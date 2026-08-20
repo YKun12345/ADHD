@@ -6,6 +6,7 @@ const wxml = fs.readFileSync(path.join(directory, 'index.wxml'), 'utf8')
 const wxss = fs.readFileSync(path.join(directory, 'index.wxss'), 'utf8')
 const appConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8'))
 assert.equal(appConfig.pages.includes('pages/tracking/index'), true, 'app.json 缺少 tracking 路由')
+assert.equal(appConfig.pages.includes('pages/tracking-trend/index'), true, 'app.json 缺少 trend 路由')
 
 const fragments = [
   '14天每日追踪', '{{completedCount}} / {{totalDays}}',
@@ -15,7 +16,7 @@ const fragments = [
   'wx:for="{{sleepOptions}}"', 'bindtap="selectSleep"',
   'bindtap="toggleMedication"', 'data-field="medicationDosage"',
   'data-field="note"', 'bindtap="submitTracking"', '{{saveStatus}}',
-  'bindtap="generateDemoData"', '仅生成本地演示数据，不会上传服务器',
+  'bindtap="generateDemoData"', 'bindtap="openTrend"', '查看14天趋势', '仅生成本地演示数据，不会上传服务器',
   '本追踪仅用于辅助筛查，不替代专业医生诊断或用药建议'
 ]
 for (const fragment of fragments) assert.equal(wxml.includes(fragment), true, `WXML 缺少：${fragment}`)

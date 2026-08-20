@@ -47,6 +47,7 @@
       <button class="save-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTracking">保存今日记录</button>
       <text class="save-status" wx:if="{{saveStatus}}">{{saveStatus}}</text>
     </view>
+    <button class="trend-button" bindtap="openTrend">查看14天趋势</button>
     <view class="demo-card">
       <text class="demo-title">比赛演示辅助</text>
       <text class="demo-description">仅生成本地演示数据，不会上传服务器</text>

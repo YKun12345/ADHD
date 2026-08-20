@@ -174,6 +174,10 @@ Page({
     })
   },
 
+  openTrend() {
+    wx.navigateTo({ url: '/pages/tracking-trend/index' })
+  },
+
   goBack() {
     wx.navigateBack({ delta: 1 })
   }

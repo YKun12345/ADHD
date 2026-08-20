@@ -1,0 +1,19 @@
+<view class="trend-page">
+  <view class="trend-nav"><view bindtap="goBack">‹</view><text>14天趋势</text><view></view></view>
+  <view class="trend-content">
+    <text class="page-title">状态变化趋势</text>
+    <text class="page-subtitle">已记录 {{completedCount}} / 14 天</text>
+    <text class="demo-badge" wx:if="{{demoMode}}">本地演示数据</text>
+    <view class="metric-tabs">
+      <view class="metric-tab {{activeMetric === item.key ? 'metric-tab--active' : ''}}" wx:for="{{metricTabs}}" wx:key="key" data-metric="{{item.key}}" bindtap="selectMetric">{{item.label}}</view>
+    </view>
+    <view class="chart-card" wx:if="{{hasData}}">
+      <view class="chart-summary"><text>{{metricLabel}}均值</text><text class="average-value">{{averageValue}} {{metricUnit}}</text></view>
+      <canvas class="trend-canvas" canvas-id="trendCanvas"></canvas>
+      <view class="axis-labels"><text>第1天</text><text>第7天</text><text>第14天</text></view>
+      <text class="gap-tip">空白日期表示当天尚未记录，不按 0 计算</text>
+    </view>
+    <view class="empty-card" wx:else><text class="empty-title">暂无追踪数据</text><text>请先返回每日追踪完成至少一天记录</text></view>
+    <text class="medical-tip">趋势仅展示客观记录，不替代专业医生诊断</text>
+  </view>
+</view>

@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const { TRACKING_LOGS_KEY, TRACKING_PENDING_KEY } = require('../utils/tracking-data')
 
-const calls = { requests: [], writes: [], toasts: [], modals: [], back: [] }
+const calls = { requests: [], writes: [], toasts: [], modals: [], back: [], navigateTo: [] }
 let storage = {}
 let requestImplementation = async () => ({ id: 1 })
 let pageDefinition
@@ -16,6 +16,7 @@ global.wx = {
   setStorageSync(key, value) { storage[key] = value; calls.writes.push([key, value]) },
   showToast(options) { calls.toasts.push(options) },
   showModal(options) { calls.modals.push(options); options.success({ confirm: true }) },
+  navigateTo(options) { calls.navigateTo.push(options) },
   navigateBack(options) { calls.back.push(options) }
 }
 global.Page = (definition) => { pageDefinition = definition }
@@ -25,7 +26,7 @@ function createPage() {
   return { ...pageDefinition, data: JSON.parse(JSON.stringify(pageDefinition.data)), setData(patch) { this.data = { ...this.data, ...patch } } }
 }
 function reset() {
-  calls.requests = []; calls.writes = []; calls.toasts = []; calls.modals = []; calls.back = []
+  calls.requests = []; calls.writes = []; calls.toasts = []; calls.modals = []; calls.back = []; calls.navigateTo = []
   storage = { current_user: { full_name: '追踪患者' }, patient_dashboard_cache: { currentDay: 3, completedDays: [1, 2] } }
   requestImplementation = async () => ({ id: 1 })
 }
@@ -77,6 +78,8 @@ async function run() {
 
   demo.goBack()
   assert.deepEqual(calls.back, [{ delta: 1 }])
+  demo.openTrend()
+  assert.deepEqual(calls.navigateTo, [{ url: '/pages/tracking-trend/index' }])
   console.log('每日追踪页面控制逻辑测试全部通过')
 }
 run().catch((error) => { console.error(error); process.exitCode = 1 })
