@@ -193,7 +193,7 @@ async function run() {
     }
   })
   assert.deepEqual(calls.navigateTo.at(-1), {
-    url: '/pages/cognitive/index'
+    url: '/pages/cognitive-center/index'
   })
 
   reset()
@@ -223,7 +223,7 @@ async function run() {
     }
   })
   assert.deepEqual(calls.navigateTo.at(-1), {
-    url: '/pages/cognitive/index'
+    url: '/pages/cognitive-center/index'
   })
 
   console.log('患者首页控制逻辑测试全部通过')

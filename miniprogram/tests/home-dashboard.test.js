@@ -93,7 +93,7 @@ assert.equal(
 )
 assert.equal(
   adultTasks.find((item) => item.id === 'cognitive').url,
-  '/pages/cognitive/index'
+  '/pages/cognitive-center/index'
 )
 
 const adultEntries = buildQuickEntries('adult')
@@ -104,7 +104,7 @@ assert.equal(adultScaleEntry.available, true)
 assert.equal(adultScaleEntry.url, '/pages/scale/index')
 assert.equal(
   adultEntries.find((item) => item.id === 'cognitive').url,
-  '/pages/cognitive/index'
+  '/pages/cognitive-center/index'
 )
 
 const childScaleTask = buildHomeTasks('child').find(
@@ -119,6 +119,6 @@ const childCognitiveEntry = buildQuickEntries('child').find(
 )
 assert.equal(childCognitiveEntry.available, true)
 assert.equal(childCognitiveEntry.statusLabel, '开始测试')
-assert.equal(childCognitiveEntry.url, '/pages/cognitive/index')
+assert.equal(childCognitiveEntry.url, '/pages/cognitive-center/index')
 
 console.log('患者首页进度数据测试全部通过')

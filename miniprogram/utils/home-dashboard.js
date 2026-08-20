@@ -75,7 +75,7 @@ function getCognitiveAvailability(patientType) {
     return {
       available: true,
       statusLabel: '开始测试',
-      url: '/pages/cognitive/index'
+      url: '/pages/cognitive-center/index'
     }
   }
 

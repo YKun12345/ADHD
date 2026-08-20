@@ -5,6 +5,15 @@ const path = require('node:path')
 const pageDirectory = path.join(__dirname, '..', 'pages', 'stroop')
 const wxml = fs.readFileSync(path.join(pageDirectory, 'index.wxml'), 'utf8')
 const wxss = fs.readFileSync(path.join(pageDirectory, 'index.wxss'), 'utf8')
+const appConfig = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8')
+)
+
+assert.equal(
+  appConfig.pages.includes('pages/stroop/index'),
+  true,
+  'app.json 缺少 pages/stroop/index 路由'
+)
 
 const requiredWxml = [
   'Stroop 颜色词测试',
