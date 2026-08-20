@@ -202,7 +202,7 @@ Content-Type: application/json
 8. 保存 `access_token` 与 `current_user`；
 9. 更新 `getApp().globalData.isLoggedIn` 和 `userInfo`；
 10. 显示“注册成功”，随后使用 `wx.reLaunch` 进入 `/pages/home/index`；
-11. 无论成功或失败，都在结束路径恢复 `submitting`，但成功跳转前不允许再次提交。
+11. 注册失败时恢复 `submitting`；注册成功后保持提交锁定，直到 `wx.reLaunch` 完成页面切换。
 
 注册失败时保留所有表单字段，便于用户修正。页面不得把密码、token 或完整注册请求写入控制台。
 
