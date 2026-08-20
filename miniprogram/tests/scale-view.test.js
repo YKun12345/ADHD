@@ -31,7 +31,8 @@ assert.equal(
 )
 
 const requiredWxml = [
-  'ASRS 成人自评量表',
+  '{{title}}',
+  '{{instructions}}',
   'wx:if="{{!patientSupported}}"',
   '{{unsupportedMessage}}',
   'wx:elif="{{showResult}}"',
@@ -46,6 +47,7 @@ const requiredWxml = [
   'bindtap="goNext"',
   "isLastQuestion ? '提交量表' : '下一题'",
   '{{result.total_score}}',
+  '{{resultRiskLabel}}',
   '{{result.summary}}',
   'wx:for="{{result.recommendations}}"',
   '本量表结果仅用于辅助筛查，不替代专业医生诊断'

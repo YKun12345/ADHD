@@ -1,9 +1,9 @@
 <view class="scale-page">
   <view class="scale-header">
-    <text class="scale-kicker">行为量表 · 成人版</text>
-    <text class="scale-title">ASRS 成人自评量表</text>
+    <text class="scale-kicker">{{scaleKicker}}</text>
+    <text class="scale-title">{{title}}</text>
     <text class="scale-subtitle">
-      请根据近 6 个月的实际情况作答，预计 {{estimatedMinutes}} 分钟
+      {{instructions}}，预计 {{estimatedMinutes}} 分钟
     </text>
   </view>
 
@@ -25,7 +25,7 @@
       <view class="result-stat">
         <text class="result-stat-label">风险等级</text>
         <text class="result-stat-value result-risk">
-          {{result.risk_level}}
+          {{resultRiskLabel}}
         </text>
       </view>
     </view>

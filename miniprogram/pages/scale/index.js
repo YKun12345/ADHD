@@ -1,12 +1,35 @@
 const { request } = require('../../utils/request')
-const {
-  ASRS_DRAFT_KEY,
-  ASRS_CONFIG,
-  normalizeDraftAnswers,
-  setAnswer,
-  getQuestionState,
-  buildScalePayload
-} = require('../../utils/asrs-scale')
+const asrsScale = require('../../utils/asrs-scale')
+const snapScale = require('../../utils/snap-scale')
+
+const SCALE_MODELS = {
+  adult: {
+    draftKey: asrsScale.ASRS_DRAFT_KEY,
+    config: asrsScale.ASRS_CONFIG,
+    instructions: '请根据近 6 个月的实际情况作答',
+    scaleKicker: '行为量表 · 成人版',
+    normalizeDraftAnswers: asrsScale.normalizeDraftAnswers,
+    setAnswer: asrsScale.setAnswer,
+    getQuestionState: asrsScale.getQuestionState,
+    buildScalePayload: asrsScale.buildScalePayload
+  },
+  child: {
+    draftKey: snapScale.SNAP_DRAFT_KEY,
+    config: snapScale.SNAP_CONFIG,
+    instructions: snapScale.SNAP_CONFIG.instructions,
+    scaleKicker: '行为量表 · 儿童版',
+    normalizeDraftAnswers: snapScale.normalizeDraftAnswers,
+    setAnswer: snapScale.setAnswer,
+    getQuestionState: snapScale.getQuestionState,
+    buildScalePayload: snapScale.buildScalePayload
+  }
+}
+
+const RISK_LABELS = {
+  low: '低风险',
+  medium: '中等风险',
+  high: '高风险'
+}
 
 function isCompleteResult(result) {
   return Boolean(
@@ -23,21 +46,24 @@ Page({
     patientName: '患者',
     patientSupported: false,
     unsupportedMessage: '',
-    title: ASRS_CONFIG.title,
-    estimatedMinutes: ASRS_CONFIG.estimatedMinutes,
-    options: ASRS_CONFIG.options,
+    title: asrsScale.ASRS_CONFIG.title,
+    instructions: '请根据近 6 个月的实际情况作答',
+    scaleKicker: '行为量表 · 成人版',
+    estimatedMinutes: asrsScale.ASRS_CONFIG.estimatedMinutes,
+    options: asrsScale.ASRS_CONFIG.options,
     answers: [],
     currentIndex: 0,
     questionNumber: 1,
-    totalQuestions: ASRS_CONFIG.questions.length,
-    currentQuestion: ASRS_CONFIG.questions[0],
+    totalQuestions: asrsScale.ASRS_CONFIG.questions.length,
+    currentQuestion: asrsScale.ASRS_CONFIG.questions[0],
     selectedValue: null,
     progressPercent: 6,
     isFirstQuestion: true,
     isLastQuestion: false,
     submitting: false,
     showResult: false,
-    result: null
+    result: null,
+    resultRiskLabel: ''
   },
 
   onLoad() {
@@ -53,33 +79,47 @@ Page({
       })
     }
 
-    if (patientType !== 'adult') {
+    const scaleModel = SCALE_MODELS[patientType]
+
+    if (!scaleModel) {
       this.setData({
         patientSupported: false,
         unsupportedMessage:
-          '儿童患者请使用 SNAP-IV 儿童量表，该量表将在 D5 开放。'
+          '暂时无法识别患者量表类型，请返回首页后重试。'
       })
       return
     }
 
-    const answers = normalizeDraftAnswers(
-      wx.getStorageSync(ASRS_DRAFT_KEY)
+    this.scaleModel = scaleModel
+    this.draftKey = scaleModel.draftKey
+
+    const answers = scaleModel.normalizeDraftAnswers(
+      wx.getStorageSync(scaleModel.draftKey)
     )
-    const currentIndex = answers.length >= ASRS_CONFIG.questions.length
-      ? ASRS_CONFIG.questions.length - 1
+    const currentIndex = answers.length >= scaleModel.config.questions.length
+      ? scaleModel.config.questions.length - 1
       : answers.length
 
     this.setData({
       patientSupported: true,
       unsupportedMessage: '',
+      title: scaleModel.config.title,
+      instructions: scaleModel.instructions,
+      scaleKicker: scaleModel.scaleKicker,
+      estimatedMinutes: scaleModel.config.estimatedMinutes,
+      options: scaleModel.config.options,
       answers,
-      ...getQuestionState(currentIndex, answers)
+      ...scaleModel.getQuestionState(currentIndex, answers)
     })
   },
 
   selectOption(event) {
     const value = Number(event.currentTarget.dataset.value)
-    const answers = setAnswer(
+    if (!this.scaleModel) {
+      return
+    }
+
+    const answers = this.scaleModel.setAnswer(
       this.data.answers,
       this.data.currentIndex,
       value
@@ -89,10 +129,13 @@ Page({
       return
     }
 
-    wx.setStorageSync(ASRS_DRAFT_KEY, answers)
+    wx.setStorageSync(this.draftKey, answers)
     this.setData({
       answers,
-      ...getQuestionState(this.data.currentIndex, answers)
+      ...this.scaleModel.getQuestionState(
+        this.data.currentIndex,
+        answers
+      )
     })
   },
 
@@ -102,7 +145,7 @@ Page({
     }
 
     this.setData({
-      ...getQuestionState(
+      ...this.scaleModel.getQuestionState(
         this.data.currentIndex - 1,
         this.data.answers
       )
@@ -127,7 +170,7 @@ Page({
     }
 
     this.setData({
-      ...getQuestionState(
+      ...this.scaleModel.getQuestionState(
         this.data.currentIndex + 1,
         this.data.answers
       )
@@ -139,14 +182,20 @@ Page({
       return
     }
 
-    const payload = buildScalePayload(this.data.answers)
+    if (!this.scaleModel) {
+      return
+    }
+
+    const payload = this.scaleModel.buildScalePayload(
+      this.data.answers
+    )
 
     if (!payload) {
-      const firstMissingIndex = ASRS_CONFIG.questions.findIndex(
+      const firstMissingIndex = this.scaleModel.config.questions.findIndex(
         (_, index) => !Number.isInteger(this.data.answers[index])
       )
       this.setData({
-        ...getQuestionState(
+        ...this.scaleModel.getQuestionState(
           firstMissingIndex >= 0 ? firstMissingIndex : 0,
           this.data.answers
         )
@@ -173,9 +222,11 @@ Page({
         throw new Error('INCOMPLETE_SCALE_RESULT')
       }
 
-      wx.removeStorageSync(ASRS_DRAFT_KEY)
+      wx.removeStorageSync(this.draftKey)
       this.setData({
         result,
+        resultRiskLabel:
+          RISK_LABELS[result.risk_level] || result.risk_level,
         showResult: true,
         submitting: false
       })

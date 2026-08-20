@@ -5,6 +5,10 @@ const {
   ASRS_CONFIG,
   getQuestionState
 } = require('../utils/asrs-scale')
+const {
+  SNAP_DRAFT_KEY,
+  SNAP_CONFIG
+} = require('../utils/snap-scale')
 
 const calls = {
   request: [],
@@ -146,12 +150,23 @@ async function run() {
   assert.equal(draftPage.data.selectedValue, null)
 
   reset('child')
+  storage[SNAP_DRAFT_KEY] = [0, 1]
   const childPage = createPage()
   childPage.onLoad()
-  assert.equal(childPage.data.patientSupported, false)
+  assert.equal(childPage.data.patientSupported, true)
+  assert.equal(childPage.data.title, SNAP_CONFIG.title)
+  assert.equal(childPage.data.options.length, 4)
+  assert.equal(childPage.data.totalQuestions, 26)
+  assert.equal(childPage.data.currentIndex, 2)
+  assert.deepEqual(childPage.data.answers, [0, 1])
+
+  reset('unknown')
+  const unknownPage = createPage()
+  unknownPage.onLoad()
+  assert.equal(unknownPage.data.patientSupported, false)
   assert.equal(
-    childPage.data.unsupportedMessage,
-    '儿童患者请使用 SNAP-IV 儿童量表，该量表将在 D5 开放。'
+    unknownPage.data.unsupportedMessage,
+    '暂时无法识别患者量表类型，请返回首页后重试。'
   )
 
   reset('adult', Array(18).fill(2))
@@ -175,7 +190,32 @@ async function run() {
   assert.deepEqual(calls.storageRemovals, [ASRS_DRAFT_KEY])
   assert.equal(successPage.data.showResult, true)
   assert.deepEqual(successPage.data.result, completeResult)
+  assert.equal(successPage.data.resultRiskLabel, '低风险')
   assert.equal(successPage.data.submitting, false)
+
+  reset('child')
+  storage[SNAP_DRAFT_KEY] = Array(26).fill(1)
+  requestImplementation = async (options) => {
+    calls.request.push(options)
+    return {
+      ...completeResult,
+      risk_level: 'medium'
+    }
+  }
+  const childSubmitPage = createPage()
+  childSubmitPage.onLoad()
+  await childSubmitPage.submitScale()
+  assert.deepEqual(calls.request.at(-1), {
+    url: '/patient/submit_scale',
+    method: 'POST',
+    data: {
+      scale_type: 'SNAP_IV',
+      respondent_type: 'parent',
+      answers: Array(26).fill(1)
+    }
+  })
+  assert.deepEqual(calls.storageRemovals, [SNAP_DRAFT_KEY])
+  assert.equal(childSubmitPage.data.resultRiskLabel, '中等风险')
 
   reset('adult', Array(18).fill(3))
   requestImplementation = async (options) => {
