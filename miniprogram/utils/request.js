@@ -1,5 +1,22 @@
 const BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
+function createTransportError(error = {}) {
+  const detail =
+    typeof error.errMsg === 'string' ? error.errMsg : ''
+  const isTimeout = /timeout/i.test(detail)
+  const requestError = new Error(
+    isTimeout
+      ? '请求超时，请检查网络或后端服务'
+      : '无法连接服务器，请检查后端是否启动'
+  )
+
+  requestError.code = isTimeout
+    ? 'REQUEST_TIMEOUT'
+    : 'NETWORK_ERROR'
+
+  return requestError
+}
+
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('access_token')
@@ -45,7 +62,7 @@ function request(options) {
 
       fail(error) {
         console.error('网络请求失败：', error)
-        reject(new Error('无法连接服务器，请检查后端是否启动'))
+        reject(createTransportError(error))
       }
     })
   })
@@ -53,5 +70,6 @@ function request(options) {
 
 module.exports = {
   request,
-  BASE_URL
+  BASE_URL,
+  createTransportError
 }
