@@ -20,9 +20,9 @@
 - Modify: `miniprogram/utils/gonogo-test.js`
 - Modify: `miniprogram/tests/gonogo-test.test.js`
 
-- [ ] 先测试固定 8 题、颜色判定、反应时、相容/冲突统计、payload、最近结果合并和 0/2—2/2 汇总，观察红灯。
-- [ ] 实现两个纯逻辑模块，并为 Go/No-Go payload 补充报告元数据。
-- [ ] 运行相关测试与语法检查，提交 `feat(miniprogram): model Stroop and cognitive summary`。
+- [x] 先测试固定 8 题、颜色判定、反应时、相容/冲突统计、payload、最近结果合并和 0/2—2/2 汇总，观察红灯。
+- [x] 实现两个纯逻辑模块，并为 Go/No-Go payload 补充报告元数据。
+- [x] 运行相关测试与语法检查，提交 `feat(miniprogram): model Stroop and cognitive summary`。
 
 ### Task 2: Stroop 页面控制器
 
@@ -31,9 +31,9 @@
 - Create: `miniprogram/pages/stroop/index.js`
 - Create: `miniprogram/pages/stroop/index.json`
 
-- [ ] 先用 fake `Date.now/setTimeout/clearTimeout` 测试加载、启动、作答、防重复、完整 8 题、本地保存、同步成功/失败、重试和卸载。
-- [ ] 实现 `intro/testing/feedback/result` 状态机和独立待同步 key。
-- [ ] 运行页面与纯逻辑测试，提交 `feat(miniprogram): implement Stroop controller`。
+- [x] 先用 fake `Date.now/setTimeout/clearTimeout` 测试加载、启动、作答、防重复、完整 8 题、本地保存、同步成功/失败、重试和卸载。
+- [x] 实现 `intro/testing/feedback/result` 状态机和独立待同步 key。
+- [x] 运行页面与纯逻辑测试，提交 `feat(miniprogram): implement Stroop controller`。
 
 ### Task 3: Stroop 视图
 
@@ -42,9 +42,9 @@
 - Create: `miniprogram/pages/stroop/index.wxml`
 - Create: `miniprogram/pages/stroop/index.wxss`
 
-- [ ] 先测试说明、颜色词、四个颜色按钮、进度、反馈、结果指标、同步状态与免责声明，观察文件不存在红灯。
-- [ ] 实现高对比、非仅依赖色彩的手机界面，并确保按钮内容明确居中。
-- [ ] 运行结构与控制器测试，提交 `style(miniprogram): build Stroop test interface`。
+- [x] 先测试说明、颜色词、四个颜色按钮、进度、反馈、结果指标、同步状态与免责声明，观察文件不存在红灯。
+- [x] 实现高对比、非仅依赖色彩的手机界面，并确保按钮内容明确居中。
+- [x] 运行结构与控制器测试，提交 `style(miniprogram): build Stroop test interface`。
 
 ### Task 4: 认知中心与 D6 本地结果接入
 
@@ -58,9 +58,9 @@
 - Modify: `miniprogram/pages/cognitive/index.js`
 - Modify: `miniprogram/tests/cognitive-page.test.js`
 
-- [ ] 先测试认知中心读取 0/2—2/2、本地结果卡、双任务导航和 Go/No-Go 完成后本地保存，观察红灯。
-- [ ] 实现中心控制器与视图，并让 D6 结果先落本地再同步。
-- [ ] 运行相关回归，提交 `feat(miniprogram): add cognitive test center`。
+- [x] 先测试认知中心读取 0/2—2/2、本地结果卡、双任务导航和 Go/No-Go 完成后本地保存，观察红灯。
+- [x] 实现中心控制器与视图，并让 D6 结果先落本地再同步。
+- [x] 运行相关回归，提交 `feat(miniprogram): add cognitive test center`。
 
 ### Task 5: 路由、首页与全量验证
 
@@ -72,9 +72,9 @@
 - Modify: `项目任务与进度.md`
 - Modify: `docs/superpowers/plans/2026-08-21-miniprogram-stroop-summary.md`
 
-- [ ] 先测试首页认知入口改为 `/pages/cognitive-center/index` 且两个新路由已注册，观察红灯。
-- [ ] 更新路由与入口，运行全部测试、JavaScript 语法、JSON 和 `git diff --check`。
-- [ ] D7 更新为 100%，记录接口/真机边界，提交记录并确认工作区干净。
+- [x] 先测试首页认知入口改为 `/pages/cognitive-center/index` 且两个新路由已注册，观察红灯。
+- [x] 更新路由与入口，运行全部测试、JavaScript 语法、JSON 和 `git diff --check`。
+- [x] D7 更新为 100%，记录接口/真机边界，提交记录并确认工作区干净。
 
 ## 计划自审
 
