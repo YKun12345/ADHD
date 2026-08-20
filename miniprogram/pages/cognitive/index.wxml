@@ -1,0 +1,154 @@
+<view class="cognitive-page">
+  <view class="cognitive-nav">
+    <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>
+    <text class="nav-title">认知测试</text>
+    <view class="nav-placeholder"></view>
+  </view>
+
+  <view class="cognitive-content">
+    <view class="page-heading">
+      <text class="page-kicker">注意与抑制控制</text>
+      <text class="page-title">Go / No-Go 认知测试</text>
+      <text class="page-subtitle">全程约 1 分钟，请在安静环境中完成</text>
+    </view>
+
+    <view class="pending-banner" wx:if="{{phase === 'intro' && hasPendingResult}}">
+      <text class="pending-text">上次结果尚未同步</text>
+      <button
+        class="pending-action"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+        bindtap="retrySync"
+      >重新同步</button>
+    </view>
+
+    <view class="instruction-card" wx:if="{{phase === 'intro'}}">
+      <text class="section-title">测试说明</text>
+      <text class="section-description">
+        每轮图形出现前请保持不动，按颜色完成操作。
+      </text>
+
+      <view class="rule-list">
+        <view class="rule-item rule-item--go">
+          <view class="rule-dot rule-dot--go"></view>
+          <view class="rule-copy">
+            <text class="rule-title">GO · 需要反应</text>
+            <text class="rule-description">看到绿色“点击”时请尽快点击</text>
+          </view>
+        </view>
+        <view class="rule-item rule-item--nogo">
+          <view class="rule-dot rule-dot--nogo"></view>
+          <view class="rule-copy">
+            <text class="rule-title">NO-GO · 保持抑制</text>
+            <text class="rule-description">看到红色“停”时请保持不动</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="notice-box">
+        提前点击也会记录为误触。共 10 轮，开始后请连续完成。
+      </view>
+      <button class="primary-button" bindtap="startTest">开始测试</button>
+    </view>
+
+    <view
+      class="test-card"
+      wx:elif="{{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback'}}"
+    >
+      <view class="test-progress-header">
+        <text class="test-progress-label">测试进度</text>
+        <text class="test-progress-count">
+          {{currentTrialNumber}} / {{totalTrials}}
+        </text>
+      </view>
+      <view class="test-progress-track">
+        <view
+          class="test-progress-value"
+          style="width: {{progressPercent}}%;"
+        ></view>
+      </view>
+
+      <view class="test-stage" bindtap="handleTestTap">
+        <view class="waiting-state" wx:if="{{phase === 'waiting'}}">
+          <view class="waiting-ring"></view>
+          <text class="waiting-label">等待图形</text>
+          <text class="waiting-help">此时请不要点击</text>
+        </view>
+
+        <view class="stimulus-state" wx:elif="{{phase === 'stimulus'}}">
+          <view class="stimulus-circle stimulus-circle--{{stimulusType}}">
+            <text class="stimulus-label">{{stimulusLabel}}</text>
+          </view>
+          <text class="stimulus-help">
+            {{stimulusType === 'go' ? '现在点击屏幕' : '保持不动'}}
+          </text>
+        </view>
+
+        <view class="feedback-state" wx:else>
+          <view class="feedback-icon {{feedbackCorrect ? 'feedback-icon--correct' : 'feedback-icon--error'}}">
+            {{feedbackCorrect ? '✓' : '!'}}
+          </view>
+          <text class="feedback-text">{{feedbackText}}</text>
+          <text class="feedback-help">准备进入下一轮</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="result-card" wx:elif="{{phase === 'result'}}">
+      <view class="result-heading">
+        <view class="result-icon">✓</view>
+        <view class="result-heading-copy">
+          <text class="result-title">测试已完成</text>
+          <text class="sync-badge sync-badge--{{syncStatus}}">{{syncStatus}}</text>
+        </view>
+      </view>
+
+      <view class="result-highlight">
+        <text class="result-highlight-label">总体正确率</text>
+        <text class="result-highlight-value">{{result.accuracy}}%</text>
+      </view>
+
+      <view class="result-grid">
+        <view class="result-stat">
+          <text class="result-stat-value">{{result.average_reaction_time_ms}}</text>
+          <text class="result-stat-label">平均反应时（毫秒）</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-value">{{result.go_accuracy}}%</text>
+          <text class="result-stat-label">GO 正确率</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-value">{{result.nogo_accuracy}}%</text>
+          <text class="result-stat-label">NO-GO 正确率</text>
+        </view>
+        <view class="result-stat">
+          <text class="result-stat-value">{{result.false_starts}}</text>
+          <text class="result-stat-label">提前误触</text>
+        </view>
+      </view>
+
+      <view class="error-summary">
+        <text>冲动错误 {{result.commission_errors}} 次</text>
+        <text>遗漏错误 {{result.omission_errors}} 次</text>
+      </view>
+
+      <button
+        class="primary-button"
+        wx:if="{{syncStatus === '待同步'}}"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+        bindtap="retrySync"
+      >重新同步结果</button>
+      <button
+        class="secondary-button"
+        disabled="{{submitting}}"
+        bindtap="restartTest"
+      >再测一次</button>
+      <button class="text-button" bindtap="goBack">返回患者首页</button>
+    </view>
+
+    <text class="medical-tip">
+      本任务仅用于辅助筛查，不替代专业认知评估或医生诊断
+    </text>
+  </view>
+</view>
