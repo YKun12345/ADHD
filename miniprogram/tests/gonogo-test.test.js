@@ -107,6 +107,15 @@ assert.deepEqual(
   {
     test_type: 'reaction',
     result_json: {
+      test_name: 'Go/No-Go 测试',
+      status_text: '已完成测试',
+      summary: 'Go/No-Go 测试已完成。本次结果记录反应速度、注意保持和抑制控制的客观表现。',
+      metrics: [
+        { label: '正确率', value: '70%' },
+        { label: '平均反应时', value: '300 ms' },
+        { label: '冲动错误', value: '1' },
+        { label: '提前误触', value: '1' }
+      ],
       test_variant: 'go_nogo',
       raw_result: summarizeTrials(records),
       finished_at: '2026-08-21T02:00:00.000Z'
