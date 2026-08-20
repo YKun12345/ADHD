@@ -1,0 +1,45 @@
+page { min-height: 100%; background: #f4f7fa; }
+.tracking-page { min-height: 100vh; color: #17324d; background: #f4f7fa; }
+.tracking-nav { height: 96rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 26rpx; color: #fff; background: #17324d; font-size: 29rpx; }
+.nav-back, .nav-placeholder { width: 68rpx; height: 68rpx; }
+.nav-back { display: flex; align-items: center; justify-content: center; font-size: 62rpx; line-height: 1; }
+.tracking-content { padding: 44rpx 30rpx calc(54rpx + env(safe-area-inset-bottom)); }
+.page-heading { display: flex; flex-direction: column; }
+.page-title { font-size: 42rpx; font-weight: 700; }
+.page-subtitle { margin-top: 12rpx; color: #718096; font-size: 24rpx; }
+.progress-card { margin-top: 30rpx; padding: 30rpx; border-radius: 24rpx; color: #fff; background: #17324d; }
+.progress-header { display: flex; justify-content: space-between; font-size: 27rpx; font-weight: 600; }
+.progress-track { height: 15rpx; margin-top: 22rpx; overflow: hidden; border-radius: 999rpx; background: rgba(255,255,255,.2); }
+.progress-value { height: 100%; border-radius: 999rpx; background: #73c7b6; }
+.demo-badge { display: inline-block; margin-top: 18rpx; padding: 5rpx 12rpx; border-radius: 999rpx; color: #17324d; background: #fff1b8; font-size: 20rpx; }
+.day-strip { width: 100%; margin-top: 24rpx; white-space: nowrap; }
+.day-list { display: flex; padding-bottom: 8rpx; }
+.day-chip { flex-shrink: 0; margin-right: 12rpx; padding: 14rpx 20rpx; border: 2rpx solid #dce5ec; border-radius: 999rpx; color: #64748b; background: #fff; font-size: 22rpx; }
+.day-chip--active { border-color: #3f7c78; color: #2f6f6b; background: #eaf5f3; font-weight: 600; }
+.form-card, .demo-card { margin-top: 24rpx; padding: 34rpx 28rpx; border-radius: 26rpx; background: #fff; box-shadow: 0 14rpx 38rpx rgba(23,50,77,.08); }
+.section-title { display: block; font-size: 31rpx; font-weight: 700; }
+.field-label { display: block; margin-top: 30rpx; margin-bottom: 14rpx; font-size: 26rpx; font-weight: 600; }
+.choice-row, .rating-row, .sleep-row { display: flex; justify-content: space-between; }
+.choice-button { width: 18%; min-height: 86rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx solid #dce5ec; border-radius: 16rpx; color: #526575; background: #f7f9fb; }
+.choice-button--active { border-color: #3f7c78; color: #2f6f6b; background: #eaf5f3; box-shadow: 0 7rpx 18rpx rgba(63,124,120,.12); }
+.choice-caption { margin-top: 5rpx; font-size: 16rpx; }
+.rating-button, .sleep-button { height: 78rpx; display: flex; align-items: center; justify-content: center; border: 2rpx solid #dce5ec; border-radius: 16rpx; background: #f7f9fb; }
+.rating-button { width: 17%; }
+.sleep-button { width: 30%; }
+.field-input, .note-input { width: 100%; box-sizing: border-box; border: 2rpx solid #dce5ec; border-radius: 17rpx; color: #17324d; background: #f7f9fb; font-size: 26rpx; }
+.field-input { height: 84rpx; padding: 0 22rpx; }
+.note-input { height: 180rpx; padding: 20rpx 22rpx; }
+.medication-row { display: flex; align-items: center; margin-top: 32rpx; padding: 22rpx; border-radius: 18rpx; background: #eaf5f3; }
+.check-box { width: 42rpx; height: 42rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-right: 18rpx; border: 2rpx solid #aab8c4; border-radius: 8rpx; color: #fff; background: #fff; }
+.check-box--active { border-color: #3f7c78; background: #3f7c78; }
+.medication-title, .medication-tip { display: block; }
+.medication-title { font-size: 25rpx; font-weight: 600; }
+.medication-tip { margin-top: 5rpx; color: #718096; font-size: 20rpx; }
+.save-button { width: 100%; height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 34rpx; border-radius: 18rpx; color: #fff; background: #17324d; font-size: 28rpx; font-weight: 600; line-height: 1.4; }
+.save-button::after, .demo-button::after { border: none; }
+.save-status { display: block; margin-top: 14rpx; color: #3f7c78; font-size: 23rpx; text-align: center; }
+.demo-card { background: #fff8e9; }
+.demo-title { display: block; color: #7a5b2b; font-size: 27rpx; font-weight: 700; }
+.demo-description { display: block; margin-top: 8rpx; color: #8b7044; font-size: 22rpx; }
+.demo-button { margin-top: 18rpx; color: #7a5b2b; background: #fff; font-size: 24rpx; }
+.medical-tip { display: block; margin-top: 32rpx; color: #8795a3; font-size: 21rpx; line-height: 1.6; text-align: center; }

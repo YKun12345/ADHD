@@ -44,6 +44,7 @@ Page({
     moods: MOODS,
     ratings: RATINGS,
     sleepOptions: SLEEP_OPTIONS,
+    days: Array.from({ length: 14 }, (_, index) => index + 1),
     ...createTrackingForm(),
     completedDays: [],
     completedCount: 0,
