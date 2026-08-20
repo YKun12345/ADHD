@@ -12,6 +12,10 @@ const wxml = fs.readFileSync(
   path.join(registerDirectory, 'index.wxml'),
   'utf8'
 )
+const wxss = fs.readFileSync(
+  path.join(registerDirectory, 'index.wxss'),
+  'utf8'
+)
 
 const requiredWxmlSnippets = [
   'bindsubmit="handleSubmit"',
@@ -54,6 +58,34 @@ assert.equal(
   wxml.includes('注册表单将在下一步填写'),
   false,
   '必须删除占位文案'
+)
+
+const requiredWxssSnippets = [
+  '.register-page',
+  'min-height: 100vh',
+  '.register-card',
+  '.choice-card--active',
+  '.gender-option--active',
+  '.password-control',
+  '.consent-panel',
+  '.register-button[disabled]',
+  'env(safe-area-inset-bottom)',
+  '#17324d',
+  '#3f7c78'
+]
+
+for (const snippet of requiredWxssSnippets) {
+  assert.equal(
+    wxss.includes(snippet),
+    true,
+    `WXSS 缺少：${snippet}`
+  )
+}
+
+assert.equal(
+  /position\s*:\s*fixed/.test(wxss),
+  false,
+  '注册表单不能用 fixed 定位锁死页面滚动'
 )
 
 console.log('注册页面结构测试全部通过')

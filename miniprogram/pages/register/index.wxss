@@ -6,25 +6,25 @@ page {
 .register-page {
   min-height: 100vh;
   box-sizing: border-box;
-  padding: 120rpx 40rpx 60rpx;
-  display: flex;
-  flex-direction: column;
+  padding: 72rpx 32rpx calc(60rpx + env(safe-area-inset-bottom));
 }
 
 .register-header {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 18rpx 16rpx 6rpx;
 }
 
 .register-title {
   color: #17324d;
   font-size: 44rpx;
   font-weight: 700;
+  line-height: 1.4;
 }
 
 .register-subtitle {
-  margin-top: 20rpx;
+  margin-top: 16rpx;
   color: #64748b;
   font-size: 27rpx;
   line-height: 1.6;
@@ -32,8 +32,8 @@ page {
 }
 
 .register-card {
-  margin-top: 56rpx;
-  padding: 40rpx 36rpx;
+  margin-top: 36rpx;
+  padding: 40rpx 32rpx;
   border-radius: 28rpx;
   background: #ffffff;
   box-shadow: 0 16rpx 44rpx rgba(23, 50, 77, 0.09);
@@ -48,16 +48,211 @@ page {
 
 .section-description {
   display: block;
-  margin-top: 20rpx;
+  margin-top: 10rpx;
   color: #718096;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.field-block {
+  margin-top: 32rpx;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 14rpx;
+  color: #17324d;
   font-size: 27rpx;
+  font-weight: 600;
+}
+
+.field-help {
+  display: block;
+  margin: -4rpx 0 16rpx;
+  color: #8795a3;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.field-input,
+.password-control {
+  box-sizing: border-box;
+  border: 2rpx solid #dce5ec;
+  border-radius: 18rpx;
+  background: #f7f9fb;
+}
+
+.field-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  color: #17324d;
+  font-size: 28rpx;
+}
+
+.input-placeholder {
+  color: #9aa8b5;
+}
+
+.choice-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.choice-card {
+  width: 48%;
+  box-sizing: border-box;
+  padding: 24rpx 20rpx;
+  border: 2rpx solid #dce5ec;
+  border-radius: 20rpx;
+  background: #f7f9fb;
+}
+
+.choice-card--active {
+  border-color: #3f7c78;
+  background: #edf8f5;
+  box-shadow: 0 8rpx 20rpx rgba(63, 124, 120, 0.12);
+}
+
+.choice-title,
+.choice-description {
+  display: block;
+}
+
+.choice-title {
+  color: #17324d;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.choice-description {
+  margin-top: 8rpx;
+  color: #718096;
+  font-size: 21rpx;
+}
+
+.choice-card--active .choice-title {
+  color: #2f6f6b;
+}
+
+.gender-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -8rpx;
+}
+
+.gender-option {
+  min-width: 134rpx;
+  box-sizing: border-box;
+  margin: 8rpx;
+  padding: 18rpx 20rpx;
+  border: 2rpx solid #dce5ec;
+  border-radius: 18rpx;
+  color: #526575;
+  background: #f7f9fb;
+  font-size: 25rpx;
+  text-align: center;
+}
+
+.gender-option--active {
+  border-color: #3f7c78;
+  color: #2f6f6b;
+  background: #edf8f5;
+  font-weight: 600;
+}
+
+.password-control {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+}
+
+.password-input {
+  flex: 1;
+  min-width: 0;
+  height: 84rpx;
+  padding-left: 24rpx;
+  color: #17324d;
+  background: transparent;
+  font-size: 28rpx;
+}
+
+.visibility-button {
+  flex-shrink: 0;
+  padding: 22rpx 24rpx;
+  color: #3f7c78;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.password-hint {
+  display: block;
+  margin-top: 12rpx;
+  color: #8795a3;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.consent-panel {
+  margin-top: 30rpx;
+  padding: 28rpx;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 22rpx;
+  background: #eaf4f3;
+}
+
+.consent-checkbox-group,
+.consent-checkbox-label {
+  flex-shrink: 0;
+}
+
+.consent-copy {
+  flex: 1;
+  padding-top: 2rpx;
+  color: #526575;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.consent-link {
+  color: #2f6f6b;
+  font-weight: 600;
+}
+
+.register-button {
+  margin-top: 34rpx;
+  height: 92rpx;
+  line-height: 92rpx;
+  border-radius: 18rpx;
+  color: #ffffff;
+  background: #17324d;
+  font-size: 31rpx;
+  font-weight: 600;
+}
+
+.register-button::after {
+  border: none;
+}
+
+.register-button[disabled] {
+  color: rgba(255, 255, 255, 0.82);
+  background: #607487;
+}
+
+.back-login {
+  display: block;
+  margin-top: 30rpx;
+  color: #3f7c78;
+  font-size: 25rpx;
+  text-align: center;
 }
 
 .medical-tip {
   display: block;
-  margin-top: auto;
-  padding-top: 50rpx;
-  text-align: center;
+  margin-top: 42rpx;
   color: #8795a3;
   font-size: 22rpx;
+  line-height: 1.6;
+  text-align: center;
 }
