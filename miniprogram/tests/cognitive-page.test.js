@@ -5,6 +5,7 @@ const {
   evaluateTrial,
   buildCognitivePayload
 } = require('../utils/gonogo-test')
+const { LATEST_RESULTS_KEY } = require('../utils/cognitive-results')
 
 const calls = {
   requests: [],
@@ -191,6 +192,10 @@ async function run() {
       timeoutPage._finishedAt
     )
   })
+  assert.deepEqual(
+    storage[LATEST_RESULTS_KEY].reaction,
+    calls.requests[0].data
+  )
 
   reset()
   requestImplementation = async () => {
@@ -211,6 +216,7 @@ async function run() {
     storage.pending_cognitive_result,
     buildCognitivePayload(offlinePage._records, offlinePage._finishedAt)
   )
+  assert.equal(storage[LATEST_RESULTS_KEY].reaction.test_type, 'reaction')
 
   requestImplementation = async () => ({ id: 2 })
   await offlinePage.retrySync()

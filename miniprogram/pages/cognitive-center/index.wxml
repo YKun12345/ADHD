@@ -1,0 +1,71 @@
+<view class="cognitive-center-page">
+  <view class="center-nav">
+    <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>
+    <text class="nav-title">认知测试中心</text>
+    <view class="nav-placeholder"></view>
+  </view>
+
+  <view class="center-content">
+    <view class="page-heading">
+      <text class="page-kicker">你好，{{patientName}}</text>
+      <text class="page-title">完成两项认知任务</text>
+      <text class="page-subtitle">
+        在安静环境中独立完成，每项约 1 分钟
+      </text>
+    </view>
+
+    <view class="summary-card">
+      <view class="summary-header">
+        <view class="summary-copy">
+          <text class="summary-title">认知任务进度</text>
+          <text class="summary-description">{{summaryText}}</text>
+        </view>
+        <text class="summary-count">{{completedCount}} / {{totalCount}}</text>
+      </view>
+      <view class="summary-progress-track">
+        <view
+          class="summary-progress-value"
+          style="width: {{progressPercent}}%;"
+        ></view>
+      </view>
+      <view class="completion-banner" wx:if="{{allCompleted}}">
+        ✓ 两项任务已完成，最近结果已保存在本机
+      </view>
+    </view>
+
+    <view class="test-list">
+      <view
+        class="test-card {{item.completed ? 'test-card--completed' : ''}}"
+        wx:for="{{cards}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="handleTestTap"
+      >
+        <view class="test-icon">{{item.icon}}</view>
+        <view class="test-copy">
+          <view class="test-title-row">
+            <text class="test-title">{{item.title}}</text>
+            <text class="completed-badge" wx:if="{{item.completed}}">已完成</text>
+          </view>
+          <text class="test-description">{{item.description}}</text>
+          <text class="test-metric">{{item.primaryMetric}}</text>
+        </view>
+        <view class="test-action">
+          <text>{{item.statusLabel}}</text>
+          <text class="test-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="privacy-note">
+      <text class="privacy-title">本地结果说明</text>
+      <text class="privacy-text">
+        中心仅保存最近一次客观指标，不保存姓名、邮箱或登录凭据。
+      </text>
+    </view>
+
+    <text class="medical-tip">
+      本中心仅汇总任务完成情况和客观指标，不替代专业医生诊断
+    </text>
+  </view>
+</view>

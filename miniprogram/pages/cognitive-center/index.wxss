@@ -1,0 +1,257 @@
+page {
+  min-height: 100%;
+  background: #f4f7fa;
+}
+
+.cognitive-center-page {
+  min-height: 100vh;
+  color: #17324d;
+  background: #f4f7fa;
+}
+
+.center-nav {
+  height: 96rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 26rpx;
+  color: #ffffff;
+  background: #17324d;
+}
+
+.nav-back,
+.nav-placeholder {
+  width: 68rpx;
+  height: 68rpx;
+}
+
+.nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 62rpx;
+  line-height: 1;
+}
+
+.nav-title {
+  font-size: 29rpx;
+  font-weight: 500;
+}
+
+.center-content {
+  box-sizing: border-box;
+  padding: 46rpx 32rpx calc(54rpx + env(safe-area-inset-bottom));
+}
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-kicker {
+  color: #3f7c78;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.page-title {
+  margin-top: 10rpx;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  margin-top: 14rpx;
+  color: #718096;
+  font-size: 24rpx;
+}
+
+.summary-card {
+  margin-top: 34rpx;
+  padding: 34rpx;
+  border-radius: 28rpx;
+  color: #ffffff;
+  background: #17324d;
+  box-shadow: 0 16rpx 40rpx rgba(23, 50, 77, 0.18);
+}
+
+.summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.summary-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-right: 20rpx;
+}
+
+.summary-title {
+  font-size: 31rpx;
+  font-weight: 700;
+}
+
+.summary-description {
+  margin-top: 12rpx;
+  color: #c8d7e2;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.summary-count {
+  flex-shrink: 0;
+  color: #cfe4df;
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.summary-progress-track {
+  height: 16rpx;
+  margin-top: 26rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.summary-progress-value {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #73c7b6;
+  transition: width 220ms ease;
+}
+
+.completion-banner {
+  margin-top: 22rpx;
+  padding: 14rpx 18rpx;
+  border-radius: 14rpx;
+  color: #17324d;
+  background: #cfe4df;
+  font-size: 22rpx;
+}
+
+.test-list {
+  margin-top: 28rpx;
+}
+
+.test-card {
+  min-height: 164rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  margin-top: 18rpx;
+  padding: 28rpx 24rpx;
+  border: 2rpx solid transparent;
+  border-radius: 24rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 34rpx rgba(23, 50, 77, 0.08);
+}
+
+.test-card--completed {
+  border-color: #b8ddd5;
+  background: #fbfffe;
+}
+
+.test-icon {
+  width: 78rpx;
+  height: 78rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  color: #ffffff;
+  background: #3f8b7f;
+  font-size: 27rpx;
+  font-weight: 700;
+}
+
+.test-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20rpx;
+}
+
+.test-title-row {
+  display: flex;
+  align-items: center;
+}
+
+.test-title {
+  font-size: 29rpx;
+  font-weight: 700;
+}
+
+.completed-badge {
+  margin-left: 12rpx;
+  padding: 4rpx 10rpx;
+  border-radius: 999rpx;
+  color: #2f6f6b;
+  background: #e5f4f0;
+  font-size: 19rpx;
+}
+
+.test-description {
+  margin-top: 8rpx;
+  color: #718096;
+  font-size: 22rpx;
+}
+
+.test-metric {
+  margin-top: 9rpx;
+  color: #3f7c78;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.test-action {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 12rpx;
+  color: #3f7c78;
+  font-size: 20rpx;
+}
+
+.test-arrow {
+  margin-top: 8rpx;
+  color: #9aa8b5;
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.privacy-note {
+  display: flex;
+  flex-direction: column;
+  margin-top: 28rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #eaf5f3;
+}
+
+.privacy-title {
+  color: #2f6f6b;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.privacy-text {
+  margin-top: 8rpx;
+  color: #64748b;
+  font-size: 21rpx;
+  line-height: 1.6;
+}
+
+.medical-tip {
+  display: block;
+  margin-top: 34rpx;
+  color: #8795a3;
+  font-size: 21rpx;
+  line-height: 1.6;
+  text-align: center;
+}

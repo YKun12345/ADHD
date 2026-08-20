@@ -5,6 +5,10 @@ const {
   summarizeTrials,
   buildCognitivePayload
 } = require('../../utils/gonogo-test')
+const {
+  LATEST_RESULTS_KEY,
+  mergeLatestResult
+} = require('../../utils/cognitive-results')
 
 const PENDING_RESULT_KEY = 'pending_cognitive_result'
 const WAITING_DELAYS = [800, 1000, 1200, 1400]
@@ -213,6 +217,16 @@ Page({
 
     this._clearTimers()
     this._finishedAt = this._finishedAt || new Date().toISOString()
+    const payload = buildCognitivePayload(
+      this._records,
+      this._finishedAt
+    )
+    const latestResults = mergeLatestResult(
+      wx.getStorageSync(LATEST_RESULTS_KEY),
+      payload
+    )
+    wx.setStorageSync(LATEST_RESULTS_KEY, latestResults)
+
     this.setData({
       phase: 'result',
       running: false,
@@ -221,9 +235,7 @@ Page({
       syncStatus: '同步中'
     })
 
-    return this._syncResult(
-      buildCognitivePayload(this._records, this._finishedAt)
-    )
+    return this._syncResult(payload)
   },
 
   async _syncResult(payload) {
