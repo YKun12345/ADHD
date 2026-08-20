@@ -56,7 +56,7 @@ function createLocalDashboard(cache = {}) {
 }
 
 function getScaleAvailability(patientType) {
-  if (patientType === 'adult') {
+  if (patientType === 'adult' || patientType === 'child') {
     return {
       available: true,
       statusLabel: '开始评估',
@@ -66,9 +66,7 @@ function getScaleAvailability(patientType) {
 
   return {
     available: false,
-    statusLabel: patientType === 'child'
-      ? 'D5 开放'
-      : '按计划开发'
+    statusLabel: '按计划开发'
   }
 }
 

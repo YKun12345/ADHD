@@ -98,8 +98,8 @@ assert.equal(adultScaleEntry.url, '/pages/scale/index')
 const childScaleTask = buildHomeTasks('child').find(
   (item) => item.id === 'scale'
 )
-assert.equal(childScaleTask.available, false)
-assert.equal(childScaleTask.statusLabel, 'D5 开放')
-assert.equal(Object.hasOwn(childScaleTask, 'url'), false)
+assert.equal(childScaleTask.available, true)
+assert.equal(childScaleTask.statusLabel, '开始评估')
+assert.equal(childScaleTask.url, '/pages/scale/index')
 
 console.log('患者首页进度数据测试全部通过')

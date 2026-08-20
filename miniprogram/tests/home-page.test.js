@@ -185,6 +185,25 @@ async function run() {
     }
   ])
 
+  reset()
+  storage.current_user.patient_profile = {
+    patient_type: 'child'
+  }
+  const childNavigationPage = createPage()
+  childNavigationPage.onLoad()
+  childNavigationPage.handleTaskTap({
+    currentTarget: {
+      dataset: {
+        id: 'scale'
+      }
+    }
+  })
+  assert.deepEqual(calls.navigateTo, [
+    {
+      url: '/pages/scale/index'
+    }
+  ])
+
   console.log('患者首页控制逻辑测试全部通过')
 }
 
