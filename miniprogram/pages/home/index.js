@@ -1,55 +1,25 @@
-// pages/home/index.js
+const { request } = require('../../utils/request')
+const {
+  createLocalDashboard,
+  normalizeDashboardStatus,
+  buildHomeTasks,
+  buildQuickEntries
+} = require('../../utils/home-dashboard')
+
 Page({
   data: {
     userName: '患者',
     currentDay: 1,
     totalDays: 14,
-    completedDays: 0,
+    completedDays: [],
+    completedCount: 0,
     progressPercent: 0,
-
-    tasks: [
-      {
-        id: 'scale',
-        icon: '量',
-        title: '行为量表',
-        description: '完成今日注意力行为评估'
-      },
-      {
-        id: 'cognitive',
-        icon: '测',
-        title: '认知测试',
-        description: '完成反应力与注意力测试'
-      },
-      {
-        id: 'tracking',
-        icon: '记',
-        title: '每日追踪',
-        description: '记录睡眠、情绪和用药情况'
-      }
-    ],
-
-    quickEntries: [
-      {
-        id: 'scale',
-        icon: '量',
-        title: '行为量表'
-      },
-      {
-        id: 'cognitive',
-        icon: '测',
-        title: '认知测试'
-      },
-      {
-        id: 'tracking',
-        icon: '踪',
-        title: '14天追踪'
-      },
-      {
-        id: 'report',
-        icon: '报',
-        title: '综合报告'
-      }
-    ]
+    dashboardSource: 'local',
+    sourceLabel: '本地计划',
+    statusMessage: '',
+    loadingDashboard: false,
+    tasks: buildHomeTasks(),
+    quickEntries: buildQuickEntries()
   },
 
   onLoad() {
@@ -62,21 +32,72 @@ Page({
     }
   },
 
-  handleTaskTap(event) {
-    const title = event.currentTarget.dataset.title
+  onShow() {
+    return this.refreshDashboard()
+  },
 
-    wx.showToast({
-      title: `${title}功能开发中`,
-      icon: 'none'
+  async refreshDashboard() {
+    const cache = wx.getStorageSync('patient_dashboard_cache')
+    const localDashboard = createLocalDashboard(cache)
+
+    this.setData({
+      ...localDashboard,
+      statusMessage: '',
+      loadingDashboard: true
+    })
+
+    try {
+      const response = await request({
+        url: '/patient/dashboard_status',
+        method: 'GET'
+      })
+      const serverDashboard = normalizeDashboardStatus(response)
+
+      this.setData({
+        ...serverDashboard,
+        statusMessage: '',
+        loadingDashboard: false
+      })
+
+      wx.setStorageSync('patient_dashboard_cache', {
+        currentDay: serverDashboard.currentDay,
+        completedDays: serverDashboard.completedDays
+      })
+    } catch (error) {
+      this.setData({
+        statusMessage: '暂时无法同步，当前展示本地计划',
+        loadingDashboard: false
+      })
+    }
+  },
+
+  openHomeItem(collection, id) {
+    const item = collection.find((entry) => entry.id === id)
+
+    if (!item || !item.available || !item.url) {
+      wx.showToast({
+        title: '该功能正在按计划开发',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.navigateTo({
+      url: item.url
     })
   },
 
-  handleEntryTap(event) {
-    const title = event.currentTarget.dataset.title
+  handleTaskTap(event) {
+    this.openHomeItem(
+      this.data.tasks,
+      event.currentTarget.dataset.id
+    )
+  },
 
-    wx.showToast({
-      title: `${title}功能开发中`,
-      icon: 'none'
-    })
+  handleEntryTap(event) {
+    this.openHomeItem(
+      this.data.quickEntries,
+      event.currentTarget.dataset.id
+    )
   }
 })
