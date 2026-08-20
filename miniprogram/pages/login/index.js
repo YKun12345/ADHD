@@ -19,6 +19,12 @@ Page({
     })
   },
 
+  goToRegister() {
+    wx.navigateTo({
+      url: '/pages/register/index'
+    })
+  },
+
   async handleLogin() {
     const identifier = this.data.identifier.trim()
     const password = this.data.password

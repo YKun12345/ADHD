@@ -1,0 +1,19 @@
+<view class="register-page">
+  <view class="register-header">
+    <text class="register-title">创建患者账号</text>
+    <text class="register-subtitle">
+      完善基础信息，开始14天辅助筛查计划
+    </text>
+  </view>
+
+  <view class="register-card">
+    <text class="section-title">基本信息</text>
+    <text class="section-description">
+      注册表单将在下一步填写
+    </text>
+  </view>
+
+  <text class="medical-tip">
+    本平台仅用于辅助筛查，不替代专业医生诊断
+  </text>
+</view>

@@ -1,7 +1,8 @@
 {
   "pages": [
     "pages/login/index",
-    "pages/home/index"
+    "pages/home/index",
+    "pages/register/index"
   ],
   "window": {
     "navigationBarTitleText": "ADHD智慧辅助诊断",

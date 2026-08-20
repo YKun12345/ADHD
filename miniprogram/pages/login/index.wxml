@@ -35,7 +35,9 @@
       登录
     </button>
 
-    <text class="login-tip">首次使用请先注册患者账号</text>
+    <text class="login-tip" bindtap="goToRegister">
+  首次使用请先注册患者账号
+</text>
   </view>
 
   <text class="disclaimer">
