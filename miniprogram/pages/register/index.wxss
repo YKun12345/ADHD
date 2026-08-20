@@ -223,7 +223,12 @@ page {
 .register-button {
   margin-top: 34rpx;
   height: 92rpx;
-  line-height: 92rpx;
+  box-sizing: border-box;
+  padding: 0 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
   border-radius: 18rpx;
   color: #ffffff;
   background: #17324d;

@@ -88,4 +88,13 @@ assert.equal(
   '注册表单不能用 fixed 定位锁死页面滚动'
 )
 
+const registerButtonRule = wxss.match(
+  /\.register-button\s*\{([\s\S]*?)\}/
+)
+assert.ok(registerButtonRule, 'WXSS 缺少注册按钮规则')
+assert.match(registerButtonRule[1], /display:\s*flex/)
+assert.match(registerButtonRule[1], /align-items:\s*center/)
+assert.match(registerButtonRule[1], /justify-content:\s*center/)
+assert.doesNotMatch(registerButtonRule[1], /line-height:\s*92rpx/)
+
 console.log('注册页面结构测试全部通过')
