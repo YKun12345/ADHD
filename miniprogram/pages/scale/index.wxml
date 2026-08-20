@@ -1,0 +1,99 @@
+<view class="scale-page">
+  <view class="scale-header">
+    <text class="scale-kicker">行为量表 · 成人版</text>
+    <text class="scale-title">ASRS 成人自评量表</text>
+    <text class="scale-subtitle">
+      请根据近 6 个月的实际情况作答，预计 {{estimatedMinutes}} 分钟
+    </text>
+  </view>
+
+  <view class="unsupported-card" wx:if="{{!patientSupported}}">
+    <view class="unsupported-icon">!</view>
+    <text class="unsupported-title">当前量表不适用于该患者</text>
+    <text class="unsupported-message">{{unsupportedMessage}}</text>
+    <button class="back-button" bindtap="goBack">返回患者首页</button>
+  </view>
+
+  <view class="result-card" wx:elif="{{showResult}}">
+    <view class="result-icon">✓</view>
+    <text class="result-title">量表已完成</text>
+    <view class="result-summary-row">
+      <view class="result-stat">
+        <text class="result-stat-label">总分</text>
+        <text class="result-stat-value">{{result.total_score}}</text>
+      </view>
+      <view class="result-stat">
+        <text class="result-stat-label">风险等级</text>
+        <text class="result-stat-value result-risk">
+          {{result.risk_level}}
+        </text>
+      </view>
+    </view>
+    <text class="result-section-title">结果说明</text>
+    <text class="result-summary">{{result.summary}}</text>
+    <text class="result-section-title">后续建议</text>
+    <view class="recommendation-list">
+      <view
+        class="recommendation-item"
+        wx:for="{{result.recommendations}}"
+        wx:key="index"
+      >
+        <text class="recommendation-dot">•</text>
+        <text class="recommendation-text">{{item}}</text>
+      </view>
+    </view>
+    <button class="back-button" bindtap="goBack">返回患者首页</button>
+  </view>
+
+  <view class="scale-card" wx:else>
+    <view class="scale-progress-header">
+      <text class="scale-progress-text">
+        {{questionNumber}} / {{totalQuestions}}
+      </text>
+      <text class="draft-label">答案自动保存在本机</text>
+    </view>
+
+    <view class="scale-progress-track">
+      <view
+        class="scale-progress-value"
+        style="width: {{progressPercent}}%;"
+      ></view>
+    </view>
+
+    <view class="question-section">
+      <text class="question-number">第 {{questionNumber}} 题</text>
+      <text class="question-text">{{currentQuestion}}</text>
+    </view>
+
+    <view class="option-list">
+      <button
+        class="option-button {{selectedValue === item.value ? 'option-button--selected' : ''}}"
+        wx:for="{{options}}"
+        wx:key="value"
+        data-value="{{item.value}}"
+        bindtap="selectOption"
+      >
+        <text class="option-marker">{{item.value}}</text>
+        <text class="option-label">{{item.label}}</text>
+      </button>
+    </view>
+
+    <view class="navigation-row">
+      <button
+        class="navigation-button navigation-button--secondary"
+        disabled="{{isFirstQuestion || submitting}}"
+        bindtap="goPrevious"
+      >上一题</button>
+      <button
+        class="navigation-button navigation-button--primary"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+        bindtap="goNext"
+      >{{isLastQuestion ? '提交量表' : '下一题'}}</button>
+    </view>
+  </view>
+
+  <text class="medical-tip">
+    本量表结果仅用于辅助筛查，不替代专业医生诊断
+  </text>
+</view>
