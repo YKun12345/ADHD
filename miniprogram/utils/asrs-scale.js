@@ -1,9 +1,12 @@
+const { createScaleSession } = require('./scale-session')
+
 const ASRS_DRAFT_KEY = 'scale_draft_asrs'
 
 const ASRS_CONFIG = {
   title: 'ASRS 成人自评量表',
   scaleType: 'ASRS',
   respondentType: 'self',
+  maxScore: 4,
   estimatedMinutes: 5,
   options: [
     { label: '从不', value: 0 },
@@ -34,88 +37,12 @@ const ASRS_CONFIG = {
   ]
 }
 
-function isValidAnswer(value) {
-  return Number.isInteger(value) && value >= 0 && value <= 4
-}
-
-function normalizeDraftAnswers(value) {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  const answers = []
-  const maximumLength = Math.min(
-    value.length,
-    ASRS_CONFIG.questions.length
-  )
-
-  for (let index = 0; index < maximumLength; index += 1) {
-    if (!isValidAnswer(value[index])) {
-      break
-    }
-
-    answers.push(value[index])
-  }
-
-  return answers
-}
-
-function setAnswer(answers, index, value) {
-  const nextAnswers = Array.isArray(answers)
-    ? answers.slice()
-    : []
-
-  if (
-    !Number.isInteger(index) ||
-    index < 0 ||
-    index >= ASRS_CONFIG.questions.length ||
-    !isValidAnswer(value)
-  ) {
-    return nextAnswers
-  }
-
-  nextAnswers[index] = value
-  return nextAnswers
-}
-
-function getQuestionState(index, answers = []) {
-  const lastIndex = ASRS_CONFIG.questions.length - 1
-  const currentIndex = Number.isInteger(index)
-    ? Math.min(lastIndex, Math.max(0, index))
-    : 0
-  const selectedValue = isValidAnswer(answers[currentIndex])
-    ? answers[currentIndex]
-    : null
-
-  return {
-    currentIndex,
-    questionNumber: currentIndex + 1,
-    totalQuestions: ASRS_CONFIG.questions.length,
-    currentQuestion: ASRS_CONFIG.questions[currentIndex],
-    selectedValue,
-    progressPercent: Math.round(
-      ((currentIndex + 1) / ASRS_CONFIG.questions.length) * 100
-    ),
-    isFirstQuestion: currentIndex === 0,
-    isLastQuestion: currentIndex === lastIndex
-  }
-}
-
-function buildScalePayload(answers) {
-  if (
-    !Array.isArray(answers) ||
-    answers.length !== ASRS_CONFIG.questions.length ||
-    !answers.every(isValidAnswer)
-  ) {
-    return null
-  }
-
-  return {
-    scale_type: ASRS_CONFIG.scaleType,
-    respondent_type: ASRS_CONFIG.respondentType,
-    answers: answers.slice()
-  }
-}
+const {
+  normalizeDraftAnswers,
+  setAnswer,
+  getQuestionState,
+  buildScalePayload
+} = createScaleSession(ASRS_CONFIG)
 
 module.exports = {
   ASRS_DRAFT_KEY,
