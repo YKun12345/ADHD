@@ -85,9 +85,21 @@ function getCognitiveAvailability(patientType) {
   }
 }
 
+function getTrackingAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '开始记录',
+      url: '/pages/tracking/index'
+    }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
+  const trackingAvailability = getTrackingAvailability(patientType)
 
   return [
     {
@@ -109,8 +121,7 @@ function buildHomeTasks(patientType = '') {
       icon: '记',
       title: '每日追踪',
       description: '记录睡眠、情绪和用药情况',
-      available: false,
-      statusLabel: '按计划开发'
+      ...trackingAvailability
     }
   ]
 }
@@ -118,6 +129,7 @@ function buildHomeTasks(patientType = '') {
 function buildQuickEntries(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
+  const trackingAvailability = getTrackingAvailability(patientType)
 
   return [
     {
@@ -136,8 +148,7 @@ function buildQuickEntries(patientType = '') {
       id: 'tracking',
       icon: '踪',
       title: '14天追踪',
-      available: false,
-      statusLabel: '按计划开发'
+      ...trackingAvailability
     },
     {
       id: 'report',

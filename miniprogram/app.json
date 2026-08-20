@@ -6,7 +6,8 @@
     "pages/scale/index",
     "pages/cognitive-center/index",
     "pages/cognitive/index",
-    "pages/stroop/index"
+    "pages/stroop/index",
+    "pages/tracking/index"
   ],
   "window": {
     "navigationBarTitleText": "ADHD智慧辅助诊断",

@@ -4,6 +4,8 @@ const path = require('node:path')
 const directory = path.join(__dirname, '..', 'pages', 'tracking')
 const wxml = fs.readFileSync(path.join(directory, 'index.wxml'), 'utf8')
 const wxss = fs.readFileSync(path.join(directory, 'index.wxss'), 'utf8')
+const appConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8'))
+assert.equal(appConfig.pages.includes('pages/tracking/index'), true, 'app.json 缺少 tracking 路由')
 
 const fragments = [
   '14天每日追踪', '{{completedCount}} / {{totalDays}}',

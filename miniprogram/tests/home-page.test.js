@@ -195,6 +195,8 @@ async function run() {
   assert.deepEqual(calls.navigateTo.at(-1), {
     url: '/pages/cognitive-center/index'
   })
+  adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'tracking' } } })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/tracking/index' })
 
   reset()
   storage.current_user.patient_profile = {
@@ -225,6 +227,8 @@ async function run() {
   assert.deepEqual(calls.navigateTo.at(-1), {
     url: '/pages/cognitive-center/index'
   })
+  childNavigationPage.handleTaskTap({ currentTarget: { dataset: { id: 'tracking' } } })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/tracking/index' })
 
   console.log('患者首页控制逻辑测试全部通过')
 }
