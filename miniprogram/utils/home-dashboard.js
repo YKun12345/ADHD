@@ -55,15 +55,33 @@ function createLocalDashboard(cache = {}) {
   return normalizeDashboardStatus(cache, 'local')
 }
 
-function buildHomeTasks() {
+function getScaleAvailability(patientType) {
+  if (patientType === 'adult') {
+    return {
+      available: true,
+      statusLabel: '开始评估',
+      url: '/pages/scale/index'
+    }
+  }
+
+  return {
+    available: false,
+    statusLabel: patientType === 'child'
+      ? 'D5 开放'
+      : '按计划开发'
+  }
+}
+
+function buildHomeTasks(patientType = '') {
+  const scaleAvailability = getScaleAvailability(patientType)
+
   return [
     {
       id: 'scale',
       icon: '量',
       title: '行为量表',
       description: '完成今日注意力行为评估',
-      available: false,
-      statusLabel: '按计划开发'
+      ...scaleAvailability
     },
     {
       id: 'cognitive',
@@ -84,14 +102,15 @@ function buildHomeTasks() {
   ]
 }
 
-function buildQuickEntries() {
+function buildQuickEntries(patientType = '') {
+  const scaleAvailability = getScaleAvailability(patientType)
+
   return [
     {
       id: 'scale',
       icon: '量',
       title: '行为量表',
-      available: false,
-      statusLabel: '按计划开发'
+      ...scaleAvailability
     },
     {
       id: 'cognitive',

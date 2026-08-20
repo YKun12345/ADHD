@@ -17,6 +17,18 @@ const wxss = fs.readFileSync(
   path.join(pageDirectory, 'index.wxss'),
   'utf8'
 )
+const appConfig = JSON.parse(
+  fs.readFileSync(
+    path.join(__dirname, '..', 'app.json'),
+    'utf8'
+  )
+)
+
+assert.equal(
+  appConfig.pages.includes('pages/scale/index'),
+  true,
+  'app.json 缺少 pages/scale/index 路由'
+)
 
 const requiredWxml = [
   'ASRS 成人自评量表',

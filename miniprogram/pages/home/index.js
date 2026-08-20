@@ -25,11 +25,22 @@ Page({
   onLoad() {
     const user = wx.getStorageSync('current_user')
 
-    if (user && user.full_name) {
-      this.setData({
-        userName: user.full_name
-      })
+    if (!user) {
+      return
     }
+
+    const patientProfile = user.patient_profile || {}
+    const patientType = String(
+      patientProfile.patient_type || ''
+    ).toLowerCase()
+
+    this.setData({
+      ...(user.full_name
+        ? { userName: user.full_name }
+        : {}),
+      tasks: buildHomeTasks(patientType),
+      quickEntries: buildQuickEntries(patientType)
+    })
   },
 
   onShow() {

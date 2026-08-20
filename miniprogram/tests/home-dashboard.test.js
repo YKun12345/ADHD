@@ -78,4 +78,28 @@ assert.equal(entries.every((item) => item.available === false), true)
 assert.equal(entries.every((item) => item.statusLabel === '按计划开发'), true)
 assert.equal(entries.some((item) => Object.hasOwn(item, 'url')), false)
 
+const adultTasks = buildHomeTasks('adult')
+const adultScaleTask = adultTasks.find((item) => item.id === 'scale')
+assert.equal(adultScaleTask.available, true)
+assert.equal(adultScaleTask.statusLabel, '开始评估')
+assert.equal(adultScaleTask.url, '/pages/scale/index')
+assert.equal(
+  adultTasks.find((item) => item.id === 'cognitive').available,
+  false
+)
+
+const adultEntries = buildQuickEntries('adult')
+const adultScaleEntry = adultEntries.find(
+  (item) => item.id === 'scale'
+)
+assert.equal(adultScaleEntry.available, true)
+assert.equal(adultScaleEntry.url, '/pages/scale/index')
+
+const childScaleTask = buildHomeTasks('child').find(
+  (item) => item.id === 'scale'
+)
+assert.equal(childScaleTask.available, false)
+assert.equal(childScaleTask.statusLabel, 'D5 开放')
+assert.equal(Object.hasOwn(childScaleTask, 'url'), false)
+
 console.log('患者首页进度数据测试全部通过')
