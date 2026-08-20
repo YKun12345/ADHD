@@ -51,6 +51,21 @@ page {
   font-size: 27rpx;
 }
 
+.progress-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.dashboard-source {
+  margin-top: 8rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  color: #17324d;
+  background: #cfe4df;
+  font-size: 20rpx;
+}
+
 .progress-track {
   height: 18rpx;
   margin-top: 30rpx;
@@ -60,10 +75,10 @@ page {
 }
 
 .progress-value {
-  width: 0%;
   height: 100%;
   border-radius: 20rpx;
   background: #73c7b6;
+  transition: width 240ms ease;
 }
 
 .progress-tip {
@@ -72,6 +87,14 @@ page {
   color: #d9e5ec;
   font-size: 24rpx;
   line-height: 1.6;
+}
+
+.dashboard-message {
+  display: block;
+  margin-top: 14rpx;
+  color: #f5dca8;
+  font-size: 22rpx;
+  line-height: 1.5;
 }
 
 .section-header {
@@ -111,6 +134,11 @@ page {
   border-bottom: none;
 }
 
+.task-item--disabled,
+.quick-item--disabled {
+  opacity: 0.72;
+}
+
 .task-icon,
 .quick-icon {
   display: flex;
@@ -145,6 +173,18 @@ page {
   margin-top: 10rpx;
   color: #7a8996;
   font-size: 24rpx;
+}
+
+.task-tail {
+  display: flex;
+  align-items: center;
+  margin-left: 16rpx;
+}
+
+.task-status,
+.entry-status {
+  color: #8795a3;
+  font-size: 20rpx;
 }
 
 .task-arrow {
@@ -182,10 +222,20 @@ page {
 }
 
 .quick-title {
-  margin-left: 20rpx;
   color: #17324d;
   font-size: 27rpx;
   font-weight: 600;
+}
+
+.quick-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20rpx;
+}
+
+.entry-status {
+  margin-top: 8rpx;
 }
 
 .medical-tip {

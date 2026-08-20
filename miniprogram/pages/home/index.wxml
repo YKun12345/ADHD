@@ -9,18 +9,31 @@
   <view class="progress-card">
     <view class="card-header">
       <text class="card-title">14天任务进度</text>
-      <text class="progress-number">
-        {{completedDays}} / {{totalDays}} 天
-      </text>
+      <view class="progress-meta">
+        <text class="progress-number">
+          {{completedCount}} / {{totalDays}} 天
+        </text>
+        <text class="dashboard-source">
+          {{sourceLabel}}
+        </text>
+      </view>
     </view>
 
     <view class="progress-track">
-  <view class="progress-value"></view>
-</view>
+      <view
+        class="progress-value"
+        style="width: {{progressPercent}}%;"
+      ></view>
+    </view>
 
     <text class="progress-tip">
       坚持完成每日任务，有助于获得更完整的评估结果
     </text>
+
+    <text
+      class="dashboard-message"
+      wx:if="{{statusMessage}}"
+    >{{statusMessage}}</text>
   </view>
 
   <view class="section-header">
@@ -30,10 +43,10 @@
 
   <view class="task-list">
     <view
-      class="task-item"
+      class="task-item {{item.available ? '' : 'task-item--disabled'}}"
       wx:for="{{tasks}}"
       wx:key="id"
-      data-title="{{item.title}}"
+      data-id="{{item.id}}"
       bindtap="handleTaskTap"
     >
       <view class="task-icon">{{item.icon}}</view>
@@ -43,7 +56,10 @@
         <text class="task-description">{{item.description}}</text>
       </view>
 
-      <text class="task-arrow">›</text>
+      <view class="task-tail">
+        <text class="task-status">{{item.statusLabel}}</text>
+        <text class="task-arrow">›</text>
+      </view>
     </view>
   </view>
 
@@ -53,14 +69,17 @@
 
   <view class="quick-grid">
     <view
-      class="quick-item"
+      class="quick-item {{item.available ? '' : 'quick-item--disabled'}}"
       wx:for="{{quickEntries}}"
       wx:key="id"
-      data-title="{{item.title}}"
+      data-id="{{item.id}}"
       bindtap="handleEntryTap"
     >
       <view class="quick-icon">{{item.icon}}</view>
-      <text class="quick-title">{{item.title}}</text>
+      <view class="quick-content">
+        <text class="quick-title">{{item.title}}</text>
+        <text class="entry-status">{{item.statusLabel}}</text>
+      </view>
     </view>
   </view>
 
