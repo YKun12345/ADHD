@@ -85,7 +85,15 @@ assert.equal(adultScaleTask.statusLabel, '开始评估')
 assert.equal(adultScaleTask.url, '/pages/scale/index')
 assert.equal(
   adultTasks.find((item) => item.id === 'cognitive').available,
-  false
+  true
+)
+assert.equal(
+  adultTasks.find((item) => item.id === 'cognitive').statusLabel,
+  '开始测试'
+)
+assert.equal(
+  adultTasks.find((item) => item.id === 'cognitive').url,
+  '/pages/cognitive/index'
 )
 
 const adultEntries = buildQuickEntries('adult')
@@ -94,6 +102,10 @@ const adultScaleEntry = adultEntries.find(
 )
 assert.equal(adultScaleEntry.available, true)
 assert.equal(adultScaleEntry.url, '/pages/scale/index')
+assert.equal(
+  adultEntries.find((item) => item.id === 'cognitive').url,
+  '/pages/cognitive/index'
+)
 
 const childScaleTask = buildHomeTasks('child').find(
   (item) => item.id === 'scale'
@@ -101,5 +113,12 @@ const childScaleTask = buildHomeTasks('child').find(
 assert.equal(childScaleTask.available, true)
 assert.equal(childScaleTask.statusLabel, '开始评估')
 assert.equal(childScaleTask.url, '/pages/scale/index')
+
+const childCognitiveEntry = buildQuickEntries('child').find(
+  (item) => item.id === 'cognitive'
+)
+assert.equal(childCognitiveEntry.available, true)
+assert.equal(childCognitiveEntry.statusLabel, '开始测试')
+assert.equal(childCognitiveEntry.url, '/pages/cognitive/index')
 
 console.log('患者首页进度数据测试全部通过')

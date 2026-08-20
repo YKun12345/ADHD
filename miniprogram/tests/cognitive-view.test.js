@@ -17,6 +17,18 @@ const wxss = fs.readFileSync(
   path.join(pageDirectory, 'index.wxss'),
   'utf8'
 )
+const appConfig = JSON.parse(
+  fs.readFileSync(
+    path.join(__dirname, '..', 'app.json'),
+    'utf8'
+  )
+)
+
+assert.equal(
+  appConfig.pages.includes('pages/cognitive/index'),
+  true,
+  'app.json 缺少 pages/cognitive/index 路由'
+)
 
 const requiredWxml = [
   'Go / No-Go 认知测试',

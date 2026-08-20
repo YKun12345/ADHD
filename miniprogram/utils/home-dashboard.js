@@ -70,8 +70,24 @@ function getScaleAvailability(patientType) {
   }
 }
 
+function getCognitiveAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '开始测试',
+      url: '/pages/cognitive/index'
+    }
+  }
+
+  return {
+    available: false,
+    statusLabel: '按计划开发'
+  }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
+  const cognitiveAvailability = getCognitiveAvailability(patientType)
 
   return [
     {
@@ -86,8 +102,7 @@ function buildHomeTasks(patientType = '') {
       icon: '测',
       title: '认知测试',
       description: '完成反应力与注意力测试',
-      available: false,
-      statusLabel: '按计划开发'
+      ...cognitiveAvailability
     },
     {
       id: 'tracking',
@@ -102,6 +117,7 @@ function buildHomeTasks(patientType = '') {
 
 function buildQuickEntries(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
+  const cognitiveAvailability = getCognitiveAvailability(patientType)
 
   return [
     {
@@ -114,8 +130,7 @@ function buildQuickEntries(patientType = '') {
       id: 'cognitive',
       icon: '测',
       title: '认知测试',
-      available: false,
-      statusLabel: '按计划开发'
+      ...cognitiveAvailability
     },
     {
       id: 'tracking',

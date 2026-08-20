@@ -185,6 +185,17 @@ async function run() {
     }
   ])
 
+  adultNavigationPage.handleTaskTap({
+    currentTarget: {
+      dataset: {
+        id: 'cognitive'
+      }
+    }
+  })
+  assert.deepEqual(calls.navigateTo.at(-1), {
+    url: '/pages/cognitive/index'
+  })
+
   reset()
   storage.current_user.patient_profile = {
     patient_type: 'child'
@@ -203,6 +214,17 @@ async function run() {
       url: '/pages/scale/index'
     }
   ])
+
+  childNavigationPage.handleEntryTap({
+    currentTarget: {
+      dataset: {
+        id: 'cognitive'
+      }
+    }
+  })
+  assert.deepEqual(calls.navigateTo.at(-1), {
+    url: '/pages/cognitive/index'
+  })
 
   console.log('患者首页控制逻辑测试全部通过')
 }
