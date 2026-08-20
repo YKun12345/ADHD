@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/login/index",
+    "pages/home/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "ADHD智慧辅助诊断",
+    "navigationBarBackgroundColor": "#17324D",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F4F7FA"
+  },
+  "style": "v2",
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

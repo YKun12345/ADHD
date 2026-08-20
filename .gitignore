@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Secrets
+.env
+backend/.env
+
+# Local databases
+*.db
+
+# Node dependencies
+node_modules/
+
+# Generated files
+.codex-tmp/
+downloads/
+uploads/
+*.log
+
+# Large model artifacts
+*.pt
+*.pth
+*.ckpt
+
+# WeChat DevTools local config
+miniprogram/project.private.config.json
+miniprogram/miniprogram_npm/
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>就诊者工作台 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        body.researcher-page {
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+                linear-gradient(180deg, #F4F8FF 0%, #EEF4FB 100%);
+        }
+
+        .researcher-page .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .researcher-page .logo ion-icon,
+        .researcher-page .nav-links a:hover,
+        .researcher-page .nav-links a.active,
+        .researcher-page .user-profile ion-icon {
+            color: #2563EB;
+        }
+
+        .researcher-page .user-profile {
+            background: #EFF6FF;
+            color: #1E3A8A;
+        }
+
+        .patients-page-shell {
+            max-width: 1460px;
+            margin: 0 auto;
+            padding: 7.5rem 2rem 3rem;
+        }
+
+        .patients-hero {
+            text-align: center;
+            padding: 0.45rem 0 1.4rem;
+        }
+
+        .patients-copy {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .patients-copy h1 {
+            margin: 0 0 0.85rem;
+            font-size: 2.9rem;
+            line-height: 1.16;
+            color: #0F172A;
+        }
+
+        .patients-copy p {
+            margin: 0 auto;
+            max-width: 800px;
+            color: #475569;
+            line-height: 1.85;
+            font-size: 1.03rem;
+        }
+
+        .workspace-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(280px, 360px);
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            align-items: stretch;
+        }
+
+        .toolbar-card,
+        .workspace-list-card {
+            background: rgba(255, 255, 255, 0.97);
+            border: 1px solid rgba(191, 219, 254, 0.72);
+            border-radius: 26px;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.05);
+        }
+
+        .toolbar-card {
+            padding: 1.45rem 1.5rem;
+        }
+
+        .toolbar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar-header h2 {
+            margin: 0;
+            font-size: 1.28rem;
+            color: #0F172A;
+        }
+
+        .toolbar-header p {
+            margin: 0.35rem 0 0;
+            color: #64748B;
+            line-height: 1.7;
+            font-size: 0.93rem;
+        }
+
+        .mini-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .bind-patient-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.85rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .bind-patient-input {
+            border: 1.5px solid #CBD5E1;
+            border-radius: 14px;
+            padding: 0.92rem 1rem;
+            font-size: 1rem;
+            background: #F8FAFC;
+            color: #0F172A;
+        }
+
+        .bind-patient-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            background: #FFFFFF;
+        }
+
+        .bind-patient-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 0.92rem 1.3rem;
+            min-width: 138px;
+            background: #2563EB;
+            color: #FFFFFF;
+            font-size: 0.98rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .bind-patient-btn:hover {
+            background: #1D4ED8;
+            transform: translateY(-1px);
+        }
+
+        .bind-patient-btn:disabled {
+            opacity: 0.72;
+            cursor: wait;
+            transform: none;
+        }
+
+        .bind-feedback {
+            min-height: 1.3rem;
+            font-size: 0.9rem;
+        }
+
+        .bind-feedback.success { color: #047857; }
+        .bind-feedback.error { color: #B91C1C; }
+
+        .summary-card {
+            padding: 1.45rem 1.35rem;
+            background: linear-gradient(135deg, #163C8C 0%, #1E3A8A 100%);
+            color: #FFFFFF;
+            box-shadow: 0 18px 34px rgba(30, 58, 138, 0.18);
+        }
+
+        .summary-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.78rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.95rem;
+        }
+
+        .summary-card h3 {
+            margin: 0 0 0.9rem;
+            color: white;
+            font-size: 1.2rem;
+            line-height: 1.45;
+        }
+
+        .summary-value {
+            display: block;
+            font-size: 3rem;
+            line-height: 1;
+            font-weight: 800;
+            margin-bottom: 0.55rem;
+        }
+
+        .summary-value::after {
+            content: " 人";
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.72);
+            margin-left: 0.2rem;
+        }
+
+        .summary-card p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.75;
+            font-size: 0.94rem;
+        }
+
+        .workspace-list-card {
+            padding: 1.45rem;
+        }
+
+        .workspace-list-card .toolbar-header {
+            margin-bottom: 0.9rem;
+        }
+
+        .patient-empty {
+            border: 1px dashed #BFDBFE;
+            border-radius: 18px;
+            padding: 1.25rem;
+            text-align: center;
+            color: #64748B;
+            background: #F8FAFC;
+        }
+
+        .patient-workspace-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 0.8rem;
+        }
+
+        .patient-workspace-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.28fr) minmax(320px, 0.72fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .patient-row-main,
+        .patient-row-side {
+            border-radius: 22px;
+            border: 1px solid rgba(147, 197, 253, 0.78);
+            background: linear-gradient(180deg, #F5FAFF 0%, #EDF6FF 100%);
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.05);
+        }
+
+        .patient-row-main {
+            padding: 1.2rem 1.15rem;
+        }
+
+        .patient-row-main.active-focus {
+            border-color: #93C5FD;
+            box-shadow: 0 18px 30px rgba(37, 99, 235, 0.08);
+        }
+
+        .patient-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .patient-card-top h4 {
+            margin: 0;
+            font-size: 1.15rem;
+            color: #0F172A;
+        }
+
+        .patient-card-sub {
+            color: #64748B;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-top: 0.28rem;
+        }
+
+        .patient-status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.82rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .patient-status-pill.warning {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        .patient-status-pill.success {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .patient-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .tag {
+            display: inline-flex;
+            padding: 0.32rem 0.72rem;
+            border-radius: 999px;
+            background: #DBEAFE;
+            color: #1D4ED8;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .tag.security {
+            background: #E0F2FE;
+            color: #0369A1;
+        }
+
+        .tag.security.success {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .tag.security.warning {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        .tag.security.danger {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+
+        .patient-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .patient-stat {
+            border-radius: 16px;
+            padding: 0.82rem 0.85rem;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+        }
+
+        .patient-stat-label {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #64748B;
+            font-size: 0.79rem;
+            font-weight: 700;
+        }
+
+        .patient-stat-value {
+            color: #0F172A;
+            font-size: 0.93rem;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .patient-focus-box {
+            border-radius: 16px;
+            padding: 0.88rem 0.95rem;
+            background: linear-gradient(135deg, #EEF6FF 0%, #F8FBFF 100%);
+            border: 1px solid #DBEAFE;
+        }
+
+        .patient-focus-label {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #1D4ED8;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .patient-focus-text {
+            color: #334155;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .patient-security-box {
+            margin-top: 0.9rem;
+            border-radius: 18px;
+            padding: 0.95rem 1rem;
+            background: linear-gradient(135deg, #F8FBFF 0%, #F8FAFC 100%);
+            border: 1px solid rgba(191, 219, 254, 0.78);
+        }
+
+        .patient-security-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .patient-security-head strong {
+            color: #0F172A;
+            font-size: 0.98rem;
+        }
+
+        .patient-security-sub {
+            color: #64748B;
+            font-size: 0.84rem;
+            line-height: 1.6;
+            margin-top: 0.2rem;
+        }
+
+        .patient-security-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.34rem 0.82rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: #E0F2FE;
+            color: #0369A1;
+        }
+
+        .patient-security-pill.success {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .patient-security-pill.warning {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        .patient-security-pill.danger {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+
+        .patient-security-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.7rem;
+        }
+
+        .patient-security-item {
+            border-radius: 14px;
+            padding: 0.8rem 0.82rem;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+        }
+
+        .patient-security-item span {
+            display: block;
+            margin-bottom: 0.28rem;
+            color: #64748B;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .patient-security-item strong {
+            color: #0F172A;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .patient-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+
+        .view-report-btn,
+        .view-visualization-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            padding: 0.82rem 1rem;
+            font-size: 0.94rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-report-btn {
+            background: #1E3A8A;
+            color: #FFFFFF;
+            border: none;
+        }
+
+        .view-report-btn:hover {
+            background: #1D4ED8;
+        }
+
+        .view-visualization-btn {
+            background: #F8FAFC;
+            color: #1E3A8A;
+            border: 1px solid #BFDBFE;
+        }
+
+        .view-visualization-btn:hover {
+            background: #EFF6FF;
+            border-color: #93C5FD;
+        }
+
+        .patient-row-side {
+            padding: 0.95rem;
+            display: grid;
+            gap: 0.9rem;
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.98) 0%, rgba(233, 244, 255, 0.98) 100%);
+        }
+
+        .workspace-side-card {
+            border: 1px solid #CFE3FF;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.86);
+            padding: 0.95rem;
+        }
+
+        .workspace-side-card h5 {
+            margin: 0 0 0.38rem;
+            font-size: 1rem;
+            color: #0F172A;
+        }
+
+        .workspace-side-card p {
+            margin: 0;
+            color: #64748B;
+            font-size: 0.88rem;
+            line-height: 1.65;
+        }
+
+        .inline-mini-list {
+            display: grid;
+            gap: 0.65rem;
+            margin-top: 0.8rem;
+        }
+
+        .inline-mini-row {
+            padding: 0.78rem 0.82rem;
+            border-radius: 14px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            color: #334155;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .inline-mini-row strong {
+            color: #0F172A;
+        }
+
+        .inline-empty {
+            margin-top: 0.8rem;
+            color: #94A3B8;
+            font-size: 0.88rem;
+        }
+
+        .inline-task-form {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 0.9rem;
+        }
+
+        .inline-task-form input,
+        .inline-task-form select,
+        .inline-task-form textarea {
+            width: 100%;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 12px;
+            padding: 0.78rem 0.85rem;
+            background: #FFFFFF;
+            color: #0F172A;
+            font-size: 0.9rem;
+        }
+
+        .inline-task-form textarea {
+            resize: vertical;
+            min-height: 74px;
+            line-height: 1.6;
+        }
+
+        .inline-task-form input:focus,
+        .inline-task-form select:focus,
+        .inline-task-form textarea:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .inline-task-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .inline-task-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 0.74rem 0.95rem;
+            background: #2563EB;
+            color: #FFFFFF;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .inline-task-btn:disabled {
+            opacity: 0.72;
+            cursor: wait;
+        }
+
+        .inline-feedback {
+            min-height: 1.2rem;
+            font-size: 0.84rem;
+        }
+
+        .inline-feedback.success { color: #047857; }
+        .inline-feedback.error { color: #B91C1C; }
+
+        .doctor-care-avatar {
+            background: linear-gradient(135deg, #1D4ED8, #60A5FA);
+        }
+
+        .doctor-care-drawer {
+            width: min(980px, calc(100vw - 32px));
+            padding: 0;
+        }
+
+        .doctor-care-shell {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            height: 100%;
+            min-height: 0;
+        }
+
+        .doctor-care-sidebar {
+            border-right: 1px solid rgba(148, 163, 184, 0.14);
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            min-height: 0;
+        }
+
+        .doctor-care-sidebar h4 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: #0F172A;
+        }
+
+        .doctor-care-sidebar p {
+            margin: 0;
+            color: #64748B;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .doctor-care-patient-list {
+            display: grid;
+            gap: 0.7rem;
+            overflow-y: auto;
+            padding-right: 0.2rem;
+        }
+
+        .doctor-care-patient-btn {
+            width: 100%;
+            border: 1px solid #DBEAFE;
+            border-radius: 16px;
+            background: #FFFFFF;
+            padding: 0.85rem 0.9rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .doctor-care-patient-btn:hover,
+        .doctor-care-patient-btn.active {
+            border-color: #60A5FA;
+            background: #EFF6FF;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08);
+        }
+
+        .doctor-care-patient-btn strong {
+            display: block;
+            color: #0F172A;
+            font-size: 0.94rem;
+            margin-bottom: 0.28rem;
+        }
+
+        .doctor-care-patient-btn span {
+            display: block;
+            color: #64748B;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .doctor-care-patient-meta {
+            display: grid;
+            gap: 0.18rem;
+        }
+
+        .doctor-care-patient-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.55rem;
+        }
+
+        .doctor-care-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.52rem;
+            border-radius: 999px;
+            background: #E0F2FE;
+            color: #0369A1;
+            font-size: 0.74rem;
+            font-weight: 700;
+        }
+
+        .doctor-care-badge.unread {
+            background: #DBEAFE;
+            color: #1D4ED8;
+        }
+
+        .doctor-care-badge.ai {
+            background: #EDE9FE;
+            color: #6D28D9;
+        }
+
+        .doctor-care-main {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            gap: 0.85rem;
+        }
+
+        .doctor-care-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+
+        .doctor-care-header h3 {
+            margin: 0;
+            color: #0F172A;
+            font-size: 1.16rem;
+        }
+
+        .doctor-care-header p {
+            margin: 0.2rem 0 0;
+            color: #64748B;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .doctor-care-tabs {
+            display: flex;
+            gap: 0.6rem;
+            flex-shrink: 0;
+        }
+
+        .doctor-care-tab {
+            border: 1px solid #CBD5E1;
+            background: #FFFFFF;
+            color: #475569;
+            border-radius: 999px;
+            padding: 0.62rem 0.95rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .doctor-care-tab.active,
+        .doctor-care-tab:hover {
+            background: #0EA5E9;
+            border-color: #0EA5E9;
+            color: #FFFFFF;
+        }
+
+        .doctor-care-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .doctor-care-thread {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 28%), linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+            border-radius: 22px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .doctor-care-thread.hidden {
+            display: none;
+        }
+
+        .doctor-care-time-divider {
+            align-self: center;
+            margin: 0.2rem 0 0.35rem;
+            padding: 0.22rem 0.72rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid rgba(191, 219, 254, 0.8);
+            color: #94A3B8;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .doctor-care-bubble-row {
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .doctor-care-bubble-row.researcher,
+        .doctor-care-bubble-row.assistant {
+            justify-content: flex-end;
+        }
+
+        .doctor-care-bubble-row.participant,
+        .doctor-care-bubble-row.user {
+            justify-content: flex-start;
+        }
+
+        .doctor-care-bubble {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: auto;
+            min-width: 0;
+            max-width: min(68%, 420px);
+            border-radius: 18px;
+            padding: 0.62rem 0.74rem;
+            line-height: 1.62;
+            font-size: 0.92rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .doctor-care-bubble-row.researcher .doctor-care-bubble {
+            background: linear-gradient(135deg, #2563EB, #1D4ED8);
+            color: #FFFFFF;
+            border-bottom-right-radius: 6px;
+        }
+
+        .doctor-care-bubble-row.participant .doctor-care-bubble,
+        .doctor-care-bubble-row.user .doctor-care-bubble {
+            background: #FFFFFF;
+            color: #334155;
+            border: 1px solid #E2E8F0;
+            border-bottom-left-radius: 6px;
+        }
+
+        .doctor-care-bubble-row.assistant .doctor-care-bubble {
+            background: linear-gradient(135deg, #0EA5E9, #38BDF8);
+            color: #FFFFFF;
+            border-bottom-right-radius: 6px;
+        }
+
+        .doctor-care-bubble-role {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 0.34rem;
+            padding: 0.12rem 0.46rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            font-size: 0.75rem;
+            font-weight: 700;
+            width: auto;
+            max-width: 100%;
+        }
+
+        .doctor-care-bubble-row.participant .doctor-care-bubble-role,
+        .doctor-care-bubble-row.user .doctor-care-bubble-role {
+            background: #EFF6FF;
+            color: #1D4ED8;
+        }
+
+        .doctor-care-bubble-row.assistant .doctor-care-bubble-role {
+            background: rgba(255, 255, 255, 0.22);
+            color: #FFFFFF;
+        }
+
+        .doctor-care-empty {
+            border: 1px dashed #BFDBFE;
+            border-radius: 18px;
+            background: #F8FAFC;
+            padding: 1.2rem;
+            color: #64748B;
+            line-height: 1.65;
+            text-align: center;
+        }
+
+        .doctor-care-form {
+            display: grid;
+            gap: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .doctor-care-form textarea {
+            width: 100%;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 14px;
+            padding: 0.82rem 0.92rem;
+            background: #FFFFFF;
+            color: #0F172A;
+            font-size: 0.94rem;
+            resize: vertical;
+            min-height: 72px;
+            line-height: 1.6;
+        }
+
+        .doctor-care-form textarea:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .doctor-care-form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .doctor-care-feedback {
+            min-height: 1.2rem;
+            font-size: 0.84rem;
+            color: #64748B;
+        }
+
+        .doctor-care-feedback.success { color: #047857; }
+        .doctor-care-feedback.error { color: #B91C1C; }
+
+        .doctor-care-send-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 0.76rem 0.96rem;
+            background: #2563EB;
+            color: #FFFFFF;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .doctor-care-send-btn:disabled {
+            opacity: 0.72;
+            cursor: wait;
+        }
+
+        @media (max-width: 1200px) {
+            .workspace-toolbar,
+            .patient-workspace-row {
+                grid-template-columns: 1fr;
+            }
+
+            .doctor-care-drawer {
+                width: min(760px, calc(100vw - 32px));
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .patients-page-shell {
+                padding-top: 7rem;
+            }
+
+            .bind-patient-row,
+            .patient-stat-grid,
+            .patient-security-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .patient-action-row {
+                flex-direction: column;
+            }
+
+            .view-report-btn,
+            .view-visualization-btn {
+                width: 100%;
+            }
+
+            .doctor-care-drawer {
+                width: min(100vw - 24px, 1000px);
+                top: 12px;
+                right: 12px;
+                bottom: 12px;
+            }
+
+            .doctor-care-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .doctor-care-sidebar {
+                border-right: none;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+                max-height: 220px;
+            }
+        }
+    </style>
+</head>
+<body class="researcher-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="doctor_analysis.html">首页</a></li>
+                <li><a href="doctor_patients.html" class="active">就诊者工作台</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <span id="researcherName">研究人员</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="patients-page-shell">
+        <section class="patients-hero">
+            <div class="patients-copy">
+                <h1>就诊者工作台</h1>
+                <p>从就诊者工作台进入综合分析、影像处理与可视化，不再把研究端拆成多个独立工具。每位就诊者占一行，左侧看当前状态，右侧直接完成个性化任务推送。</p>
+            </div>
+        </section>
+
+        <section class="workspace-toolbar">
+            <!-- 研究人员 AI 助手卡片 -->
+            <div class="toolbar-card" id="aiAssistantCard" style="grid-column: 1 / -1; background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 60%, #4F46E5 100%); border:none; margin-bottom:0;">
+                <div style="display:grid; grid-template-columns:1fr auto; gap:1.5rem; align-items:center;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                            <div style="width:44px; height:44px; background:rgba(255,255,255,0.15); border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <ion-icon name="sparkles" style="color:white; font-size:1.4rem;"></ion-icon>
+                            </div>
+                            <div>
+                                <strong style="display:block; color:white; font-size:1.1rem;">AI 研究助手</strong>
+                                <span style="color:rgba(255,255,255,0.75); font-size:0.82rem;">就诊者群体风险摘要 + 优先关注排序</span>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:0.75rem;" id="aiAssistantStats">
+                            <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
+                                <span style="display:block; font-size:1.8rem; font-weight:800; color:white; line-height:1;" id="statHighRisk">--</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">高风险就诊者</span>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
+                                <span style="display:block; font-size:1.8rem; font-weight:800; color:#FDE68A; line-height:1;" id="statPending">--</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">待补冲任务</span>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
+                                <span style="display:block; font-size:1.8rem; font-weight:800; color:#6EE7B7; line-height:1;" id="statComplete">--</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">山路完整</span>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
+                                <span style="display:block; font-size:1.8rem; font-weight:800; color:white; line-height:1;" id="statTotal">--</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">总就诊者</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem; min-width:240px; background:rgba(255,255,255,0.08); border-radius:18px; padding:1.1rem;">
+                        <p style="color:rgba(255,255,255,0.82); font-size:0.85rem; line-height:1.65; margin:0;" id="aiAssistantSuggestion">
+                            正在分析就诊者数据...
+                        </p>
+                        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                            <button id="refreshAiSummaryBtn" onclick="refreshAiSummary()" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.6rem 1rem; border-radius:12px; background:white; color:#1E3A8A; border:none; font-size:0.85rem; font-weight:800; cursor:pointer; transition:opacity 0.2s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                                <ion-icon name="refresh-outline"></ion-icon> 剛新摘要
+                            </button>
+                            <button onclick="document.getElementById('aiPriorityModal').style.display='flex'" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.6rem 1rem; border-radius:12px; background:rgba(255,255,255,0.18); color:white; border:1.5px solid rgba(255,255,255,0.3); font-size:0.85rem; font-weight:700; cursor:pointer; transition:opacity 0.2s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                                <ion-icon name="list-outline"></ion-icon> 优先决策
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="toolbar-card">
+                <div class="toolbar-header">
+                    <div>
+                        <h2>添加就诊者档案</h2>
+                        <p>输入就诊者注册邮箱后即可把他纳入你的工作台，后续综合分析、影像分析和影像可视化都会自动带上这位就诊者的上下文。</p>
+                    </div>
+                    <span class="mini-pill" id="patientListCount">当前 0 人</span>
+                </div>
+                <div class="bind-patient-row">
+                    <input id="patientEmailInput" class="bind-patient-input" type="email" placeholder="请输入就诊者注册邮箱，例如 patient@example.com" />
+                    <button id="bindPatientBtn" class="bind-patient-btn" type="button">添加就诊者档案</button>
+                </div>
+                <div id="bindFeedback" class="bind-feedback"></div>
+            </div>
+
+            <aside class="toolbar-card summary-card">
+                <span class="summary-eyebrow">Workspace Overview</span>
+                <h3>就诊者主线已经收拢到同一个工作台中，后续分析和可视化都从这里进入。</h3>
+                <span class="summary-value" id="patientCountHero">0</span>
+                <p>先选就诊者，再查看综合分析，再进入影像分析和影像可视化。这样研究端的流程就和答辩里要讲的“就诊者中心化分析链路”完全一致了。</p>
+            </aside>
+        </section>
+
+        <section class="workspace-list-card">
+            <div class="toolbar-header">
+                <div>
+                    <h2>就诊者分析工作台</h2>
+                    <p>每位就诊者独占一行。左侧是当前画像与主要状态，右侧直接完成个性化任务推送。通知与就诊者AI记录已经收拢到右下角独立模块里统一查看。</p>
+                </div>
+            </div>
+
+            <div id="patientEmptyState" class="patient-empty">还没有就诊者进入工作台。先通过上方“添加就诊者档案”把就诊者纳入研究端工作流。</div>
+            <div id="myPatientList" class="patient-workspace-list"></div>
+        </section>
+    </main>
+
+    <div class="floating-ai" id="doctorCareBubble">
+        <div class="ai-avatar doctor-care-avatar" id="doctorCareAvatar" title="查看就诊者通知与AI记录">
+            <ion-icon name="people"></ion-icon>
+        </div>
+        <div class="ai-tooltip" id="doctorCareTooltip">
+            <div class="ai-tooltip-head">
+                <strong>就诊者沟通模块</strong>
+                <button class="btn-close" id="closeDoctorCareTooltip"><ion-icon name="close"></ion-icon></button>
+            </div>
+            <p>从这里统一查看你管理的就诊者通知和 AI 交流记录，不用再在每个就诊者卡片里来回切换。</p>
+            <div class="ai-tooltip-actions">
+                <button class="ai-tooltip-btn" id="openDoctorCareDrawerBtn" type="button">查看记录</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-ai-overlay hidden" id="doctorCareOverlay"></div>
+    <aside class="floating-ai-drawer doctor-care-drawer" id="doctorCareDrawer" aria-hidden="true">
+        <div class="doctor-care-shell">
+            <section class="doctor-care-sidebar">
+                <div>
+                    <div class="ai-status-kicker">Care Workspace</div>
+                    <h4>就诊者列表</h4>
+                    <p>先选一位就诊者，再查看“通知”或“就诊者AI记录”。</p>
+                </div>
+                <div id="doctorCarePatientList" class="doctor-care-patient-list"></div>
+            </section>
+
+            <section class="doctor-care-main">
+                <div class="doctor-care-header">
+                    <div>
+                        <div class="ai-status-kicker">Conversation Module</div>
+                        <h3 id="doctorCareTitle">就诊者沟通模块</h3>
+                        <p id="doctorCareHint">请选择一位当前研究人员正在管理的就诊者。</p>
+                    </div>
+                    <button class="icon-btn" id="closeDoctorCareDrawerBtn" type="button" title="关闭">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+
+                <div class="doctor-care-tabs">
+                    <button class="doctor-care-tab active" type="button" data-care-tab="messages">通知</button>
+                    <button class="doctor-care-tab" type="button" data-care-tab="logs">就诊者AI记录</button>
+                </div>
+
+                <div class="doctor-care-body">
+                    <div id="doctorCareMessageThread" class="doctor-care-thread"></div>
+                    <div id="doctorCareAiLogThread" class="doctor-care-thread hidden"></div>
+
+                    <div id="doctorCareEmpty" class="doctor-care-empty">请选择一位就诊者后开始查看通知或 AI 交流记录。</div>
+
+                    <form id="doctorCareMessageForm" class="doctor-care-form">
+                        <textarea id="doctorCareMessageInput" placeholder="给当前就诊者发一条通知，比如提醒补做量表、继续14天追踪，或者让他查看最新报告。"></textarea>
+                        <div class="doctor-care-form-actions">
+                            <div id="doctorCareFeedback" class="doctor-care-feedback"></div>
+                            <button id="doctorCareSendBtn" class="doctor-care-send-btn" type="submit">发送通知</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </aside>
+
+    <!-- AI 优先决策 Modal -->
+    <div id="aiPriorityModal" style="display:none; position:fixed; inset:0; z-index:9000;
+        background:rgba(15,23,42,0.55); backdrop-filter:blur(6px);
+        align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:28px; padding:2rem; max-width:600px;
+                    width:calc(100% - 2rem); max-height:85vh; overflow-y:auto;
+                    box-shadow:0 32px 80px rgba(0,0,0,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 style="margin:0; color:#0F172A; font-size:1.25rem;">🧠 AI 优先决策面板</h3>
+                <button onclick="document.getElementById('aiPriorityModal').style.display='none'"  style="background:#F1F5F9; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1rem;">&#x2715;</button>
+            </div>
+            <div id="aiPriorityList" style="display:flex; flex-direction:column; gap:0.85rem;"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/doctor_patients.js"></script>
+    <script>
+    // 研究人员 AI 助手逻辑
+    document.addEventListener('DOMContentLoaded', () => initAiAssistant());
+
+    async function initAiAssistant() {
+        try {
+            const data = await window.API?.Doctor?.getMyPatients().catch(() => null);
+            if (!data) {
+                document.getElementById('aiAssistantSuggestion').textContent = '暂无就诊者数据，请先添加就诊者档案。';
+                ['statHighRisk','statPending','statComplete','statTotal'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = '0';
+                });
+                return;
+            }
+
+            const patients = data.items || [];
+            analyzeAndRender(patients);
+        } catch(e) {
+            document.getElementById('aiAssistantSuggestion').textContent = '暂时无法加载分析，请稍后重试。';
+        }
+    }
+
+    function analyzeAndRender(patients) {
+        const total = patients.length;
+        let highRisk = 0, pending = 0, complete = 0;
+        const priorityList = [];
+
+        patients.forEach(p => {
+            const risk = p.latest_scale_risk_level;
+            const scaleType = p.latest_scale_type;
+            const trackingDays = p.tracking_completed_days || 0;
+
+            if (risk === 'high' || risk === '高风险') highRisk++;
+
+            // 就诊者待补充任务评估
+            const needsScale = !scaleType;
+            const needsCognitive = !p.has_cognitive;
+            const needsTracking = trackingDays < 14;
+            const hasPending = needsScale || needsCognitive || needsTracking;
+            if (hasPending) pending++;
+
+            // 山路完整就诊者
+            if (!needsScale && !needsCognitive && !needsTracking) complete++;
+
+            // 构建优先量：高风险=3，待补充=+1
+            const priority = (risk === 'high' ? 3 : risk === 'medium' ? 2 : 1) + (hasPending ? 1 : 0);
+            priorityList.push({ ...p, priority, needsScale, needsCognitive, needsTracking });
+        });
+
+        // 排序
+        priorityList.sort((a, b) => b.priority - a.priority);
+
+        // 更新仓表数据
+        ['statHighRisk','statPending','statComplete','statTotal'].forEach((id, idx) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = [highRisk, pending, complete, total][idx];
+        });
+
+        // 生成 AI 建议文案
+        const topPatient = priorityList[0];
+        let suggestion = '';
+        if (!topPatient) {
+            suggestion = '当前工作台尚无就诊者。建议先添加就诊者档案，再开始犳期工作。';
+        } else if (highRisk > 0) {
+            suggestion = `目前有 ${highRisk} 位高风险就诊者，建议优先查看 ${topPatient.patient_name}。${
+                topPatient.needsTracking ? '该就诊者追踪天数不足，建议推送追踪提醒。' :
+                topPatient.needsCognitive ? '该就诊者尚未完成认知测试，建议推送认知测试任务。' :
+                '建议查阅完整报告并安排复诊。'
+            }`;
+        } else if (pending > 0) {
+            suggestion = `有 ${pending} 位就诊者有待完成的任务。建议先查看 ${topPatient.patient_name}（${
+                topPatient.needsScale ? '需补量表' :
+                topPatient.needsCognitive ? '需补认知测试' : `追踪还差 ${14 - (topPatient.tracking_completed_days||0)} 天`
+            }）。`;
+        } else {
+            suggestion = `所有 ${complete} 位就诊者已完成基础评估路径！建议安排營像分析和综合报告解读。`;
+        }
+        document.getElementById('aiAssistantSuggestion').textContent = suggestion;
+
+        // 渲染优先决策列表
+        const priorityListEl = document.getElementById('aiPriorityList');
+        if (priorityListEl) {
+            if (priorityList.length === 0) {
+                priorityListEl.innerHTML = '<p style="color:#64748B; text-align:center;">暂无就诊者数据。</p>';
+            } else {
+                priorityListEl.innerHTML = priorityList.slice(0, 8).map((p, idx) => {
+                    const riskColor = p.latest_scale_risk_level === 'high' ? '#B91C1C' :
+                                      p.latest_scale_risk_level === 'medium' ? '#B45309' : '#15803D';
+                    const riskBg = p.latest_scale_risk_level === 'high' ? '#FEE2E2' :
+                                   p.latest_scale_risk_level === 'medium' ? '#FEF3C7' : '#DCFCE7';
+                    const tasks = [
+                        p.needsScale && '补 量表',
+                        p.needsCognitive && '补 认知测试',
+                        p.needsTracking && `追踪还差 ${14 - (p.tracking_completed_days||0)} 天`
+                    ].filter(Boolean);
+
+                    return `
+                    <div style="display:flex; align-items:flex-start; gap:0.85rem; padding:1rem;
+                        border-radius:18px; background:${idx === 0 ? 'linear-gradient(135deg,#EFF6FF,#F5F3FF)' : '#F8FAFC'};
+                        border:1.5px solid ${idx === 0 ? '#BFDBFE' : '#E2E8F0'};">
+                        <div style="width:32px; height:32px; background:${idx < 3 ? '#1E3A8A' : '#CBD5E1'};
+                            border-radius:50%; display:flex; align-items:center; justify-content:center;
+                            color:white; font-weight:800; font-size:0.82rem; flex-shrink:0;">#${idx+1}</div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
+                                <strong style="font-size:0.94rem; color:#0F172A;">${p.patient_name}</strong>
+                                ${p.latest_scale_risk_level ? `<span style="padding:0.18rem 0.52rem; border-radius:999px; background:${riskBg}; color:${riskColor}; font-size:0.74rem; font-weight:700;">${p.latest_scale_risk_level}</span>` : ''}
+                            </div>
+                            <p style="font-size:0.8rem; color:#64748B; margin:0 0 0.5rem; line-height:1.5;">${p.patient_email}</p>
+                            ${tasks.length ? `<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">${tasks.map(t => `<span style="padding:0.2rem 0.55rem; border-radius:8px; background:#DBEAFE; color:#1D4ED8; font-size:0.75rem; font-weight:700;">${t}</span>`).join('')}</div>` : '<span style="font-size:0.8rem; color:#15803D;">&#10003; 基础评估完整</span>'}
+                        </div>
+                        <a href="doctor_patients.html?focus_patient_id=${p.patient_id}" style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.5rem 0.85rem; border-radius:10px; background:#1E3A8A; color:white; font-size:0.8rem; font-weight:700; text-decoration:none; flex-shrink:0;">
+                            进入 <ion-icon name="chevron-forward"></ion-icon>
+                        </a>
+                    </div>`;
+                }).join('');
+            }
+        }
+    }
+
+    function refreshAiSummary() {
+        const btn = document.getElementById('refreshAiSummaryBtn');
+        if (btn) btn.textContent = '刷新中...';
+        initAiAssistant().finally(() => {
+            if (btn) btn.innerHTML = '<ion-icon name="refresh-outline"></ion-icon> 刷新摘要';
+        });
+    }
+    </script>
+</body>
+</html>

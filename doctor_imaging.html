@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-03-25 11:15 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像分析 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        body.researcher-page {
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+                linear-gradient(180deg, #F4F8FF 0%, #EEF4FB 100%);
+        }
+
+        .researcher-page .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .researcher-page .logo ion-icon,
+        .researcher-page .nav-links a:hover,
+        .researcher-page .nav-links a.active,
+        .researcher-page .user-profile ion-icon,
+        .researcher-page .card-header h2 ion-icon {
+            color: #2563EB;
+        }
+
+        .researcher-page .user-profile {
+            background: #EFF6FF;
+            color: #1E3A8A;
+        }
+
+        .researcher-page .main-content {
+            margin-top: 0;
+            padding: 7.4rem 2rem 3rem;
+            max-width: 1400px;
+        }
+
+        .imaging-hero {
+            padding: 0.55rem 0 1rem;
+            margin-bottom: 1.4rem;
+            text-align: center;
+        }
+
+        .imaging-hero h1 {
+            font-size: 2.7rem;
+            line-height: 1.18;
+            color: #0F172A;
+            margin: 0 0 0.85rem;
+        }
+
+        .imaging-hero p {
+            color: #475569;
+            font-size: 1.05rem;
+            line-height: 1.85;
+            max-width: 860px;
+            margin: 0 auto 1rem;
+        }
+
+        .imaging-hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .imaging-hero-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.72rem 1rem;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .imaging-hero-link.primary {
+            background: #2563EB;
+            color: #FFFFFF;
+        }
+
+        .imaging-hero-link.secondary {
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+        }
+
+        .context-card {
+            background: rgba(255,255,255,0.98);
+            border: 1px solid rgba(191, 219, 254, 0.75);
+            border-radius: 20px;
+            padding: 1.1rem 1.2rem;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.04);
+            margin-bottom: 1.3rem;
+        }
+
+        .context-card h3 {
+            font-size: 1.02rem;
+            color: #0F172A;
+            margin-bottom: 0.4rem;
+        }
+
+        .context-card p {
+            margin: 0 0 0.7rem;
+            color: #64748B;
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .selected-patient-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+        }
+
+        .selected-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.72rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .researcher-page .dashboard-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.6rem;
+        }
+
+        .researcher-page .card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(191, 219, 254, 0.65);
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
+        }
+
+        .researcher-page .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 22px 42px rgba(37, 99, 235, 0.08);
+        }
+
+        .researcher-page .upload-zone:hover,
+        .researcher-page .upload-zone.dragover {
+            background: rgba(37, 99, 235, 0.06);
+            border-color: #2563EB;
+        }
+
+        .researcher-page .btn-primary {
+            background: #2563EB;
+            color: white;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+        }
+
+        .researcher-page .btn-primary:hover {
+            background: #1D4ED8;
+        }
+
+        .researcher-page .btn-accent {
+            background: #0F766E;
+        }
+
+        .researcher-page .btn-accent:hover {
+            background: #0D9488;
+        }
+
+        .timeseries-file-input {
+            display: none;
+        }
+
+        .prediction-summary {
+            margin-top: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            color: #475569;
+            line-height: 1.7;
+            font-size: 0.92rem;
+        }
+
+        .prediction-summary strong {
+            color: #0F172A;
+        }
+
+        .prediction-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-top: 0.85rem;
+        }
+
+        .prediction-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.36rem 0.72rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 1024px) {
+            .researcher-page .main-content {
+                padding-top: 7rem;
+            }
+
+            .researcher-page .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .imaging-hero h1 {
+                font-size: 2.25rem;
+            }
+        }
+    </style>
+</head>
+<body class="researcher-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a id="childNavImaging" href="doctor_imaging.html" class="active">影像分析</a></li>
+                <li><a id="childNavVisualization" href="doctor_visualization.html">影像可视化</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <span id="researcherName">研究人员</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section class="imaging-hero">
+            <h1>时间序列分类推理</h1>
+            <p>本页已从“上传原始影像”调整为“上传 ROI 时间序列后分类”。当前支持 AAL90 / AAL116 的 `.1D` 与 `.csv` 时间序列，系统会自动把推理结果绑定到当前就诊者。</p>
+            <div class="imaging-hero-actions">
+                <a id="backToPatientReportImagingLink" href="doctor_patients.html" class="imaging-hero-link primary">返回患者工作台</a>
+                <a id="openPatientReportImagingLink" href="doctor_patients.html" class="imaging-hero-link secondary">查看患者综合分析</a>
+            </div>
+        </section>
+
+        <div class="context-card">
+            <h3>当前就诊者上下文</h3>
+            <p id="timeseriesPatientHint">请先从患者工作台进入本页，系统会自动沿用当前就诊者上下文，推理结果也会直接写入这位就诊者的结果记录。</p>
+            <div id="timeseriesPatientMeta" class="selected-patient-meta"></div>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="card slide-up" id="upload" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                    <h2><ion-icon name="cloud-upload"></ion-icon> 时间序列上传</h2>
+                </div>
+                <div class="card-content">
+                    <input id="timeseriesFileInput" class="timeseries-file-input" type="file" accept=".1d,.1D,.csv" />
+                    <div class="upload-zone" id="uploadZone">
+                        <ion-icon name="document-text"></ion-icon>
+                        <h3>上传 ROI 时间序列文件</h3>
+                        <span class="sub-text">支持 AAL90 / AAL116 的 `.1D` 或 `.csv` 文件，形状应为 timepoints × regions。</span>
+                    </div>
+                    <div class="status-list">
+                        <div class="status-item">
+                            <span>文件读取</span>
+                            <span class="badge waiting" id="fileStatusBadge">等待中</span>
+                        </div>
+                        <div class="status-item">
+                            <span>连接矩阵构建</span>
+                            <span class="badge waiting" id="connectivityStatusBadge">等待中</span>
+                        </div>
+                        <div class="status-item">
+                            <span>HGST 推理</span>
+                            <span class="badge waiting" id="predictionStatusBadge">等待中</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card slide-up" id="diagnosis" style="animation-delay: 0.2s;">
+                <div class="card-header">
+                    <h2><ion-icon name="hardware-chip"></ion-icon> 当前推理状态</h2>
+                </div>
+                <div class="card-content">
+                    <div class="viz-container" id="brainGraph">
+                        <div class="scan-line"></div>
+                        <p class="placeholder-text">等待上传时间序列文件，系统会自动解析时间点数、ROI 维度并构建连接矩阵。</p>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <span class="label">时间点数</span>
+                            <span class="value" id="nodeAttention">N/A</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="label">ROI 维度</span>
+                            <span class="value" id="edgeConnectivity">N/A</span>
+                        </div>
+                    </div>
+                    <div id="predictionMeta" class="prediction-meta"></div>
+                </div>
+            </section>
+
+            <section class="card slide-up" id="reports" style="animation-delay: 0.3s;">
+                <div class="card-header">
+                    <h2><ion-icon name="medkit"></ion-icon> 分类结果</h2>
+                </div>
+                <div class="card-content results-center">
+                    <div class="meter-wrapper">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
+                            <path class="circle-bg"
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <path class="circle" id="riskCircle"
+                                stroke-dasharray="0, 100"
+                                d="M18 2.0845
+                                a 15.9155 15.9155 0 0 1 0 31.831
+                                a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <text x="18" y="20.35" class="percentage" id="riskText">--</text>
+                        </svg>
+                    </div>
+                    <p class="meter-label" id="predictionLabelText">等待开始推理</p>
+
+                    <div class="bars-container">
+                        <div class="bar-row">
+                            <span>ADHD 概率</span>
+                            <div class="progress-track"><div class="progress-fill fill-teal" id="adhdProbabilityBar" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="bar-row">
+                            <span>Control 概率</span>
+                            <div class="progress-track"><div class="progress-fill fill-blue" id="controlProbabilityBar" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+
+                    <div id="predictionSummary" class="prediction-summary">
+                        <strong>提示：</strong> 当前还没有推理结果。上传时间序列文件后，系统会返回分类标签、概率和简短解释。
+                    </div>
+
+                    <button class="btn btn-accent full-width" id="generateReportBtn">
+                        开始分类推理
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/api.js?v=20260407a"></script>
+    <script src="js/main.js?v=20260407a"></script>
+</body>
+</html>

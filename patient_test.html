@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-03-28 14:12 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认知测试 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+            border: 1px solid #E2E8F0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(15, 23, 42, 0.15);
+        }
+
+        .game-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #64748B;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .game-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .reaction-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #93C5FD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            user-select: none;
+        }
+
+        .reaction-circle:hover {
+            background: #60A5FA;
+            transform: scale(1.02);
+        }
+
+        .reaction-time {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #60A5FA;
+            font-weight: 600;
+        }
+
+        .stroop-text {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .stroop-instruction {
+            font-size: 0.9rem;
+            color: #64748B;
+            text-align: center;
+        }
+
+        .trail-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+        }
+
+        .trail-number {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #60A5FA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #3B82F6;
+            transition: all 0.2s ease;
+        }
+
+        .trail-number.is-hit {
+            background: #DBEAFE;
+            border-color: #2563EB;
+            color: #1D4ED8;
+        }
+
+        .trail-number.is-error {
+            background: #FEE2E2;
+            border-color: #EF4444;
+            color: #B91C1C;
+        }
+
+        .flanker-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .flanker-arrow {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .flanker-target {
+            color: #3B82F6;
+        }
+
+        .flanker-congruent {
+            color: #10B981;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .nback-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .nback-square {
+            width: 60px;
+            height: 60px;
+            background: #F1F5F9;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .nback-square.active {
+            background: #3B82F6;
+        }
+
+        .nback-label {
+            font-size: 0.9rem;
+            color: #64748B;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .digit-span-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .digit-box {
+            width: 35px;
+            height: 40px;
+            border-bottom: 2px solid #E2E8F0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #3B82F6;
+        }
+
+        .digit-span-label {
+            font-size: 0.9rem;
+            color: #64748B;
+            text-align: center;
+        }
+
+        .digit-controls {
+            display: flex;
+            gap: 0.3rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            max-width: 100%;
+        }
+
+        .digit-btn {
+            padding: 0.4rem 0.6rem;
+            min-width: 28px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .digit-btn:hover {
+            background: #2563EB;
+        }
+
+        .game-button {
+            margin-top: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .game-button:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+
+<body class="bg-page" data-copilot-page="test">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html">首页</a></li>
+                <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_test.html" class="active">认知测试</a></li>
+                <li><a href="patient_tracking.html">14天追踪</a></li>
+                <li><a href="patient_report.html">我的报告</a></li>
+                <li><a href="clinical_pathway.html">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="info-block" style="padding-top: 120px; min-height: 80vh;">
+        <div class="info-container block-center">
+            <h1 style="font-size: 2.5rem; color: #0F172A; margin-bottom: 1rem;">认知测试</h1>
+            <p class="center-sub">通过互动游戏方式评估注意力、反应速度和执行功能，让测试过程更加有趣。</p>
+
+            <!-- 成就横幅区域 -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; max-width:780px; margin:0 auto 2rem;" id="achievementBannerRow">
+                <div id="testStreakBanner"></div>
+                <div id="testAchievementBanner"
+                     style="background:linear-gradient(135deg,#F5F3FF,#EFF6FF); border:1.5px solid #C4B5FD;
+                            border-radius:18px; padding:1rem 1.2rem; display:flex; align-items:center; gap:0.85rem;
+                            cursor:pointer; transition:box-shadow 0.2s ease;"
+                     onclick="showAchievementPanel()"
+                     onmouseover="this.style.boxShadow='0 8px 24px rgba(124,58,237,0.15)'"
+                     onmouseout="this.style.boxShadow=''">
+                    <span style="font-size:2rem;">🏆</span>
+                    <div>
+                        <strong id="achievementCount" style="display:block; font-size:1rem; color:#6D28D9;">-- / 8 成就</strong>
+                        <span style="font-size:0.8rem; color:#7C3AED;">点击查看全部成就</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 成就面板 Modal -->
+            <div id="achievementPanel" style="display:none; position:fixed; inset:0; z-index:8888;
+                background:rgba(15,23,42,0.5); backdrop-filter:blur(6px);
+                align-items:center; justify-content:center;">
+                <div style="background:white; border-radius:24px; padding:2rem; max-width:520px;
+                            width:calc(100% - 2rem); max-height:85vh; overflow-y:auto;
+                            box-shadow:0 32px 80px rgba(0,0,0,0.2);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="margin:0; font-size:1.2rem; color:#0F172A;">🎖 我的成就</h3>
+                        <button onclick="document.getElementById('achievementPanel').style.display='none';"
+                                style="background:#F1F5F9; border:none; width:32px; height:32px; border-radius:50%;
+                                       cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center;">✕</button>
+                    </div>
+                    <div id="achievementPanelContent"></div>
+                </div>
+            </div>
+
+            <div class="games-container">
+                <div class="game-card">
+                    <div class="game-title">反应时测试</div>
+                    <div class="game-content">
+                        <div class="reaction-circle" id="reactionCircle">
+                            <span style="font-size: 1.5rem; color: white;">点击</span>
+                        </div>
+                        <div class="reaction-time" id="reactionTime">0 ms</div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=reaction'">开始测试</button>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">Stroop 测试</div>
+                    <div class="game-content">
+                        <div class="stroop-text" id="stroopWord" style="color: purple;">YELLOW</div>
+                        <div class="stroop-instruction">请判断文字墨水颜色</div>
+                    </div>
+                    <div class="stroop-controls" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem;">
+                        <button class="stroop-btn" style="padding: 0.5rem 1rem; background: #EF4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleStroopAnswer('red')">红</button>
+                        <button class="stroop-btn" style="padding: 0.5rem 1rem; background: #10B981; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleStroopAnswer('green')">绿</button>
+                        <button class="stroop-btn" style="padding: 0.5rem 1rem; background: #3B82F6; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleStroopAnswer('blue')">蓝</button>
+                        <button class="stroop-btn" style="padding: 0.5rem 1rem; background: #F59E0B; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleStroopAnswer('yellow')">黄</button>
+                    </div>
+                    <div class="stroop-result" style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748B;">
+                        <div>正确: <span id="stroopCorrect">0</span> | 错误: <span id="stroopWrong">0</span></div>
+                        <div style="margin-top: 0.5rem;">平均反应时间: <span id="stroopAvgTime">0</span> ms</div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=stroop'">开始测试</button>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">连线测试</div>
+                    <div class="game-content">
+                        <div class="trail-container">
+                            <div class="trail-number" data-number="1" style="top: 20px; left: 20px; cursor: pointer;" onclick="handleTrailNumberClick(this, 1)">1</div>
+                            <div class="trail-number" data-number="2" style="top: 20px; left: 120px; cursor: pointer;" onclick="handleTrailNumberClick(this, 2)">2</div>
+                            <div class="trail-number" data-number="3" style="top: 60px; left: 200px; cursor: pointer;" onclick="handleTrailNumberClick(this, 3)">3</div>
+                            <div class="trail-number" data-number="4" style="top: 120px; left: 60px; cursor: pointer;" onclick="handleTrailNumberClick(this, 4)">4</div>
+                            <div class="trail-number" data-number="5" style="top: 100px; left: 140px; cursor: pointer;" onclick="handleTrailNumberClick(this, 5)">5</div>
+                            <div class="trail-number" data-number="6" style="top: 60px; left: 260px; cursor: pointer;" onclick="handleTrailNumberClick(this, 6)">6</div>
+                            <div class="trail-number" data-number="7" style="top: 160px; left: 100px; cursor: pointer;" onclick="handleTrailNumberClick(this, 7)">7</div>
+                            <div class="trail-number" data-number="8" style="top: 160px; left: 200px; cursor: pointer;" onclick="handleTrailNumberClick(this, 8)">8</div>
+                        </div>
+                    </div>
+                    <div class="trail-result" style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748B;">
+                        <div>当前进度: <span id="trailProgress">0</span>/8</div>
+                        <div style="margin-top: 0.5rem;">错误次数: <span id="trailErrors">0</span></div>
+                        <div style="margin-top: 0.5rem;">用时: <span id="trailTime">0</span> ms</div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=trail'">开始测试</button>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">Flanker 任务</div>
+                    <div class="game-content">
+                        <div class="flanker-container">
+                            <span class="flanker-arrow" id="flankerArrow1">&gt;</span>
+                            <span class="flanker-arrow" id="flankerArrow2">&gt;</span>
+                            <span class="flanker-arrow flanker-target" id="flankerTarget">&gt;</span>
+                            <span class="flanker-arrow" id="flankerArrow4">&gt;</span>
+                            <span class="flanker-arrow" id="flankerArrow5">&gt;</span>
+                        </div>
+                        <div class="flanker-congruent" id="flankerModeLabel">Congruent</div>
+                    </div>
+                    <div class="flanker-controls" style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
+                        <button class="flanker-btn" style="padding: 0.5rem 1.5rem; background: #3B82F6; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleFlankerAnswer('>')">→</button>
+                        <button class="flanker-btn" style="padding: 0.5rem 1.5rem; background: #3B82F6; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleFlankerAnswer('<')">←</button>
+                    </div>
+                    <div class="flanker-result" style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748B;">
+                        <div>正确: <span id="flankerCorrect">0</span> | 错误: <span id="flankerWrong">0</span></div>
+                        <div style="margin-top: 0.5rem;">平均反应时间: <span id="flankerAvgTime">0</span> ms</div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=flanker'">开始测试</button>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">2-back 测试</div>
+                    <div class="game-content">
+                        <div class="nback-container">
+                            <div class="nback-square" id="nbackCell0"></div>
+                            <div class="nback-square" id="nbackCell1"></div>
+                            <div class="nback-square" id="nbackCell2"></div>
+                            <div class="nback-square" id="nbackCell3"></div>
+                            <div class="nback-square" id="nbackCell4"></div>
+                            <div class="nback-square active" id="nbackCell5"></div>
+                            <div class="nback-square" id="nbackCell6"></div>
+                            <div class="nback-square" id="nbackCell7"></div>
+                            <div class="nback-square" id="nbackCell8"></div>
+                        </div>
+                        <div class="nback-label">当前位置变化判断</div>
+                    </div>
+                    <div class="nback-controls" style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
+                        <button class="nback-btn" style="padding: 0.5rem 1.5rem; background: #10B981; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleNBackAnswer(true)">匹配</button>
+                        <button class="nback-btn" style="padding: 0.5rem 1.5rem; background: #EF4444; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="handleNBackAnswer(false)">不匹配</button>
+                    </div>
+                    <div class="nback-result" style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748B;">
+                        <div>正确: <span id="nbackCorrect">0</span> | 错误: <span id="nbackWrong">0</span></div>
+                        <div style="margin-top: 0.5rem;">当前进度: <span id="nbackProgress">0</span>/20</div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=nback'">开始测试</button>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-title">数字广度测试</div>
+                    <div class="game-content">
+                        <div class="digit-span-container" id="digitSpanPrompt">
+                            <div class="digit-box">3</div>
+                            <div class="digit-box">7</div>
+                            <div class="digit-box">2</div>
+                            <div class="digit-box">9</div>
+                            <div class="digit-box">5</div>
+                        </div>
+                        <div class="digit-span-label">Recall</div>
+                    </div>
+                    <div class="digit-controls">
+                        <button class="digit-btn" onclick="handleDigitInput('1')">1</button>
+                        <button class="digit-btn" onclick="handleDigitInput('2')">2</button>
+                        <button class="digit-btn" onclick="handleDigitInput('3')">3</button>
+                        <button class="digit-btn" onclick="handleDigitInput('4')">4</button>
+                        <button class="digit-btn" onclick="handleDigitInput('5')">5</button>
+                        <button class="digit-btn" onclick="handleDigitInput('6')">6</button>
+                        <button class="digit-btn" onclick="handleDigitInput('7')">7</button>
+                        <button class="digit-btn" onclick="handleDigitInput('8')">8</button>
+                        <button class="digit-btn" onclick="handleDigitInput('9')">9</button>
+                        <button class="digit-btn" onclick="handleDigitInput('0')">0</button>
+                    </div>
+                    <div class="digit-result" style="text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #64748B;">
+                        <div>你的输入: <span id="digitInput">-</span></div>
+                        <div style="margin-top: 0.5rem;">当前长度: <span id="digitLength">5</span> | 正确: <span id="digitCorrect">0</span></div>
+                    </div>
+                    <button class="game-button" onclick="window.location.href='patient_test_session.html?test=digit'">开始测试</button>
+                </div>
+            </div>
+
+            <div style="margin-top: 4rem; text-align: center;">
+                <button class="btn-back" style="padding: 1rem 2rem; background: #EF4444; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin: 0 auto;" onclick="window.location.href='patient_home.html'">
+                    <ion-icon name="close-circle-outline"></ion-icon> 本地终止并返回
+                </button>
+            </div>
+
+            <div style="margin-top: 4rem; margin-bottom: 4rem; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 2rem;">
+                <h2 style="text-align: center; font-size: 1.8rem; font-weight: 600; color: #1E293B; margin-bottom: 2rem;">为什么使用这些认知测试方法?</h2>
+                <p style="text-align: center; font-size: 1.1rem; color: #64748B; margin-bottom: 3rem;">使用多种认知测试方法对注意力、执行功能和工作记忆进行全面评估，帮助医疗保健提供者更准确地了解就诊者的认知状态。</p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); border: 1px solid #E2E8F0;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 48px; height: 48px; background: #EFF6FF; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <ion-icon name="eye-outline" style="font-size: 24px; color: #3B82F6;"></ion-icon>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 600; color: #1E293B; margin: 0;">注意力与抑制控制</h3>
+                        </div>
+                        <p style="color: #64748B; line-height: 1.6; text-align: left;">Stroop测试和Flanker任务评估注意力选择性和抑制控制能力，这是ADHD患者常见的认知缺陷领域。</p>
+                        <ul style="color: #64748B; line-height: 1.6; margin-top: 1rem; padding-left: 1.5rem; text-align: left;">
+                            <li style="text-align: left;">Stroop测试：测量抑制自动反应的能力</li>
+                            <li style="text-align: left;">Flanker任务：评估注意力集中和干扰抑制</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); border: 1px solid #E2E8F0;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 48px; height: 48px; background: #ECFDF5; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <ion-icon name="move-outline" style="font-size: 24px; color: #10B981;"></ion-icon>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 600; color: #1E293B; margin: 0;">视觉搜索与运动协调</h3>
+                        </div>
+                        <p style="color: #64748B; line-height: 1.6; text-align: left;">连线测试评估视觉搜索能力、运动协调能力和执行功能，这些都是ADHD患者可能存在困难的领域。</p>
+                        <ul style="color: #64748B; line-height: 1.6; margin-top: 1rem; padding-left: 1.5rem; text-align: left;">
+                            <li style="text-align: left;">视觉空间能力</li>
+                            <li style="text-align: left;">序列处理能力</li>
+                            <li style="text-align: left;">手眼协调能力</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); border: 1px solid #E2E8F0;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 48px; height: 48px; background: #FEF3C7; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <ion-icon name="memory-outline" style="font-size: 24px; color: #F59E0B;"></ion-icon>
+                            </div>
+                            <h3 style="font-size: 1.25rem; font-weight: 600; color: #1E293B; margin: 0;">工作记忆</h3>
+                        </div>
+                        <p style="color: #64748B; line-height: 1.6; text-align: left;">2-Back测试和数字广度测试评估工作记忆能力，这是ADHD患者的核心认知缺陷之一。</p>
+                        <ul style="color: #64748B; line-height: 1.6; margin-top: 1rem; padding-left: 1.5rem; text-align: left;">
+                            <li style="text-align: left;">2-Back测试：评估更新和监控工作记忆的能力</li>
+                            <li style="text-align: left;">数字广度测试：评估短期记忆容量</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer" style="padding: 2rem 0; margin-top: auto;">
+        <div class="footer-container" style="justify-content: center;">
+            <span>知行合“医” - 专注每刻 © 2026</span>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/achievement.js"></script>
+    <script src="js/games.js"></script>
+    <script src="js/patient_copilot.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取用户名
+        const user = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl && user?.full_name) userNameEl.textContent = user.full_name;
+
+        // 渲染成就和连续天数
+        if (window.Achievement) {
+            window.Achievement.renderStreak('testStreakBanner');
+            
+            const renderCounts = () => {
+                const unlocked = window.Achievement.getUnlocked();
+                const countEl = document.getElementById('achievementCount');
+                if (countEl) countEl.textContent = `${unlocked.length} / 8 成就已解锁`;
+            };
+            renderCounts();
+
+            // 尝试通过后端数据恢复成就状态
+            if (window.API?.Patient?.getComprehensiveReport) {
+                window.API.Patient.getComprehensiveReport().then(report => {
+                    if (report) {
+                        window.Achievement.syncWithBackend(report);
+                        window.Achievement.renderStreak('testStreakBanner');
+                        renderCounts();
+                    }
+                }).catch(e => console.warn('Achievement sync failed', e));
+            }
+        }
+
+        // 检查是否从测试会话返回（带成就触发标志）
+        const achFlag = sessionStorage.getItem('achievement_trigger');
+        if (achFlag && window.Achievement) {
+            try {
+                const result = JSON.parse(achFlag);
+                sessionStorage.removeItem('achievement_trigger');
+                setTimeout(() => window.Achievement.onTestComplete(result), 600);
+            } catch(e) {}
+        }
+    });
+
+    function showAchievementPanel() {
+        const panel = document.getElementById('achievementPanel');
+        panel.style.display = 'flex';
+        if (window.Achievement) {
+            window.Achievement.renderPanel('achievementPanelContent');
+        }
+        panel.addEventListener('click', function(e) {
+            if (e.target === panel) panel.style.display = 'none';
+        }, { once: true });
+    }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,202 @@
+<!-- Time Course Visualization Card -->
+<div class='card h-100'>
+  <div class='card-header pt-1 pb-1 pr-1'>
+    <div class='row'>
+      <div class='col-1 pl-1 pr-1 pb-1 pt-0'>
+        <div class="alert alert-info small p-2 m-0 text-center toggle-immediate" role="alert" id='ts-preprocess-alert' data-toggle="tooltip" data-placement="top" title="正在查看预处理后的数据" style="display: none;">
+          <i class="fa-solid fa-p"></i>
+        </div>
+      </div>
+      <div class='col-2 pr-1 pl-1'>
+        <!-- Toggle time point line -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-time-marker' data-toggle="tooltip" data-placement="top" title="显示或隐藏时间点标记">
+          <i class="fa-solid fa-location-pin"></i>
+        </button>
+        <!-- Toggle plot grid lines -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-grid' data-toggle="tooltip" data-placement="top" title="显示或隐藏网格线">
+          <i class="fa-solid fa-border-all"></i>
+        </button>
+        <!-- Toggle time course hover -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-ts-hover' data-toggle="tooltip" data-placement="top" title="显示或隐藏悬浮标签">
+          <i class="fa-solid fa-message"></i>
+        </button>
+        <!-- Toggle task design convolution -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-convolution' data-toggle="tooltip" data-placement="top" title="显示或隐藏所有任务设计回归量的 HRF 卷积">
+          <i class="fa-solid fa-wave-square"></i>
+        </button>
+      </div>
+      <div class='col-4 pr-1 pl-1'>
+        <div class='row align-items-center'>
+          <div class="custom-control custom-switch mr-2">
+            <input type="checkbox" class="custom-control-input" id="enable-annotate">
+            <label class="custom-control-label" for="enable-annotate">标注</label>
+          </div>
+          <!-- Move fmri left -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='left-move-annotate' data-toggle="tooltip" data-placement="top" title="将所选标注左移" disabled>
+            <i class="fa-solid fa-left-long"></i>
+          </button>
+          <!-- Move fmri right -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait mr-2" id='right-move-annotate' data-toggle="tooltip" data-placement="top" title="将所选标注右移" disabled>
+            <i class="fa-solid fa-right-long"></i>
+          </button>
+          <!-- Undo annotate -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='undo-annotate' data-toggle="tooltip" data-placement="top" title="撤销标注" disabled>
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          <!-- Remove all annotations -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait mr-2" id='remove-annotate' data-toggle="tooltip" data-placement="top" title="移除全部标注" disabled>
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+          <!-- Marker Plot Options -->
+          <button id="annotate-plot-popover" title="标注标记选项" type="button" class="btn btn-outline-secondary btn-sm" data-container="body" data-toggle="popover" data-placement="top"
+          data-content= "
+          <div class='row'>
+            <div class='col mr-5 ml-5'>
+              <div class='row'>
+                <label for='annotate-color-select'>选择颜色：</label>
+                <select class='custom-select w-100' id='annotate-color-select'>
+                  <!-- Options will be dynamically added here -->
+                  <option value='red'>红色</option>
+                  <option value='blue'>蓝色</option>
+                  <option value='green'>绿色</option>
+                  <option value='orange'>橙色</option>
+                  <option value='purple'>紫色</option>
+                  <option value='black'>黑色</option>
+                  <option value='grey'>灰色</option>
+                  <option value='yellow'>黄色</option>
+                  <option value='brown'>棕色</option>
+                  <option value='darkred'>深红色</option>
+                  <option value='tomato'>番茄红</option>
+                  <option value='magenta'>洋红色</option>
+                  <option value='crimson'>猩红色</option>
+                  <option value='salmon'>鲑红色</option>
+                  <option value='firebrick'>砖红色</option>
+                  <option value='navy'>海军蓝</option>
+                  <option value='royalblue'>宝蓝色</option>
+                  <option value='turquoise'>青绿色</option>
+                  <option value='coral'>珊瑚色</option>
+                  <option value='seagreen'>海绿色</option>
+                  <option value='forestgreen'>森林绿</option>
+                  <option value='olive'>橄榄色</option>
+                  <option value='darkgreen'>深绿色</option>
+                  <option value='darkorange'>深橙色</option>
+                  <option value='violet'>紫罗兰色</option>
+                  <option value='slategrey'>石板灰</option>
+                  <option value='slateblue'>石板蓝</option>
+                  <option value='darkgrey'>深灰色</option>
+                  <option value='khaki'>卡其色</option>
+                  <option value='tan'>浅棕色</option>
+                </select>
+              </div>
+              <div class='row mt-2'>
+                <label for='annotate-marker-width' class='mb-1'>标注线宽：</label>
+                <input id='annotate-marker-width' type='text' class='slider' data-slider-responsive='true' />
+              </div>
+              <div class='row mb-2'>
+                <label for='annotate-marker-opacity' class='mb-1'>标注不透明度</label>
+                <input id='annotate-marker-opacity' type='text' class='slider' data-slider-responsive='true' />
+              </div>
+              <div class='row mt-2'>
+                <div class='col-8'>
+                  <span>标注线型</span>
+                  <select class='custom-select' id='annotate-marker-select'>
+                    <option value='solid'>实线</option>
+                    <option value='dash'>虚线</option>
+                    <option value='dot'>点线</option>
+                    <option value='longdash'>长虚线</option>
+                    <option value='dashdot'>点划线</option>
+                  </select>
+                </div>
+                <div class='col-4'>
+                  <label for='highlight-annotate'>高亮当前选中</label>
+                  <input type='checkbox' class='form-control w-75 h-25' id='highlight-annotate'>
+                </div>
+              </div>
+            </div>
+          </div>
+          ">
+            标记
+          </button>
+        </div>
+      </div>
+      <div class='col-2'>
+        <button id="peak-finder-popover" title="峰值查找" type="button" class="btn btn-outline-primary btn-sm" data-container="body" data-toggle="popover" data-placement="top"
+        data-content= "
+          <form id='peak-finder-form'>
+            <div class='row mb-2'>
+              <div class='col'>
+                <div class='row'>
+                  <div class='col'>
+                    <h5>选择时间序列</h5>
+                    <select class='custom-select' id='ts-select-peak-finder'>
+                    </select>
+                  </div>
+                </div>
+                <div class='row'>
+                  <div class='alert alert-secondary mt-3 ml-3' id='peak-finder-prep-alert' role='alert' style=' display: none;'>
+                    <i class='fa-solid fa-triangle-exclamation'></i>
+                    <span class='mr-2'>使用预处理后的时间序列</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='form-row mt-2'>
+              <div class='form-group col-sm-4'>
+                <label for='peak-height'>高度</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='峰值所需高度，单位与时间序列数据一致。' aria-hidden='true'></span>
+                <input type='number' class='form-control' id='peak-height' step='0.01'>
+              </div>
+              <div class='form-group col-sm-4'>
+                <label for='peak-threshold'>阈值</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='峰值所需阈值，即与相邻采样点的垂直距离。' aria-hidden='true'></span>
+                <input type='number' class='form-control' id='peak-threshold' step='0.01'>
+              </div>
+              <div class='form-group col-sm-4'>
+                <label for='peak-distance'>距离</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='相邻峰之间的最小水平距离（采样点数，>= 1）。会优先移除较小的峰，直到所有保留峰满足条件。' aria-hidden='true'></span>
+                <input type='number' class='form-control' id='peak-distance' step='0.01' min='1.0' value='1.0'>
+              </div>
+            </div>
+            <div class='form-row'>
+              <div class='form-group col-sm-4'>
+                <label for='peak-prominence'>显著性</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='峰值所需显著性。显著性描述峰值相对于周围基线的突出程度，定义为峰顶与其最低等高线之间的垂直距离。' aria-hidden='true'></span>
+                <input type='number' class='form-control' id='peak-prominence' step='0.01'>
+              </div>
+              <div class='form-group col-sm-4'>
+                <label for='peak-width'>宽度</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='峰值所需宽度，单位为时间点数量。' aria-hidden='true'></span>
+                <input type='number' class='form-control' id='peak-width' step='0.01'>
+              </div>
+              <div class='form-group col-sm-4'>
+                <label for='peak-z-score'>Z 分数</label>
+                <span class='fa-solid fa-circle-info ml-1 toggle-immediate' data-toggle='tooltip' data-placement='top' title='是否在峰值检测前对时间序列执行 Z 分数归一化（此时参数应按 Z 分数单位填写）。' aria-hidden='true'></span>
+                <input type='checkbox' class='form-control w-75 h-25' id='peak-z-score'>
+              </div>
+            </div>
+            <button type='button' id='submit-peak-finder' class='btn btn-primary'>计算</button>
+          </form>
+        ">
+          查找峰值
+        </button>
+      </div>
+      <div class='col-3 pr-1 pl-1'>
+        <!-- Average Modal Button -->
+        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" id='run-average-button' data-target="#average-modal" disabled>
+          平均
+        </button>
+        <!-- Correlation Modal Button -->
+        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" id='run-correlation-button' data-target="#correlation-modal" disabled>
+          相关
+      </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class='row'>
+      <div id="time-course-plot"></div>
+    </div>
+  </div>
+</div>
+{% include 'components/modals/averageModal.html' %}
+{% include 'components/modals/correlationModal.html' %}

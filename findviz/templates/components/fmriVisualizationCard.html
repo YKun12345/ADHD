@@ -1,0 +1,219 @@
+<!-- FMRI Visualization Card -->
+<div class='card h-100'>
+  <div class="card-header pt-1 pb-1">
+    <div class='row'>
+      <div class='col-1 pl-1 pr-1 pb-1 pt-0'>
+        <div class="alert alert-info small p-2 m-0 text-center toggle-immediate" role="alert" id='preprocess-alert' data-toggle="tooltip" data-placement="top" title="正在查看预处理后的数据" style="display: none;">
+          <i class="fa-solid fa-p"></i>
+        </div>
+      </div>
+      <!-- Time point to seconds conversion -->
+      <div class="col-2">
+        <div class="row">
+          <div class="col-sm-2 pl-0 pr-0 pt-1">
+            <span class="mr-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="时间序列的重复时间（应与 fMRI 一致），必须为正数。" aria-hidden="true">TR:</span>
+          </div>
+          <div class="col-sm-6 pl-1 pr-1">
+            <input type="number" class="form-control form-control-sm" id="tr-convert-form" step="0.01">
+          </div>
+          <div class="col-sm-2 pl-0 pr-0">
+            <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-tr-convert' data-toggle="tooltip" data-placement="top" title="切换时间点与秒单位" disabled>
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class='col ml-1'>
+        <!-- Toggle slice montage or ortho view (for nifti) -->
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-view' data-toggle="tooltip" data-placement="top" title="在正交视图与切片蒙太奇视图之间切换。" disabled>
+            蒙太奇
+          </button>
+          <button id="montage-popover" title="切片蒙太奇选项" type="button" class="btn btn-outline-secondary btn-sm pr-1 pl-1 mr-1" data-container="body" data-toggle="popover" data-placement="top" disabled
+          data-content= "
+            <div class='row'>
+              <div class='col'>
+                <div id='slice-sliders'>
+                  <div class='row'>
+                      <span>选择切片方向</span>
+                      <select id ='montage-slice-select' class='custom-select'>
+                        <option value='x' selected>X（矢状面）</option>
+                        <option value='y'>Y（冠状面）</option>
+                        <option value='z'>Z（轴向）</option>
+                      </select>
+                  </div>
+                  <div class='row mt-2'>
+                    <label for='slice-1-slider' class='mb-1'>切片 1</label>
+                    <input id='slice-1-slider' type='text' class='slider' data-slider-responsive='true' />
+                  </div>
+                  <div class='row'>
+                    <label for='slice-2-slider' class='mb-1'>切片 2</label>
+                    <input id='slice-2-slider' type='text' class='slider' data-slider-responsive='true' />
+                  </div>
+                  <div class='row'>
+                    <label for='slice-3-slider' class='mb-1'>切片 3</label>
+                    <input id='slice-3-slider' type='text' class='slider' data-slider-responsive='true' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ">
+            <i class="fa-solid fa-caret-up"></i>
+          </button>
+        </div>
+        <!-- Toggle crosshair (for nifti) -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-crosshair' data-toggle="tooltip" data-placement="top" title="显示或隐藏十字线" disabled>
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <!-- Toggle plotly hover text -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-hover' data-toggle="tooltip" data-placement="top" title="显示或隐藏悬浮信息" disabled>
+          <i class="fa-solid fa-message"></i>
+        </button>
+        <!-- Toggle direction labels (for nifti) -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-direction-labels' data-toggle="tooltip" data-placement="top" title="显示或隐藏方向标签" disabled>
+          <i class="fa-solid fa-text-slash"></i>
+        </button>
+        <!-- Toggle colorbar -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-colorbar' data-toggle="tooltip" data-placement="top" title="显示或隐藏色条" disabled>
+          <i class="fa-solid fa-ruler-vertical"></i>
+        </button>
+        <!-- Reverse colorscale -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='reverse-colorbar' data-toggle="tooltip" data-placement="top" title="反转色标" disabled>
+          <i class="fa-solid fa-arrows-up-down"></i>
+        </button>
+        <!-- Freeze view (for gifti) -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='toggle-freeze-view' data-toggle="tooltip" data-placement="top" title="锁定或解锁表面视图" disabled>
+          <i class="fa-solid fa-lock"></i>
+        </button>
+        <!-- Take screenshot of visualization container -->
+        <button class="btn btn-outline-secondary btn-sm toggle-wait" id='select-screenshot' data-toggle="tooltip" data-placement="top" title="截图" disabled>
+          <i class="fa-solid fa-image"></i>
+        </button>
+        <!-- Movie controls -->
+        <div class="btn-group">
+          <!-- Play movie -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='play-movie' data-toggle="tooltip" data-placement="top" title="播放时间点序列">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <!-- Play movie options popover -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait pr-1 pl-1" id='play-movie-popover' title="播放选项" data-container="body" data-toggle="popover" data-placement="top" data-content= "
+            <div class='row'>
+              <div class='col mr-5 ml-5'>
+                <div id='play-movie-options'>
+                  <div class='row'>
+                    <label for='play-movie-speed' class='mb-1'>帧更新间隔（毫秒）</label>
+                    <input id='play-movie-speed' type='text' class='slider' data-slider-responsive='true' />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ">
+            <i class="fa-solid fa-caret-up"></i>
+          </button>
+        </div>
+      </div>
+      <div class='col-4'>
+        <div class='row'>
+          <div class="custom-control custom-switch mr-3">
+            <!-- Enable fmri time course -->
+            <input type="checkbox" class="custom-control-input" id="enable-fmri-time-course">
+            <label class="custom-control-label small" for="enable-fmri-time-course">启用时间序列</label>
+            <span class="fa-solid fa-circle-info toggle-immediate mr-2" data-toggle="tooltip" data-placement="top" title="绘制所选体素或顶点的时间序列。" aria-hidden="true"></span>
+          </div>
+          <div class="fa-solid fa-unlock pt-1 pr-1 toggle-immediate" id='freeze-icon' data-toggle="tooltip" data-placement="top" title="锁定或解锁 fMRI 时间序列选择"></div>
+          <div class="custom-control custom-switch">
+            <!-- Freeze fmri time course -->
+            <input type="checkbox" class="custom-control-input" id="freeze-fmri-time-course" disabled>
+            <label class="custom-control-label small" for="freeze-fmri-time-course"></label>
+          </div>
+          <!-- Undo fmri time course -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='undo-fmri-time-course' data-toggle="tooltip" data-placement="top" title="移除图中最近冻结的 fMRI 时间序列" disabled>
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+          <!-- Remove all fmri time course -->
+          <button class="btn btn-outline-secondary btn-sm toggle-wait" id='remove-fmri-time-course' data-toggle="tooltip" data-placement="top" title="移除图中全部 fMRI 时间序列" disabled>
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body pt-1 pb-1">
+    <div class='row'>
+      <div id="surface-container" class="mt-2 p-0" style="display: none; width: 100%; height: 100%;">
+        <!-- JavaScript will dynamically create and insert left and right hemisphere visualizations here -->
+      </div>
+        <!-- Orthogonal Slices Container: X, Y, Z slices arranged horizontally -->
+      <div id="slice-container" class="d-flex mt-2 p-0" style="display: none;">
+      </div>
+    </div>
+    <div class='row'>
+      <div class='col mr-5 ml-2 mt-2' id="distance-container" style="display: none;">
+        <div id="distance-plot"></div>
+      </div>
+    </div>
+  </div>
+  <div class='card-footer pt-1 pb-1'>
+    <div class='row' id='slider-container'>
+      <div class='col'>
+        <div class='row'>
+          <!-- Time slider title and display container -->
+          <div class='col-sm-3'>
+            <div class='row'>
+              <div class='col-sm-5 p-1 text-center'>
+                <!-- time slider title -->
+                <label for="time_slider" id='time-slider-title' style="font-weight: bolder;"></label>
+              </div>
+              <!-- time point display -->
+              <div class='col-sm-7 p-1 d-flex'>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-50 d-inline" id='time-point-display'></div>
+              </div>
+            </div>
+          </div>
+          <!-- Voxel coordinate container -->
+          <div id='voxel-coord-container' class='col-sm-3 offset-sm-1 mr-1' style="display: none;">
+            <div class='row'>
+              <div class='col-sm-5 p-1 text-center'>
+                <div class='small'>体素坐标：</div>
+              </div>
+              <div class='col-sm-7 pl-0 d-flex'>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-25 d-inline" id='x-voxel'></div>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-25 d-inline" id='y-voxel'></div>
+                <div class="shadow-sm bg-light rounded small p-1 w-25 d-inline" id='z-voxel'></div>
+              </div>
+            </div>
+          </div>
+          <!-- World coordinate container -->
+          <div id='world-coord-container' class='col-sm-3' style="display: none;">
+            <div class='row'>
+              <div class='col-sm-5 p-1 text-center'>
+                <div class='small'>世界坐标：</div>
+              </div>
+              <div class='col-sm-7 pl-0 d-flex'>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-25 d-inline" id='x-world'></div>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-25 d-inline" id='y-world'></div>
+                <div class="shadow-sm bg-light rounded small p-1 w-25 d-inline" id='z-world'></div>
+              </div>
+            </div>
+          </div>
+          <!-- Vertex coordinate container -->
+          <div id='vertex-coord-container' class='col-sm-3 offset-sm-3' style="display: none;">
+            <div class='row'>
+              <div class='col-sm-5 p-1 text-center'>
+                <div class='small'>顶点：</div>
+              </div>
+              <div class='col-sm-7 pl-0 d-flex'>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-50 d-inline" id='vertex-number'></div>
+                <div class="shadow-sm bg-light rounded small p-1 mr-1 w-25 d-inline" id='selected-hemisphere'></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Time slider -->
+        <div class='row justify-content-center pt-0' id='time-slider-container'>
+          <input id="time-slider" type="text" class="slider"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

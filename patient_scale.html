@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行为量表 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body class="bg-page" data-copilot-page="scale">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html">首页</a></li>
+                <li><a href="patient_scale.html" class="active">行为量表</a></li>
+                <li><a href="patient_test.html">认知测试</a></li>
+                <li><a href="patient_tracking.html">14天追踪</a></li>
+                <li><a href="patient_report.html">我的报告</a></li>
+                <li><a href="clinical_pathway.html">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span
+                            id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="info-block" style="padding-top: 120px; min-height: 80vh;">
+        <div class="info-container block-center">
+            <!-- 1. Landing View -->
+            <div id="viewLanding" class="scale-view active">
+                <h1 style="font-size: 2.5rem; color: #0F172A; margin-bottom: 1rem;">行为特征评量表</h1>
+                <p class="center-sub">基于国际通用标准 (WHO/DSM-5) 的快速筛查工具，仅需 5 分钟构建您的初步认知档案。</p>
+
+                <div class="scale-cards-grid">
+                    <!-- Adult Card -->
+                    <div class="scale-card" onclick="startScale('adult')" style="position: relative; overflow: hidden; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #334155; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);">
+                        <svg style="position: absolute; bottom: 0; right: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.15;" viewBox="0 0 200 200" preserveAspectRatio="none">
+                            <path d="M-20,200 Q100,100 250,150" fill="none" stroke="#E2E8F0" stroke-width="1.5"/>
+                            <path d="M20,220 Q150,50 250,80" fill="none" stroke="#38BDF8" stroke-width="3"/>
+                        </svg>
+                        <div style="position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%;">
+                            <div class="card-icon bg-cyan-gradient" style="box-shadow: 0 10px 20px rgba(2, 132, 199, 0.4);"><ion-icon name="person"></ion-icon></div>
+                            <h3 style="color: white;">ASRS 成人自评量表</h3>
+                            <p style="color: #94A3B8; flex-grow: 1;">适用于 18 岁及以上，评估工作记忆、注意力缺失与多动冲动核心症状群。</p>
+                            <div class="tags">
+                                <span class="tag" style="background: rgba(14, 165, 233, 0.15); color: #38BDF8;">WHO推荐</span>
+                                <span class="tag" style="background: rgba(255, 255, 255, 0.1); color: #CBD5E1;">约 5 分钟</span>
+                            </div>
+                            <button class="btn-primary-cyan outline-hover" style="box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3);">开始成版评估</button>
+                        </div>
+                    </div>
+
+                    <!-- Child Card -->
+                    <div class="scale-card" onclick="startScale('child')" style="position: relative; overflow: hidden; background: linear-gradient(135deg, #0F172A, #1E293B); border: 1px solid #334155; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);">
+                        <svg style="position: absolute; bottom: 0; right: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.15;" viewBox="0 0 200 200" preserveAspectRatio="none">
+                            <path d="M-20,200 Q100,100 250,150" fill="none" stroke="#E2E8F0" stroke-width="1.5"/>
+                            <path d="M20,220 Q150,50 250,80" fill="none" stroke="#10B981" stroke-width="3"/>
+                        </svg>
+                        <div style="position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%;">
+                            <div class="card-icon bg-green-gradient" style="box-shadow: 0 10px 20px rgba(5, 150, 105, 0.4);"><ion-icon name="extension-puzzle"></ion-icon></div>
+                            <h3 style="color: white;">SNAP-IV 儿童行为量表</h3>
+                            <p style="color: #94A3B8; flex-grow: 1;">适用于 6-18 岁，由家长或老师填写，考察核心注意力及对立违抗行为。</p>
+                            <div class="tags">
+                                <span class="tag" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">DSM-5标准</span>
+                                <span class="tag" style="background: rgba(255, 255, 255, 0.1); color: #CBD5E1;">家长/教师填</span>
+                            </div>
+                            <button class="btn-primary-green outline-hover" style="box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);">家长/教师代为填写</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scale-footer-note">
+                    <p><ion-icon name="information-circle-outline"></ion-icon> <strong>不确定选哪个？</strong>
+                        如果您是为孩子咨询，请直接点击绿色儿童版入口开始。</p>
+                </div>
+            </div>
+
+            <!-- 2. Testing View (Immersive) -->
+            <div id="viewTesting" class="scale-view" style="display: none;">
+                <div class="test-header">
+                    <button class="btn-back" onclick="quitScale()"><ion-icon name="arrow-back-outline"></ion-icon>
+                        暂时退出测评</button>
+                    <div class="progress-container">
+                        <span class="progress-text" id="progressText">进度计算中...</span>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progressFill" style="width: 0%; transition: width 0.3s;">
+                            </div>
+                        </div>
+                    </div>
+                    <span class="time-est"><ion-icon name="time-outline"></ion-icon> 预计剩 4 分钟</span>
+                </div>
+
+                <div class="question-focus-container">
+                    <h2 class="question-text" id="questionText">题目载入中...</h2>
+                    <div class="options-grid" id="optionsGrid">
+                        <!-- Options generated dynamically -->
+                    </div>
+                    <a href="#" class="help-link"><ion-icon name="bulb-outline"></ion-icon>
+                        需要帮助理解这道题？点击查看系统提供的每日生活实例</a>
+                </div>
+            </div>
+
+            <!-- 3. Result View -->
+            <div id="viewResult" class="scale-view" style="display: none;">
+                <div class="result-celebration block-center">
+                    <div class="icon-pulse" style="font-size: 5rem; color: #10B981; margin-bottom: 0.5rem;"><ion-icon
+                            name="checkmark-circle"></ion-icon></div>
+                    <h2 style="font-size: 2.2rem; margin-bottom: 1rem;">初步筛查评估已完成，感谢您的配合！</h2>
+                    <p style="color: #64748B; margin-bottom: 2rem;">本地测试数据已自动保存至系统档案，并进行了图结构抽取，以下为多维分解。</p>
+                </div>
+
+                <div class="result-dashboard">
+                    <div class="chart-box" id="radarChart" style="width: 100%; height: 350px;"></div>
+                    <div class="interpretation-box">
+                        <h3 id="resultHeading"><ion-icon name="analytics-outline" style="color: var(--primary-blue);"></ion-icon> 表型倾向性解读
+                        </h3>
+                        <p id="resultSummary">根据您的行为特质匹配结果，系统感知到在 <strong>【注意力维持】</strong> 以及 <strong>【执行启动障碍】</strong>
+                            维度上呈现出显著的偏离特异性。这可能意味着您在需要统筹和长链规划的枯燥工作中，更容易遇到阻力或极易受无关刺激的直接干扰。</p>
+                        <div id="scoreChips" style="display:flex; flex-wrap:wrap; gap:0.6rem; margin: 1.25rem 0;"></div>
+                        <div id="recommendationList" style="display:flex; flex-direction:column; gap:0.75rem; margin-top: 1rem;"></div>
+                        <div class="alert-box note">
+                            <ion-icon name="shield-checkmark-outline"></ion-icon>
+                            <span id="resultDisclaimer"><strong>医学免责声明：</strong> 此量表截断分数并不等同于最终诊断。为避免记忆的主观偏差，我们墙裂建议通过后续 14 天的客观追踪来建立真正的 GNN
+                                特质图谱，或持此报告直接向权威精神/心理医生预约问诊。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cta-group" style="display: flex; gap: 1rem; justify-content: center; margin-top: 3rem;">
+                    <button class="btn-primary-orange shadow-lg"
+                        style="padding: 1.2rem 2.5rem; font-size: 1.1rem; border-radius: 16px; border:none; color:white; font-weight:700; display:flex; gap:0.5rem; align-items:center; cursor: pointer;"
+                        onclick="window.location.href='patient_tracking.html'">
+                        <ion-icon name="rocket-outline"></ion-icon> 强烈建议：去开启 14 天连续行为追踪
+                    </button>
+                    <button class="btn-outline" style="padding: 1.2rem 2.5rem; font-size: 1.1rem; cursor: pointer;">
+                        保存入数字健康档案
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: Analytical Rationale Cards -->
+        <div class="info-container block-center" style="margin-top: 8rem; text-align: left; max-width: 1200px;">
+            <h2 style="font-size: 2.2rem; color: #0F172A; margin-bottom: 1.5rem; text-align: center;">为什么使用 ASRS 与
+                SNAP-IV 辅助诊断？</h2>
+            <p class="center-sub" style="text-align: center; margin-bottom: 4rem;">使用 <strong>ASRS 与 SNAP-IV</strong> 对
+                <strong>全年龄段人群</strong> 进行评估，帮助医疗保健提供者基于 <strong>国际金标准</strong> 更精准地 <strong>区分核心症状维度</strong>，并结合
+                <strong>多视角数据</strong> 动态跟踪 <strong>干预效果随时间的变化</strong>。
+            </p>
+
+            <div class="feature-grid">
+                <!-- Card 1 -->
+                <div class="feature-card" style="background: #1E293B; border-color: #334155; padding: 2.5rem;">
+                    <ion-icon name="globe-outline"
+                        style="color: #89CFF0; font-size: 2.5rem; margin-bottom: 1.5rem; display: block;"></ion-icon>
+                    <h4 style="font-size: 1.3rem; margin-bottom: 1rem; color: white;">国际权威标准与高临床效度</h4>
+                    <p style="color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">量表均直接源自世界卫生组织
+                        (WHO)和 美国精神医学学会(DSM-5)标准。<br><br>
+                        <strong style="color:white;">权威性：</strong>经过数十年、跨文化、大样本临床验证的“金标准”。<br>
+                        <strong style="color:white;">准确性：</strong>能精准区分正常波动与病理性症状，极大降低误判率。
+                    </p>
+                </div>
+                <!-- Card 2 -->
+                <div class="feature-card" style="background: #1E293B; border-color: #334155; padding: 2.5rem;">
+                    <ion-icon name="layers-outline"
+                        style="color: #A3E4D7; font-size: 2.5rem; margin-bottom: 1.5rem; display: block;"></ion-icon>
+                    <h4 style="font-size: 1.3rem; margin-bottom: 1rem; color: white;">多维度的症状量化结构</h4>
+                    <p style="color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">不同于简单的“是/否”判断，它们能将模糊的主观感受转化为
+                        <strong>可量化的多维数据</strong>。<br><br><strong
+                            style="color:white;">细分维度</strong>：拆解为“注意力缺陷”、“多动/冲动”及“对立违抗”。<br><strong
+                            style="color:white;">数据融合</strong>：结构化分数能与14天追踪及图神经网络多模态对齐。
+                    </p>
+                </div>
+                <!-- Card 3 -->
+                <div class="feature-card" style="background: #1E293B; border-color: #334155; padding: 2.5rem;">
+                    <ion-icon name="people-circle-outline"
+                        style="color: #D2B4DE; font-size: 2.5rem; margin-bottom: 1.5rem; display: block;"></ion-icon>
+                    <h4 style="font-size: 1.3rem; margin-bottom: 1rem; color: white;">全生命周期的场景覆盖</h4>
+                    <p style="color: #CBD5E1; line-height: 1.7; font-size: 0.95rem;">两者互补，完美覆盖了从 <strong>儿童青少年</strong>
+                        到 <strong>成年人</strong> 的全年龄段需求。<br><br><strong style="color:white;">年龄适配</strong>：ASRS
+                        专为成人设计；SNAP-IV 专为儿童的发育特征设计。<br><strong
+                            style="color:white;">多源验证</strong>：支持家长和老师双视角填写，消除单一主观视角的偏差。</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SECTION: Scale FAQs -->
+    <section class="bg-deep-navy" style="padding: 6rem 0; margin-top: 4rem;">
+        <div class="info-container faq-container block-center" style="max-width: 1000px; text-align: left;">
+            <h2
+                style="font-size: 2.2rem; margin-bottom: 2rem; color: white; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 1.5rem; font-weight: 800;">
+                常见问题解答</h2>
+            <div class="faq-list" style="border-top: none;">
+                <!-- 1 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>ASRS 与 SNAP-IV 评估体系源自何处？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>这两个量表均具有深厚的国际学术背景。<br>
+                            <strong>ASRS (成人版)</strong>：由世界卫生组织 (WHO) 与哈佛医学院的成人 ADHD 工作组共同开发，旨在全球范围内标准化成人 ADHD
+                            的筛查。<br>
+                            <strong>SNAP-IV (儿童版)</strong>：基于美国精神医学学会发布的 DSM 标准制定，是全球儿科和精神科临床研究中引用率最高的工具之一。<br>
+
+                    </div>
+                </div>
+                <!-- 2 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>它们与其他网络自测题有何不同？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>最大的区别在于 <strong>“临床效度”</strong> 与 <strong>“维度划分”</strong>。<br>
+                            许多网络测试仅凭经验编写，缺乏统计学验证。而 ASRS 和 SNAP-IV 经过数十年的大样本数据验证，具有极高的信度和效度。
+                            它们不仅仅给出一个总分，而是将症状细分为 <strong>“注意力缺陷”</strong> 和 <strong>“多动/冲动”</strong>
+                            两个核心维度。这种结构化分析能更精准地描绘认知特征。</p>
+                    </div>
+                </div>
+                <!-- 3 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>使用这两张量表进行初步筛查有什么好处？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>它们是连接“主观感受”与“客观诊断”的高效桥梁。<br>
+                            <strong>快速识别</strong>：能在 5-10 分钟内帮助用户识别潜在的注意力问题，避免长期被误解。<br>
+                            <strong>辅助决策</strong>：ASRS 能回顾童年症状延续性；SNAP-IV 能整合家长和老师的多视角观察。<br>
+                            <strong>基线建立</strong>：在本系统中，量表得分将作为基线数据，与您后续的14天行为追踪进行多模态对比。
+                        </p>
+                    </div>
+                </div>
+                <!-- 4 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>问卷具体测量什么？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>
+                            <strong>ASRS</strong>包含 18 个条目，测量成人在工作、社交场景中，注意力维持、组织规划、冲动控制的频率。<br>
+                            <strong>SNAP-IV</strong>包含 26 个条目，分为注意力不集中、多动/冲动、对立违抗行为三个子量表，测量儿童过去6个月内的行为频率。
+                        </p>
+                    </div>
+                </div>
+                <!-- 5 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>这些量表能否可靠地应用于不同人群？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>是的，它们具有广泛的跨文化适用性。<br>
+                            ASRS已被翻译成超过 40 种语言，并在不同国家和文化背景下验证了其稳定性，适用于所有成年群体。<br>
+                            SNAP-IV广泛应用于 6-18 岁的儿童及青少年，家长和教师双版本能够消除单一视角的偏差，真实反映不同环境的表现。</p>
+                    </div>
+                </div>
+
+                <!-- 6 -->
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>它们如何为注意力障碍的研究和个人成长做出贡献？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>它们是理解大脑独特运作方式的钥匙,
+                            全球数百万份验证数据构成了我们对 ADHD 神经机制理解的基础。
+                            通过填写量表，用户能第一次系统地审视自己的行为模式。“自我觉察”是改变的第一步。结合本系统的14天追踪，患者可以找到最适合的干预策略。
+                        </p>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Simple sticky footer -->
+    <footer class="app-footer" style="padding: 2rem 0; margin-top: auto;">
+        <div class="footer-container" style="justify-content: center;">
+            <span>知行合“医” - 专注每刻 © 2026</span>
+        </div>
+    </footer>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/scale.js"></script>
+    <script src="js/patient_copilot.js"></script>
+</body>
+
+</html>

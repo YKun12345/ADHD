@@ -1,0 +1,62 @@
+<!-- Average Analysis Panel-->
+<div class="modal fade" id="average-modal" tabindex="-1" aria-labelledby="average-modal-label" aria-hidden="true">
+    <div class='spinner-overlay' id="average-spinner-overlay"></div>
+    <div id='average-modal-dialog' class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="average-modal-label">窗口平均</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="average-form" enctype="multipart/form-data">
+          <div class="modal-body">
+            <!-- Average Spinner Wheel -->
+            <div class="spinner-container d-flex justify-content-center">
+              <div id='average-spinner-wheel' class="spinner-wheel" role="status"></div>
+            </div>
+            <div class='row'>
+              <div class='col ml-3 mr-3'>
+                <div class='row'>
+                  <div id="no-annotation-message-average" class="alert alert-danger" role='alert' style="display: none;">未选择用于平均的时间点（请使用标注工具选择时间点）</div>
+                </div>
+                <div class='row mt-3'>
+                  <div class='col ml-3 mr-3'>
+                    <div class='row'>
+                      <h5>窗口参数</h5>
+                      <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="在左时间点和右时间点指定的范围内执行窗口平均。" aria-hidden="true"></span>
+                    </div>
+                    <div class='row'>
+                      <div class='col-6'>
+                        <label for="average-left-edge">左边界</label>
+                        <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="以时间点为单位，必须小于或等于 0。" aria-hidden="true"></span>
+                        <input type="number" class="form-control" id="average-left-edge" max="0" step="1" value="0">
+                      </div>
+                      <div class='col-6'>
+                        <label for="average-right-edge">右边界</label>
+                        <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="以时间点为单位，必须大于或等于 0。" aria-hidden="true"></span>
+                        <input type="number" class="form-control" id="average-right-edge" min="0" step="1" value="0">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="row">
+              <div class="col">
+                <div id="error-message-average" class="alert alert-danger" role='alert' style="display: none;"></div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                <button type="submit" class="btn btn-primary" id='submit-average' data-dismiss="static">计算</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

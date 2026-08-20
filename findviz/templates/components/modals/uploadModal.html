@@ -1,0 +1,177 @@
+﻿<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="jumbotron">
+          <div class='row justify-content-center'>
+            <div class="brand-pill">智绘脑图</div>
+            <h1 class="display-4">脑影像可视化工作台</h1>
+          </div>
+          <p class="lead">比赛版仅保留 NIfTI 与 GIfTI 影像上传及可视化能力</p>
+          <hr class="my-4">
+          <div class='row'>
+            <div class='col'>
+              <button type="button" class="btn btn-primary btn-lg mt-4" data-toggle="modal" id='upload-file' data-target="#upload-modal">
+                上传影像文件
+              </button>
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="modal fade" id="upload-modal" tabindex="-1" aria-labelledby="upload-modal-label" aria-hidden="true">
+      <div class='spinner-overlay' id="file-load-spinner-overlay"></div>
+      <div id='upload-modal-dialog' class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="container-fluid">
+              <div class='row'>
+                <div class='col-5'>
+                  <h5 class="modal-title" id="upload-modal-dialog">上传影像文件</h5>
+                </div>
+                <div class='col-4 offset-2'>
+                  <button id='upload-scene' type="button" class="btn btn-outline-secondary">上传场景</button>
+                  <input type="file" id="file-scene" style="display: none;">
+                </div>
+                <div class='col-1'>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand">影像文件类型</a>
+            <ul class="nav nav-pills mb-3">
+              <li class="nav-item">
+                <a class="nav-link active" id="nifti-tab" data-toggle="pill" href="#nifti" role="tab" aria-selected="true">NIfTI</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="gifti-tab" data-toggle="pill" href="#gifti" role="tab" aria-selected="false">GIfTI</a>
+              </li>
+            </ul>
+          </nav>
+          <form id="upload-form" enctype="multipart/form-data">
+            <div class="modal-body">
+              <div class="spinner-container d-flex justify-content-center">
+                <div id='file-load-spinner-wheel' class="spinner-wheel" role="status"></div>
+              </div>
+              <div class="tab-content" id="fileupload-content">
+                <div class="tab-pane fade show active" id="nifti" role="tabpanel" aria-labelledby="nifti-tab">
+                  <div class='card'>
+                    <div class="card-header">
+                      <h5 class="card-title">NIfTI 文件</h5>
+                    </div>
+                    <div class='card-body'>
+                      <div class='row justify-content-start'>
+                        <div class="form-group ml-1">
+                          <label for="nifti-func" class="text-secondary">功能文件（.nii, .nii.gz）</label>
+                          <i class="fa-solid fa-triangle-exclamation" id="nifti-func-error" style="color: #e93407; display: none;"></i>
+                          <input type="file" class="form-control-file" id="nifti-func">
+                        </div>
+                      </div>
+                      <div class='row justify-content-start'>
+                        <div class="form-group ml-1">
+                          <label for="nifti-anat" class="d-inline-block text-secondary">解剖文件（.nii, .nii.gz，可选）</label>
+                          <i class="fa-solid fa-triangle-exclamation" id="nifti-anat-error" style="color: #e93407; display: none;"></i>
+                          <span class="fa-solid fa-circle-info d-inline-block toggle-immediate" data-toggle="tooltip" data-placement="top" title="可选：用于功能影像与解剖影像叠加显示。" aria-hidden="true"></span>
+                          <input type="file" class="form-control-file" id="nifti-anat">
+                        </div>
+                      </div>
+                      <div class='row justify-content-start'>
+                        <div class="form-group ml-1">
+                          <label for="nifti-mask" class="d-inline-block text-secondary">脑掩膜文件（.nii, .nii.gz，可选）</label>
+                          <i class="fa-solid fa-triangle-exclamation" id="nifti-mask-error" style="color: #e93407; display: none;"></i>
+                          <span class="fa-solid fa-circle-info d-inline-block toggle-immediate" data-toggle="tooltip" data-placement="top" title="可选：用于限制脑组织范围，便于更清晰地显示有效体素。" aria-hidden="true"></span>
+                          <input type="file" class="form-control-file" id="nifti-mask">
+                        </div>
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                          <div class="fa fa-exclamation-triangle d-inline-block"></div>
+                          <div class="d-inline-block">比赛版建议同时上传脑掩膜文件，以启用更完整的预处理与分析能力。</div>
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="gifti" role="tabpanel" aria-labelledby="gifti-tab">
+                  <div class='card'>
+                    <div class="card-header">
+                      <h5 class="card-title">GIfTI 文件</h5>
+                    </div>
+                    <div class='card-body'>
+                      <div class='row justify-content-start'>
+                        <div class='col pl-0'>
+                          <p class="pl-2 mt-0 mb-1"><strong>左半球文件</strong></p>
+                          <div class='row'>
+                            <div class="form-group pl-4">
+                              <label for="left-hemisphere-gifti-func" class="text-secondary">功能文件（func.gii）</label>
+                              <i class="fa-solid fa-triangle-exclamation" id="left-hemisphere-gifti-func-error" style="color: #e93407; display: none;"></i>
+                              <input type="file" class="form-control-file" id="left-hemisphere-gifti-func">
+                            </div>
+                          </div>
+                          <div class='row'>
+                            <div class="form-group pl-4">
+                              <label for="left-hemisphere-gifti-mesh" class="text-secondary">表面几何文件（surf.gii）</label>
+                              <i class="fa-solid fa-triangle-exclamation" id="left-hemisphere-gifti-mesh-error" style="color: #e93407; display: none;"></i>
+                              <span class="fa-solid fa-circle-info d-inline-block toggle-immediate" data-toggle="tooltip" data-placement="top" title="左半球表面几何文件，用于 3D 脑表面展示。" aria-hidden="true"></span>
+                              <input type="file" class="form-control-file" id="left-hemisphere-gifti-mesh">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class='row justify-content-start mt-3'>
+                        <div class='col pl-0'>
+                          <p class="pl-2 mt-0 mb-1"><strong>右半球文件</strong></p>
+                          <div class='row'>
+                            <div class="form-group pl-4">
+                              <label for="right-hemisphere-gifti-func" class="text-secondary">功能文件（func.gii）</label>
+                              <i class="fa-solid fa-triangle-exclamation" id="right-hemisphere-gifti-func-error" style="color: #e93407; display: none;"></i>
+                              <input type="file" class="form-control-file" id="right-hemisphere-gifti-func">
+                            </div>
+                          </div>
+                          <div class='row'>
+                            <div class="form-group pl-4">
+                              <label for="right-hemisphere-gifti-mesh" class="text-secondary">表面几何文件（surf.gii）</label>
+                              <i class="fa-solid fa-triangle-exclamation" id="right-hemisphere-gifti-mesh-error" style="color: #e93407; display: none;"></i>
+                              <span class="fa-solid fa-circle-info d-inline-block toggle-immediate" data-toggle="tooltip" data-placement="top" title="右半球表面几何文件，用于 3D 脑表面展示。" aria-hidden="true"></span>
+                              <input type="file" class="form-control-file" id="right-hemisphere-gifti-mesh">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="error-message-upload" class="alert alert-danger" role='alert' style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+              <button type="submit" class="btn btn-primary" id='submit-file' data-dismiss="static">上传并可视化</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="error-scene-modal" tabindex="-1" role="dialog" aria-labelledby="error-scene-modal-label" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="error-scene-modal-label">场景文件上传失败</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger" role="alert">
+              场景文件上传失败，请确认该场景文件来自同版本的可视化工作台，并通过“保存场景”功能导出。
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影像可视化 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <link rel="stylesheet" href="findviz/static/css/vendor/bootstrap.min.css">
+    <link rel="stylesheet" href="findviz/static/css/vendor/all.min.css">
+    <link rel="stylesheet" href="findviz/static/css/vendor/bootstrap-slider.min.css">
+    <link rel="stylesheet" href="findviz/static/css/vendor/bootstrap-select.min.css">
+    <link rel="stylesheet" href="findviz/static/css/styles.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="findviz/static/js/vendor/jquery-3.5.1.min.js"></script>
+    <script src="findviz/static/js/vendor/popper.min.js"></script>
+    <script src="findviz/static/js/vendor/bootstrap.min.js"></script>
+    <script src="findviz/static/js/vendor/plotly-latest.min.js"></script>
+    <script src="findviz/static/js/vendor/bootstrap-slider.min.js"></script>
+    <script src="findviz/static/js/vendor/bootstrap-select.min.js"></script>
+    <script src="findviz/static/js/vendor/html2canvas.min.js"></script>
+    <style>
+        body.researcher-visualization-page {
+            margin: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+                linear-gradient(180deg, #F4F8FF 0%, #EEF4FB 100%);
+            color: #334155;
+        }
+
+        .researcher-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1200;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .researcher-topbar-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .researcher-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #0F172A;
+        }
+
+        .researcher-brand ion-icon {
+            font-size: 1.9rem;
+            color: #2563EB;
+        }
+
+        .researcher-nav {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .researcher-nav a {
+            color: #64748B;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .researcher-nav a.active,
+        .researcher-nav a:hover {
+            color: #2563EB;
+        }
+
+        .researcher-user {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.9rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1E3A8A;
+            font-weight: 700;
+        }
+
+        .researcher-shell {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.4rem 2rem 3rem;
+        }
+
+        .visualization-hero {
+            padding: 1.75rem 0 1.45rem;
+            margin-bottom: 1.2rem;
+            text-align: center;
+        }
+
+        .visualization-hero h1 {
+            margin: 0 0 0.85rem;
+            font-size: 2.45rem;
+            font-weight: 800;
+            color: #0F172A;
+            line-height: 1.18;
+        }
+
+        .visualization-hero p {
+            margin: 0 auto;
+            color: #475569;
+            line-height: 1.8;
+            font-size: 1rem;
+            max-width: 920px;
+        }
+
+        .visualization-hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .visualization-hero-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.72rem 1rem;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .visualization-hero-link.primary {
+            background: #2563EB;
+            color: #FFFFFF;
+        }
+
+        .visualization-hero-link.secondary {
+            background: #EFF6FF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+        }
+
+        .context-card,
+        .workspace-card,
+        .viewer-card {
+            background: rgba(255,255,255,0.96);
+            border: 1px solid rgba(191, 219, 254, 0.75);
+            border-radius: 22px;
+            padding: 1.2rem;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.04);
+        }
+
+        .context-card {
+            margin-bottom: 1rem;
+        }
+
+        .context-card h3,
+        .workspace-card h3,
+        .viewer-card h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1.05rem;
+            color: #0F172A;
+        }
+
+        .context-card p,
+        .workspace-card p,
+        .viewer-card p {
+            margin: 0 0 0.8rem;
+            color: #64748B;
+            line-height: 1.7;
+            font-size: 0.92rem;
+        }
+
+        .selected-patient-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+        }
+
+        .selected-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.72rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .workspace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .workspace-copy {
+            min-width: 0;
+            flex: 1 1 0;
+            max-width: 720px;
+        }
+
+        .workspace-copy p {
+            margin-bottom: 0;
+        }
+
+        .workspace-patient-note {
+            margin-top: 0.65rem;
+            min-height: 1.35rem;
+            color: #64748B;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .upload-card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .upload-panel {
+            display: block;
+            border: 1px solid #E2E8F0;
+            border-radius: 22px;
+            overflow: hidden;
+            background: white;
+            height: 100%;
+        }
+
+        .upload-panel.nifti-card {
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08);
+        }
+
+        .upload-panel.gifti-card {
+            box-shadow: 0 12px 24px rgba(15, 118, 110, 0.08);
+        }
+
+        .upload-panel-header {
+            padding: 1.3rem 1.5rem;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .upload-panel-header h4 {
+            margin: 0;
+            font-size: 1.65rem;
+            color: #1F2937;
+            font-weight: 800;
+        }
+
+        .upload-panel-header p {
+            margin: 0.45rem 0 0;
+            color: #64748B;
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        .upload-panel-body {
+            padding: 1.25rem 1.5rem 1.5rem;
+        }
+
+        .file-group-title {
+            font-size: 1.15rem;
+            color: #0F172A;
+            font-weight: 800;
+            margin: 0 0 0.9rem;
+        }
+
+        .file-row {
+            margin-bottom: 1.2rem;
+        }
+
+        .screenshot-upload-row {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+
+        .asset-explain-box {
+            width: 100%;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 14px;
+            padding: 0.82rem 0.92rem;
+            background: #FFFFFF;
+            color: #0F172A;
+            font-size: 0.92rem;
+            resize: vertical;
+            min-height: 92px;
+            line-height: 1.65;
+        }
+
+        .asset-explain-box:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .asset-save-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 0.8rem;
+        }
+
+        .screenshot-preview-box {
+            min-height: 170px;
+            border-radius: 18px;
+            border: 1px dashed #BFDBFE;
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.7), rgba(255,255,255,0.95));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #64748B;
+            text-align: center;
+            padding: 0.9rem;
+        }
+
+        .screenshot-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .screenshot-input {
+            display: none;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.98rem;
+            color: #64748B;
+            margin-bottom: 0.45rem;
+        }
+
+        .file-input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .native-file-input {
+            font-size: 0.95rem;
+            color: #334155;
+        }
+
+        .warning-box {
+            margin-top: 1rem;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            background: #FEF3C7;
+            color: #92400E;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .upload-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            margin-top: 1.4rem;
+        }
+
+        .action-btn {
+            border: none;
+            border-radius: 14px;
+            padding: 0.9rem 1.25rem;
+            font-size: 0.96rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .action-btn.secondary {
+            background: #6B7280;
+            color: white;
+        }
+
+        .action-btn.primary {
+            background: #2563EB;
+            color: white;
+        }
+
+        .gifti-card .action-btn.primary {
+            background: #0F766E;
+        }
+
+        .gifti-card .action-btn.primary:hover {
+            background: #0D9488;
+        }
+
+        .action-feedback {
+            min-height: 1.5rem;
+            margin-top: 0.9rem;
+            font-size: 0.92rem;
+            color: #64748B;
+        }
+
+        .action-feedback.success { color: #047857; }
+        .action-feedback.error { color: #B91C1C; }
+
+        .save-panel {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid rgba(147, 197, 253, 0.55);
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.98));
+        }
+
+        .save-panel-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .save-panel-header h4 {
+            margin: 0 0 0.35rem;
+            font-size: 1rem;
+            color: #0F172A;
+        }
+
+        .save-panel-header p {
+            margin: 0;
+            color: #64748B;
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+
+        .save-file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-top: 0.75rem;
+        }
+
+        .save-file-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.38rem 0.7rem;
+            border-radius: 999px;
+            background: #FFFFFF;
+            border: 1px solid #DBEAFE;
+            color: #1E3A8A;
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        .viewer-card {
+            margin-top: 1.5rem;
+        }
+
+        .viewer-card #parent-container {
+            margin-top: 0.75rem !important;
+            padding-left: 0.35rem;
+            padding-right: 0.35rem;
+            font-size: 13px;
+        }
+
+        .viewer-card #analytics-toolbox-container .card,
+        .viewer-card #fmri-user-options-container .card,
+        .viewer-card #fmri-visualization-container .card,
+        .viewer-card #time-course-user-options-container .card,
+        .viewer-card #time-course-visualization-container .card {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .viewer-card #analytics-toolbox-container .card-header,
+        .viewer-card #fmri-user-options-container .card-header,
+        .viewer-card #fmri-visualization-container .card-header,
+        .viewer-card #time-course-user-options-container .card-header,
+        .viewer-card #time-course-visualization-container .card-header {
+            padding: 0.4rem 0.55rem;
+        }
+
+        .viewer-card #analytics-toolbox-container .card-body,
+        .viewer-card #fmri-user-options-container .card-body,
+        .viewer-card #fmri-visualization-container .card-body,
+        .viewer-card #time-course-user-options-container .card-body,
+        .viewer-card #time-course-visualization-container .card-body,
+        .viewer-card #fmri-visualization-container .card-footer,
+        .viewer-card #time-course-visualization-container .card-footer {
+            padding: 0.5rem 0.6rem;
+        }
+
+        .viewer-card #fmri-container > .col-2,
+        .viewer-card #time-course-container > .col-2 {
+            flex: 0 0 19%;
+            max-width: 19%;
+        }
+
+        .viewer-card #fmri-container > .col-10,
+        .viewer-card #time-course-container > .col-10 {
+            flex: 0 0 81%;
+            max-width: 81%;
+        }
+
+        .viewer-card #fmri-container > [class*='col-'],
+        .viewer-card #time-course-container > [class*='col-'],
+        .viewer-card #analytics-toolbox-container > [class*='col-'] {
+            padding-left: 0.35rem;
+            padding-right: 0.35rem;
+        }
+
+        .viewer-card .btn,
+        .viewer-card .btn-sm {
+            padding: 0.18rem 0.48rem;
+            font-size: 0.74rem;
+            line-height: 1.25;
+            border-radius: 8px;
+        }
+
+        .viewer-card .btn-group > .btn {
+            padding-left: 0.42rem;
+            padding-right: 0.42rem;
+        }
+
+        .viewer-card .form-control,
+        .viewer-card .form-control-sm,
+        .viewer-card .custom-select {
+            font-size: 0.74rem;
+            min-height: calc(1.4em + 0.45rem + 2px);
+            padding: 0.15rem 0.4rem;
+            border-radius: 8px;
+        }
+
+        .viewer-card label,
+        .viewer-card .small,
+        .viewer-card .custom-control-label,
+        .viewer-card .alert,
+        .viewer-card .card,
+        .viewer-card .popover,
+        .viewer-card .dropdown-menu,
+        .viewer-card .dropdown-item {
+            font-size: 0.74rem;
+        }
+
+        .viewer-card .custom-control {
+            min-height: 1.2rem;
+        }
+
+        .viewer-card .custom-control-label::before,
+        .viewer-card .custom-control-label::after {
+            top: 0.15rem;
+            width: 0.85rem;
+            height: 0.85rem;
+        }
+
+        .viewer-card #time-point-display,
+        .viewer-card #x-voxel,
+        .viewer-card #y-voxel,
+        .viewer-card #z-voxel,
+        .viewer-card #x-world,
+        .viewer-card #y-world,
+        .viewer-card #z-world,
+        .viewer-card #vertex-number,
+        .viewer-card #selected-hemisphere {
+            font-size: 0.72rem;
+            padding: 0.18rem 0.3rem !important;
+        }
+
+        .viewer-card #time-course-plot {
+            min-height: 400px;
+        }
+
+        .viewer-card .js-plotly-plot .plotly .modebar {
+            transform: scale(0.84);
+            transform-origin: top right;
+        }
+
+        .viewer-empty {
+            border: 1px dashed #BFDBFE;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(255,255,255,0.98));
+            min-height: 220px;
+            padding: 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #64748B;
+            margin-top: 1rem;
+        }
+
+        .startup-alert {
+            display: none;
+            align-items: flex-start;
+            gap: 0.85rem;
+            margin-bottom: 1.2rem;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid #FECACA;
+            background: #FEF2F2;
+            color: #991B1B;
+            line-height: 1.7;
+        }
+
+        .startup-alert.visible {
+            display: flex;
+        }
+
+        .startup-alert.info {
+            border-color: #BFDBFE;
+            background: #EFF6FF;
+            color: #1D4ED8;
+        }
+
+        .startup-alert ion-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .startup-alert strong {
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+
+        .startup-alert code {
+            display: inline-block;
+            padding: 0.08rem 0.35rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.75);
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 1024px) {
+            .researcher-shell {
+                padding-top: 1rem;
+            }
+
+            .upload-card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workspace-header {
+                flex-direction: column;
+            }
+
+            .viewer-card #fmri-container > .col-2,
+            .viewer-card #fmri-container > .col-10,
+            .viewer-card #time-course-container > .col-2,
+            .viewer-card #time-course-container > .col-10 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+
+            .visualization-hero h1 {
+                font-size: 2rem;
+            }
+
+            .researcher-topbar-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body class="researcher-visualization-page">
+    <header class="researcher-topbar">
+        <div class="researcher-topbar-inner">
+            <div class="researcher-brand">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <nav class="researcher-nav">
+                <a id="childNavImaging" href="doctor_imaging.html">影像分析</a>
+                <a id="childNavVisualization" href="doctor_visualization.html" class="active">影像可视化</a>
+            </nav>
+            <div class="nav-actions">
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <span id="researcherName">研究人员</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="researcher-shell">
+        <section class="visualization-hero">
+            <h1>影像可视化</h1>
+            <p>这里已经是患者工作台的影像可视化子页。进入页面时会自动沿用当前患者上下文，研究人员可以在同一位患者主线上继续上传、可视化并保存结果。</p>
+            <div class="visualization-hero-actions">
+                <a id="backToPatientReportLink" href="doctor_patients.html" class="visualization-hero-link primary">返回患者工作台</a>
+                <a id="openPatientReportLink" href="doctor_patients.html" class="visualization-hero-link secondary">查看患者综合分析</a>
+            </div>
+        </section>
+
+        <div id="visualizationStartupAlert" class="startup-alert" role="alert" aria-live="polite"></div>
+
+        <section class="context-card">
+            <h3>当前患者上下文</h3>
+            <p id="timeseriesPatientHint">本页已经作为患者工作台的影像可视化子页使用，不需要再次绑定患者。进入页面时会自动带入你刚刚选择的那位患者。</p>
+            <div id="timeseriesPatientMeta" class="selected-patient-meta"></div>
+        </section>
+
+        <section class="workspace-card">
+            <div class="workspace-header">
+                <div class="workspace-copy">
+                    <h3>影像文件上传与保存</h3>
+                    <p>上传 NIfTI / GIfTI 文件后即可进入 findviz 工作区继续处理，并把最后的可视化结果直接保存回当前患者报告。</p>
+                    <div id="workspacePatientNote" class="workspace-patient-note">当前页面会自动沿用来自患者工作台的患者上下文。</div>
+                </div>
+            </div>
+
+            <div class="upload-card-grid">
+                <div id="upload-panel-nifti" class="upload-panel nifti-card">
+                    <div class="upload-panel-header">
+                        <h4>NIfTI 脑剖面可视化</h4>
+                        <p>上传功能影像、脑剖面和掩膜文件后，继续进入 findviz 工作区完成切面可视化与截图保存。</p>
+                    </div>
+                    <div class="upload-panel-body">
+                        <div class="file-row">
+                            <div class="file-label">功能影像文件（.nii / .nii.gz）</div>
+                            <div class="file-input-row">
+                                <input id="nifti-func" class="native-file-input" type="file" accept=".nii,.nii.gz" />
+                            </div>
+                        </div>
+
+                        <div class="file-row">
+                            <div class="file-label">脑剖面文件（可选）</div>
+                            <div class="file-input-row">
+                                <input id="nifti-anat" class="native-file-input" type="file" accept=".nii,.nii.gz" />
+                            </div>
+                        </div>
+
+                        <div class="file-row">
+                            <div class="file-label">掩膜文件（可选）</div>
+                            <div class="file-input-row">
+                                <input id="nifti-mask" class="native-file-input" type="file" accept=".nii,.nii.gz" />
+                            </div>
+                        </div>
+
+                        <div class="warning-box">
+                            <ion-icon name="warning-outline"></ion-icon>
+                            <span>请确认当前上传的文件就是这位患者的影像文件。保存后会直接写入该患者的综合报告，不再单独重新绑定患者。</span>
+                        </div>
+
+                        <div class="upload-actions">
+                            <button id="upload-file" class="action-btn secondary" type="button">选择功能影像</button>
+                            <button id="submit-file" class="action-btn primary" type="button">进入脑剖面可视化</button>
+                        </div>
+
+                        <div class="screenshot-upload-row">
+                            <input id="slice-screenshot-input" class="screenshot-input" type="file" accept="image/*" />
+                            <button id="upload-slice-screenshot-btn" class="action-btn secondary" type="button">上传影像</button>
+                            <div id="sliceScreenshotPreview" class="screenshot-preview-box">脑剖面截图预览区</div>
+                            <textarea id="sliceInterpretationInput" class="asset-explain-box" placeholder="填写脑剖面可视化结果的文字解读，保存后会同步到患者端报告。"></textarea>
+                            <div class="asset-save-row">
+                                <button id="saveSliceAssetBtn" class="action-btn primary" type="button">保存脑剖面结果</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="upload-panel-gifti" class="upload-panel gifti-card">
+                    <div class="upload-panel-header">
+                        <h4>GIfTI 3D 表面可视化</h4>
+                        <p>上传左右半球的功能与 mesh 文件后，继续进入 3D 表面工作区，并把结果同步到当前患者报告。</p>
+                    </div>
+                    <div class="upload-panel-body">
+                        <div class="file-group-title">左半球</div>
+                        <div class="file-row">
+                            <div class="file-label">功能文件（.func.gii）</div>
+                            <div class="file-input-row">
+                                <input id="left-hemisphere-gifti-func" class="native-file-input" type="file" accept=".gii" />
+                            </div>
+                        </div>
+                        <div class="file-row">
+                            <div class="file-label">表面文件（.surf.gii）</div>
+                            <div class="file-input-row">
+                                <input id="left-hemisphere-gifti-mesh" class="native-file-input" type="file" accept=".gii" />
+                            </div>
+                        </div>
+
+                        <div class="file-group-title" style="margin-top:1.6rem;">右半球</div>
+                        <div class="file-row">
+                            <div class="file-label">功能文件（.func.gii）</div>
+                            <div class="file-input-row">
+                                <input id="right-hemisphere-gifti-func" class="native-file-input" type="file" accept=".gii" />
+                            </div>
+                        </div>
+                        <div class="file-row">
+                            <div class="file-label">表面文件（.surf.gii）</div>
+                            <div class="file-input-row">
+                                <input id="right-hemisphere-gifti-mesh" class="native-file-input" type="file" accept=".gii" />
+                            </div>
+                        </div>
+
+                        <div class="upload-actions">
+                            <button id="submit-file-gifti" class="action-btn primary" type="button">进入 3D 表面可视化</button>
+                        </div>
+
+                        <div class="screenshot-upload-row">
+                            <input id="surface-screenshot-input" class="screenshot-input" type="file" accept="image/*" />
+                            <button id="upload-surface-screenshot-btn" class="action-btn secondary" type="button">上传影像</button>
+                            <div id="surfaceScreenshotPreview" class="screenshot-preview-box">3D 表面截图预览区</div>
+                            <textarea id="surfaceInterpretationInput" class="asset-explain-box" placeholder="填写 3D 表面可视化结果的文字解读，保存后会同步到患者端报告。"></textarea>
+                            <div class="asset-save-row">
+                                <button id="saveSurfaceAssetBtn" class="action-btn primary" type="button">保存 3D 表面结果</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadActionFeedback" class="action-feedback"></div>
+
+            <div id="saveVisualizationPanel" class="save-panel">
+                <div class="save-panel-header">
+                    <div>
+                        <h4>保存到患者报告</h4>
+                        <p id="saveVisualizationSummary">完成可视化后，可以把当前文件信息和可视化结果直接保存回患者综合报告，供患者端和研究端共同查看。</p>
+                    </div>
+                    <button id="saveVisualizationButton" class="action-btn primary" type="button" disabled>保存到报告</button>
+                </div>
+                <div id="saveVisualizationFiles" class="save-file-list"></div>
+                <div id="saveVisualizationStatus" class="action-feedback"></div>
+            </div>
+        </section>
+
+        <section class="viewer-card">
+            <h3>findviz 可视化工作区</h3>
+            <p>上传成功后，这里会载入 findviz 工作区。你可以继续完成脑剖面切面、3D 表面以及时间序列可视化，并最终保存回当前患者报告。</p>
+
+            <div id="findvizEmptyState" class="viewer-empty">
+                <div>
+                    <p style="font-size:1.06rem; font-weight:700; color:#1E3A8A; margin-bottom:0.6rem;">等待载入患者影像可视化</p>
+                    <p style="margin:0;">请先上传这位患者的 NIfTI 或 GIfTI 文件，工作区载入后就能继续完成影像可视化和结果保存。</p>
+                </div>
+            </div>
+
+            <div id="findvizUploadErrorRoot"></div>
+            <div id="findvizViewerErrorRoot"></div>
+            <div id="findvizFragmentRoots" style="display:none;">
+                <div id="analytics-toolbox-template"></div>
+                <div id="fmriVisualizationOptionsRoot"></div>
+                <div id="fmriPreprocessingOptionsRoot"></div>
+                <div id="fmriVisualizationCardRoot"></div>
+                <div id="timeCourseVisualizationOptionsRoot"></div>
+                <div id="timeCourseMarkerOptionsRoot"></div>
+                <div id="timeCoursePreprocessingOptionsRoot"></div>
+                <div id="timeCourseVisualizationCardRoot"></div>
+            </div>
+
+            <div id="parent-container" class="container-fluid mt-4" style="display:none;">
+                <div id="spinner-overlay" class="spinner-overlay"></div>
+                <div id="analytics-toolbox-container" class="row justify-content-center"></div>
+                <div id="fmri-container" class="row justify-content-center mt-1">
+                    <div class="col-2 pr-1">
+                        <div id="fmri-user-options-container" class="h-100"></div>
+                    </div>
+                    <div class="col-10 pr-2">
+                        <div id="fmri-visualization-container" class="h-100"></div>
+                    </div>
+                    <div class="spinner-container d-flex justify-content-center">
+                        <div id="spinner-wheel" class="spinner-wheel"></div>
+                    </div>
+                </div>
+                <div id="time-course-container" class="row justify-content-center mt-2" style="visibility:hidden;">
+                    <div class="col-2 pr-1">
+                        <div id="time-course-user-options-container" class="h-100"></div>
+                    </div>
+                    <div class="col-10 pr-2">
+                        <div id="time-course-visualization-container" class="h-100"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        window.__doctorVizModuleBooted = false;
+
+        (function () {
+            const openedFromFile = window.location.protocol === 'file:';
+
+            function renderStartupAlert(type, title, messageHtml) {
+                const container = document.getElementById('visualizationStartupAlert');
+                if (!container) return;
+
+                container.className = `startup-alert visible ${type || ''}`.trim();
+                container.innerHTML = `
+                    <ion-icon name="${type === 'info' ? 'information-circle-outline' : 'warning-outline'}"></ion-icon>
+                    <div>
+                        <strong>${title}</strong>
+                        <div>${messageHtml}</div>
+                    </div>
+                `;
+            }
+
+            if (openedFromFile) {
+                // 通过 file:// 打开时显示提示（不阻断，但说明功能受限）
+                renderStartupAlert(
+                    'info',
+                    '当前通过 file:// 打开，部分功能受限',
+                    '建议通过后端服务访问本页（如 <code>http://127.0.0.1:8000/doctor_visualization.html</code>），以获得完整 findviz 功能。当前已跳过协议限制，可继续使用上传与保存功能。'
+                );
+            }
+
+        })();
+    </script>
+    <script src="js/api.js?v=20260407a"></script>
+    <script type="module" src="js/doctor_visualization.js?v=20260407a"></script>
+</body>
+</html>

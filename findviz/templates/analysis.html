@@ -1,0 +1,135 @@
+﻿<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智绘脑图 · 脑影像可视化</title>
+    <link rel="icon" href="data:,">
+    <!-- Load CSS stylesheets first -->
+    <link rel="stylesheet" href="{{ request.script_root }}/static/css/vendor/bootstrap.min.css">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="{{ request.script_root }}/static/css/vendor/all.min.css">
+    <!-- Bootstrap Slider CSS -->
+    <link rel="stylesheet" href="{{ request.script_root }}/static/css/vendor/bootstrap-slider.min.css">
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="{{ request.script_root }}/static/css/vendor/bootstrap-select.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ request.script_root }}/static/css/styles.css">
+
+    <!-- Load JavaScript libraries -->
+    <!-- JQuery -->
+    <script src="{{ request.script_root }}/static/js/vendor/jquery-3.5.1.min.js"></script>
+    <!-- Popper JS -->
+    <script src="{{ request.script_root }}/static/js/vendor/popper.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ request.script_root }}/static/js/vendor/bootstrap.min.js"></script>
+    <!-- Plotly JS -->
+    <script src="{{ request.script_root }}/static/js/vendor/plotly-latest.min.js"></script>
+    <!-- Bootstrap-slider JS -->
+    <script src="{{ request.script_root }}/static/js/vendor/bootstrap-slider.min.js"></script>
+    <!-- Bootstrap-select JS -->
+    <script src="{{ request.script_root }}/static/js/vendor/bootstrap-select.min.js"></script>
+    <!-- HTML2Canvas -->
+    <script src="{{ request.script_root }}/static/js/vendor/html2canvas.min.js"></script>
+
+</head>
+<body class="{{ 'embed-mode' if embed_mode else '' }}">
+{% if embed_mode %}
+  <div class="embed-topbar">
+    <div class="embed-brand">
+      <span class="embed-brand-pill">智绘脑图</span>
+      <span class="embed-brand-title">脑影像可视化工作台</span>
+    </div>
+    <div class="embed-patient">
+      <span>当前患者：{{ patient_name or '未选择' }}</span>
+      {% if patient_email %}
+      <span class="embed-patient-email">{{ patient_email }}</span>
+      {% endif %}
+    </div>
+    {% if return_url %}
+    <a class="embed-return" href="{{ return_url }}" target="_top">返回研究平台</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+ <!-- Parent Visualization Container -->
+ <div id="parent-container" class="container-fluid mt-5" style="display: none;">
+  <!-- Spinner overlay for upload, preprocessing, and analysis wait -->
+  <div id="spinner-overlay" class="spinner-overlay"></div>
+  <!-- FMRI Container -->
+  <div id="fmri-container" class='row justify-content-center'>
+    <div class="col-2 pr-1">
+      <!-- FMRI User Options Container -->
+      <div id="fmri-user-options-container" class="h-100">
+        <!-- Visualization Options -->
+        {% include 'components/fmriVisualizationOptions.html' %}
+        <!-- Preprocessing Options -->
+        {% include 'components/fmriPreprocessingOptions.html' %}
+      </div>
+    </div>
+    <div class="col-10 pr-2">
+      <!-- Visualization Container -->
+      <div id="fmri-visualization-container" class="h-100">
+        <!-- fmri visualization card -->
+        {% include 'components/fmriVisualizationCard.html' %}
+      </div>
+    </div>
+    <!-- Spinner wheel for upload, preprocessing, and analysis wait -->
+    <div class="spinner-container d-flex justify-content-center">
+      <div id="spinner-wheel" class="spinner-wheel"></div>
+    </div>
+  </div>
+  <!-- Time Course Container -->
+  <div id="time-course-container" class='row justify-content-center mt-2' style="visibility: hidden;">
+    <div class="col-2 pr-1">
+      <!-- Time Course User Options Container -->
+      <div id="time-course-user-options-container" class="h-100">
+        <!-- Visualization Options -->
+        {% include 'components/timeCourseVisualizationOptions.html' %}
+        <!-- Time Marker Options -->
+        {% include 'components/timeCourseMarkerOptions.html' %}
+        <!-- Preprocessing Options -->
+        {% include 'components/timeCoursePreprocessingOptions.html' %}
+      </div>
+    </div>
+    <div class="col-10 pr-2">
+      <div id='time-course-visualization-container' class="h-100">
+        <!-- time course visualization card -->
+        {% include 'components/timeCourseVisualizationCard.html' %}
+      </div>
+    </div>
+  </div>
+  <!-- Viewer Error Modal -->
+  {% include 'components/modals/viewerErrorModal.html' %}
+</div>
+
+  <!-- Analysis Viewer javascript -->
+  <script type="module">
+    window.FINDVIZ_BASE_PATH = {{ request.script_root|tojson }};
+    // Import classes from modules
+    import AnalysisViewer from '{{ request.script_root }}/static/js/viewer/AnalysisViewer.js';
+    import { initBootstrapComponents } from '{{ request.script_root }}/static/js/utils.js';
+
+    // Toggle parent visualization container to display
+    const visualizationContainer = document.getElementById('parent-container');
+    visualizationContainer.style.display = 'block'
+    // Load HTML components and initialize 'Result' class
+    document.addEventListener("DOMContentLoaded", async () => {
+      // initialize analysis viewer after page load
+      let analysis = new AnalysisViewer(
+        {{ plot_type|tojson }},
+        {{ analysis|tojson }}
+      );
+      analysis.init();
+
+      // initialize bootstrap components
+      initBootstrapComponents()
+    });
+
+  </script>
+
+</body>
+</html>
+

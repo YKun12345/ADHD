@@ -1,0 +1,96 @@
+<!-- Time Course Preprocessing Options -->
+<div class='row mt-1'>
+  <div class='col-12 pr-0 pl-1'>
+    <div class='card'>
+      <div class="card-body pt-2 pb-1">
+        <form>
+          <!-- Time Course Select -->
+          <div class='row'>
+            <select class="selectpicker w-100" id='ts-prep-select' multiple data-actions-box="true" title="选择时间序列" disabled>
+            </select>
+          </div>
+          <!-- Normalization Options -->
+          <div class='row mt-1'>
+            <div class='col-12 ml-1'>
+              <div class='row'>
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="ts-enable-normalization" disabled>
+                  <label class="custom-control-label small" for="ts-enable-normalization"><strong>归一化</strong></label>
+                </div>
+              </div>
+              <div class='row'>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input ts-norm-option" type="radio" name="norm-options" id="ts-select-mean-center" value="mean-center" disabled>
+                  <label class="form-check-label small" for="ts-select-mean-center">均值中心化</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input ts-norm-option" type="radio" name="norm-options" id="ts-select-z-score" value="z-score" disabled>
+                  <label class="form-check-label small" for="ts-select-z-score">Z 分数</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Filtering and Detrending -->
+          <div class='row mt-1 mb-1'>
+            <div class='col-12'>
+              <div class='row pl-1'>
+                <div class='col-6 pl-0'>
+                  <!-- Filtering Switch -->
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="ts-enable-filtering" disabled>
+                  <label class="custom-control-label small" for="ts-enable-filtering"><strong>滤波</strong></label>
+                  <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="时间序列滤波使用 5 阶 Butterworth 滤波器。低截止和高截止频率单位为赫兹（Hz）。仅提供低截止频率时执行高通滤波，仅提供高截止频率时执行低通滤波，同时提供两者时执行带通滤波。" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <!-- Detrending Checkbox -->
+                <div class='col-6 pl-0 d-flex align-items-center'>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="ts-enable-detrending" disabled>
+                    <label class="form-check-label small" for="ts-enable-detrending">去趋势</label>
+                      <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="去除线性趋势。" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+              <!-- Filter options layout -->
+              <div class='row pl-2 justify-content-start'>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group filter-options mb-1">
+                    <label for="ts-filter-tr" class='mb-0'><small>TR:</small></label>
+                    <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="时间序列的重复时间（应与 fMRI 一致）。" aria-hidden="true"></span>
+                    <input type="number" class="form-control form-control-sm ts-filter-option" id="ts-filter-tr" step="0.01" disabled>
+                  </div>
+                </div>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group filter-options mb-1">
+                    <label for="ts-filter-low-cut" class='mb-0'><small>低截止：</small></label>
+                    <div class="d-flex align-items-center">
+                      <input type="number" class="form-control form-control-sm ts-filter-option mr-1" id="ts-filter-low-cut" step="0.01" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group filter-options mb-1">
+                    <label for="ts-filter-high-cut" class='mb-0'><small>高截止：</small></label>
+                    <div class="d-flex align-items-center">
+                      <input type="number" class="form-control form-control-sm ts-filter-option mr-1" id="ts-filter-high-cut" step="0.01" disabled>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='row mt-2 mb-1'>
+            <!-- Error Message Placeholder -->
+            <div id="ts-error-message-preprocess" class="alert alert-danger" role='alert' style="display: none;"></div>
+            <div class='col-7 pl-1 pr-1'>
+              <button type="button" class="btn btn-primary btn-sm btn-block" id='ts-submit-preprocess' type='submit' disabled>预处理</button>
+            </div>
+            <div class='col-5 pl-1'>
+              <button type="button" class="btn btn-secondary btn-sm btn-block" id='ts-reset-preprocess' disabled>重置</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

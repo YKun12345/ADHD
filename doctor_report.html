@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>患者综合报告 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        body.researcher-page {
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 28%),
+                linear-gradient(180deg, #F4F8FF 0%, #EEF4FB 100%);
+        }
+
+        .researcher-page .navbar {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .researcher-page .logo ion-icon,
+        .researcher-page .nav-links a:hover,
+        .researcher-page .nav-links a.active,
+        .researcher-page .user-profile ion-icon {
+            color: #2563EB;
+        }
+
+        .researcher-page .user-profile {
+            background: #EFF6FF;
+            color: #1E3A8A;
+        }
+
+        .report-shell {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 8.5rem 2rem 3.5rem;
+        }
+
+        .report-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(191, 219, 254, 0.72);
+            border-radius: 26px;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.05);
+            padding: 2rem;
+        }
+
+        .researcher-header-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .researcher-security-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .security-audit-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .security-audit-top h3 {
+            margin: 0;
+            font-size: 1.18rem;
+            color: #0F172A;
+        }
+
+        .security-audit-top p {
+            margin: 0.3rem 0 0;
+            color: #64748B;
+            line-height: 1.7;
+        }
+
+        .security-audit-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.38rem 0.82rem;
+            border-radius: 999px;
+            background: #E0F2FE;
+            color: #0369A1;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .security-audit-badge.success {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .security-audit-badge.warning {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        .security-audit-badge.danger {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+
+        .security-audit-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .security-audit-item {
+            border-radius: 16px;
+            padding: 0.92rem 0.95rem;
+            background: linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%);
+            border: 1px solid rgba(191, 219, 254, 0.76);
+        }
+
+        .security-audit-item span {
+            display: block;
+            margin-bottom: 0.28rem;
+            color: #64748B;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .security-audit-item strong {
+            color: #0F172A;
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .report-header h1 {
+            margin: 0 0 0.6rem;
+            font-size: 2rem;
+            color: #0F172A;
+        }
+
+        .report-header p {
+            margin: 0;
+            color: #64748B;
+            line-height: 1.7;
+        }
+
+        .researcher-report-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 1.2rem;
+        }
+
+        .meta-chip {
+            padding: 0.42rem 0.8rem;
+            border-radius: 999px;
+            background: #EFF6FF;
+            color: #1D4ED8;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #64748B;
+            line-height: 1.8;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 0.75rem;
+            color: #0F172A;
+            font-size: 1.45rem;
+        }
+
+        .researcher-report-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .researcher-page .report-scale-stack,
+        .researcher-page .report-cognitive-stack {
+            grid-template-columns: minmax(0, 0.84fr) minmax(520px, 1.16fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .researcher-page .report-radar-panel.compact {
+            min-height: 560px;
+            padding: 0.35rem 0 0.35rem 0.65rem;
+        }
+
+        .researcher-page .report-tracking-chart-grid {
+            grid-template-columns: minmax(0, 1.48fr) minmax(300px, 0.72fr);
+            gap: 1.2rem;
+            align-items: stretch;
+        }
+
+        .researcher-page .report-tracking-chart-grid > * {
+            min-width: 0;
+        }
+
+        .researcher-page .report-tracking-chart-grid .report-ai-section {
+            padding: 1.1rem 1.15rem;
+        }
+
+        @media (max-width: 960px) {
+            .report-shell {
+                padding: 7.8rem 1rem 2.5rem;
+            }
+
+            .report-card {
+                padding: 1.3rem;
+            }
+
+            .report-header {
+                flex-direction: column;
+            }
+
+            .researcher-report-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .researcher-page .report-scale-stack,
+            .researcher-page .report-cognitive-stack,
+            .researcher-page .report-tracking-chart-grid,
+            .security-audit-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .researcher-page .report-radar-panel.compact {
+                min-height: 440px;
+                padding-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="researcher-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="doctor_analysis.html">首页</a></li>
+                <li><a href="doctor_patients.html" class="active">患者工作台</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <span id="researcherName">研究人员</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="report-shell">
+        <div id="reportLoading" class="report-card empty-state">
+            正在加载患者综合报告...
+        </div>
+
+        <div id="reportEmpty" class="report-card empty-state hidden">
+            <h3>暂时没有可展示的报告内容</h3>
+            <p>请先返回患者工作台，确认该患者已经同步量表、认知测试、14天追踪或影像可视化数据。</p>
+        </div>
+
+        <div id="reportContent" class="hidden">
+            <section class="report-card researcher-header-card">
+                <div class="report-header">
+                    <div>
+                        <h1 id="patientTitle">患者综合报告</h1>
+                        <p id="patientSubTitle">研究端与患者端共用同一份报告数据，这里展示的是患者当前同步到后台的最新内容。</p>
+                    </div>
+                    <div class="researcher-report-actions">
+                        <button id="openImagingBtn" class="btn-secondary" type="button">进入影像分析</button>
+                        <button id="openVisualizationBtn" class="btn-primary-orange" type="button">进入影像可视化</button>
+                        <a href="doctor_patients.html" class="btn-outline" style="text-decoration:none;">返回患者工作台</a>
+                    </div>
+                </div>
+                <div id="metaRow" class="meta-row"></div>
+            </section>
+
+            <section id="securityStatusCard" class="report-card researcher-security-card hidden">
+                <div class="security-audit-top">
+                    <div>
+                        <h3>安全审计状态</h3>
+                        <p>展示该患者是否已经纳入安全链路、是否已生成密文记录，以及最近一次时间审计结果。</p>
+                    </div>
+                    <span id="securityStatusBadge" class="security-audit-badge">加载中</span>
+                </div>
+                <div id="securityStatusGrid" class="security-audit-grid"></div>
+            </section>
+
+            <div class="researcher-report-stack">
+                <div class="todo-widget report-waterfall-card report-scale-card" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                        <h3><ion-icon name="podium-outline" style="color: var(--primary-blue);"></ion-icon> 最新量表结果</h3>
+                        <span id="reportBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                    </div>
+                    <div class="report-scale-stack">
+                        <div>
+                            <div id="reportMeta" class="report-meta-row"></div>
+                            <h4 id="reportScaleTitle" style="font-size:1.35rem; color:#0F172A; margin-bottom:0.8rem;">--</h4>
+                            <p id="reportSummary" style="color:#475569; line-height:1.8; margin-bottom:1.5rem;">--</p>
+                            <div id="reportRecommendations" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+                        </div>
+                        <div class="report-radar-panel compact">
+                            <div id="reportRadar" style="width:100%; height:560px;"></div>
+                        </div>
+                    </div>
+                    <div class="alert-box note" style="margin-top:1.4rem;">
+                        <ion-icon name="shield-checkmark-outline"></ion-icon>
+                        <span id="reportDisclaimer"><strong>辅助说明：</strong> 量表结果用于帮助理解当前状态，不代表最终医学诊断。</span>
+                    </div>
+                </div>
+
+                <div id="trackingSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                        <h3><ion-icon name="calendar-outline" style="color: var(--primary-blue);"></ion-icon> 14天数据追踪</h3>
+                        <span id="trackingBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                    </div>
+                    <div id="trackingMetaChips" style="display:flex; flex-wrap:wrap; gap:0.7rem; margin-bottom:1rem;"></div>
+                    <p id="trackingSummaryText" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                    <div class="report-tracking-chart-grid">
+                        <div class="report-ai-section">
+                            <strong>情绪走势</strong>
+                            <div id="reportTrackingLineChart" style="width:100%; height:340px;"></div>
+                        </div>
+                        <div class="report-ai-section">
+                            <strong>情绪分布</strong>
+                            <div id="reportTrackingDonutChart" style="width:100%; height:340px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="imagingSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                        <h3><ion-icon name="scan-outline" style="color: var(--primary-blue);"></ion-icon> 影像可视化摘要</h3>
+                        <span id="imagingBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                    </div>
+                    <p id="imagingSummary" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                    <div id="imagingMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;"></div>
+                    <div id="imagingFiles" style="display:flex; flex-wrap:wrap; gap:0.75rem;"></div>
+                    <div class="report-imaging-preview-grid">
+                        <section class="report-imaging-slot">
+                            <strong>脑切面截图预览</strong>
+                            <div id="imagingSlicePreview" class="report-imaging-placeholder">研究人员同步脑切面截图后，这里会展示给患者与研究人员查看。</div>
+                        </section>
+                        <section class="report-imaging-slot">
+                            <strong>3D 表面截图预览</strong>
+                            <div id="imagingSurfacePreview" class="report-imaging-placeholder">研究人员同步 3D 表面截图后，这里会展示给患者与研究人员查看。</div>
+                        </section>
+                    </div>
+                    <div class="report-imaging-interpretation">
+                        <strong>可视化结果文字解读</strong>
+                        <p id="imagingInterpretation">研究人员同步脑影像截图与结果说明后，这里会展示对应的可视化文字解读。</p>
+                    </div>
+                </div>
+
+                <div id="modelPredictionSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                        <h3><ion-icon name="pulse-outline" style="color: var(--primary-blue);"></ion-icon> 影像分析结果</h3>
+                        <span id="modelPredictionBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                    </div>
+                    <div class="report-prediction-grid">
+                        <div>
+                            <div class="report-prediction-result-row">
+                                <div class="report-prediction-stat">
+                                    <span class="report-prediction-kicker">二分类结果</span>
+                                    <strong id="modelPredictionLabel">--</strong>
+                                </div>
+                                <div class="report-prediction-stat">
+                                    <span class="report-prediction-kicker">置信等级</span>
+                                    <strong id="modelPredictionConfidence">--</strong>
+                                </div>
+                            </div>
+                            <p id="modelPredictionSummary" class="report-prediction-summary">--</p>
+                            <div id="modelPredictionMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem;"></div>
+                        </div>
+                        <div class="report-prediction-bars">
+                            <div class="report-probability-card">
+                                <div class="report-probability-top">
+                                    <strong>ADHD 概率</strong>
+                                    <span id="modelPredictionAdhdValue">--</span>
+                                </div>
+                                <div class="report-probability-track">
+                                    <div id="modelPredictionAdhdBar" class="report-probability-fill adhd"></div>
+                                </div>
+                            </div>
+                            <div class="report-probability-card">
+                                <div class="report-probability-top">
+                                    <strong>未患病概率</strong>
+                                    <span id="modelPredictionControlValue">--</span>
+                                </div>
+                                <div class="report-probability-track">
+                                    <div id="modelPredictionControlBar" class="report-probability-fill control"></div>
+                                </div>
+                            </div>
+                            <p class="report-prediction-note">该结果来自研究端上传时序影像数据后的模型推理，仅供辅助参考，不替代正式医学诊断。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="cognitiveSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                        <h3><ion-icon name="game-controller-outline" style="color: var(--primary-blue);"></ion-icon> 认知能力摘要</h3>
+                        <span id="cognitiveBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                    </div>
+                    <div class="report-cognitive-stack">
+                        <div>
+                            <p id="cognitiveSummary" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                            <div id="cognitiveMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;"></div>
+                            <div id="cognitiveTests" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+                        </div>
+                        <div class="report-radar-panel compact">
+                            <div id="cognitiveRadar" style="width:100%; height:540px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="js/api.js?v=20260405d"></script>
+    <script src="js/doctor_report.js?v=20260405d"></script>
+</body>
+</html>

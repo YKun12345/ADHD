@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-03-25 11:15 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>研究人员首页 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        :root {
+            --doctor-blue: #2563EB;
+            --doctor-blue-soft: #EFF6FF;
+            --doctor-ink: #0F172A;
+            --doctor-muted: #64748B;
+            --doctor-border: rgba(148, 163, 184, 0.24);
+        }
+
+        body.researcher-page {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #F3F8FF 0%, #EEF5FF 100%);
+        }
+
+        .researcher-page .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid var(--doctor-border);
+            box-shadow: 0 10px 32px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(12px);
+        }
+
+        .researcher-page .logo ion-icon,
+        .researcher-page .nav-links a:hover,
+        .researcher-page .nav-links a.active,
+        .researcher-page .user-profile ion-icon {
+            color: var(--doctor-blue);
+        }
+
+        .researcher-page .user-profile {
+            background: #EFF6FF;
+            color: #1E3A8A;
+        }
+
+        .researcher-page .hero-split {
+            background: linear-gradient(135deg, #EDF6FF 0%, #E3F0FF 55%, #DCEBFF 100%);
+            padding: 10rem 2rem 10rem;
+        }
+
+        .researcher-page .hero-content {
+            max-width: 1380px;
+            gap: 2.9rem;
+        }
+
+        .researcher-page .hero-left {
+            margin-left: 4.2rem;
+            max-width: 700px;
+        }
+
+        .doctor-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.48rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--doctor-blue);
+            font-size: 0.88rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            margin-bottom: 1.4rem;
+        }
+
+        .researcher-page .hero-left h1 {
+            margin: 0 0 1.5rem;
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--doctor-ink);
+            line-height: 1.25;
+        }
+
+        .researcher-page .hero-left h1 .accent {
+            color: transparent;
+            background: linear-gradient(135deg, #2563EB 0%, #0EA5E9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .researcher-page .hero-left .subtitle {
+            max-width: 640px;
+            margin-bottom: 3rem;
+            color: #475569;
+            font-size: 1.2rem;
+            line-height: 1.7;
+        }
+
+        .doctor-button-row .btn-primary-orange {
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+        }
+
+        .doctor-button-row .btn-primary-orange:hover {
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.32);
+        }
+
+        .doctor-button-row .btn-secondary {
+            background: #0F766E;
+            box-shadow: 0 6px 15px rgba(15, 118, 110, 0.18);
+        }
+
+        .doctor-button-row .btn-outline {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: #BFDBFE;
+            color: #1E3A8A;
+        }
+
+        .doctor-button-row .btn-outline:hover {
+            background: #FFFFFF;
+            border-color: #93C5FD;
+            color: #1D4ED8;
+        }
+
+        .researcher-page .hero-right {
+            flex: 0 0 470px;
+            max-width: 470px;
+            transform: translateY(4px);
+        }
+
+        .doctor-task-widget {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(255, 255, 255, 0.88);
+            border-radius: 28px;
+            padding: 1.45rem;
+            box-shadow: 0 24px 52px rgba(15, 23, 42, 0.09);
+        }
+
+        .doctor-focus-panel {
+            display: grid;
+            gap: 0.72rem;
+            padding: 0.82rem 0.9rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(248, 250, 252, 0.96));
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            margin-bottom: 0.95rem;
+        }
+
+        .doctor-focus-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 0.28rem 0.64rem;
+            border-radius: 999px;
+            background: #DBEAFE;
+            color: #1D4ED8;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .doctor-focus-panel h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: #0F172A;
+            line-height: 1.25;
+        }
+
+        .doctor-focus-panel p {
+            margin: 0;
+            color: #475569;
+            line-height: 1.55;
+            font-size: 0.84rem;
+        }
+
+        .doctor-focus-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+
+        .doctor-focus-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.28rem 0.62rem;
+            border-radius: 999px;
+            background: #FFFFFF;
+            border: 1px solid #BFDBFE;
+            color: #1E3A8A;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .doctor-focus-actions {
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .doctor-focus-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            padding: 0.68rem 0.88rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .doctor-focus-btn.primary {
+            background: #2563EB;
+            color: #FFFFFF;
+            border: none;
+        }
+
+        .doctor-focus-btn.secondary {
+            background: #FFFFFF;
+            color: #1D4ED8;
+            border: 1px solid #BFDBFE;
+        }
+
+        .doctor-task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .doctor-task-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: #1E293B;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .doctor-task-status {
+            color: #64748B;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .doctor-progress-track {
+            height: 8px;
+            margin-bottom: 0.95rem;
+            background: #F3F4F6;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .doctor-progress-fill {
+            width: 76%;
+            height: 100%;
+            background: linear-gradient(90deg, #93C5FD 0%, #86EFAC 100%);
+            border-radius: inherit;
+        }
+
+        .doctor-task-card {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.92rem 0.95rem;
+            margin-bottom: 0.72rem;
+            border: 1.5px solid #EEF2F7;
+            border-radius: 16px;
+            background: #FFFFFF;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            text-align: left;
+        }
+
+        .doctor-task-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .doctor-task-card:hover {
+            border-color: #BFDBFE;
+            background: #FAFDFF;
+            transform: translateX(4px);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, 0.08);
+        }
+
+        .doctor-task-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .task-indigo {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .task-cyan {
+            background: #E0F2FE;
+            color: #0284C7;
+        }
+
+        .task-amber {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        .doctor-task-copy {
+            min-width: 0;
+        }
+
+        .doctor-task-copy h4 {
+            margin: 0 0 0.32rem;
+            font-size: 1rem;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .doctor-task-copy p {
+            margin: 0;
+            color: #64748B;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .doctor-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.22rem 0.52rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .doctor-tag.info {
+            color: #4F46E5;
+            background: #EDE9FE;
+            border: 1px solid #DDD6FE;
+        }
+
+        .doctor-tag.warning {
+            color: #C2410C;
+            background: #FFEDD5;
+            border: 1px solid #FED7AA;
+        }
+
+        .doctor-tag.success {
+            color: #047857;
+            background: #D1FAE5;
+            border: 1px solid #A7F3D0;
+        }
+
+        .doctor-metric {
+            min-width: 58px;
+            text-align: right;
+            color: var(--doctor-blue);
+        }
+
+        .doctor-metric span {
+            display: block;
+            font-size: 1.52rem;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        .doctor-metric small {
+            display: block;
+            margin-top: 0.15rem;
+            color: #94A3B8;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .doctor-arrow {
+            font-size: 1.4rem;
+            color: #94A3B8;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .doctor-task-card:hover .doctor-arrow {
+            transform: translateX(3px);
+            color: var(--doctor-blue);
+        }
+
+        .doctor-section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .doctor-section-title h2 {
+            margin: 0;
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: 2.35rem;
+            font-weight: 800;
+            color: #0F172A;
+        }
+
+        .doctor-section-title p {
+            margin: 0.6rem auto 0;
+            max-width: 760px;
+            color: #64748B;
+            line-height: 1.7;
+            font-size: 1.02rem;
+        }
+
+        .doctor-capability-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.4rem;
+        }
+
+        .doctor-capability-card.featured {
+            background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%);
+            border-color: #BFDBFE;
+        }
+
+        .doctor-capability-card {
+            padding: 2rem 1.5rem 1.6rem;
+            border-radius: 24px;
+            border: 1px solid rgba(203, 213, 225, 0.62);
+            background: #FFFFFF;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.04);
+            transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+        }
+
+        .doctor-capability-card:hover {
+            transform: translateY(-6px);
+            border-color: #BFDBFE;
+            box-shadow: 0 20px 42px rgba(37, 99, 235, 0.08);
+        }
+
+        .doctor-capability-step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: #EFF6FF;
+            color: var(--doctor-blue);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .doctor-capability-card h4 {
+            margin: 0 0 0.65rem;
+            font-size: 1.12rem;
+            color: #0F172A;
+        }
+
+        .doctor-capability-card p {
+            margin: 0;
+            color: #64748B;
+            line-height: 1.75;
+            font-size: 0.94rem;
+        }
+
+        .doctor-process-block {
+            padding-top: 3.6rem;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.42);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .bind-modal {
+            width: min(560px, 100%);
+            background: white;
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+            border: 1px solid rgba(191, 219, 254, 0.75);
+        }
+
+        .bind-modal h3 {
+            font-size: 1.55rem;
+            color: #0F172A;
+            margin-bottom: 0.75rem;
+        }
+
+        .bind-modal p {
+            color: #64748B;
+            line-height: 1.75;
+            margin-bottom: 1.2rem;
+        }
+
+        .bind-modal-input {
+            width: 100%;
+            border: 1.5px solid #CBD5E1;
+            border-radius: 14px;
+            padding: 0.95rem 1rem;
+            font-size: 1rem;
+            background: #F8FAFC;
+            color: #0F172A;
+            margin-bottom: 0.85rem;
+        }
+
+        .bind-modal-input:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+            background: white;
+        }
+
+        .bind-modal-feedback {
+            min-height: 1.45rem;
+            font-size: 0.92rem;
+            margin-bottom: 1rem;
+        }
+
+        .bind-modal-feedback.success { color: #047857; }
+        .bind-modal-feedback.error { color: #B91C1C; }
+
+        .bind-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 1200px) {
+            .researcher-page .hero-content {
+                flex-direction: column;
+                text-align: left;
+            }
+
+            .researcher-page .hero-left {
+                margin-left: 0;
+                max-width: none;
+            }
+
+            .researcher-page .hero-right {
+                width: 100%;
+                flex: auto;
+                max-width: 520px;
+            }
+
+            .doctor-capability-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .researcher-page .hero-split {
+                padding: 8rem 1.2rem 7rem;
+            }
+
+            .doctor-task-widget {
+                padding: 1.1rem;
+            }
+
+            .doctor-focus-actions {
+                flex-direction: column;
+            }
+
+            .doctor-focus-btn {
+                width: 100%;
+            }
+
+            .doctor-task-card {
+                grid-template-columns: 54px minmax(0, 1fr);
+                padding: 0.82rem 0.85rem;
+            }
+
+            .doctor-metric,
+            .doctor-arrow {
+                display: none;
+            }
+
+            .info-container.alternating,
+            .info-container.alternating.reverse {
+                flex-direction: column;
+                text-align: center;
+                gap: 3rem;
+            }
+        }
+    </style>
+</head>
+<body class="researcher-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="doctor_analysis.html" class="active">首页</a></li>
+                <li><a href="doctor_patients.html">患者工作台</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <span id="researcherName">研究人员</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero-split">
+            <svg class="neuron-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice">
+                <g stroke="#B9DCF7" stroke-width="1.5" fill="none">
+                    <path d="M -100,200 Q 400,50 850,350 T 1500,300" />
+                    <path d="M -50,750 Q 400,900 800,650 T 1500,700" />
+                    <path d="M 850,350 L 800,650 L 1200,200" />
+                    <path d="M 50,100 L 200,750 L 850,350" />
+                    <circle cx="850" cy="350" r="22" fill="#A3E4D7" />
+                    <circle cx="1200" cy="200" r="26" fill="#A3E4D7" />
+                    <circle cx="400" cy="50" r="30" fill="#85C1E9" />
+                    <circle cx="800" cy="650" r="24" fill="#85C1E9" />
+                    <circle cx="50" cy="100" r="16" fill="#85C1E9" />
+                    <circle cx="200" cy="750" r="18" fill="#D2B4DE" />
+                    <circle cx="400" cy="900" r="28" fill="#D2B4DE" />
+                    <circle cx="1400" cy="320" r="20" fill="#D2B4DE" />
+                </g>
+            </svg>
+
+            <div class="hero-content">
+                <div class="hero-left">
+                    <div class="doctor-kicker">
+                        <ion-icon name="flask-outline"></ion-icon>
+                        <span>Research Workspace</span>
+                    </div>
+                    <h1>围绕 <span class="accent">就诊者链路</span><br>的综合分析工作台</h1>
+                    <p class="subtitle">研究端不再是孤立的工具集合，而是从患者工作台出发，串联量表、14天追踪、AI摘要、影像二分类与脑影像可视化的协同分析入口。</p>
+                    <div class="btn-group doctor-button-row">
+                        <button class="btn-primary-orange" type="button" onclick="window.location.href='doctor_patients.html'">进入患者工作台</button>
+                        <button class="btn-secondary" id="openBindModalBtn" type="button">添加患者档案</button>
+                        <button class="btn-outline" type="button" onclick="window.location.href='doctor_patients.html'">查看患者主线</button>
+                        <button class="btn-outline" type="button" onclick="window.location.href='dac_dashboard.html'">DAC 审计台</button>
+                    </div>
+                </div>
+
+                <div class="hero-right">
+                    <div class="doctor-task-widget">
+                        <div class="doctor-task-header">
+                            <h3><ion-icon name="calendar-outline"></ion-icon> 患者中心工作流</h3>
+                            <span class="doctor-task-status">实时同步</span>
+                        </div>
+                        <div class="doctor-progress-track">
+                            <div class="doctor-progress-fill"></div>
+                        </div>
+
+                        <div class="doctor-focus-panel">
+                            <span class="doctor-focus-kicker">优先关注患者</span>
+                            <h4 id="focusPatientName">正在整理当前最适合推进分析的患者…</h4>
+                            <p id="focusPatientHint">系统会结合量表、追踪进度与影像状态，推荐当前最值得进入综合分析链路的患者。</p>
+                            <div id="focusPatientMeta" class="doctor-focus-meta"></div>
+                            <div class="doctor-focus-actions">
+                                <a id="focusPatientReportBtn" href="doctor_patients.html" class="doctor-focus-btn primary">查看患者综合分析</a>
+                                <a id="focusPatientVizBtn" href="doctor_visualization.html" class="doctor-focus-btn secondary">继续影像可视化</a>
+                            </div>
+                        </div>
+
+                        <button class="doctor-task-card" type="button" onclick="window.location.href='doctor_patients.html'">
+                            <div class="doctor-task-icon task-indigo">
+                                <ion-icon name="people-outline"></ion-icon>
+                            </div>
+                            <div class="doctor-task-copy">
+                                <h4>患者工作台 <span class="doctor-tag info">主入口</span></h4>
+                                <p>先进入患者列表，再围绕某位患者统一查看量表、追踪、AI摘要、影像结果与综合报告。</p>
+                            </div>
+                            <div class="doctor-metric">
+                                <span id="patientCount">0</span>
+                                <small>人</small>
+                            </div>
+                            <ion-icon class="doctor-arrow" name="chevron-forward"></ion-icon>
+                        </button>
+
+                        <button class="doctor-task-card" type="button" onclick="window.location.href='doctor_patients.html'">
+                            <div class="doctor-task-icon task-cyan">
+                                <ion-icon name="scan-outline"></ion-icon>
+                            </div>
+                            <div class="doctor-task-copy">
+                                <h4>影像可视化链路 <span class="doctor-tag warning">待补充</span></h4>
+                                <p>在患者上下文中继续查看 NIfTI / GIfTI 结果，让脑影像证据与综合分析页面保持联动。</p>
+                            </div>
+                            <div class="doctor-metric">
+                                <span id="pendingImagingCount">0</span>
+                                <small>项</small>
+                            </div>
+                            <ion-icon class="doctor-arrow" name="chevron-forward"></ion-icon>
+                        </button>
+
+                        <button class="doctor-task-card" type="button" onclick="window.location.href='doctor_patients.html'">
+                            <div class="doctor-task-icon task-amber">
+                                <ion-icon name="document-text-outline"></ion-icon>
+                            </div>
+                            <div class="doctor-task-copy">
+                                <h4>综合分析沉淀 <span class="doctor-tag success">本周生成</span></h4>
+                                <p>把量表、认知测试、14天追踪、AI摘要和影像结果汇总到同一患者综合分析页中，形成长期证据链。</p>
+                            </div>
+                            <div class="doctor-metric">
+                                <span id="weeklyReportCount">0</span>
+                                <small>份</small>
+                            </div>
+                            <ion-icon class="doctor-arrow" name="chevron-forward"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <svg class="hero-curve" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                <path d="M0,0 C480,120 960,120 1440,0 L1440,120 L0,120 Z" fill="#F8FAFC"></path>
+            </svg>
+        </section>
+
+        <section class="info-block doctor-process-block">
+            <div class="info-container">
+                <div class="doctor-section-title">
+                    <h2>研究端协同路径</h2>
+                    <p>从患者工作台出发，先进入单个患者的综合分析，再补充影像与可视化证据，最后沉淀为可追溯的多模态分析结果。</p>
+                </div>
+
+                <div class="doctor-capability-grid">
+                    <article class="doctor-capability-card featured">
+                        <span class="doctor-capability-step">01</span>
+                        <h4>进入患者工作台</h4>
+                        <p>围绕“患者”而不是“工具”组织研究流程，先确认谁最值得优先进入综合分析与随访判断。</p>
+                    </article>
+
+                    <article class="doctor-capability-card">
+                        <span class="doctor-capability-step">02</span>
+                        <h4>补充影像与可视化证据</h4>
+                        <p>在同一患者上下文中完成影像上传、分类分析与脑影像可视化，让客观证据与行为数据形成联动。</p>
+                    </article>
+
+                    <article class="doctor-capability-card">
+                        <span class="doctor-capability-step">03</span>
+                        <h4>沉淀综合分析与随访依据</h4>
+                        <p>把量表、认知测试、14天追踪、AI摘要和影像结果统一沉淀在综合分析页，形成可持续跟踪的研究证据链。</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="bindModalOverlay" class="modal-overlay">
+        <div class="bind-modal">
+            <h3>添加患者档案</h3>
+            <p>输入患者注册邮箱后，系统会立即建立关联，并把你带入“患者工作台 -> 综合分析 -> 影像可视化”的研究链路中。</p>
+            <input id="bindModalEmailInput" class="bind-modal-input" type="email" placeholder="请输入患者注册邮箱，例如 patient@example.com">
+            <div id="bindModalFeedback" class="bind-modal-feedback"></div>
+            <div class="bind-modal-actions">
+                <button id="closeBindModalBtn" class="btn-outline" type="button">取消</button>
+                <button id="confirmBindPatientBtn" class="btn-primary-orange" type="button">立即添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/doctor_home.js"></script>
+</body>
+</html>

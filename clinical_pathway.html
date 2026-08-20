@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-04-04 20:47 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的临床路径 | 知行合"医"</title>
+    <meta name="description" content="查看您的完整ADHD评估临床路径进度，从基础量表到AI解读的全流程追踪。">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* ============================================
+           临床路径页面专属样式
+        ============================================ */
+        body {
+            background: linear-gradient(160deg, #F0F6FF 0%, #F8FAFC 50%, #F5F0FF 100%);
+            min-height: 100vh;
+        }
+
+        .pathway-shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 7.5rem 2rem 4rem;
+        }
+
+        /* --- Page Header --- */
+        .pathway-page-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .pathway-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.42rem 1rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #EFF6FF, #F5F0FF);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #7C3AED;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 1.2rem;
+        }
+
+        .pathway-page-header h1 {
+            font-size: 2.6rem;
+            color: #0F172A;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.03em;
+        }
+
+        .pathway-page-header p {
+            color: #64748B;
+            font-size: 1.05rem;
+            max-width: 560px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* --- Overall Progress Bar --- */
+        .pathway-overall-progress {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            padding: 1.6rem 2rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid rgba(147, 197, 253, 0.5);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .pathway-overall-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pathway-overall-label {
+            display: block;
+            font-size: 0.84rem;
+            color: #64748B;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.5rem;
+        }
+
+        .pathway-overall-track {
+            height: 12px;
+            background: #E2E8F0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .pathway-overall-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2563EB, #8B5CF6, #EC4899);
+            transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .pathway-overall-fill::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            border: 3px solid #8B5CF6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+        }
+
+        .pathway-overall-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .pathway-stat-box {
+            text-align: center;
+        }
+
+        .pathway-stat-num {
+            display: block;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0F172A;
+            line-height: 1;
+        }
+
+        .pathway-stat-label {
+            display: block;
+            font-size: 0.78rem;
+            color: #64748B;
+            margin-top: 0.3rem;
+        }
+
+        .pathway-stat-divider {
+            width: 1px;
+            background: #E2E8F0;
+            align-self: stretch;
+        }
+
+        /* --- Timeline Layout --- */
+        .pathway-timeline {
+            position: relative;
+            display: grid;
+            gap: 0;
+        }
+
+        /* Vertical connector line */
+        .pathway-timeline::before {
+            content: '';
+            position: absolute;
+            left: 36px;
+            top: 48px;
+            bottom: 48px;
+            width: 2px;
+            background: linear-gradient(180deg, #2563EB 0%, #8B5CF6 50%, #E2E8F0 100%);
+            z-index: 0;
+        }
+
+        /* --- Timeline Item --- */
+        .pathway-item {
+            display: grid;
+            grid-template-columns: 74px 1fr;
+            gap: 1.2rem;
+            padding-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pathway-item:last-child {
+            padding-bottom: 0;
+        }
+
+        /* --- Step Badge (left dot) --- */
+        .pathway-step-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .pathway-step-badge {
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .pathway-step-badge:hover {
+            transform: scale(1.08);
+        }
+
+        .pathway-step-badge ion-icon {
+            font-size: 1.7rem;
+        }
+
+        /* Status variants */
+        .pathway-step-badge.done {
+            background: linear-gradient(135deg, #1D4ED8, #3B82F6);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+        }
+
+        .pathway-step-badge.done ion-icon {
+            color: white;
+        }
+
+        .pathway-step-badge.active {
+            background: linear-gradient(135deg, #7C3AED, #A78BFA);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+            animation: pulseBadge 2.5s ease-in-out infinite;
+        }
+
+        .pathway-step-badge.active ion-icon {
+            color: white;
+        }
+
+        @keyframes pulseBadge {
+            0%, 100% { box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4); }
+            50% { box-shadow: 0 8px 32px rgba(124, 58, 237, 0.7), 0 0 0 8px rgba(124, 58, 237, 0.12); }
+        }
+
+        .pathway-step-badge.partial {
+            background: linear-gradient(135deg, #F59E0B, #FBBF24);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35);
+        }
+
+        .pathway-step-badge.partial ion-icon {
+            color: white;
+        }
+
+        .pathway-step-badge.pending {
+            background: #F1F5F9;
+            border: 2px solid #E2E8F0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+        }
+
+        .pathway-step-badge.pending ion-icon {
+            color: #94A3B8;
+        }
+
+        /* Step number ring */
+        .pathway-step-num {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid currentColor;
+            font-size: 0.7rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pathway-step-badge.done .pathway-step-num { color: #2563EB; }
+        .pathway-step-badge.active .pathway-step-num { color: #7C3AED; }
+        .pathway-step-badge.partial .pathway-step-num { color: #D97706; }
+        .pathway-step-badge.pending .pathway-step-num { color: #94A3B8; }
+
+        /* --- Step Card (right content) --- */
+        .pathway-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 22px;
+            padding: 1.4rem 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pathway-card:hover {
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .pathway-card.card-done {
+            border-color: rgba(37, 99, 235, 0.2);
+            background: linear-gradient(160deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.95));
+        }
+
+        .pathway-card.card-active {
+            border-color: rgba(124, 58, 237, 0.3);
+            background: linear-gradient(160deg, rgba(245, 243, 255, 0.98), rgba(255, 255, 255, 0.98));
+            box-shadow: 0 16px 40px rgba(124, 58, 237, 0.12);
+        }
+
+        .pathway-card.card-partial {
+            border-color: rgba(245, 158, 11, 0.2);
+            background: linear-gradient(160deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.95));
+        }
+
+        .pathway-card.card-pending {
+            opacity: 0.72;
+        }
+
+        /* Left accent bar */
+        .pathway-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .pathway-card.card-done::before { background: linear-gradient(180deg, #2563EB, #3B82F6); }
+        .pathway-card.card-active::before { background: linear-gradient(180deg, #7C3AED, #A78BFA); }
+        .pathway-card.card-partial::before { background: linear-gradient(180deg, #F59E0B, #FBBF24); }
+        .pathway-card.card-pending::before { background: #E2E8F0; }
+
+        .pathway-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .pathway-card-title-wrap h3 {
+            font-size: 1.1rem;
+            color: #0F172A;
+            margin: 0 0 0.25rem;
+            font-weight: 700;
+        }
+
+        .pathway-card-subtitle {
+            font-size: 0.84rem;
+            color: #64748B;
+            line-height: 1.5;
+        }
+
+        .pathway-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .pathway-status-pill.pill-done { background: #DCFCE7; color: #15803D; }
+        .pathway-status-pill.pill-active { background: #EDE9FE; color: #6D28D9; }
+        .pathway-status-pill.pill-partial { background: #FEF3C7; color: #B45309; }
+        .pathway-status-pill.pill-pending { background: #F1F5F9; color: #64748B; }
+
+        /* Data preview chips */
+        .pathway-data-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+
+        .pathway-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.28rem 0.72rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.08);
+            color: #1D4ED8;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .pathway-chip.chip-green { background: rgba(16, 185, 129, 0.08); color: #047857; border-color: rgba(16, 185, 129, 0.15); }
+        .pathway-chip.chip-purple { background: rgba(124, 58, 237, 0.08); color: #6D28D9; border-color: rgba(124, 58, 237, 0.15); }
+        .pathway-chip.chip-orange { background: rgba(245, 158, 11, 0.08); color: #B45309; border-color: rgba(245, 158, 11, 0.15); }
+        .pathway-chip.chip-gray { background: #F1F5F9; color: #64748B; border-color: #E2E8F0; }
+
+        .pathway-card-desc {
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.75;
+            margin: 0.5rem 0 0;
+        }
+
+        /* Mini progress bar inside card */
+        .pathway-mini-progress {
+            margin-top: 0.9rem;
+        }
+
+        .pathway-mini-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: #64748B;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .pathway-mini-track {
+            height: 7px;
+            background: #E2E8F0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .pathway-mini-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1s ease-out 0.3s;
+        }
+
+        .pathway-mini-fill.fill-blue { background: linear-gradient(90deg, #2563EB, #3B82F6); }
+        .pathway-mini-fill.fill-purple { background: linear-gradient(90deg, #7C3AED, #A78BFA); }
+        .pathway-mini-fill.fill-amber { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+        .pathway-mini-fill.fill-green { background: linear-gradient(90deg, #10B981, #34D399); }
+
+        /* Card action row */
+        .pathway-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(226, 232, 240, 0.6);
+            flex-wrap: wrap;
+        }
+
+        .pathway-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.62rem 1.15rem;
+            border-radius: 12px;
+            background: #1E3A8A;
+            color: white;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pathway-btn-primary:hover {
+            background: #2563EB;
+            transform: translateY(-1px);
+        }
+
+        .pathway-btn-primary.purple {
+            background: linear-gradient(135deg, #7C3AED, #6D28D9);
+        }
+
+        .pathway-btn-primary.purple:hover {
+            background: linear-gradient(135deg, #6D28D9, #5B21B6);
+        }
+
+        .pathway-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.62rem 1.15rem;
+            border-radius: 12px;
+            background: transparent;
+            color: #475569;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1.5px solid #CBD5E1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pathway-btn-outline:hover {
+            border-color: #93C5FD;
+            color: #1E3A8A;
+            background: #EFF6FF;
+        }
+
+        .pathway-time-hint {
+            margin-left: auto;
+            font-size: 0.78rem;
+            color: #94A3B8;
+            font-weight: 500;
+        }
+
+        /* --- Active Step Hero Callout --- */
+        .pathway-active-callout {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            border-radius: 24px;
+            padding: 1.6rem 2rem;
+            margin-bottom: 2.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            box-shadow: 0 20px 48px rgba(79, 70, 229, 0.3);
+            flex-wrap: wrap;
+        }
+
+        .pathway-active-callout-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .pathway-active-callout-icon ion-icon {
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .pathway-active-callout-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pathway-active-callout-text p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.92rem;
+            line-height: 1.65;
+        }
+
+        .pathway-active-callout-text strong {
+            font-size: 1.15rem;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .pathway-active-callout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.8rem 1.4rem;
+            border-radius: 14px;
+            background: white;
+            color: #4F46E5;
+            font-size: 0.92rem;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .pathway-active-callout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        /* --- Completion Banner --- */
+        .pathway-complete-banner {
+            background: linear-gradient(135deg, #047857, #059669);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            color: white;
+            margin-top: 2rem;
+            display: none;
+            box-shadow: 0 20px 48px rgba(16, 185, 129, 0.25);
+        }
+
+        .pathway-complete-banner.show { display: block; }
+
+        .pathway-complete-banner ion-icon {
+            font-size: 3.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .pathway-complete-banner h3 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pathway-complete-banner p {
+            opacity: 0.9;
+            margin-bottom: 1.2rem;
+        }
+
+        /* --- Legend --- */
+        .pathway-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            padding: 1.2rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .pathway-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.82rem;
+            color: #64748B;
+            font-weight: 600;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.done { background: #2563EB; }
+        .legend-dot.active { background: #7C3AED; }
+        .legend-dot.partial { background: #F59E0B; }
+        .legend-dot.pending { background: #CBD5E1; }
+
+        /* slide-in animation */
+        .pathway-item {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInLeft 0.5s ease forwards;
+        }
+
+        @keyframes slideInLeft {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .pathway-item:nth-child(1) { animation-delay: 0.05s; }
+        .pathway-item:nth-child(2) { animation-delay: 0.12s; }
+        .pathway-item:nth-child(3) { animation-delay: 0.19s; }
+        .pathway-item:nth-child(4) { animation-delay: 0.26s; }
+        .pathway-item:nth-child(5) { animation-delay: 0.33s; }
+        .pathway-item:nth-child(6) { animation-delay: 0.40s; }
+        .pathway-item:nth-child(7) { animation-delay: 0.47s; }
+        .pathway-item:nth-child(8) { animation-delay: 0.54s; }
+    </style>
+</head>
+<body data-copilot-page="report">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合"医"</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html">首页</a></li>
+                <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_test.html">认知测试</a></li>
+                <li><a href="patient_tracking.html">14天追踪</a></li>
+                <li><a href="patient_report.html">我的报告</a></li>
+                <li><a href="clinical_pathway.html" class="active">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pathway-shell">
+        <!-- Page Header -->
+        <div class="pathway-page-header slide-up">
+            <div class="pathway-eyebrow">
+                <ion-icon name="git-branch-outline"></ion-icon>
+                临床评估路径总览
+            </div>
+            <h1>你的 ADHD 评估完整路径</h1>
+            <p>从注册登录到综合报告完成，共<strong>8个关键节点</strong>。系统会根据你完成的每个步骤，自动解锁下一阶段的评估与数据分析。</p>
+        </div>
+
+        <!-- Active Step Callout (dynamically shown) -->
+        <div class="pathway-active-callout slide-up" id="activeCallout" style="animation-delay:0.1s; display:none;">
+            <div class="pathway-active-callout-icon">
+                <ion-icon name="arrow-forward-circle" id="calloutIcon"></ion-icon>
+            </div>
+            <div class="pathway-active-callout-text">
+                <strong id="calloutTitle">当前推荐步骤</strong>
+                <p id="calloutDesc">系统正在分析你的进度...</p>
+            </div>
+            <a href="#" id="calloutBtn" class="pathway-active-callout-btn">
+                立即开始 <ion-icon name="arrow-forward"></ion-icon>
+            </a>
+        </div>
+
+        <!-- Overall Progress -->
+        <div class="pathway-overall-progress slide-up" style="animation-delay:0.15s;">
+            <div class="pathway-overall-left">
+                <span class="pathway-overall-label">整体完成进度</span>
+                <div class="pathway-overall-track">
+                    <div class="pathway-overall-fill" id="overallProgressFill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="pathway-overall-stats">
+                <div class="pathway-stat-box">
+                    <span class="pathway-stat-num" id="statDone">0</span>
+                    <span class="pathway-stat-label">已完成</span>
+                </div>
+                <div class="pathway-stat-divider"></div>
+                <div class="pathway-stat-box">
+                    <span class="pathway-stat-num" id="statTotal">8</span>
+                    <span class="pathway-stat-label">总步骤</span>
+                </div>
+                <div class="pathway-stat-divider"></div>
+                <div class="pathway-stat-box">
+                    <span class="pathway-stat-num" id="statPct">0%</span>
+                    <span class="pathway-stat-label">完成率</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="pathway-timeline" id="pathwayTimeline">
+            <!-- Items are rendered by JS -->
+        </div>
+
+        <!-- Completion Banner -->
+        <div class="pathway-complete-banner" id="completionBanner">
+            <ion-icon name="trophy"></ion-icon>
+            <h3>🎉 恭喜！你已完成完整的临床评估路径</h3>
+            <p>你的数据已经涵盖行为量表、认知测试、14天追踪、影像分析、AI解读和DAC安全审计。研究人员已收到你的综合报告，感谢你参与本次评估。</p>
+            <a href="patient_report.html" class="pathway-btn-primary" style="display:inline-flex; margin: 0 auto;">查看综合报告 <ion-icon name="document-text-outline"></ion-icon></a>
+        </div>
+
+        <!-- Legend -->
+        <div class="pathway-legend">
+            <div class="pathway-legend-item"><div class="legend-dot done"></div> 已完成</div>
+            <div class="pathway-legend-item"><div class="legend-dot active"></div> 当前步骤（推荐）</div>
+            <div class="pathway-legend-item"><div class="legend-dot partial"></div> 进行中</div>
+            <div class="pathway-legend-item"><div class="legend-dot pending"></div> 待解锁</div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" style="padding: 2rem 0; margin-top: 3rem;">
+        <div class="footer-container" style="justify-content: center;">
+            <span>知行合"医" - 专注每刻 © 2026</span>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/patient_copilot.js"></script>
+    <script>
+    (function() {
+        // ============================================
+        // 临床路径步骤定义
+        // ============================================
+        const PATHWAY_STEPS = [
+            {
+                id: 'register',
+                icon: 'person-add-outline',
+                title: '账号注册与登录',
+                subtitle: '开启你的数字化评估旅程',
+                desc: '通过邮箱注册患者账号，系统为你创建独立的加密数据空间，所有评估数据仅你和授权研究人员可见。',
+                defaultStatus: 'done', // 登录了就算完成
+                actionLabel: '已完成',
+                actionUrl: '#',
+                dataPoints: []
+            },
+            {
+                id: 'scale',
+                icon: 'document-text-outline',
+                title: '行为量表评估',
+                subtitle: 'ASRS / SNAP-IV 标准化测评',
+                desc: '填写业界公认的 ADHD 行为量表，建立基础画像和医学评估基线。仅需填写一次，约 10-15 分钟。',
+                defaultStatus: 'pending',
+                actionLabel: '填写量表',
+                actionUrl: 'patient_scale.html',
+                progressLabel: '量表完成情况',
+                dataPoints: [] // 动态填充
+            },
+            {
+                id: 'cognitive',
+                icon: 'game-controller-outline',
+                title: '认知能力测试',
+                subtitle: 'N-back / Go-No-Go / Stroop 实验组合',
+                desc: '通过三项经典认知实验范式，客观测量你的工作记忆、冲动抑制和选择性注意能力，约需 5-8 分钟。',
+                defaultStatus: 'pending',
+                actionLabel: '开始认知测试',
+                actionUrl: 'patient_test.html',
+                dataPoints: []
+            },
+            {
+                id: 'tracking',
+                icon: 'calendar-outline',
+                title: '14天动态追踪',
+                subtitle: '连续行为日志与情绪记录',
+                desc: '连续14天记录每日情绪状态、行为表现和用药情况，帮助系统建立个人动态基线，发现波动趋势。',
+                defaultStatus: 'pending',
+                actionLabel: '开始追踪打卡',
+                actionUrl: 'patient_tracking.html',
+                hasProgress: true,
+                maxDays: 14,
+                dataPoints: []
+            },
+            {
+                id: 'ai_interpret',
+                icon: 'sparkles-outline',
+                title: 'AI 智能解读',
+                subtitle: '结合量表、认知与追踪结果的综合解释',
+                desc: 'AI 助手将量表结果、认知测试数据和14天追踪结果融合分析，用通俗语言解释你的认知画像，并给出个性化建议。',
+                defaultStatus: 'pending',
+                actionLabel: '查看 AI 解读',
+                actionUrl: 'patient_report.html',
+                dataPoints: []
+            },
+            {
+                id: 'imaging',
+                icon: 'scan-outline',
+                title: '影像分析',
+                subtitle: '研究端脑功能网络可视化',
+                desc: '研究人员上传脑功能时间序列数据后，GNN 模型将生成脑网络连接矩阵分析和 ADHD 概率预测，与你的行为数据交叉验证。',
+                defaultStatus: 'pending',
+                actionLabel: '查看影像结果',
+                actionUrl: 'patient_report.html',
+                dataPoints: []
+            },
+            {
+                id: 'dac_audit',
+                icon: 'shield-checkmark-outline',
+                title: 'DAC 安全审计',
+                subtitle: '分布式聚合计算与数据完整性验证',
+                desc: '所有数据进入去中心化聚合计算链路，研究人员进行时空双维度安全审计，确保数据完整性和隐私合规。审计完成后数据进入综合报告。',
+                defaultStatus: 'pending',
+                actionLabel: '查看审计状态',
+                actionUrl: 'dac_dashboard.html',
+                dataPoints: []
+            },
+            {
+                id: 'report',
+                icon: 'ribbon-outline',
+                title: '综合报告完成',
+                subtitle: '完整临床画像与研究人员解读',
+                desc: '综合所有评估数据生成完整的临床分析报告，包含五维执行功能雷达图、趋势分析、影像验证和个性化干预建议。',
+                defaultStatus: 'pending',
+                actionLabel: '查看综合报告',
+                actionUrl: 'patient_report.html',
+                dataPoints: []
+            }
+        ];
+
+        let steps = PATHWAY_STEPS.map(s => ({ ...s, status: s.defaultStatus, chipData: [] }));
+        let reportData = null;
+        let dashboardData = null;
+
+        // ============================================
+        // 加载数据并更新状态
+        // ============================================
+        async function loadData() {
+            // 同时检查 token 和 user，任一存在即居火登录态
+            const token = localStorage.getItem('smartbrain_token');
+            const user = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
+
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl && user?.full_name) userNameEl.textContent = user.full_name;
+
+            // 步骤1: 注册 - 如果登录了就是完成
+            steps[0].status = 'done';
+            steps[0].chipData = [
+                user?.email ? `账号: ${user.email}` : '已登录',
+                user?.patient_type === 'adult' ? '类型: 成人就诊者' : '类型: 就诊者'
+            ];
+
+            try {
+                [reportData, dashboardData] = await Promise.all([
+                    window.API?.Patient?.getComprehensiveReport().catch(() => null),
+                    window.API?.Patient?.getDashboardStatus().catch(() => null)
+                ]);
+            } catch(e) { /* API 失败时降级显示默认状态 */ }
+
+            applyDataToSteps();
+            render();
+        }
+
+        function applyDataToSteps() {
+            const scale = reportData?.latest_scale;
+            const cog = reportData?.cognitive_profile;
+            const tracking = reportData?.tracking_summary;
+            const imaging = reportData?.imaging_analysis;
+
+            // 步骤2: 量表
+            if (scale) {
+                steps[1].status = 'done';
+                steps[1].chipData = [
+                    `量表: ${scale.scale_type || '--'}`,
+                    `风险: ${scale.risk_level || '--'}`,
+                    `得分: ${scale.total_score ?? '--'}`
+                ];
+            }
+
+            // 步骤3: 认知测试
+            if (cog?.sessions_count > 0) {
+                steps[2].status = 'done';
+                steps[2].chipData = [
+                    `已完成: ${cog.sessions_count || 0} 次`,
+                    `工作记忆: ${cog.working_memory_score?.toFixed(0) ?? '--'}%`,
+                    `抑制控制: ${cog.inhibition_score?.toFixed(0) ?? '--'}%`
+                ];
+            } else if (scale) {
+                steps[2].status = 'active';
+            }
+
+            // 步骤4: 追踪
+            const done = tracking?.completed_count || 0;
+            const total = tracking?.total_days || 14;
+            if (done >= total) {
+                steps[3].status = 'done';
+                steps[3].chipData = [`已完成: ${done}/${total} 天`, `追踪完整率: 100%`];
+                steps[3].progress = 100;
+            } else if (done > 0) {
+                steps[3].status = 'partial';
+                steps[3].chipData = [`已完成: ${done}/${total} 天`, `追踪完整率: ${Math.round(done/total*100)}%`];
+                steps[3].progress = Math.round(done / total * 100);
+            } else if (scale || (cog?.sessions_count > 0)) {
+                steps[3].status = 'active';
+                steps[3].progress = 0;
+            }
+
+            // 步骤5: AI 解读 (量表+认知都完成才解锁)
+            if (scale && cog?.sessions_count > 0) {
+                steps[4].status = 'partial';
+                steps[4].chipData = [`AI 解读: 可用`];
+                if (done >= 7) {
+                    steps[4].status = 'done';
+                    steps[4].chipData = [`AI 解读: 已完成`, `追踪数据已融合`];
+                }
+            }
+
+            // 步骤6: 影像分析
+            if (imaging?.prediction_label) {
+                steps[5].status = 'done';
+                steps[5].chipData = [
+                    `分类: ${imaging.prediction_label}`,
+                    `置信度: ${imaging.confidence_level || '--'}`
+                ];
+            }
+
+            // 步骤7: DAC 审计 - 从 security 获取
+            const auditDone = dashboardData?.audit_completed;
+            if (auditDone) {
+                steps[6].status = 'done';
+                steps[6].chipData = [`审计状态: 已完成`, `链路: 安全`];
+            }
+
+            // 步骤8: 综合报告
+            const allDone = steps.slice(0,7).every(s => s.status === 'done');
+            if (allDone) {
+                steps[7].status = 'done';
+                steps[7].chipData = [`报告状态: 完整`, `已可查阅`];
+            }
+
+            // 确定"当前步骤" (第一个非done的)
+            const activeIdx = steps.findIndex(s => s.status === 'pending' || s.status === 'active');
+            if (activeIdx !== -1 && steps[activeIdx].status === 'pending') {
+                steps[activeIdx].status = 'active';
+            }
+        }
+
+        // ============================================
+        // 渲染
+        // ============================================
+        function render() {
+            const container = document.getElementById('pathwayTimeline');
+            if (!container) return;
+
+            const doneCount = steps.filter(s => s.status === 'done').length;
+            const pct = Math.round((doneCount / steps.length) * 100);
+
+            // Update progress bar
+            setTimeout(() => {
+                const fill = document.getElementById('overallProgressFill');
+                if (fill) fill.style.width = pct + '%';
+            }, 200);
+            document.getElementById('statDone').textContent = doneCount;
+            document.getElementById('statPct').textContent = pct + '%';
+
+            // Active callout
+            const activeStep = steps.find(s => s.status === 'active');
+            const callout = document.getElementById('activeCallout');
+            if (activeStep && callout) {
+                callout.style.display = 'flex';
+                document.getElementById('calloutIcon').setAttribute('name', activeStep.icon);
+                document.getElementById('calloutTitle').textContent = `当前推荐：第 ${steps.indexOf(activeStep)+1} 步 — ${activeStep.title}`;
+                document.getElementById('calloutDesc').textContent = activeStep.desc;
+                const btn = document.getElementById('calloutBtn');
+                btn.href = activeStep.actionUrl;
+                btn.innerHTML = `${activeStep.actionLabel} <ion-icon name="arrow-forward"></ion-icon>`;
+            }
+
+            // Completion banner
+            if (doneCount === steps.length) {
+                document.getElementById('completionBanner').classList.add('show');
+            }
+
+            // Render each step
+            container.innerHTML = '';
+            steps.forEach((step, idx) => {
+                container.appendChild(buildStepEl(step, idx));
+            });
+
+            // Rehydrate ionicons
+            if (window.Ionicons) window.Ionicons.applyPolyfills();
+        }
+
+        function buildStepEl(step, idx) {
+            const statusMap = {
+                done: { badgeClass: 'done', cardClass: 'card-done', pillClass: 'pill-done', pillText: '✓ 已完成' },
+                active: { badgeClass: 'active', cardClass: 'card-active', pillClass: 'pill-active', pillText: '▶ 当前步骤' },
+                partial: { badgeClass: 'partial', cardClass: 'card-partial', pillClass: 'pill-partial', pillText: '⟳ 进行中' },
+                pending: { badgeClass: 'pending', cardClass: 'card-pending', pillClass: 'pill-pending', pillText: '○ 待解锁' }
+            };
+            const s = statusMap[step.status] || statusMap.pending;
+
+            const chipColors = ['', 'chip-green', 'chip-purple', 'chip-orange'];
+            const chipsHtml = (step.chipData || []).map((c, ci) =>
+                `<span class="pathway-chip ${chipColors[ci % chipColors.length]}"><ion-icon name="checkmark-outline"></ion-icon> ${c}</span>`
+            ).join('');
+
+            let progressHtml = '';
+            if (step.hasProgress && step.progress !== undefined) {
+                const fillColor = step.progress >= 100 ? 'fill-green' : step.progress > 0 ? 'fill-purple' : 'fill-blue';
+                progressHtml = `
+                    <div class="pathway-mini-progress">
+                        <div class="pathway-mini-progress-label">
+                            <span>追踪进度</span>
+                            <span>${step.progress}%</span>
+                        </div>
+                        <div class="pathway-mini-track">
+                            <div class="pathway-mini-fill ${fillColor}" style="width: ${step.progress}%;"></div>
+                        </div>
+                    </div>`;
+            }
+
+            const isPending = step.status === 'pending';
+            const actionBtn = isPending
+                ? `<span style="font-size:0.82rem; color:#94A3B8;">完成前序步骤后解锁</span>`
+                : `<a href="${step.actionUrl}" class="pathway-btn-primary ${step.status === 'active' ? 'purple' : ''}">${step.actionLabel} <ion-icon name="arrow-forward-outline"></ion-icon></a>`;
+
+            const item = document.createElement('div');
+            item.className = 'pathway-item';
+            item.innerHTML = `
+                <div class="pathway-step-col">
+                    <div class="pathway-step-badge ${s.badgeClass}">
+                        <ion-icon name="${step.icon}"></ion-icon>
+                        <span class="pathway-step-num">${idx + 1}</span>
+                    </div>
+                </div>
+                <div class="pathway-card ${s.cardClass}">
+                    <div class="pathway-card-top">
+                        <div class="pathway-card-title-wrap">
+                            <h3>${step.title}</h3>
+                            <span class="pathway-card-subtitle">${step.subtitle}</span>
+                        </div>
+                        <span class="pathway-status-pill ${s.pillClass}">${s.pillText}</span>
+                    </div>
+                    ${chipsHtml ? `<div class="pathway-data-chips">${chipsHtml}</div>` : ''}
+                    <p class="pathway-card-desc">${step.desc}</p>
+                    ${progressHtml}
+                    <div class="pathway-card-actions">
+                        ${actionBtn}
+                        ${step.status === 'done' ? `<a href="${step.actionUrl}" class="pathway-btn-outline">查看详情 <ion-icon name="eye-outline"></ion-icon></a>` : ''}
+                    </div>
+                </div>`;
+            return item;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
+    })();
+    </script>
+</body>
+</html>

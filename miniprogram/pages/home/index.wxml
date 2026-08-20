@@ -1,0 +1,70 @@
+<view class="home-page">
+  <view class="welcome-section">
+    <text class="welcome-text">你好，{{userName}}</text>
+    <text class="welcome-subtitle">
+      今天是14天辅助筛查计划的第{{currentDay}}天
+    </text>
+  </view>
+
+  <view class="progress-card">
+    <view class="card-header">
+      <text class="card-title">14天任务进度</text>
+      <text class="progress-number">
+        {{completedDays}} / {{totalDays}} 天
+      </text>
+    </view>
+
+    <view class="progress-track">
+  <view class="progress-value"></view>
+</view>
+
+    <text class="progress-tip">
+      坚持完成每日任务，有助于获得更完整的评估结果
+    </text>
+  </view>
+
+  <view class="section-header">
+    <text class="section-title">今日任务</text>
+    <text class="section-extra">第{{currentDay}}天</text>
+  </view>
+
+  <view class="task-list">
+    <view
+      class="task-item"
+      wx:for="{{tasks}}"
+      wx:key="id"
+      data-title="{{item.title}}"
+      bindtap="handleTaskTap"
+    >
+      <view class="task-icon">{{item.icon}}</view>
+
+      <view class="task-content">
+        <text class="task-title">{{item.title}}</text>
+        <text class="task-description">{{item.description}}</text>
+      </view>
+
+      <text class="task-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section-header quick-header">
+    <text class="section-title">快捷入口</text>
+  </view>
+
+  <view class="quick-grid">
+    <view
+      class="quick-item"
+      wx:for="{{quickEntries}}"
+      wx:key="id"
+      data-title="{{item.title}}"
+      bindtap="handleEntryTap"
+    >
+      <view class="quick-icon">{{item.icon}}</view>
+      <text class="quick-title">{{item.title}}</text>
+    </view>
+  </view>
+
+  <text class="medical-tip">
+    本平台仅用于辅助筛查，不替代专业医生诊断
+  </text>
+</view>

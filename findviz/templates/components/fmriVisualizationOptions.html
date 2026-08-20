@@ -1,0 +1,65 @@
+<!-- Visualization Options (for fMRI data) -->
+<div class="row">
+  <div class = 'col-12 pr-0 pl-1'>
+    <div class="card" id="slider-card">
+      <div class="card-body pt-1 pb-1">
+        <form>
+        <!-- Custom Colormap Dropdown -->
+          <div class='row pl-2 pt-0 mb-1'>
+            <div class="form-group mb-0 mr-2 w-100" id="form-colormap">
+              <label class='small' for="colormap-dropdown"> <strong>选择色图：</strong></label>
+              <div class="custom-dropdown" id="colormap-dropdown">
+                <!-- Dropdown content goes here -->
+              </div>
+            </div>
+          </div>
+          <!-- Placeholder for Global Min and Max Slider -->
+          <div class='row mb-1'>
+            <div class='col-12'>
+              <div class="form-group mb-1" id="form-color-range">
+                <div class='row pl-2'>
+                  <label for="color-range-slider" class='mb-1 small'><strong>颜色范围：</strong></label>
+                </div>
+                <div class='row pl-2'>
+                  <input id="color-range-slider" type="text" class="slider" data-slider-responsive="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class = 'row mb-1'>
+            <div class='col-12'>
+              <!-- Placeholder for Threshold Slider -->
+              <div class="form-group mb-1" id="form-threshold">
+                <div class='row pl-2'>
+                  <label for="threshold-slider" class='mb-1 small'><strong>颜色阈值：</strong></label>
+                </div>
+                <div class='row pl-2'>
+                  <input id="threshold-slider" type="text" class="slider" data-slider-responsive="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class = 'row mb-1'>
+            <div class='col-12'>
+              <!-- Placeholder for Opacity Slider -->
+              <div class="form-group mb-1" id="form-opacity">
+                <div class='row pl-2'>
+                  <label for="opacity-slider" class='mb-1 small'><strong>颜色不透明度：</strong></label>
+                </div>
+                <div class='row pl-2'>
+                  <input id="opacity-slider" type="text" class="slider" data-slider-responsive="true" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Reset slider button -->
+          <div class='row justify-content-center'>
+            <div class='col-10'>
+              <button type="button" class="btn btn-secondary btn-sm btn-block mt-2" id="reset-slider-button">重置滑块</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

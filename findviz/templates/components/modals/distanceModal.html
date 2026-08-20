@@ -1,0 +1,56 @@
+<!-- Time Point Distance Modal-->
+<div class="modal fade" id="distance-modal" tabindex="-1" aria-labelledby="distance-modal-label" aria-hidden="true">
+    <div id='distance-modal-dialog' class="modal-dialog modal-dialog-centered">
+    <!-- Distance spinner overlay-->
+    <div class='spinner-overlay' id="distance-spinner-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="distance-modal-label">计算时间点距离</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="distance-form" enctype="multipart/form-data">
+          <div class="modal-body">
+            <!-- Distance Spinner Wheel -->
+            <div class="spinner-container d-flex justify-content-center">
+              <div id='distance-spinner-wheel' class="spinner-wheel" role="status"></div>
+            </div>
+            <div class="row">
+              <div class='col ml-3 mr-3'>
+                <div class='row'>
+                  <div class="alert alert-primary" role="alert">
+                    <span class='mr-2'>当前选中时间点：</span>
+                    <span id='timepoint-distance-label' class="fs-4 fw-bold">0</span>
+                  </div>
+                </div>
+                <div class='row'>
+                  <div class="alert alert-secondary" id="distance-prep-alert" role="alert" style="display: none;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span class='mr-2'>使用预处理后的数据</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col ml-3 mr-3'>
+                <h5>选择距离度量</h5>
+                <select class="custom-select" id="distance-metric-select">
+                  <option value="euclidean">欧氏距离</option>
+                  <option value="sqeuclidean">平方欧氏距离</option>
+                  <option value="cityblock">曼哈顿距离</option>
+                  <option value="cosine">余弦距离</option>
+                  <option value="correlation">相关距离</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div id="error-message-distance" class="alert alert-danger" role='alert' style="display: none;"></div>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            <button type="submit" class="btn btn-primary" id='run-average' data-dismiss="static">计算</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

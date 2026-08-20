@@ -1,0 +1,44 @@
+<!--pages/login/index.wxml-->
+<view class="login-page">
+  <view class="login-header">
+    <text class="title">ADHD智慧辅助诊断平台</text>
+    <text class="subtitle">患者登录</text>
+  </view>
+
+  <view class="login-card">
+    <text class="field-label">账号</text>
+    <input
+      class="field-input"
+      type="text"
+      value="{{identifier}}"
+      placeholder="请输入邮箱或账号"
+      placeholder-class="input-placeholder"
+      bindinput="onIdentifierInput"
+    />
+
+    <text class="field-label password-label">密码</text>
+    <input
+      class="field-input"
+      password
+      value="{{password}}"
+      placeholder="请输入密码"
+      placeholder-class="input-placeholder"
+      bindinput="onPasswordInput"
+    />
+
+    <button
+      class="login-button"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="handleLogin"
+    >
+      登录
+    </button>
+
+    <text class="login-tip">首次使用请先注册患者账号</text>
+  </view>
+
+  <text class="disclaimer">
+    本平台仅用于辅助筛查，不替代专业医生诊断
+  </text>
+</view>

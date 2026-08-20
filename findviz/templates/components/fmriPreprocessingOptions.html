@@ -1,0 +1,114 @@
+<!-- Preprocessing Options (for fMRI data) -->
+<div class ='row mt-2'>
+  <div class='col-12 pr-0 pl-1'>
+    <div class ='card'>
+      <div class="card-body pt-2 pb-1">
+        <form>
+          <!-- Normalization -->
+          <div class='row mb-1'>
+            <div class='col-12'>
+              <div class='row pl-1'>
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="enable-normalization" disabled>
+                  <label class="custom-control-label small" for="enable-normalization"><strong>归一化</strong></label>
+                  <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="对每个体素或顶点的时间序列分别进行归一化。" aria-hidden="true"></span>
+                </div>
+              </div>
+              <div class='row pl-1 mb-1' id='normalization-options'>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input norm-option" type="radio" name="norm-options" id="select-mean-center" value="mean-center" disabled>
+                  <label class="form-check-label small" for="select-mean-center">均值中心化</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input norm-option" type="radio" name="norm-options" id="select-z-score" value="z-score" disabled>
+                  <label class="form-check-label small" for="select-z-score">Z 分数</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Filtering and Detrending-->
+          <div class='row mt-1 mb-1'>
+            <div class='col-12'>
+              <!-- Filter Switch -->
+              <div class='row pl-1'>
+                <div class='col-6 pl-0'>
+                  <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="enable-filtering" disabled>
+                    <label class="custom-control-label small" for="enable-filtering"><strong>滤波</strong></label>
+                    <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="时间滤波使用 5 阶 Butterworth 滤波器。低截止和高截止频率单位为赫兹（Hz）。仅提供低截止频率时执行高通滤波，仅提供高截止频率时执行低通滤波，同时提供两者时执行带通滤波。" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <!-- Detrending Checkbox layout -->
+                <div class='col-6 pl-0 d-flex align-items-center'>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="enable-detrending" disabled>
+                    <label class="form-check-label small" for="enable-detrending">去趋势</label>
+                    <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="去除线性趋势。" aria-hidden="true"></span>
+                  </div>
+                </div>
+              </div>
+              <!-- Filter options layout -->
+              <div class='row pl-1 justify-content-start' id='filter-options'>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group mb-1">
+                    <label for="filter-tr" class='mb-0'><small>TR:</small></label>
+                    <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="功能磁共振时间序列的重复时间。" aria-hidden="true"></span>
+                    <input type="number" class="form-control form-control-sm filter-option" id="filter-tr" step="0.01" disabled>
+                  </div>
+                </div>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group filter-options mb-1">
+                    <label for="filter-low-cut" class='mb-0'><small>低截止：</small></label>
+                    <div class="d-flex align-items-center">
+                      <input type="number" class="form-control form-control-sm filter-option mr-1" id="filter-low-cut" step="0.01" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-4 pl-0 pr-1">
+                  <div class="form-group filter-options mb-1">
+                    <label for="filter-high-cut" class='mb-0'><small>高截止：</small></label>
+                    <div class="d-flex align-items-center">
+                      <input type="number" class="form-control form-control-sm filter-option mr-1" id="filter-high-cut" step="0.01" disabled>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Spatial Smoothing-->
+          <div class='row mb-1'>
+            <div class='col-12'>
+              <div class='row pl-1'>
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="enable-smoothing" disabled>
+                  <label class="custom-control-label small" for="enable-smoothing"><strong>平滑</strong></label>
+                  <span class="fa-solid fa-circle-info ml-1 toggle-immediate" data-toggle="tooltip" data-placement="top" title="表面 .gii 输入暂不支持。对 fMRI 体数据执行 3D 高斯各向同性空间平滑，平滑程度由以毫米为单位的 FWHM 核大小控制。" aria-hidden="true"></span>
+                </div>
+              </div>
+              <!-- Smoothing options layout -->
+              <div class='row pl-2 justify-content-start'>
+                <div class='col-6 pl-0'>
+                  <label for="smoothing-fwhm" class='mb-0'><small>FWHM:</small></label>
+                  <div class="d-flex align-items-center">
+                    <input type="number" class="form-control form-control-sm mr-1" id="smoothing-fwhm" step="0.1" min="0" max="12" disabled>
+                    <span><small>mm</small></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class='row mt-3 mb-1'>
+            <!-- Error Message Placeholder -->
+            <div id="error-message-preprocess" class="alert alert-danger" role='alert' style="display: none;"></div>
+            <div class='col-7 pl-1 pr-1'>
+              <button type="button" class="btn btn-primary btn-sm btn-block" id='submit-preprocess-button' type='submit' disabled>预处理</button>
+            </div>
+            <div class='col-5 pl-1'>
+              <button type="button" class="btn btn-secondary btn-sm btn-block" id='reset-preprocess-button' disabled>重置</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
