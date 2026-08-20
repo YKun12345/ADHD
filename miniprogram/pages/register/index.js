@@ -16,6 +16,7 @@ const EDITABLE_FIELDS = [
   'password',
   'confirmPassword'
 ]
+const SUBMIT_COOLDOWN_MS = 800
 
 Page({
   data: {
@@ -114,6 +115,17 @@ Page({
       })
       return
     }
+
+    const currentTime = Date.now()
+
+    if (
+      this._lastSubmitAt &&
+      currentTime - this._lastSubmitAt < SUBMIT_COOLDOWN_MS
+    ) {
+      return
+    }
+
+    this._lastSubmitAt = currentTime
 
     this.setData({
       submitting: true

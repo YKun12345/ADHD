@@ -216,6 +216,41 @@ async function run() {
   )
 
   resetCalls()
+  const rapidRetryPage = createPage()
+  rapidRetryPage.setData(validForm)
+  const originalDateNow = Date.now
+  let currentTime = 1000
+  Date.now = () => currentTime
+
+  try {
+    requestImplementation = async (options) => {
+      calls.request.push(options)
+      const error = new Error('This email is already registered.')
+      error.statusCode = 400
+      throw error
+    }
+
+    await rapidRetryPage.handleSubmit()
+    currentTime = 1100
+    await rapidRetryPage.handleSubmit()
+    assert.equal(
+      calls.request.length,
+      1,
+      '800毫秒内的快速重复点击只能发送一次请求'
+    )
+
+    currentTime = 1800
+    await rapidRetryPage.handleSubmit()
+    assert.equal(
+      calls.request.length,
+      2,
+      '冷却时间结束后应允许用户主动重试'
+    )
+  } finally {
+    Date.now = originalDateNow
+  }
+
+  resetCalls()
   const failedPage = createPage()
   failedPage.setData(validForm)
   requestImplementation = async (options) => {
