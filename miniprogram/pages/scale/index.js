@@ -1,6 +1,10 @@
 const { request } = require('../../utils/request')
 const asrsScale = require('../../utils/asrs-scale')
 const snapScale = require('../../utils/snap-scale')
+const {
+  SCALE_LATEST_RESULT_KEY,
+  isReportableScaleResult
+} = require('../../utils/report-data')
 
 const SCALE_MODELS = {
   adult: {
@@ -220,6 +224,10 @@ Page({
 
       if (!isCompleteResult(result)) {
         throw new Error('INCOMPLETE_SCALE_RESULT')
+      }
+
+      if (isReportableScaleResult(result)) {
+        wx.setStorageSync(SCALE_LATEST_RESULT_KEY, result)
       }
 
       wx.removeStorageSync(this.draftKey)

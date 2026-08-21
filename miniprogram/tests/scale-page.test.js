@@ -9,6 +9,9 @@ const {
   SNAP_DRAFT_KEY,
   SNAP_CONFIG
 } = require('../utils/snap-scale')
+const {
+  SCALE_LATEST_RESULT_KEY
+} = require('../utils/report-data')
 
 const calls = {
   request: [],
@@ -94,10 +97,22 @@ function reset(patientType = 'adult', draft) {
 }
 
 const completeResult = {
+  id: 1,
+  scale_type: 'ASRS',
+  respondent_type: 'self',
   total_score: 20,
   risk_level: 'low',
+  radar_scores: {
+    attention_control: 12,
+    organization: 11,
+    task_activation: 10,
+    hyperactivity: 9,
+    impulsivity: 8
+  },
+  sub_scores: {},
   summary: '当前结果用于测试。',
-  recommendations: ['继续完成后续任务。']
+  recommendations: ['继续完成后续任务。'],
+  created_at: '2026-08-21T08:00:00.000Z'
 }
 
 async function run() {
@@ -192,6 +207,11 @@ async function run() {
   assert.deepEqual(successPage.data.result, completeResult)
   assert.equal(successPage.data.resultRiskLabel, '低风险')
   assert.equal(successPage.data.submitting, false)
+  assert.deepEqual(storage[SCALE_LATEST_RESULT_KEY], completeResult)
+  assert.deepEqual(calls.storageWrites.at(-1), [
+    SCALE_LATEST_RESULT_KEY,
+    completeResult
+  ])
 
   reset('child')
   storage[SNAP_DRAFT_KEY] = Array(26).fill(1)
@@ -199,6 +219,15 @@ async function run() {
     calls.request.push(options)
     return {
       ...completeResult,
+      scale_type: 'SNAP_IV',
+      respondent_type: 'parent',
+      radar_scores: {
+        attention_control: 12,
+        organization: 11,
+        hyperactivity: 10,
+        impulsivity: 9,
+        emotional_regulation: 8
+      },
       risk_level: 'medium'
     }
   }
@@ -216,8 +245,10 @@ async function run() {
   })
   assert.deepEqual(calls.storageRemovals, [SNAP_DRAFT_KEY])
   assert.equal(childSubmitPage.data.resultRiskLabel, '中等风险')
+  assert.equal(storage[SCALE_LATEST_RESULT_KEY].scale_type, 'SNAP_IV')
 
   reset('adult', Array(18).fill(3))
+  storage[SCALE_LATEST_RESULT_KEY] = completeResult
   requestImplementation = async (options) => {
     calls.request.push(options)
     throw new Error('offline')
@@ -228,11 +259,25 @@ async function run() {
   assert.equal(failedPage.data.showResult, false)
   assert.equal(failedPage.data.submitting, false)
   assert.deepEqual(storage[ASRS_DRAFT_KEY], Array(18).fill(3))
+  assert.deepEqual(storage[SCALE_LATEST_RESULT_KEY], completeResult)
   assert.deepEqual(calls.toasts.at(-1), {
     title: '量表提交失败，答案已保留',
     icon: 'none',
     duration: 2500
   })
+
+  reset('adult', Array(18).fill(2))
+  storage[SCALE_LATEST_RESULT_KEY] = completeResult
+  requestImplementation = async () => ({
+    ...completeResult,
+    radar_scores: {
+      attention_control: 12
+    }
+  })
+  const incompleteCachePage = createPage()
+  incompleteCachePage.onLoad()
+  await incompleteCachePage.submitScale()
+  assert.deepEqual(storage[SCALE_LATEST_RESULT_KEY], completeResult)
 
   reset('adult', Array(18).fill(1))
   let releaseRequest
