@@ -21,6 +21,7 @@ node_modules/
 # Generated files
 .codex-tmp/
 .superpowers/
+.worktrees/
 downloads/
 uploads/
 *.log
