@@ -118,6 +118,28 @@ function getAiAvailability(patientType) {
   return { available: false, statusLabel: '按计划开发' }
 }
 
+function getPathwayAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '查看路径',
+      url: '/pages/care-pathway/index'
+    }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
+function getEducationAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '开始阅读',
+      url: '/pages/education/index'
+    }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
@@ -154,6 +176,8 @@ function buildQuickEntries(patientType = '') {
   const trackingAvailability = getTrackingAvailability(patientType)
   const reportAvailability = getReportAvailability(patientType)
   const aiAvailability = getAiAvailability(patientType)
+  const pathwayAvailability = getPathwayAvailability(patientType)
+  const educationAvailability = getEducationAvailability(patientType)
 
   return [
     {
@@ -185,6 +209,18 @@ function buildQuickEntries(patientType = '') {
       icon: '问',
       title: 'AI助手',
       ...aiAvailability
+    },
+    {
+      id: 'pathway',
+      icon: '路',
+      title: '我的路径',
+      ...pathwayAvailability
+    },
+    {
+      id: 'education',
+      icon: '知',
+      title: '科普中心',
+      ...educationAvailability
     }
   ]
 }

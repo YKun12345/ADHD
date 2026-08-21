@@ -10,7 +10,10 @@
     "pages/tracking/index",
     "pages/tracking-trend/index",
     "pages/report/index",
-    "pages/ai-chat/index"
+    "pages/ai-chat/index",
+    "pages/care-pathway/index",
+    "pages/education/index",
+    "pages/education-detail/index"
   ],
   "window": {
     "navigationBarTitleText": "ADHD智慧辅助诊断",

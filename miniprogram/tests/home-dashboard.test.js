@@ -73,7 +73,7 @@ assert.equal(tasks.some((item) => Object.hasOwn(item, 'url')), false)
 const entries = buildQuickEntries()
 assert.deepEqual(
   entries.map((item) => item.id),
-  ['scale', 'cognitive', 'tracking', 'report', 'ai']
+  ['scale', 'cognitive', 'tracking', 'report', 'ai', 'pathway', 'education']
 )
 assert.equal(entries.every((item) => item.available === false), true)
 assert.equal(entries.every((item) => item.statusLabel === '按计划开发'), true)
@@ -118,6 +118,16 @@ assert.equal(adultAiEntry.available, true)
 assert.equal(adultAiEntry.statusLabel, '开始咨询')
 assert.equal(adultAiEntry.url, '/pages/ai-chat/index')
 assert.equal(adultTasks.some((item) => item.id === 'ai'), false)
+const adultPathwayEntry = adultEntries.find((item) => item.id === 'pathway')
+assert.equal(adultPathwayEntry.available, true)
+assert.equal(adultPathwayEntry.statusLabel, '查看路径')
+assert.equal(adultPathwayEntry.url, '/pages/care-pathway/index')
+const adultEducationEntry = adultEntries.find((item) => item.id === 'education')
+assert.equal(adultEducationEntry.available, true)
+assert.equal(adultEducationEntry.statusLabel, '开始阅读')
+assert.equal(adultEducationEntry.url, '/pages/education/index')
+assert.equal(adultTasks.some((item) => item.id === 'pathway'), false)
+assert.equal(adultTasks.some((item) => item.id === 'education'), false)
 
 const childScaleTask = buildHomeTasks('child').find(
   (item) => item.id === 'scale'
@@ -148,6 +158,14 @@ const childAiEntry = buildQuickEntries('child').find(
 assert.equal(childAiEntry.available, true)
 assert.equal(childAiEntry.statusLabel, '开始咨询')
 assert.equal(childAiEntry.url, '/pages/ai-chat/index')
+assert.equal(
+  buildQuickEntries('child').find((item) => item.id === 'pathway').url,
+  '/pages/care-pathway/index'
+)
+assert.equal(
+  buildQuickEntries('child').find((item) => item.id === 'education').url,
+  '/pages/education/index'
+)
 
 assert.equal(
   appConfig.pages.includes('pages/report/index'),
@@ -159,5 +177,12 @@ assert.equal(
   true,
   'app.json 缺少 AI 助手路由'
 )
+for (const route of [
+  'pages/care-pathway/index',
+  'pages/education/index',
+  'pages/education-detail/index'
+]) {
+  assert.equal(appConfig.pages.includes(route), true, `app.json 缺少路由：${route}`)
+}
 
 console.log('患者首页进度数据测试全部通过')
