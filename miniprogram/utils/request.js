@@ -1,4 +1,10 @@
-const BASE_URL = 'http://127.0.0.1:8000/api/v1'
+const {
+  API_BASE_URL_KEY,
+  DEFAULT_API_BASE_URL,
+  resolveApiBaseUrl
+} = require('./api-config')
+
+const BASE_URL = DEFAULT_API_BASE_URL
 
 function createTransportError(error = {}) {
   const detail =
@@ -20,15 +26,17 @@ function createTransportError(error = {}) {
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('access_token')
+    const storedBaseUrl = wx.getStorageSync(API_BASE_URL_KEY)
+    const baseUrl = resolveApiBaseUrl(options.baseUrl || storedBaseUrl)
 
     wx.request({
-      url: `${BASE_URL}${options.url}`,
+      url: `${baseUrl}${options.url}`,
       method: options.method || 'GET',
       data: options.data || {},
       timeout: 10000,
       header: {
         'content-type': 'application/json',
-        ...(token
+        ...(token && !options.skipAuth
           ? {
               Authorization: `Bearer ${token}`
             }
