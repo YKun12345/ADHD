@@ -1,0 +1,125 @@
+<view class="chat-page">
+  <view class="chat-nav">
+    <view class="chat-nav__back" bindtap="goBack" aria-label="返回上一页">‹</view>
+    <view class="chat-nav__title-group">
+      <text class="chat-nav__title">AI健康助手</text>
+      <text class="chat-nav__subtitle">{{patientName}}</text>
+    </view>
+    <view class="chat-nav__clear" bindtap="clearConversation">清空</view>
+  </view>
+
+  <view class="safety-banner">
+    <text class="safety-banner__title">安全使用提示</text>
+    <text>AI内容仅用于健康教育和追踪辅助，不能替代医生诊断或处方建议。</text>
+    <text>请勿发送身份证号、联系方式等敏感信息。</text>
+  </view>
+
+  <view wx:if="{{childNotice}}" class="child-notice">
+    儿童患者建议由监护人陪同使用，并由监护人判断是否需要咨询专业人员。
+  </view>
+
+  <view class="context-section">
+    <text class="context-section__label">选择咨询方向</text>
+    <view class="context-tabs">
+      <view
+        wx:for="{{contexts}}"
+        wx:key="id"
+        class="context-tab context-tab--{{contextScope === item.id ? 'active' : 'idle'}}"
+        data-scope="{{item.id}}"
+        bindtap="selectScope"
+      >
+        <text class="context-tab__label">{{item.label}}</text>
+        <text class="context-tab__description">{{item.description}}</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view
+    class="message-list"
+    scroll-y="true"
+    scroll-with-animation="true"
+    scroll-into-view="{{scrollIntoView}}"
+  >
+    <view
+      wx:for="{{messages}}"
+      wx:key="id"
+      class="message-row message-row--{{item.role}}"
+    >
+      <view class="message-bubble message-bubble--{{item.role}}">
+        <view class="message-bubble__header">
+          <text>{{item.role === 'user' ? '我' : item.role === 'assistant' ? 'AI助手' : '使用引导'}}</text>
+          <text wx:if="{{item.degraded}}" class="degraded-badge">安全降级回答</text>
+        </view>
+        <text class="message-content" user-select="true">{{item.content}}</text>
+
+        <view wx:if="{{item.usedContext.length}}" class="used-context">
+          <text class="used-context__label">本次参考：</text>
+          <text
+            wx:for="{{item.usedContext}}"
+            wx:for-item="contextItem"
+            wx:key="*this"
+            class="used-context__item"
+          >{{contextItem}}</text>
+        </view>
+
+        <text wx:if="{{item.role === 'user' && item.status === 'sending'}}" class="message-status">发送中…</text>
+        <view wx:if="{{item.role === 'user' && item.status === 'failed'}}" class="message-failed">
+          <text>发送失败</text>
+          <view class="retry-button" data-id="{{item.id}}" bindtap="retryMessage">重新发送</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{sending}}" class="assistant-thinking">
+      <view class="thinking-dot"></view>
+      <view class="thinking-dot"></view>
+      <view class="thinking-dot"></view>
+      <text>正在生成回答…</text>
+    </view>
+
+    <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
+    <view id="chat-bottom" class="chat-bottom"></view>
+  </scroll-view>
+
+  <view wx:if="{{messages.length === 1}}" class="suggestion-section">
+    <text class="suggestion-section__title">你可以这样问</text>
+    <view class="suggestion-list">
+      <view
+        wx:for="{{suggestions}}"
+        wx:key="id"
+        class="suggestion-item"
+        data-id="{{item.id}}"
+        bindtap="applySuggestion"
+      >
+        <text class="suggestion-item__label">{{item.label}}</text>
+        <text class="suggestion-item__text">{{item.text}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="composer">
+    <textarea
+      class="message-input"
+      value="{{inputValue}}"
+      maxlength="{{maxMessageLength}}"
+      placeholder="请输入想咨询的内容"
+      auto-height="true"
+      cursor-spacing="24"
+      confirm-type="send"
+      bindinput="handleInput"
+      bindconfirm="handleSend"
+    ></textarea>
+    <view class="composer__footer">
+      <text class="input-count">{{inputLength}} / {{maxMessageLength}}</text>
+      <view
+        class="send-button send-button--{{sending ? 'disabled' : 'active'}}"
+        bindtap="handleSend"
+      >{{sending ? '发送中' : '发送'}}</view>
+    </view>
+  </view>
+
+  <view class="medical-disclaimer">
+    <text>{{lastDisclaimer}}</text>
+    <text>如有紧急危险或明显不适，请立即联系当地急救服务或专业医疗人员。</text>
+  </view>
+</view>
