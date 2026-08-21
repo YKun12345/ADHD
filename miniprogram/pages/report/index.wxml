@@ -1,0 +1,190 @@
+<view class="report-page">
+  <view class="report-nav">
+    <view class="report-nav__back" bindtap="goBack" aria-label="返回上一页">‹</view>
+    <text class="report-nav__title">综合报告</text>
+    <view class="report-nav__placeholder"></view>
+  </view>
+
+  <view class="report-header">
+    <text class="report-header__title">综合辅助筛查报告</text>
+    <text class="report-header__subtitle">汇总患者端已完成的辅助筛查数据</text>
+  </view>
+
+  <view class="summary-card">
+    <view class="summary-card__top">
+      <view>
+        <text class="summary-card__name">{{patientName}}</text>
+        <text class="summary-card__type">{{patientTypeLabel}}</text>
+      </view>
+      <text class="source-badge">{{sourceLabel}}</text>
+    </view>
+    <view class="summary-card__coverage">
+      <text>资料完成度</text>
+      <text>{{coverage.percent}}%</text>
+    </view>
+    <view class="coverage-bar">
+      <view class="coverage-bar__value coverage-bar__value--{{coverage.completedCount}}"></view>
+    </view>
+    <text class="summary-card__hint">已完成 {{coverage.completedCount}} / {{coverage.totalCount}} 类患者端数据</text>
+    <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-panel">正在同步报告数据…</view>
+
+  <view class="report-card">
+    <view class="report-card__header">
+      <view>
+        <text class="report-card__title">行为量表</text>
+        <text class="report-card__subtitle">最近一次有效量表结果</text>
+      </view>
+      <text wx:if="{{scale.hasData}}" class="report-card__tag">{{scale.scaleTypeLabel}}</text>
+    </view>
+
+    <block wx:if="{{scale.hasData}}">
+      <view class="metric-grid">
+        <view class="metric-item">
+          <text class="metric-item__value">{{scale.totalScore}}</text>
+          <text class="metric-item__label">量表总分</text>
+        </view>
+        <view class="metric-item">
+          <text class="metric-item__value metric-item__value--risk">{{scale.riskLabel}}</text>
+          <text class="metric-item__label">风险分层</text>
+        </view>
+        <view class="metric-item">
+          <text class="metric-item__value metric-item__value--small">{{scale.respondentLabel}}</text>
+          <text class="metric-item__label">填写方式</text>
+        </view>
+      </view>
+
+      <view class="summary-panel">
+        <text class="section-label">结果摘要</text>
+        <text class="summary-panel__text">{{scale.summary}}</text>
+      </view>
+
+      <view class="chart-section">
+        <text class="section-label">维度分布</text>
+        <canvas
+          wx:if="{{scale.hasRadar}}"
+          class="radar-canvas"
+          canvas-id="reportRadarCanvas"
+        ></canvas>
+        <view wx:else class="empty-panel">暂无完整雷达数据</view>
+      </view>
+
+      <view wx:if="{{scale.recommendations.length}}" class="recommendation-list">
+        <text class="section-label">辅助建议</text>
+        <view
+          wx:for="{{scale.recommendations}}"
+          wx:key="*this"
+          class="recommendation-item"
+        >
+          <text class="recommendation-item__dot">•</text>
+          <text>{{item}}</text>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="empty-panel">
+      <text>尚无完整行为量表结果</text>
+      <view class="task-button" bindtap="openTask" data-task="scale">前往行为量表</view>
+    </view>
+  </view>
+
+  <view class="report-card">
+    <view class="report-card__header">
+      <view>
+        <text class="report-card__title">认知测试</text>
+        <text class="report-card__subtitle">Go/No-Go 与 Stroop 任务结果</text>
+      </view>
+      <text wx:if="{{cognitive.hasData}}" class="report-card__tag">
+        {{cognitive.completedCount}} / {{cognitive.totalCount}} 项
+      </text>
+    </view>
+
+    <block wx:if="{{cognitive.hasData}}">
+      <view
+        wx:for="{{cognitive.cards}}"
+        wx:key="id"
+        class="cognitive-item"
+      >
+        <view>
+          <text class="cognitive-item__title">{{item.title}}</text>
+          <text class="cognitive-item__secondary">{{item.secondaryMetric}}</text>
+        </view>
+        <text class="cognitive-item__metric">{{item.primaryMetric}}</text>
+      </view>
+      <text class="section-summary">{{cognitive.summary}}</text>
+      <view class="task-button task-button--secondary" bindtap="openTask" data-task="cognitive">进入认知测试中心</view>
+    </block>
+
+    <view wx:else class="empty-panel">
+      <text>尚未完成认知测试</text>
+      <view class="task-button" bindtap="openTask" data-task="cognitive">开始认知测试</view>
+    </view>
+  </view>
+
+  <view class="report-card">
+    <view class="report-card__header">
+      <view>
+        <text class="report-card__title">14天追踪</text>
+        <text class="report-card__subtitle">睡眠、情绪、注意力与专注时长记录</text>
+      </view>
+      <text wx:if="{{tracking.hasData}}" class="report-card__tag">{{tracking.sourceLabel}}</text>
+    </view>
+
+    <block wx:if="{{tracking.hasData}}">
+      <view class="metric-grid metric-grid--tracking">
+        <view class="metric-item">
+          <text class="metric-item__value">{{tracking.completedCount}} / 14</text>
+          <text class="metric-item__label">已追踪天数</text>
+        </view>
+        <view class="metric-item">
+          <text wx:if="{{tracking.averageAttention !== null}}" class="metric-item__value">{{tracking.averageAttention}}</text>
+          <text wx:else class="metric-item__value">--</text>
+          <text class="metric-item__label">平均注意力</text>
+        </view>
+        <view class="metric-item">
+          <text wx:if="{{tracking.averageMood !== null}}" class="metric-item__value">{{tracking.averageMood}}</text>
+          <text wx:else class="metric-item__value">--</text>
+          <text class="metric-item__label">平均情绪</text>
+        </view>
+        <view class="metric-item">
+          <text wx:if="{{tracking.averageFocusMinutes !== null}}" class="metric-item__value">{{tracking.averageFocusMinutes}}</text>
+          <text wx:else class="metric-item__value">--</text>
+          <text class="metric-item__label">平均专注分钟</text>
+        </view>
+      </view>
+
+      <view class="chart-section">
+        <text class="section-label">注意力趋势</text>
+        <canvas
+          wx:if="{{tracking.hasTrend}}"
+          class="trend-canvas"
+          canvas-id="reportTrendCanvas"
+        ></canvas>
+        <view wx:else class="empty-panel">同步数据暂未包含可绘制的注意力趋势</view>
+      </view>
+
+      <view class="task-button task-button--secondary" bindtap="openTrend">查看完整追踪趋势</view>
+    </block>
+
+    <view wx:else class="empty-panel">
+      <text>尚无14天追踪记录</text>
+      <view class="task-button" bindtap="openTask" data-task="tracking">开始每日追踪</view>
+    </view>
+  </view>
+
+  <view class="report-card professional-card">
+    <text class="report-card__title">专业检查</text>
+    <view class="empty-panel empty-panel--plain">
+      <text>{{professionalData}}</text>
+      <text>影像与模型结果尚未接入患者端</text>
+    </view>
+  </view>
+
+  <view class="medical-tip">
+    <text class="medical-tip__title">结果说明</text>
+    <text>本报告仅汇总患者端辅助筛查与任务数据，仅用于辅助筛查，不替代专业医生诊断。</text>
+    <text>如存在持续困扰或风险，请及时联系专业医疗人员。</text>
+  </view>
+</view>

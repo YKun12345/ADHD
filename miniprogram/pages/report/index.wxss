@@ -1,0 +1,367 @@
+page {
+  min-height: 100%;
+  background: #f3f7fa;
+  color: #17324d;
+}
+
+.report-page {
+  min-height: 100vh;
+  padding: 0 28rpx 64rpx;
+  box-sizing: border-box;
+}
+
+.report-nav {
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-nav__back,
+.report-nav__placeholder {
+  width: 64rpx;
+}
+
+.report-nav__back {
+  font-size: 54rpx;
+  line-height: 64rpx;
+}
+
+.report-nav__title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.report-header {
+  padding: 42rpx 12rpx 36rpx;
+}
+
+.report-header__title,
+.report-header__subtitle,
+.summary-card__name,
+.summary-card__type,
+.summary-card__hint,
+.report-card__title,
+.report-card__subtitle,
+.metric-item__value,
+.metric-item__label,
+.cognitive-item__title,
+.cognitive-item__secondary,
+.section-summary,
+.medical-tip__title {
+  display: block;
+}
+
+.report-header__title {
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.report-header__subtitle {
+  margin-top: 16rpx;
+  color: #71869a;
+  font-size: 27rpx;
+}
+
+.summary-card,
+.report-card {
+  margin-bottom: 28rpx;
+  padding: 34rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 34rpx rgba(23, 50, 77, 0.07);
+}
+
+.summary-card__top,
+.summary-card__coverage,
+.report-card__header,
+.cognitive-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-card__name {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.summary-card__type {
+  margin-top: 8rpx;
+  color: #71869a;
+  font-size: 24rpx;
+}
+
+.source-badge,
+.report-card__tag {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: #2f716d;
+  background: #e7f3f1;
+  font-size: 23rpx;
+}
+
+.summary-card__coverage {
+  margin-top: 30rpx;
+  font-size: 26rpx;
+}
+
+.coverage-bar {
+  height: 16rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: #dce6ed;
+}
+
+.coverage-bar__value {
+  height: 100%;
+  border-radius: inherit;
+  background: #3f7c78;
+  transition: width 0.25s ease;
+}
+
+.coverage-bar__value--0 {
+  width: 0;
+}
+
+.coverage-bar__value--1 {
+  width: 33.33%;
+}
+
+.coverage-bar__value--2 {
+  width: 66.67%;
+}
+
+.coverage-bar__value--3 {
+  width: 100%;
+}
+
+.summary-card__hint {
+  margin-top: 14rpx;
+  color: #8294a5;
+  font-size: 23rpx;
+}
+
+.status-message,
+.loading-panel {
+  display: block;
+  margin-top: 18rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 16rpx;
+  color: #8a6429;
+  background: #fff7e8;
+  font-size: 24rpx;
+}
+
+.loading-panel {
+  margin: 0 0 28rpx;
+  color: #46647d;
+  background: #eaf1f6;
+  text-align: center;
+}
+
+.report-card__header {
+  align-items: flex-start;
+  gap: 18rpx;
+  margin-bottom: 30rpx;
+}
+
+.report-card__title {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.report-card__subtitle {
+  margin-top: 10rpx;
+  color: #8294a5;
+  font-size: 23rpx;
+}
+
+.report-card__tag {
+  max-width: 260rpx;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.metric-grid--tracking {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.metric-item {
+  min-height: 122rpx;
+  padding: 20rpx 12rpx;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  background: #f4f8fa;
+  text-align: center;
+}
+
+.metric-item__value {
+  font-size: 31rpx;
+  font-weight: 700;
+}
+
+.metric-item__value--small {
+  padding-top: 6rpx;
+  font-size: 24rpx;
+}
+
+.metric-item__value--risk {
+  color: #2f716d;
+  font-size: 25rpx;
+}
+
+.metric-item__label {
+  margin-top: 10rpx;
+  color: #8294a5;
+  font-size: 21rpx;
+}
+
+.summary-panel,
+.chart-section,
+.recommendation-list {
+  margin-top: 30rpx;
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 16rpx;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.summary-panel__text,
+.section-summary {
+  color: #536d83;
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+
+.radar-canvas {
+  width: 330px;
+  height: 280px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.cognitive-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #e6edf2;
+}
+
+.cognitive-item__title {
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.cognitive-item__secondary {
+  margin-top: 8rpx;
+  color: #8294a5;
+  font-size: 22rpx;
+}
+
+.cognitive-item__metric {
+  margin-left: 20rpx;
+  color: #2f716d;
+  font-size: 26rpx;
+  font-weight: 600;
+  text-align: right;
+}
+
+.section-summary {
+  margin-top: 22rpx;
+}
+
+.trend-canvas {
+  width: 330px;
+  height: 180px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.empty-panel {
+  padding: 34rpx 22rpx;
+  border-radius: 18rpx;
+  color: #71869a;
+  background: #f4f8fa;
+  font-size: 24rpx;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.empty-panel--plain {
+  margin-top: 22rpx;
+}
+
+.empty-panel--plain text {
+  display: block;
+}
+
+.empty-panel--plain text + text {
+  margin-top: 8rpx;
+}
+
+.task-button {
+  width: 100%;
+  height: 76rpx;
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  color: #ffffff;
+  background: #17324d;
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.task-button--secondary {
+  color: #2f716d;
+  background: #e7f3f1;
+}
+
+.medical-tip {
+  padding: 30rpx;
+  border: 1rpx solid #cfe1df;
+  border-radius: 24rpx;
+  color: #536d83;
+  background: #edf7f5;
+  font-size: 23rpx;
+  line-height: 1.7;
+}
+
+.medical-tip text {
+  display: block;
+}
+
+.medical-tip__title {
+  margin-bottom: 10rpx;
+  color: #2f716d;
+  font-size: 27rpx;
+  font-weight: 700;
+}
+
+.recommendation-item {
+  display: flex;
+  margin-top: 12rpx;
+  color: #536d83;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.recommendation-item__dot {
+  margin-right: 14rpx;
+  color: #3f7c78;
+}
+
+.professional-card {
+  margin-top: 6rpx;
+}
