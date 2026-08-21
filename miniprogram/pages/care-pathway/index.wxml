@@ -1,0 +1,93 @@
+<view class="pathway-page">
+  <view class="pathway-nav">
+    <view class="pathway-nav__back" bindtap="goBack">‹</view>
+    <text class="pathway-nav__title">我的路径</text>
+    <view class="pathway-nav__placeholder"></view>
+  </view>
+
+  <view class="pathway-header">
+    <text class="pathway-header__title">辅助筛查路径</text>
+    <text class="pathway-header__subtitle">{{patientName}} · 按已完成的患者端数据更新</text>
+  </view>
+
+  <view class="pathway-summary">
+    <view class="pathway-summary__top">
+      <view>
+        <text class="pathway-summary__label">整体完成进度</text>
+        <text class="pathway-summary__number">{{completedCount}} / {{totalCount}}</text>
+      </view>
+      <view class="pathway-summary__right">
+        <text class="pathway-summary__percent">{{percent}}%</text>
+        <text class="source-badge">{{sourceLabel}}</text>
+      </view>
+    </view>
+    <view class="pathway-progress">
+      <view class="pathway-progress__value pathway-progress__value--{{completedCount}}"></view>
+    </view>
+    <text wx:if="{{loading}}" class="sync-message">正在同步路径…</text>
+    <text wx:if="{{statusMessage}}" class="sync-message sync-message--warning">{{statusMessage}}</text>
+  </view>
+
+  <view wx:if="{{currentStep}}" class="current-step">
+    <text class="current-step__eyebrow">当前推荐步骤</text>
+    <text class="current-step__title">{{currentStep.title}}</text>
+    <text class="current-step__detail">{{currentStep.detail}}</text>
+    <view
+      wx:if="{{currentStep.actionUrl}}"
+      class="step-action"
+      data-step="{{currentStep.id}}"
+      bindtap="openStep"
+    >{{currentStep.actionLabel}}</view>
+  </view>
+  <view wx:else class="current-step current-step--complete">
+    <text class="current-step__title">患者端路径已完整</text>
+    <text class="current-step__detail">可以查看综合报告，并继续保持日常记录。</text>
+  </view>
+
+  <view class="pathway-timeline">
+    <view
+      wx:for="{{steps}}"
+      wx:key="id"
+      class="pathway-step pathway-step--{{item.status}}"
+    >
+      <view class="pathway-step__rail">
+        <view class="pathway-step__dot">{{index + 1}}</view>
+        <view wx:if="{{index < steps.length - 1}}" class="pathway-step__line"></view>
+      </view>
+      <view class="pathway-step__card">
+        <view class="pathway-step__header">
+          <text class="pathway-step__title">{{item.title}}</text>
+          <text class="pathway-step__status">{{item.statusLabel}}</text>
+        </view>
+        <text class="pathway-step__description">{{item.description}}</text>
+        <text class="pathway-step__detail">{{item.detail}}</text>
+        <view
+          wx:if="{{item.actionUrl}}"
+          class="step-action step-action--secondary"
+          data-step="{{item.id}}"
+          bindtap="openStep"
+        >{{item.actionLabel}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="support-grid">
+    <view class="support-card" bindtap="openAi">
+      <text class="support-card__icon">问</text>
+      <text class="support-card__title">AI健康助手</text>
+      <text class="support-card__text">理解报告与追踪信息</text>
+    </view>
+    <view class="support-card" bindtap="openEducation">
+      <text class="support-card__icon">知</text>
+      <text class="support-card__title">科普中心</text>
+      <text class="support-card__text">阅读权威健康知识</text>
+    </view>
+  </view>
+
+  <view class="professional-note">
+    <text class="professional-note__title">专业环节说明</text>
+    <text>专业评估、影像与医生结论不计入本页完成度，当前也不会被小程序标记为已完成。</text>
+  </view>
+
+  <text class="medical-tip">本路径仅用于辅助筛查，不替代专业医生诊断。</text>
+</view>
