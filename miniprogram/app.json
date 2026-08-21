@@ -8,7 +8,8 @@
     "pages/cognitive/index",
     "pages/stroop/index",
     "pages/tracking/index",
-    "pages/tracking-trend/index"
+    "pages/tracking-trend/index",
+    "pages/report/index"
   ],
   "window": {
     "navigationBarTitleText": "ADHD智慧辅助诊断",

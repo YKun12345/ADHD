@@ -7,6 +7,7 @@ const {
   buildHomeTasks,
   buildQuickEntries
 } = require('../utils/home-dashboard')
+const appConfig = require('../app.json')
 
 assert.equal(TOTAL_DAYS, 14)
 
@@ -108,6 +109,10 @@ assert.equal(
   adultEntries.find((item) => item.id === 'cognitive').url,
   '/pages/cognitive-center/index'
 )
+const adultReportEntry = adultEntries.find((item) => item.id === 'report')
+assert.equal(adultReportEntry.available, true)
+assert.equal(adultReportEntry.statusLabel, '查看报告')
+assert.equal(adultReportEntry.url, '/pages/report/index')
 
 const childScaleTask = buildHomeTasks('child').find(
   (item) => item.id === 'scale'
@@ -125,6 +130,18 @@ assert.equal(childCognitiveEntry.url, '/pages/cognitive-center/index')
 assert.equal(
   buildQuickEntries('child').find((item) => item.id === 'tracking').url,
   '/pages/tracking/index'
+)
+const childReportEntry = buildQuickEntries('child').find(
+  (item) => item.id === 'report'
+)
+assert.equal(childReportEntry.available, true)
+assert.equal(childReportEntry.statusLabel, '查看报告')
+assert.equal(childReportEntry.url, '/pages/report/index')
+
+assert.equal(
+  appConfig.pages.includes('pages/report/index'),
+  true,
+  'app.json 缺少综合报告路由'
 )
 
 console.log('患者首页进度数据测试全部通过')

@@ -96,6 +96,17 @@ function getTrackingAvailability(patientType) {
   return { available: false, statusLabel: '按计划开发' }
 }
 
+function getReportAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '查看报告',
+      url: '/pages/report/index'
+    }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
@@ -130,6 +141,7 @@ function buildQuickEntries(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
   const trackingAvailability = getTrackingAvailability(patientType)
+  const reportAvailability = getReportAvailability(patientType)
 
   return [
     {
@@ -154,8 +166,7 @@ function buildQuickEntries(patientType = '') {
       id: 'report',
       icon: '报',
       title: '综合报告',
-      available: false,
-      statusLabel: '按计划开发'
+      ...reportAvailability
     }
   ]
 }
