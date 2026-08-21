@@ -1,0 +1,45 @@
+<view class="education-page">
+  <view class="education-nav">
+    <view class="education-nav__back" bindtap="goBack">‹</view>
+    <text class="education-nav__title">科普中心</text>
+    <view class="education-nav__placeholder"></view>
+  </view>
+  <view class="education-header">
+    <text class="education-header__title">ADHD科普中心</text>
+    <text class="education-header__subtitle">{{patientName}}，从可靠资料开始了解与支持</text>
+    <text class="offline-badge">内容已内置，断网也可阅读</text>
+  </view>
+  <scroll-view class="category-tabs" scroll-x="true">
+    <view
+      wx:for="{{categories}}"
+      wx:key="id"
+      class="category-tab category-tab--{{activeCategory === item.id ? 'active' : 'idle'}}"
+      data-category="{{item.id}}"
+      bindtap="selectCategory"
+    >{{item.label}}</view>
+  </scroll-view>
+  <view class="article-list">
+    <view
+      wx:for="{{articles}}"
+      wx:key="id"
+      class="article-card"
+      data-id="{{item.id}}"
+      bindtap="openArticle"
+    >
+      <view class="article-card__top">
+        <text class="article-card__title">{{item.title}}</text>
+        <text class="article-card__arrow">›</text>
+      </view>
+      <text class="article-card__summary">{{item.summary}}</text>
+      <view class="article-card__meta">
+        <text>{{item.readMinutes}} 分钟</text>
+        <text>核对日期 {{item.updatedAt}}</text>
+      </view>
+    </view>
+  </view>
+  <view class="source-note">
+    <text class="source-note__title">来源说明</text>
+    <text>内容依据 CDC、NIMH 与 NICE 官方资料进行中文转述；详情页可复制原始官方链接。</text>
+  </view>
+  <text class="medical-tip">科普内容仅用于健康教育，不替代专业医生诊断或处方建议。</text>
+</view>

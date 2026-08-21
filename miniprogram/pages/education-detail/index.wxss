@@ -1,0 +1,28 @@
+page { min-height: 100%; color: #17324d; background: #f3f7fa; }
+.article-page { min-height: 100vh; padding: 0 28rpx 58rpx; box-sizing: border-box; }
+.article-nav { height: 88rpx; display: flex; align-items: center; justify-content: space-between; }
+.article-nav__back, .article-nav__placeholder { width: 64rpx; }
+.article-nav__back { font-size: 54rpx; line-height: 64rpx; }
+.article-nav__title { font-size: 29rpx; font-weight: 600; }
+.article-header { padding: 38rpx 10rpx 32rpx; }
+.article-header__title, .article-header__summary, .article-section__heading,
+.article-paragraph, .source-section__title, .source-section__hint,
+.source-card__organization, .source-card__title { display: block; }
+.article-header__title { font-size: 40rpx; font-weight: 700; line-height: 1.35; }
+.article-header__summary { margin-top: 16rpx; color: #647b8e; font-size: 24rpx; line-height: 1.65; }
+.article-header__meta { display: flex; gap: 24rpx; margin-top: 18rpx; color: #91a0ad; font-size: 20rpx; }
+.article-section { margin-bottom: 22rpx; padding: 30rpx; border-radius: 22rpx; background: #fff; }
+.article-section__heading { margin-bottom: 18rpx; font-size: 30rpx; font-weight: 700; }
+.article-paragraph { margin-top: 14rpx; color: #46647d; font-size: 25rpx; line-height: 1.85; }
+.article-point { display: flex; margin-top: 14rpx; color: #46647d; font-size: 24rpx; line-height: 1.7; }
+.article-point__dot { margin-right: 14rpx; color: #3f7c78; font-weight: 700; }
+.source-section { margin-top: 30rpx; }
+.source-section__title { font-size: 30rpx; font-weight: 700; }
+.source-section__hint { margin-top: 8rpx; color: #8294a5; font-size: 21rpx; }
+.source-list { margin-top: 18rpx; }
+.source-card { margin-bottom: 16rpx; padding: 24rpx; display: flex; align-items: center; justify-content: space-between; gap: 20rpx; border-radius: 20rpx; background: #fff; }
+.source-card__content { flex: 1; min-width: 0; }
+.source-card__organization { color: #2f716d; font-size: 20rpx; font-weight: 600; }
+.source-card__title { margin-top: 7rpx; color: #536d83; font-size: 22rpx; line-height: 1.45; }
+.source-button { flex: 0 0 150rpx; height: 62rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 14rpx; color: #fff; background: #17324d; font-size: 21rpx; }
+.article-disclaimer { margin-top: 28rpx; padding: 24rpx; border: 1rpx solid #cfe1df; border-radius: 20rpx; color: #536d83; background: #edf7f5; font-size: 22rpx; line-height: 1.65; }

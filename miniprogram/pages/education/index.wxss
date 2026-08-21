@@ -1,0 +1,26 @@
+page { min-height: 100%; color: #17324d; background: #f3f7fa; }
+.education-page { min-height: 100vh; padding: 0 28rpx 58rpx; box-sizing: border-box; }
+.education-nav { height: 88rpx; display: flex; align-items: center; justify-content: space-between; }
+.education-nav__back, .education-nav__placeholder { width: 64rpx; }
+.education-nav__back { font-size: 54rpx; line-height: 64rpx; }
+.education-nav__title { font-size: 29rpx; font-weight: 600; }
+.education-header { padding: 38rpx 10rpx 28rpx; }
+.education-header__title, .education-header__subtitle, .offline-badge,
+.article-card__title, .article-card__summary, .source-note text { display: block; }
+.education-header__title { font-size: 42rpx; font-weight: 700; }
+.education-header__subtitle { margin-top: 12rpx; color: #71869a; font-size: 24rpx; line-height: 1.5; }
+.offline-badge { width: fit-content; margin-top: 18rpx; padding: 8rpx 14rpx; border-radius: 999rpx; color: #2f716d; background: #e7f3f1; font-size: 20rpx; }
+.category-tabs { width: 100%; white-space: nowrap; }
+.category-tab { display: inline-flex; align-items: center; justify-content: center; height: 64rpx; margin-right: 14rpx; padding: 0 26rpx; box-sizing: border-box; border: 1rpx solid #dce6ed; border-radius: 999rpx; background: #fff; font-size: 23rpx; }
+.category-tab--active { border-color: #3f7c78; color: #2f716d; background: #e7f3f1; font-weight: 600; }
+.category-tab--idle { color: #647b8e; }
+.article-list { margin-top: 24rpx; }
+.article-card { margin-bottom: 20rpx; padding: 28rpx; border-radius: 22rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(23,50,77,.06); }
+.article-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16rpx; }
+.article-card__title { font-size: 29rpx; font-weight: 700; line-height: 1.4; }
+.article-card__arrow { color: #9aaab7; font-size: 42rpx; }
+.article-card__summary { margin-top: 14rpx; color: #647b8e; font-size: 23rpx; line-height: 1.65; }
+.article-card__meta { display: flex; justify-content: space-between; gap: 18rpx; margin-top: 20rpx; color: #91a0ad; font-size: 19rpx; }
+.source-note { margin-top: 26rpx; padding: 25rpx; border-radius: 20rpx; color: #536d83; background: #edf3f7; font-size: 22rpx; line-height: 1.6; }
+.source-note__title { margin-bottom: 8rpx; color: #17324d; font-size: 25rpx; font-weight: 700; }
+.medical-tip { display: block; margin-top: 22rpx; color: #8294a5; font-size: 20rpx; line-height: 1.6; text-align: center; }
