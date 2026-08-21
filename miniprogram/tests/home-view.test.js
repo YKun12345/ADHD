@@ -20,6 +20,7 @@ const wxss = fs.readFileSync(
 const requiredWxml = [
   "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   '{{sourceLabel}}',
+  '<view class="dashboard-source">',
   'wx:if="{{statusMessage}}"',
   '{{statusMessage}}',
   'data-id="{{item.id}}"',
@@ -53,5 +54,30 @@ for (const selector of requiredSelectors) {
     `WXSS 缺少：${selector}`
   )
 }
+
+const dashboardSourceRule = wxss.match(
+  /\.dashboard-source\s*\{([^}]*)\}/
+)
+assert.ok(dashboardSourceRule, 'WXSS 缺少 .dashboard-source 样式规则')
+assert.match(
+  dashboardSourceRule[1],
+  /display:\s*flex/,
+  '“已同步”标签需要使用 flex 布局'
+)
+assert.match(
+  dashboardSourceRule[1],
+  /height:\s*40rpx/,
+  '“已同步”标签需要固定高度'
+)
+assert.match(
+  dashboardSourceRule[1],
+  /align-items:\s*center/,
+  '“已同步”文字需要垂直居中'
+)
+assert.match(
+  dashboardSourceRule[1],
+  /justify-content:\s*center/,
+  '“已同步”文字需要水平居中'
+)
 
 console.log('患者首页视图结构测试全部通过')

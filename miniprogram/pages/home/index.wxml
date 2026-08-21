@@ -13,9 +13,9 @@
         <text class="progress-number">
           {{completedCount}} / {{totalDays}} 天
         </text>
-        <text class="dashboard-source">
+        <view class="dashboard-source">
           {{sourceLabel}}
-        </text>
+        </view>
       </view>
     </view>
 

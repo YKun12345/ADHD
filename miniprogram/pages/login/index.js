@@ -7,6 +7,17 @@ Page({
     submitting: false
   },
 
+  onShow() {
+    const token = wx.getStorageSync('access_token')
+    const user = wx.getStorageSync('current_user')
+
+    if (token && user) {
+      wx.reLaunch({
+        url: '/pages/home/index'
+      })
+    }
+  },
+
   onIdentifierInput(event) {
     this.setData({
       identifier: event.detail.value

@@ -58,8 +58,12 @@ page {
 }
 
 .dashboard-source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40rpx;
   margin-top: 8rpx;
-  padding: 4rpx 12rpx;
+  padding: 0 12rpx;
   border-radius: 999rpx;
   color: #17324d;
   background: #cfe4df;
