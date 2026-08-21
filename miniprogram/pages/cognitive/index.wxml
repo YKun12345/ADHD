@@ -64,7 +64,7 @@
       <view class="test-progress-track">
         <view
           class="test-progress-value"
-          style="width: {{progressPercent}}%;"
+          style="{{'width: ' + progressPercent + '%;'}}"
         ></view>
       </view>
 

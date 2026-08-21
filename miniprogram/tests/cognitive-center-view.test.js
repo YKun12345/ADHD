@@ -23,7 +23,7 @@ assert.equal(
 const requiredWxml = [
   '认知测试中心',
   '{{completedCount}} / {{totalCount}}',
-  'style="width: {{progressPercent}}%;"',
+  "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   '{{summaryText}}',
   'wx:for="{{cards}}"',
   'data-id="{{item.id}}"',

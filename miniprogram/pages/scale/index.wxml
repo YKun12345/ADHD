@@ -56,7 +56,7 @@
     <view class="scale-progress-track">
       <view
         class="scale-progress-value"
-        style="width: {{progressPercent}}%;"
+        style="{{'width: ' + progressPercent + '%;'}}"
       ></view>
     </view>
 

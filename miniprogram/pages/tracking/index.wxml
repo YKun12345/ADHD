@@ -10,7 +10,7 @@
     </view>
     <view class="progress-card">
       <view class="progress-header"><text>追踪进度</text><text>{{completedCount}} / {{totalDays}}</text></view>
-      <view class="progress-track"><view class="progress-value" style="width: {{progressPercent}}%;"></view></view>
+      <view class="progress-track"><view class="progress-value" style="{{'width: ' + progressPercent + '%;'}}"></view></view>
       <text class="demo-badge" wx:if="{{demoMode}}">当前展示本地演示数据</text>
     </view>
     <scroll-view class="day-strip" scroll-x="true">

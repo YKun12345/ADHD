@@ -36,7 +36,7 @@ const requiredWxml = [
   '看到红色“停”时请保持不动',
   'bindtap="startTest"',
   '{{currentTrialNumber}} / {{totalTrials}}',
-  'style="width: {{progressPercent}}%;"',
+  "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   "phase === 'waiting' || phase === 'stimulus' || phase === 'feedback'",
   'bindtap="handleTestTap"',
   '{{stimulusLabel}}',

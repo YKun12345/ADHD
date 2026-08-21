@@ -25,7 +25,7 @@
       <view class="summary-progress-track">
         <view
           class="summary-progress-value"
-          style="width: {{progressPercent}}%;"
+          style="{{'width: ' + progressPercent + '%;'}}"
         ></view>
       </view>
       <view class="completion-banner" wx:if="{{allCompleted}}">

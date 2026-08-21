@@ -10,7 +10,7 @@ assert.equal(appConfig.pages.includes('pages/tracking-trend/index'), true, 'app.
 
 const fragments = [
   '14天每日追踪', '{{completedCount}} / {{totalDays}}',
-  'style="width: {{progressPercent}}%;"', 'wx:for="{{days}}"',
+  "style=\"{{'width: ' + progressPercent + '%;'}}\"", 'wx:for="{{days}}"',
   'bindtap="selectDay"', 'wx:for="{{moods}}"', 'data-field="moodTag"',
   'data-field="attentionRating"', 'data-field="focusMinutes"',
   'wx:for="{{sleepOptions}}"', 'bindtap="selectSleep"',

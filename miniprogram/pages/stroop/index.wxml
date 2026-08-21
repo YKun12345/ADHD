@@ -49,7 +49,7 @@
       <view class="progress-track">
         <view
           class="progress-value"
-          style="width: {{progressPercent}}%;"
+          style="{{'width: ' + progressPercent + '%;'}}"
         ></view>
       </view>
 
@@ -57,7 +57,7 @@
         <text class="prompt-help">请选择下面文字的实际颜色</text>
         <text
           class="stroop-word"
-          style="color: {{currentColorHex}};"
+          style="{{'color: ' + currentColorHex + ';'}}"
         >{{currentWord}}</text>
       </view>
 
@@ -74,7 +74,7 @@
           disabled="{{phase !== 'testing'}}"
           bindtap="handleAnswer"
         >
-          <view class="color-swatch" style="background: {{item.hex}};"></view>
+          <view class="color-swatch" style="{{'background: ' + item.hex + ';'}}"></view>
           <text>{{item.label}}</text>
         </button>
       </view>

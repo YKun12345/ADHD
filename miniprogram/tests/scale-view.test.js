@@ -37,7 +37,7 @@ const requiredWxml = [
   '{{unsupportedMessage}}',
   'wx:elif="{{showResult}}"',
   '{{questionNumber}} / {{totalQuestions}}',
-  'style="width: {{progressPercent}}%;"',
+  "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   '{{currentQuestion}}',
   'wx:for="{{options}}"',
   'data-value="{{item.value}}"',

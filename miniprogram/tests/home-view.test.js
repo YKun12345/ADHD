@@ -18,7 +18,7 @@ const wxss = fs.readFileSync(
 )
 
 const requiredWxml = [
-  'style="width: {{progressPercent}}%;"',
+  "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   '{{sourceLabel}}',
   'wx:if="{{statusMessage}}"',
   '{{statusMessage}}',
