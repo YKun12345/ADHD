@@ -9,7 +9,8 @@
     "pages/stroop/index",
     "pages/tracking/index",
     "pages/tracking-trend/index",
-    "pages/report/index"
+    "pages/report/index",
+    "pages/ai-chat/index"
   ],
   "window": {
     "navigationBarTitleText": "ADHD智慧辅助诊断",

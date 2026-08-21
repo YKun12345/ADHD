@@ -107,6 +107,17 @@ function getReportAvailability(patientType) {
   return { available: false, statusLabel: '按计划开发' }
 }
 
+function getAiAvailability(patientType) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return {
+      available: true,
+      statusLabel: '开始咨询',
+      url: '/pages/ai-chat/index'
+    }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
@@ -142,6 +153,7 @@ function buildQuickEntries(patientType = '') {
   const cognitiveAvailability = getCognitiveAvailability(patientType)
   const trackingAvailability = getTrackingAvailability(patientType)
   const reportAvailability = getReportAvailability(patientType)
+  const aiAvailability = getAiAvailability(patientType)
 
   return [
     {
@@ -167,6 +179,12 @@ function buildQuickEntries(patientType = '') {
       icon: '报',
       title: '综合报告',
       ...reportAvailability
+    },
+    {
+      id: 'ai',
+      icon: '问',
+      title: 'AI助手',
+      ...aiAvailability
     }
   ]
 }

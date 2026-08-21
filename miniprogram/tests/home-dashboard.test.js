@@ -73,7 +73,7 @@ assert.equal(tasks.some((item) => Object.hasOwn(item, 'url')), false)
 const entries = buildQuickEntries()
 assert.deepEqual(
   entries.map((item) => item.id),
-  ['scale', 'cognitive', 'tracking', 'report']
+  ['scale', 'cognitive', 'tracking', 'report', 'ai']
 )
 assert.equal(entries.every((item) => item.available === false), true)
 assert.equal(entries.every((item) => item.statusLabel === '按计划开发'), true)
@@ -113,6 +113,11 @@ const adultReportEntry = adultEntries.find((item) => item.id === 'report')
 assert.equal(adultReportEntry.available, true)
 assert.equal(adultReportEntry.statusLabel, '查看报告')
 assert.equal(adultReportEntry.url, '/pages/report/index')
+const adultAiEntry = adultEntries.find((item) => item.id === 'ai')
+assert.equal(adultAiEntry.available, true)
+assert.equal(adultAiEntry.statusLabel, '开始咨询')
+assert.equal(adultAiEntry.url, '/pages/ai-chat/index')
+assert.equal(adultTasks.some((item) => item.id === 'ai'), false)
 
 const childScaleTask = buildHomeTasks('child').find(
   (item) => item.id === 'scale'
@@ -137,11 +142,22 @@ const childReportEntry = buildQuickEntries('child').find(
 assert.equal(childReportEntry.available, true)
 assert.equal(childReportEntry.statusLabel, '查看报告')
 assert.equal(childReportEntry.url, '/pages/report/index')
+const childAiEntry = buildQuickEntries('child').find(
+  (item) => item.id === 'ai'
+)
+assert.equal(childAiEntry.available, true)
+assert.equal(childAiEntry.statusLabel, '开始咨询')
+assert.equal(childAiEntry.url, '/pages/ai-chat/index')
 
 assert.equal(
   appConfig.pages.includes('pages/report/index'),
   true,
   'app.json 缺少综合报告路由'
+)
+assert.equal(
+  appConfig.pages.includes('pages/ai-chat/index'),
+  true,
+  'app.json 缺少 AI 助手路由'
 )
 
 console.log('患者首页进度数据测试全部通过')
