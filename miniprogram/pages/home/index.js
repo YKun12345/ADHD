@@ -117,5 +117,11 @@ registerPatientPage({
     wx.navigateTo({
       url: '/pages/server-settings/index'
     })
+  },
+
+  openPrivacySettings() {
+    wx.navigateTo({
+      url: '/pages/privacy-settings/index'
+    })
   }
 })

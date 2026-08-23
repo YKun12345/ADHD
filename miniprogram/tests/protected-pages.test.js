@@ -4,6 +4,7 @@ const path = require('node:path')
 
 const PROTECTED_PAGES = [
   'home',
+  'privacy-settings',
   'scale',
   'cognitive-center',
   'cognitive',

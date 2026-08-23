@@ -236,6 +236,11 @@ async function run() {
     url: '/pages/server-settings/index'
   })
 
+  childNavigationPage.openPrivacySettings()
+  assert.deepEqual(calls.navigateTo.at(-1), {
+    url: '/pages/privacy-settings/index'
+  })
+
   console.log('患者首页控制逻辑测试全部通过')
 }
 
