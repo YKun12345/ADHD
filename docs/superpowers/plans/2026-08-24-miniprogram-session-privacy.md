@@ -121,7 +121,7 @@ git commit -m "feat(miniprogram): centralize patient session privacy"
 - Modify: `miniprogram/pages/education-detail/index.js`
 - Modify: affected page-controller tests under `miniprogram/tests/`
 
-- [ ] **Step 1: 写包装器生命周期失败测试**
+- [x] **Step 1: 写包装器生命周期失败测试**
 
 `patient-page.test.js` 通过 `protectPatientPage(definition, guard)` 验证：
 
@@ -137,7 +137,7 @@ const protectedDefinition = protectPatientPage({
 
 `protected-pages.test.js` 读取十二个受保护页面源码，要求导入并调用 `registerPatientPage`；同时确认登录、注册和服务器设置仍使用公开 `Page()`。
 
-- [ ] **Step 2: 运行测试确认包装器和页面接入均失败**
+- [x] **Step 2: 运行测试确认包装器和页面接入均失败**
 
 Run:
 
@@ -148,7 +148,7 @@ node miniprogram/tests/protected-pages.test.js
 
 Expected: 第一个测试因模块缺失失败，第二个测试列出尚未使用包装器的页面。
 
-- [ ] **Step 3: 实现包装器**
+- [x] **Step 3: 实现包装器**
 
 `patient-page.js` 导出：
 
@@ -177,7 +177,7 @@ function registerPatientPage(definition) {
 }
 ```
 
-- [ ] **Step 4: 明确接入所有受保护页面**
+- [x] **Step 4: 明确接入所有受保护页面**
 
 在十二个页面顶部加入对应相对路径的导入，并把唯一的 `Page({` 改为 `registerPatientPage({`。例如一级页面目录统一使用：
 
@@ -187,7 +187,7 @@ const { registerPatientPage } = require('../../utils/patient-page')
 
 登录、注册、服务器设置不得修改为受保护页面。为既有页面测试的 storage fixture 补充 `access_token: 'test-token'`，让测试真实通过统一守卫。
 
-- [ ] **Step 5: 验证包装器、静态接入和全部受影响页面测试**
+- [x] **Step 5: 验证包装器、静态接入和全部受影响页面测试**
 
 Run:
 
@@ -209,7 +209,7 @@ node miniprogram/tests/education-pages.test.js
 
 Expected: 全部通过，且无额外 `reLaunch`。
 
-- [ ] **Step 6: 精确提交**
+- [x] **Step 6: 精确提交**
 
 只暂存包装器、两个新测试、十二个页面控制器和确实需要 token fixture 的测试：
 
