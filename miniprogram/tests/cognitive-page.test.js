@@ -6,6 +6,7 @@ const {
   buildCognitivePayload
 } = require('../utils/gonogo-test')
 const { LATEST_RESULTS_KEY } = require('../utils/cognitive-results')
+const { advancePatientDataRevision } = require('../utils/session-privacy')
 
 const calls = {
   requests: [],
@@ -54,6 +55,11 @@ require.cache[requestPath] = {
     request(options) {
       calls.requests.push(options)
       return requestImplementation(options)
+    },
+    isPatientSessionError(error) {
+      return Boolean(error) && (
+        error.code === 'SESSION_CHANGED' || error.statusCode === 401
+      )
     }
   }
 }
@@ -225,6 +231,56 @@ async function run() {
   await offlinePage.retrySync()
   assert.equal(offlinePage.data.syncStatus, '已同步')
   assert.equal(storage.pending_cognitive_result, undefined)
+
+  for (const sessionError of [
+    Object.assign(new Error('expired'), { statusCode: 401 }),
+    Object.assign(new Error('changed'), { code: 'SESSION_CHANGED' })
+  ]) {
+    reset()
+    requestImplementation = async () => {
+      throw sessionError
+    }
+    const invalidSessionPage = createPage()
+    await invalidSessionPage._syncResult({ test_type: 'reaction' })
+    assert.equal(storage.pending_cognitive_result, undefined)
+    assert.equal(
+      calls.storageWrites.some(([key]) => key === 'pending_cognitive_result'),
+      false
+    )
+  }
+
+  reset()
+  const staleTimerPage = createPage()
+  staleTimerPage.startTest()
+  staleTimerPage._records = TRIAL_SEQUENCE.slice(0, 9).map((type) => (
+    evaluateTrial({
+      type,
+      action: type === 'go' ? 'tap' : 'timeout',
+      reactionTimeMs: 250
+    })
+  ))
+  staleTimerPage.setData({
+    currentTrialIndex: 9,
+    currentTrialNumber: 10,
+    phase: 'waiting'
+  })
+  staleTimerPage._clearTimers()
+  staleTimerPage._showStimulus()
+  runTimer(staleTimerPage._responseTimer)
+  const staleCompletionTimer = staleTimerPage._feedbackTimer
+  advancePatientDataRevision()
+  runTimer(staleCompletionTimer)
+  await flushPromises()
+  assert.equal(storage[LATEST_RESULTS_KEY], undefined)
+
+  reset()
+  const endedPage = createPage()
+  endedPage.startTest()
+  assert.equal(typeof endedPage.onPatientSessionEnded, 'function')
+  endedPage.onPatientSessionEnded()
+  assert.equal(timers.size, 0)
+  assert.deepEqual(endedPage._records, [])
+  assert.equal(endedPage.data.running, false)
 
   reset()
   let releaseRequest

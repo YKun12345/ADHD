@@ -15,6 +15,8 @@ const PATIENT_DATA_KEYS = [
   'tracking_pending_logs'
 ]
 
+let patientDataRevision = 0
+
 function defaultReadStorage(key) {
   if (typeof wx === 'undefined' || !wx || typeof wx.getStorageSync !== 'function') {
     return undefined
@@ -61,13 +63,7 @@ function defaultReLaunch(options) {
 
 function defaultGetPages() {
   if (typeof getCurrentPages !== 'function') return []
-
-  try {
-    const pages = getCurrentPages()
-    return Array.isArray(pages) ? pages : []
-  } catch (error) {
-    return []
-  }
+  return getCurrentPages()
 }
 
 function storageReader(readStorage) {
@@ -88,6 +84,34 @@ function safeRead(readStorage, key) {
   } catch (error) {
     return undefined
   }
+}
+
+function getPatientDataRevision() {
+  return patientDataRevision
+}
+
+function advancePatientDataRevision() {
+  patientDataRevision += 1
+  return patientDataRevision
+}
+
+function capturePatientSessionLease(readStorage = defaultReadStorage) {
+  const read = storageReader(readStorage)
+  return {
+    token: safeRead(read, 'access_token'),
+    revision: getPatientDataRevision()
+  }
+}
+
+function isPatientSessionLeaseCurrent(
+  lease,
+  readStorage = defaultReadStorage
+) {
+  if (!lease || typeof lease !== 'object') return false
+  if (lease.revision !== getPatientDataRevision()) return false
+
+  const read = storageReader(readStorage)
+  return safeRead(read, 'access_token') === lease.token
 }
 
 function safeRemove(removeStorage, key) {
@@ -114,41 +138,57 @@ function scrubPatientPages(getPages = defaultGetPages) {
   try {
     pages = getPages()
   } catch (error) {
-    return
+    return { ok: false, failedPageCount: 1 }
   }
 
-  if (!Array.isArray(pages)) return
+  if (!Array.isArray(pages)) {
+    return { ok: false, failedPageCount: 1 }
+  }
+
+  let failedPageCount = 0
 
   pages.forEach((page) => {
     if (!page || typeof page !== 'object') return
+    let pageFailed = false
 
-    page.__patientSessionAllowed = false
+    try {
+      page.__patientSessionAllowed = false
+    } catch (error) {
+      pageFailed = true
+    }
+
+    if (page.data && typeof page.data === 'object') {
+      const scrubbedData = {}
+      Object.keys(page.data).forEach((key) => {
+        scrubbedData[key] = neutralPageValue(page.data[key])
+      })
+
+      try {
+        if (typeof page.setData === 'function') {
+          page.setData(scrubbedData)
+        } else {
+          Object.assign(page.data, scrubbedData)
+        }
+      } catch (error) {
+        pageFailed = true
+      }
+    }
 
     try {
       if (typeof page.onPatientSessionEnded === 'function') {
         page.onPatientSessionEnded()
       }
     } catch (error) {
-      // Continue scrubbing this page even if its optional cleanup hook fails.
+      pageFailed = true
     }
 
-    if (!page.data || typeof page.data !== 'object') return
-
-    const scrubbedData = {}
-    Object.keys(page.data).forEach((key) => {
-      scrubbedData[key] = neutralPageValue(page.data[key])
-    })
-
-    try {
-      if (typeof page.setData === 'function') {
-        page.setData(scrubbedData)
-      } else {
-        Object.assign(page.data, scrubbedData)
-      }
-    } catch (error) {
-      // A failing page must not prevent the remaining page stack from clearing.
-    }
+    if (pageFailed) failedPageCount += 1
   })
+
+  return {
+    ok: failedPageCount === 0,
+    failedPageCount
+  }
 }
 
 function containsValidContent(value, seen) {
@@ -233,14 +273,18 @@ function summarizePatientData(readStorage = defaultReadStorage) {
   }
 }
 
-function clearPatientData(removeStorage = defaultRemoveStorage) {
-  const remove = storageRemover(removeStorage)
+function removePatientData(remove) {
   const failedKeys = PATIENT_DATA_KEYS.filter((key) => !safeRemove(remove, key))
 
   return {
     ok: failedKeys.length === 0,
     failedKeys
   }
+}
+
+function clearPatientData(removeStorage = defaultRemoveStorage) {
+  advancePatientDataRevision()
+  return removePatientData(storageRemover(removeStorage))
 }
 
 function endPatientSession(options = {}) {
@@ -252,8 +296,10 @@ function endPatientSession(options = {}) {
     ? settings.setLoggedIn
     : defaultSetLoggedIn
 
+  advancePatientDataRevision()
+
   const patientResult = settings.includePatientData !== false
-    ? clearPatientData(remove)
+    ? removePatientData(remove)
     : { ok: true, failedKeys: [] }
   const failedSessionKeys = SESSION_KEYS.filter((key) => !safeRemove(remove, key))
   try {
@@ -264,12 +310,13 @@ function endPatientSession(options = {}) {
   const getPages = typeof settings.getPages === 'function'
     ? settings.getPages
     : defaultGetPages
-  scrubPatientPages(getPages)
+  const pageResult = scrubPatientPages(getPages)
 
   const failedKeys = patientResult.failedKeys.concat(failedSessionKeys)
   return {
-    ok: failedKeys.length === 0,
-    failedKeys
+    ok: failedKeys.length === 0 && pageResult.ok,
+    failedKeys,
+    failedPageCount: pageResult.failedPageCount
   }
 }
 
@@ -314,5 +361,9 @@ module.exports = {
   summarizePatientData,
   clearPatientData,
   endPatientSession,
-  ensurePatientSession
+  ensurePatientSession,
+  getPatientDataRevision,
+  advancePatientDataRevision,
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
 }

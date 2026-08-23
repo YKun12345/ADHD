@@ -1,6 +1,10 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
+const {
   createLocalDashboard,
   normalizeDashboardStatus,
   buildHomeTasks,
@@ -57,12 +61,14 @@ registerPatientPage({
       statusMessage: '',
       loadingDashboard: true
     })
+    const lease = capturePatientSessionLease()
 
     try {
       const response = await request({
         url: '/patient/dashboard_status',
         method: 'GET'
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       const serverDashboard = normalizeDashboardStatus(response)
 
       this.setData({
@@ -76,6 +82,7 @@ registerPatientPage({
         completedDays: serverDashboard.completedDays
       })
     } catch (error) {
+      if (!isPatientSessionLeaseCurrent(lease)) return
       this.setData({
         statusMessage: '暂时无法同步，当前展示本地计划',
         loadingDashboard: false

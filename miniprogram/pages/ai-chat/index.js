@@ -1,6 +1,10 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
+const {
   MAX_MESSAGE_LENGTH,
   DEFAULT_DISCLAIMER,
   CHAT_CONTEXTS,
@@ -68,6 +72,10 @@ registerPatientPage({
   },
 
   onUnload() {
+    this._active = false
+  },
+
+  onPatientSessionEnded() {
     this._active = false
   },
 
@@ -186,12 +194,15 @@ registerPatientPage({
     })
     this._scrollToBottom()
 
+    const lease = capturePatientSessionLease()
+
     try {
       const response = await request({
         url: '/ai/chat',
         method: 'POST',
         data: payload
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       const assistant = normalizeChatResponse(response)
       if (!assistant) {
         throw new Error('服务返回内容不完整，请稍后重试')
@@ -217,7 +228,7 @@ registerPatientPage({
       })
       this._scrollToBottom()
     } catch (error) {
-      if (!this._active) return
+      if (!this._active || !isPatientSessionLeaseCurrent(lease)) return
 
       this.setData({
         messages: this.data.messages.map((item) => (

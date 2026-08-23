@@ -1,5 +1,12 @@
 const { registerPatientPage } = require('../../utils/patient-page')
-const { request } = require('../../utils/request')
+const {
+  request,
+  isPatientSessionError
+} = require('../../utils/request')
+const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
 const {
   SCALE_LATEST_RESULT_KEY,
   buildLocalReport,
@@ -69,12 +76,14 @@ registerPatientPage({
       statusMessage: '',
       loading: true
     })
+    const lease = capturePatientSessionLease()
 
     try {
       const response = await request({
         url: '/patient/comprehensive_report',
         method: 'GET'
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       const report = mergeReport(localReport, response)
       this.setData({
         ...report,
@@ -82,12 +91,22 @@ registerPatientPage({
         loading: false
       }, () => this._scheduleDraw())
     } catch (error) {
+      if (
+        isPatientSessionError(error) ||
+        !isPatientSessionLeaseCurrent(lease)
+      ) {
+        return
+      }
       this.setData({
         ...localReport,
         statusMessage: '暂时无法同步，当前展示本地结果',
         loading: false
       }, () => this._scheduleDraw())
     }
+  },
+
+  onPatientSessionEnded() {
+    this._localReport = null
   },
 
   _scheduleDraw() {

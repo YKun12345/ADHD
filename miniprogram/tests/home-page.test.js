@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict')
+const { advancePatientDataRevision } = require('../utils/session-privacy')
 
 const calls = {
   request: [],
@@ -146,6 +147,37 @@ async function run() {
   )
   assert.equal(offlinePage.data.loadingDashboard, false)
   assert.equal(calls.navigateTo.length, 0)
+
+  reset({
+    patient_dashboard_cache: {
+      currentDay: 2,
+      completedDays: [1]
+    }
+  })
+  let releaseStaleDashboard
+  requestImplementation = (options) => {
+    calls.request.push(options)
+    return new Promise((resolve) => {
+      releaseStaleDashboard = resolve
+    })
+  }
+  const staleDashboardPage = createPage()
+  staleDashboardPage.onLoad()
+  const staleDashboardRefresh = staleDashboardPage.onShow()
+  releaseStaleDashboard({
+    current_day: 12,
+    completed_days: [1, 2, 3, 4, 5],
+    total_days: 14,
+    logs: []
+  })
+  advancePatientDataRevision()
+  await staleDashboardRefresh
+  assert.equal(staleDashboardPage.data.currentDay, 2)
+  assert.deepEqual(calls.storageWrites, [])
+  assert.deepEqual(storage.patient_dashboard_cache, {
+    currentDay: 2,
+    completedDays: [1]
+  })
 
   offlinePage.handleEntryTap({
     currentTarget: {

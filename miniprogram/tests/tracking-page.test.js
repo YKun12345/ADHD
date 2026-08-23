@@ -1,10 +1,12 @@
 const assert = require('node:assert/strict')
 const { TRACKING_LOGS_KEY, TRACKING_PENDING_KEY } = require('../utils/tracking-data')
+const { advancePatientDataRevision } = require('../utils/session-privacy')
 
 const calls = { requests: [], writes: [], toasts: [], modals: [], back: [], navigateTo: [] }
 let storage = {}
 let requestImplementation = async () => ({ id: 1 })
 let pageDefinition
+let modalImplementation
 
 const requestPath = require.resolve('../utils/request')
 require.cache[requestPath] = { id: requestPath, filename: requestPath, loaded: true, exports: {
@@ -15,7 +17,7 @@ global.wx = {
   getStorageSync(key) { return storage[key] },
   setStorageSync(key, value) { storage[key] = value; calls.writes.push([key, value]) },
   showToast(options) { calls.toasts.push(options) },
-  showModal(options) { calls.modals.push(options); options.success({ confirm: true }) },
+  showModal(options) { calls.modals.push(options); modalImplementation(options) },
   navigateTo(options) { calls.navigateTo.push(options) },
   navigateBack(options) { calls.back.push(options) }
 }
@@ -29,6 +31,7 @@ function reset() {
   calls.requests = []; calls.writes = []; calls.toasts = []; calls.modals = []; calls.back = []; calls.navigateTo = []
   storage = { access_token: 'test-token', current_user: { id: 1, role: 'patient', full_name: '追踪患者' }, patient_dashboard_cache: { currentDay: 3, completedDays: [1, 2] } }
   requestImplementation = async () => ({ id: 1 })
+  modalImplementation = (options) => options.success({ confirm: true })
 }
 
 async function run() {
@@ -67,6 +70,18 @@ async function run() {
   const invalid = createPage(); invalid.onLoad(); await invalid.submitTracking()
   assert.equal(calls.requests.length, 0)
   assert.equal(calls.toasts.at(-1).title, '请选择今日情绪')
+
+  reset()
+  let staleModal
+  modalImplementation = (options) => { staleModal = options }
+  const staleDemo = createPage(); staleDemo.onLoad(); staleDemo.generateDemoData()
+  advancePatientDataRevision()
+  staleModal.success({ confirm: true })
+  assert.equal(storage[TRACKING_LOGS_KEY], undefined)
+  assert.equal(
+    calls.writes.some(([key]) => key === TRACKING_LOGS_KEY),
+    false
+  )
 
   reset()
   const demo = createPage(); demo.onLoad(); demo.generateDemoData()

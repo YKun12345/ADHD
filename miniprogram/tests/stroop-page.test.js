@@ -7,6 +7,7 @@ const {
   buildStroopPayload
 } = require('../utils/stroop-test')
 const { LATEST_RESULTS_KEY } = require('../utils/cognitive-results')
+const { advancePatientDataRevision } = require('../utils/session-privacy')
 
 const calls = {
   requests: [],
@@ -51,6 +52,11 @@ require.cache[requestPath] = {
     request(options) {
       calls.requests.push(options)
       return requestImplementation(options)
+    },
+    isPatientSessionError(error) {
+      return Boolean(error) && (
+        error.code === 'SESSION_CHANGED' || error.statusCode === 401
+      )
     }
   }
 }
@@ -220,6 +226,58 @@ async function run() {
   await offlinePage.retrySync()
   assert.equal(offlinePage.data.syncStatus, '已同步')
   assert.equal(storage.pending_stroop_result, undefined)
+
+  for (const sessionError of [
+    Object.assign(new Error('expired'), { statusCode: 401 }),
+    Object.assign(new Error('changed'), { code: 'SESSION_CHANGED' })
+  ]) {
+    reset()
+    requestImplementation = async () => {
+      throw sessionError
+    }
+    const invalidSessionPage = createPage()
+    await invalidSessionPage._syncResult({ test_type: 'stroop' })
+    assert.equal(storage.pending_stroop_result, undefined)
+    assert.equal(
+      calls.storageWrites.some(([key]) => key === 'pending_stroop_result'),
+      false
+    )
+  }
+
+  reset()
+  const staleTimerPage = createPage()
+  staleTimerPage.startTest()
+  staleTimerPage._records = STROOP_TRIALS.slice(0, 7).map(
+    (trial) => evaluateStroopChoice(trial, trial.colorKey, 260)
+  )
+  staleTimerPage.setData({
+    currentTrialIndex: 7,
+    currentTrialNumber: 8,
+    phase: 'testing'
+  })
+  staleTimerPage._showTrial()
+  staleTimerPage.handleAnswer({
+    currentTarget: {
+      dataset: { key: STROOP_TRIALS[7].colorKey }
+    }
+  })
+  const staleCompletionTimer = staleTimerPage._feedbackTimer
+  advancePatientDataRevision()
+  runTimer(staleCompletionTimer)
+  await flushPromises()
+  assert.equal(storage[LATEST_RESULTS_KEY], undefined)
+
+  reset()
+  const endedPage = createPage()
+  endedPage.startTest()
+  endedPage.handleAnswer({
+    currentTarget: { dataset: { key: 'red' } }
+  })
+  assert.equal(typeof endedPage.onPatientSessionEnded, 'function')
+  endedPage.onPatientSessionEnded()
+  assert.equal(timers.size, 0)
+  assert.deepEqual(endedPage._records, [])
+  assert.equal(endedPage.data.running, false)
 
   reset()
   const unloadPage = createPage()

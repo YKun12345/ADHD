@@ -2,7 +2,9 @@ const { registerPatientPage } = require('../../utils/patient-page')
 const {
   summarizePatientData,
   clearPatientData,
-  endPatientSession
+  endPatientSession,
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
 } = require('../../utils/session-privacy')
 
 registerPatientPage({
@@ -33,6 +35,7 @@ registerPatientPage({
   },
 
   _confirm(options) {
+    const lease = capturePatientSessionLease()
     return new Promise((resolve) => {
       let settled = false
 
@@ -46,7 +49,10 @@ registerPatientPage({
         wx.showModal({
           ...options,
           success(result) {
-            settle(Boolean(result && result.confirm === true))
+            settle(
+              isPatientSessionLeaseCurrent(lease) &&
+              Boolean(result && result.confirm === true)
+            )
           },
           cancel() {
             settle(false)
@@ -151,6 +157,10 @@ registerPatientPage({
         this.setData({ acting: false })
       }
     }
+  },
+
+  onPatientSessionEnded() {
+    this.setData({ acting: true })
   },
 
   goBack() {

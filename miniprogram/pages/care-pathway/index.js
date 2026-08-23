@@ -1,5 +1,12 @@
 const { registerPatientPage } = require('../../utils/patient-page')
-const { request } = require('../../utils/request')
+const {
+  request,
+  isPatientSessionError
+} = require('../../utils/request')
+const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
 const {
   SCALE_LATEST_RESULT_KEY,
   buildLocalReport,
@@ -66,12 +73,14 @@ registerPatientPage({
       statusMessage: '',
       loading: true
     })
+    const lease = capturePatientSessionLease()
 
     try {
       const response = await request({
         url: '/patient/comprehensive_report',
         method: 'GET'
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       const report = mergeReport(localReport, response)
       this.setData({
         patientName: report.patientName,
@@ -80,6 +89,12 @@ registerPatientPage({
         loading: false
       })
     } catch (error) {
+      if (
+        isPatientSessionError(error) ||
+        !isPatientSessionLeaseCurrent(lease)
+      ) {
+        return
+      }
       this.setData({
         patientName: localReport.patientName,
         ...buildCarePathway(localReport, this._hasAccount),
@@ -87,6 +102,11 @@ registerPatientPage({
         loading: false
       })
     }
+  },
+
+  onPatientSessionEnded() {
+    this._localReport = null
+    this._hasAccount = false
   },
 
   openStep(event) {

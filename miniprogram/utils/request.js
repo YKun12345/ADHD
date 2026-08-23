@@ -3,7 +3,10 @@ const {
   DEFAULT_API_BASE_URL,
   resolveApiBaseUrl
 } = require('./api-config')
-const { endPatientSession } = require('./session-privacy')
+const {
+  endPatientSession,
+  getPatientDataRevision
+} = require('./session-privacy')
 
 const BASE_URL = DEFAULT_API_BASE_URL
 
@@ -24,11 +27,50 @@ function createTransportError(error = {}) {
   return requestError
 }
 
+function createSessionChangedError(error) {
+  const sessionError = new Error(
+    error && typeof error.message === 'string' && error.message
+      ? error.message
+      : '会话已变更，请重新操作'
+  )
+  sessionError.code = 'SESSION_CHANGED'
+  sessionError.sessionChanged = true
+
+  if (error && error.statusCode !== undefined) {
+    sessionError.statusCode = error.statusCode
+  }
+  if (error && error.code) {
+    sessionError.originalCode = error.code
+  }
+
+  return sessionError
+}
+
+function isPatientSessionError(error) {
+  return Boolean(error) && (
+    error.code === 'SESSION_CHANGED' ||
+    error.statusCode === 401
+  )
+}
+
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('access_token')
+    const authenticated = Boolean(token && !options.skipAuth)
+    const patientDataRevision = getPatientDataRevision()
     const storedBaseUrl = wx.getStorageSync(API_BASE_URL_KEY)
     const baseUrl = resolveApiBaseUrl(options.baseUrl || storedBaseUrl)
+
+    const hasSessionChanged = () => {
+      if (!authenticated) return false
+      if (getPatientDataRevision() !== patientDataRevision) return true
+
+      try {
+        return wx.getStorageSync('access_token') !== token
+      } catch (error) {
+        return true
+      }
+    }
 
     wx.request({
       url: `${baseUrl}${options.url}`,
@@ -46,6 +88,10 @@ function request(options) {
 
       success(response) {
         if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (hasSessionChanged()) {
+            reject(createSessionChangedError())
+            return
+          }
           resolve(response.data)
           return
         }
@@ -55,16 +101,31 @@ function request(options) {
             ? response.data.detail
             : `请求失败（${response.statusCode}）`
 
-        if (response.statusCode === 401 && token && !options.skipAuth) {
+        const httpError = new Error(message)
+        httpError.statusCode = response.statusCode
+
+        if (response.statusCode === 401 && authenticated) {
+          if (getPatientDataRevision() !== patientDataRevision) {
+            reject(createSessionChangedError(httpError))
+            return
+          }
+
           let currentToken
+          let tokenReadSucceeded = false
 
           try {
             currentToken = wx.getStorageSync('access_token')
+            tokenReadSucceeded = true
           } catch (error) {
             // Without a current token, the active session cannot be confirmed.
           }
 
-          if (currentToken === token) {
+          if (tokenReadSucceeded && currentToken !== token) {
+            reject(createSessionChangedError(httpError))
+            return
+          }
+
+          if (tokenReadSucceeded && currentToken === token) {
             try {
               endPatientSession()
               wx.reLaunch({
@@ -74,16 +135,22 @@ function request(options) {
               // Session side effects must not replace the HTTP rejection.
             }
           }
+        } else if (hasSessionChanged()) {
+          reject(createSessionChangedError(httpError))
+          return
         }
 
-        const error = new Error(message)
-        error.statusCode = response.statusCode
-        reject(error)
+        reject(httpError)
       },
 
       fail(error) {
         console.error('网络请求失败：', error)
-        reject(createTransportError(error))
+        const transportError = createTransportError(error)
+        reject(
+          hasSessionChanged()
+            ? createSessionChangedError(transportError)
+            : transportError
+        )
       }
     })
   })
@@ -92,5 +159,7 @@ function request(options) {
 module.exports = {
   request,
   BASE_URL,
-  createTransportError
+  createTransportError,
+  createSessionChangedError,
+  isPatientSessionError
 }

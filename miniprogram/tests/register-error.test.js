@@ -354,6 +354,7 @@ async function run() {
     recordAssertion(failures, '旧 token 的延迟 401 仍拒绝原错误', () => {
       assert.equal(staleError.message, '旧会话已经失效')
       assert.equal(staleError.statusCode, 401)
+      assert.equal(staleError.code, 'SESSION_CHANGED')
     })
 
     const concurrentStorage = {
@@ -419,6 +420,7 @@ async function run() {
       assert.equal(firstConcurrentError.statusCode, 401)
       assert.equal(secondConcurrentError.message, '第二个并发请求失效')
       assert.equal(secondConcurrentError.statusCode, 401)
+      assert.equal(secondConcurrentError.code, 'SESSION_CHANGED')
     })
     recordAssertion(failures, '同 token 并发清理保留服务器地址', () => {
       assert.deepEqual(concurrent.storage, {

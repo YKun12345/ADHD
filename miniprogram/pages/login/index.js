@@ -2,7 +2,8 @@ const { request } = require('../../utils/request')
 const {
   hasValidPatientSession,
   clearPatientData,
-  endPatientSession
+  endPatientSession,
+  advancePatientDataRevision
 } = require('../../utils/session-privacy')
 
 function readStorageSafely(key) {
@@ -44,8 +45,16 @@ function storeSession(result) {
     wx.setStorageSync('current_user', result.user)
     wx.setStorageSync('access_token', result.access_token)
   } catch (error) {
-    endPatientSession({ includePatientData: false })
-    throw new Error('登录凭证保存失败，请重试')
+    const rollbackResult = endPatientSession({ includePatientData: false })
+    const storageError = new Error(
+      rollbackResult.ok
+        ? '登录凭证保存失败，请重试'
+        : '登录凭证保存及回滚失败，请关闭小程序后重试'
+    )
+    storageError.code = 'SESSION_STORAGE_FAILED'
+    storageError.failedKeys = rollbackResult.failedKeys
+    storageError.failedPageCount = rollbackResult.failedPageCount
+    throw storageError
   }
 }
 
@@ -153,6 +162,7 @@ Page({
       }
 
       storeSession(result)
+      advancePatientDataRevision()
       updateAppSession(result.user)
 
       wx.showToast({

@@ -29,6 +29,11 @@ require.cache[requestPath] = {
     request(options) {
       calls.requests.push(options)
       return requestImplementation(options)
+    },
+    isPatientSessionError(error) {
+      return Boolean(error) && (
+        error.code === 'SESSION_CHANGED' || error.statusCode === 401
+      )
     }
   }
 }
@@ -209,6 +214,35 @@ async function run() {
   releaseRequest()
   await Promise.all([firstRefresh, secondRefresh])
   assert.equal(guardedPage.data.loading, false)
+
+  reset()
+  let rejectStaleRequest
+  requestImplementation = () => new Promise((resolve, reject) => {
+    rejectStaleRequest = reject
+  })
+  const staleSessionPage = createPage()
+  staleSessionPage.onLoad()
+  const staleRefresh = staleSessionPage.onShow()
+  staleSessionPage._localReport = null
+  staleSessionPage.setData({
+    patientName: '',
+    sourceLabel: '',
+    scale: null,
+    statusMessage: '',
+    loading: false
+  })
+  rejectStaleRequest(Object.assign(new Error('changed'), {
+    code: 'SESSION_CHANGED'
+  }))
+  await staleRefresh
+  assert.equal(staleSessionPage.data.patientName, '')
+  assert.equal(staleSessionPage.data.sourceLabel, '')
+  assert.equal(staleSessionPage.data.scale, null)
+  assert.equal(staleSessionPage._localReport, null)
+  assert.equal(typeof staleSessionPage.onPatientSessionEnded, 'function')
+  staleSessionPage._localReport = { patientName: 'old patient' }
+  staleSessionPage.onPatientSessionEnded()
+  assert.equal(staleSessionPage._localReport, null)
 
   reset(false)
   requestImplementation = async () => ({

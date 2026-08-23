@@ -1,5 +1,12 @@
 const { registerPatientPage } = require('../../utils/patient-page')
-const { request } = require('../../utils/request')
+const {
+  request,
+  isPatientSessionError
+} = require('../../utils/request')
+const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
 const {
   COLORS,
   STROOP_TRIALS,
@@ -119,8 +126,10 @@ registerPatientPage({
       )
     })
 
+    const lease = capturePatientSessionLease()
     this._feedbackTimer = setTimeout(() => {
       this._feedbackTimer = null
+      if (!isPatientSessionLeaseCurrent(lease)) return
       if (completed >= STROOP_TRIALS.length) {
         this._completeTest()
         return
@@ -171,12 +180,15 @@ registerPatientPage({
       syncStatus: '同步中'
     })
 
+    const lease = capturePatientSessionLease()
+
     try {
       await request({
         url: '/patient/submit_cognitive_test',
         method: 'POST',
         data: payload
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       wx.removeStorageSync(PENDING_STROOP_KEY)
       this.setData({
         submitting: false,
@@ -184,6 +196,12 @@ registerPatientPage({
         hasPendingResult: false
       })
     } catch (error) {
+      if (
+        isPatientSessionError(error) ||
+        !isPatientSessionLeaseCurrent(lease)
+      ) {
+        return
+      }
       wx.setStorageSync(PENDING_STROOP_KEY, payload)
       this.setData({
         submitting: false,
@@ -217,6 +235,16 @@ registerPatientPage({
       clearTimeout(this._feedbackTimer)
       this._feedbackTimer = null
     }
+  },
+
+  onPatientSessionEnded() {
+    this._clearFeedbackTimer()
+    this._records = []
+    this._finishedAt = ''
+    this.setData({
+      running: false,
+      submitting: false
+    })
   },
 
   onUnload() {

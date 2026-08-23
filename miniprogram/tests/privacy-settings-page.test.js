@@ -4,7 +4,8 @@ const path = require('node:path')
 
 const {
   PATIENT_DATA_KEYS,
-  SESSION_KEYS
+  SESSION_KEYS,
+  advancePatientDataRevision
 } = require('../utils/session-privacy')
 
 const pagePath = path.join(
@@ -34,6 +35,7 @@ let storage = {}
 let showModalImplementation
 let reLaunchImplementation
 let failedRemovalKey
+let currentPages = []
 let pageDefinition
 const app = {
   globalData: {
@@ -43,6 +45,7 @@ const app = {
 }
 
 global.getApp = () => app
+global.getCurrentPages = () => currentPages
 
 global.wx = {
   getStorageSync(key) {
@@ -139,6 +142,7 @@ function reset(overrides = {}) {
   calls.navigateTo = []
   storage = patientFixture(overrides)
   failedRemovalKey = ''
+  currentPages = []
   showModalImplementation = (options) => {
     options.success({ confirm: false, cancel: true })
   }
@@ -241,6 +245,20 @@ async function run() {
   pendingModal.success({ confirm: false, cancel: true })
   assert.equal(await pendingClear, false)
   assert.equal(lockedPage.data.acting, false)
+
+  reset()
+  let staleModal
+  showModalImplementation = (options) => {
+    staleModal = options
+  }
+  const staleModalPage = createPage()
+  staleModalPage.onLoad()
+  const staleClear = staleModalPage.clearLocalData()
+  advancePatientDataRevision()
+  staleModal.success({ confirm: true })
+  assert.equal(await staleClear, false)
+  assert.deepEqual(calls.removals, [])
+  assert.equal(staleModalPage.data.acting, false)
 
   reset()
   showModalImplementation = (options) => {
@@ -357,11 +375,29 @@ async function run() {
   showModalImplementation = (options) => {
     options.success({ confirm: true })
   }
+  const failedPageScrubLogout = createPage()
+  currentPages = [failedPageScrubLogout, {
+    data: { patientName: 'stale patient' },
+    setData() {
+      throw new Error('setData failed')
+    }
+  }]
+  failedPageScrubLogout.onLoad()
+  assert.equal(await failedPageScrubLogout.logout(), false)
+  assert.equal(calls.reLaunches.length, 0)
+  assert.equal(failedPageScrubLogout.data.acting, false)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
+
+  reset()
+  showModalImplementation = (options) => {
+    options.success({ confirm: true })
+  }
   let failReLaunch
   reLaunchImplementation = (options) => {
     failReLaunch = options.fail
   }
   const failedReLaunchPage = createPage()
+  currentPages = [failedReLaunchPage]
   failedReLaunchPage.onLoad()
   const failedReLaunchResult = failedReLaunchPage.logout()
   await Promise.resolve()

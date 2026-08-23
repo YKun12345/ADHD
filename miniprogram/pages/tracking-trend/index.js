@@ -1,6 +1,10 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { TRACKING_LOGS_KEY } = require('../../utils/tracking-data')
 const { buildTrackingTrendModel, createChartPoints } = require('../../utils/tracking-trend')
+const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
 
 const METRIC_TABS = [
   { key: 'mood', label: '情绪', color: '#c85c52' },
@@ -30,6 +34,7 @@ registerPatientPage({
   },
   _applyMetric(metric) {
     const series = this._model.series[metric]
+    const lease = capturePatientSessionLease()
     this.setData({
       activeMetric: metric,
       hasData: this._model.hasData,
@@ -38,10 +43,13 @@ registerPatientPage({
       averageValue: series.average,
       metricLabel: series.label,
       metricUnit: series.unit
-    }, () => wx.nextTick(() => this._drawChart(metric)))
+    }, () => wx.nextTick(() => {
+      if (!isPatientSessionLeaseCurrent(lease)) return
+      this._drawChart(metric)
+    }))
   },
   _drawChart(metric) {
-    if (!this._model.hasData) return
+    if (!this._model || !this._model.hasData) return
     const series = this._model.series[metric]
     const tab = METRIC_TABS.find((item) => item.key === metric)
     const minValue = metric === 'focus' ? 0 : 1
@@ -60,6 +68,9 @@ registerPatientPage({
     context.setFillStyle(tab.color)
     for (const point of points.filter(Boolean)) { context.beginPath(); context.arc(point.x, point.y, 4, 0, Math.PI * 2); context.fill() }
     context.draw()
+  },
+  onPatientSessionEnded() {
+    this._model = null
   },
   goBack() { wx.navigateBack({ delta: 1 }) }
 })

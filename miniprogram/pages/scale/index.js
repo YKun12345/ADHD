@@ -1,5 +1,9 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
+const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
 const asrsScale = require('../../utils/asrs-scale')
 const snapScale = require('../../utils/snap-scale')
 const {
@@ -215,6 +219,7 @@ registerPatientPage({
     this.setData({
       submitting: true
     })
+    const lease = capturePatientSessionLease()
 
     try {
       const result = await request({
@@ -222,6 +227,7 @@ registerPatientPage({
         method: 'POST',
         data: payload
       })
+      if (!isPatientSessionLeaseCurrent(lease)) return
 
       if (!isCompleteResult(result)) {
         throw new Error('INCOMPLETE_SCALE_RESULT')
@@ -240,6 +246,7 @@ registerPatientPage({
         submitting: false
       })
     } catch (error) {
+      if (!isPatientSessionLeaseCurrent(lease)) return
       this.setData({
         submitting: false
       })

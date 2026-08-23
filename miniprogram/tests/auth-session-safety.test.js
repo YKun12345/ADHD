@@ -1,6 +1,9 @@
 const assert = require('node:assert/strict')
 
-const { PATIENT_DATA_KEYS } = require('../utils/session-privacy')
+const {
+  PATIENT_DATA_KEYS,
+  getPatientDataRevision
+} = require('../utils/session-privacy')
 
 const requestModulePath = require.resolve('../utils/request')
 const loginModulePath = require.resolve('../pages/login/index')
@@ -16,6 +19,7 @@ let requestImplementation
 let pageDefinition
 let storage
 let failedRemovalKey
+let failedWriteKey
 let timerCallbacks
 
 const app = {
@@ -36,6 +40,7 @@ const calls = {
 function reset(initialStorage) {
   storage = Object.assign({}, initialStorage)
   failedRemovalKey = ''
+  failedWriteKey = ''
   timerCallbacks = []
   app.globalData.isLoggedIn = true
   app.globalData.userInfo = storage.current_user || null
@@ -127,6 +132,9 @@ function configureGlobals() {
       delete storage[key]
     },
     setStorageSync(key, value) {
+      if (key === failedWriteKey) {
+        throw new Error(`cannot write ${key}`)
+      }
       calls.writes.push([key, value])
       storage[key] = value
     },
@@ -192,6 +200,7 @@ async function runLoginScenarios() {
     password: 'BrainMap#2026'
   })
 
+  const revisionBeforeSamePatientLogin = getPatientDataRevision()
   await samePatientPage.handleLogin()
 
   assert.deepEqual(calls.removals, [])
@@ -200,6 +209,58 @@ async function runLoginScenarios() {
     'current_user',
     'access_token'
   ])
+  assert.equal(
+    getPatientDataRevision(),
+    revisionBeforeSamePatientLogin + 1
+  )
+
+  for (const writeKey of ['current_user', 'access_token']) {
+    reset(patientStorage(2))
+    failedWriteKey = writeKey
+    requestImplementation = async () => authResponse(2)
+    const failedWritePage = createPage(definition)
+    failedWritePage.setData({
+      identifier: 'patient-2@example.com',
+      password: 'BrainMap#2026'
+    })
+
+    await failedWritePage.handleLogin()
+
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(storage, 'access_token'),
+      false
+    )
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(storage, 'current_user'),
+      false
+    )
+    assert.equal(app.globalData.isLoggedIn, false)
+    assert.equal(app.globalData.userInfo, null)
+    assert.equal(timerCallbacks.length, 0)
+    assert.match(calls.toasts[calls.toasts.length - 1].title, /保存失败/)
+  }
+
+  reset(patientStorage(2))
+  failedWriteKey = 'access_token'
+  failedRemovalKey = 'access_token'
+  requestImplementation = async () => authResponse(2)
+  const failedRollbackPage = createPage(definition)
+  failedRollbackPage.setData({
+    identifier: 'patient-2@example.com',
+    password: 'BrainMap#2026'
+  })
+
+  await failedRollbackPage.handleLogin()
+
+  assert.equal(app.globalData.isLoggedIn, false)
+  assert.equal(app.globalData.userInfo, null)
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'current_user'),
+    false
+  )
+  assert.equal(storage.access_token, 'old-token-2')
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /回滚失败/)
+  assert.equal(timerCallbacks.length, 0)
 
   reset({
     access_token: 'bad-token',
@@ -259,6 +320,26 @@ async function runRegisterScenarios() {
   assert.equal(storage.current_user.id, 1)
   assert.equal(failedClearPage.data.submitting, false)
   assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
+
+  reset(patientStorage(3))
+  failedWriteKey = 'access_token'
+  failedRemovalKey = 'access_token'
+  requestImplementation = async () => authResponse(3)
+  const failedRegisterRollbackPage = createPage(definition)
+  failedRegisterRollbackPage.setData(validForm)
+
+  await failedRegisterRollbackPage.handleSubmit()
+
+  assert.equal(app.globalData.isLoggedIn, false)
+  assert.equal(app.globalData.userInfo, null)
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'current_user'),
+    false
+  )
+  assert.equal(storage.access_token, 'old-token-3')
+  assert.equal(failedRegisterRollbackPage.data.submitting, false)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /回滚失败/)
+  assert.equal(calls.reLaunches.length, 0)
 }
 
 async function run() {

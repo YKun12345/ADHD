@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict')
+const { advancePatientDataRevision } = require('../utils/session-privacy')
 
 const calls = {
   requests: [],
@@ -289,6 +290,32 @@ async function run() {
   })
   await pending
   assert.deepEqual(unloadedPage.data, stateBeforeUnload)
+
+  reset()
+  let releaseStaleReply
+  requestImplementation = () => new Promise((resolve) => {
+    releaseStaleReply = resolve
+  })
+  const staleReplyPage = createPage()
+  staleReplyPage.onLoad({})
+  staleReplyPage.handleInput(inputEvent('old session question'))
+  const staleReply = staleReplyPage.handleSend()
+  releaseStaleReply({
+    reply: 'old session answer',
+    provider: 'qwen',
+    disclaimer: 'old disclaimer'
+  })
+  advancePatientDataRevision()
+  await staleReply
+  assert.equal(
+    staleReplyPage.data.messages.some((item) => item.role === 'assistant'),
+    false
+  )
+
+  assert.equal(typeof staleReplyPage.onPatientSessionEnded, 'function')
+  staleReplyPage._active = true
+  staleReplyPage.onPatientSessionEnded()
+  assert.equal(staleReplyPage._active, false)
 
   console.log('AI 助手页面控制逻辑测试全部通过')
 }

@@ -10,7 +10,12 @@ let pageDefinition
 
 const requestPath = require.resolve('../utils/request')
 require.cache[requestPath] = { id: requestPath, filename: requestPath, loaded: true, exports: {
-  request(options) { calls.requests.push(options); return requestImplementation(options) }
+  request(options) { calls.requests.push(options); return requestImplementation(options) },
+  isPatientSessionError(error) {
+    return Boolean(error) && (
+      error.code === 'SESSION_CHANGED' || error.statusCode === 401
+    )
+  }
 } }
 
 global.wx = {
@@ -118,6 +123,33 @@ async function run() {
   assert.equal(calls.requests.length, 1)
   releaseRequest({})
   await Promise.all([first, second])
+
+  reset()
+  let rejectStaleRequest
+  requestImplementation = () => new Promise((resolve, reject) => {
+    rejectStaleRequest = reject
+  })
+  const staleSessionPage = createPage()
+  staleSessionPage.onLoad()
+  const staleRefresh = staleSessionPage.onShow()
+  staleSessionPage._localReport = null
+  staleSessionPage.setData({
+    patientName: '',
+    steps: [],
+    statusMessage: '',
+    loading: false
+  })
+  rejectStaleRequest(Object.assign(new Error('expired'), {
+    statusCode: 401
+  }))
+  await staleRefresh
+  assert.equal(staleSessionPage.data.patientName, '')
+  assert.deepEqual(staleSessionPage.data.steps, [])
+  assert.equal(staleSessionPage._localReport, null)
+  assert.equal(typeof staleSessionPage.onPatientSessionEnded, 'function')
+  staleSessionPage._localReport = { patientName: 'old patient' }
+  staleSessionPage.onPatientSessionEnded()
+  assert.equal(staleSessionPage._localReport, null)
 
   guardedPage.openStep({ currentTarget: { dataset: { step: 'scale' } } })
   guardedPage.openStep({ currentTarget: { dataset: { step: 'cognitive' } } })

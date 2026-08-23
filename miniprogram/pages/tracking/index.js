@@ -1,6 +1,10 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
+} = require('../../utils/session-privacy')
+const {
   TRACKING_LOGS_KEY,
   TRACKING_PENDING_KEY,
   createTrackingForm,
@@ -139,8 +143,11 @@ registerPatientPage({
     this._updateDashboard(summary)
     this.setData({ ...summary, submitting: true, saveStatus: '正在同步', demoMode: false })
 
+    const lease = capturePatientSessionLease()
+
     try {
       await request({ url: '/patient/submit_daily_log', method: 'POST', data: payload })
+      if (!isPatientSessionLeaseCurrent(lease)) return
       logs = upsertTrackingLog(logs, {
         ...logs.find((log) => log.day_index === payload.day_index),
         sync_status: 'synced'
@@ -151,17 +158,19 @@ registerPatientPage({
       wx.setStorageSync(TRACKING_PENDING_KEY, nextPending)
       this.setData({ submitting: false, saveStatus: '已同步' })
     } catch (error) {
+      if (!isPatientSessionLeaseCurrent(lease)) return
       this.setData({ submitting: false, saveStatus: '已保存本机，待同步' })
     }
   },
 
   generateDemoData() {
+    const lease = capturePatientSessionLease()
     wx.showModal({
       title: '生成本地演示数据',
       content: '将覆盖本机的追踪记录，不会提交到服务器。',
       confirmText: '生成演示',
       success: (result) => {
-        if (!result.confirm) return
+        if (!result.confirm || !isPatientSessionLeaseCurrent(lease)) return
         const logs = buildDemoTrackingLogs()
         const summary = summarizeTrackingLogs(logs)
         wx.setStorageSync(TRACKING_LOGS_KEY, logs)
