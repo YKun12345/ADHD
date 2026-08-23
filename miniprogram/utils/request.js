@@ -56,13 +56,23 @@ function request(options) {
             : `请求失败（${response.statusCode}）`
 
         if (response.statusCode === 401 && token && !options.skipAuth) {
-          const currentToken = wx.getStorageSync('access_token')
+          let currentToken
+
+          try {
+            currentToken = wx.getStorageSync('access_token')
+          } catch (error) {
+            // Without a current token, the active session cannot be confirmed.
+          }
 
           if (currentToken === token) {
-            endPatientSession()
-            wx.reLaunch({
-              url: '/pages/login/index'
-            })
+            try {
+              endPatientSession()
+              wx.reLaunch({
+                url: '/pages/login/index'
+              })
+            } catch (error) {
+              // Session side effects must not replace the HTTP rejection.
+            }
           }
         }
 

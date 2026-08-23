@@ -36,6 +36,7 @@ function createRequestBoundary(
   const removedKeys = []
   const reLaunches = []
   const requestOptions = []
+  let storageReadCount = 0
   const globalWrites = {
     isLoggedIn: [],
     userInfo: []
@@ -74,6 +75,10 @@ function createRequestBoundary(
   global.getApp = () => app
   global.wx = {
     getStorageSync(key) {
+      storageReadCount += 1
+      if (storageReadCount === settings.throwOnStorageRead) {
+        throw new Error('storage unavailable')
+      }
       return storage[key]
     },
     removeStorageSync(key) {
@@ -82,6 +87,9 @@ function createRequestBoundary(
     },
     reLaunch(options) {
       reLaunches.push(options)
+      if (settings.reLaunchError) {
+        throw settings.reLaunchError
+      }
     },
     request(options) {
       requestOptions.push(options)
@@ -97,11 +105,47 @@ function createRequestBoundary(
     storage,
     removedKeys,
     reLaunches,
+    getStorageReadCount() {
+      return storageReadCount
+    },
     getRequestOptions(index = 0) {
       return requestOptions[index]
     },
     respond(index = 0, nextResponse = response) {
       requestOptions[index].success(nextResponse)
+    }
+  }
+}
+
+function captureCall(operation) {
+  try {
+    return { error: undefined, value: operation() }
+  } catch (error) {
+    return { error, value: undefined }
+  }
+}
+
+function observePromise(promise) {
+  let state = 'pending'
+  let value
+
+  promise.then(
+    (result) => {
+      state = 'resolved'
+      value = result
+    },
+    (error) => {
+      state = 'rejected'
+      value = error
+    }
+  )
+
+  return {
+    getState() {
+      return state
+    },
+    getValue() {
+      return value
     }
   }
 }
@@ -378,6 +422,117 @@ async function run() {
     })
     recordAssertion(failures, '同 token 并发清理保留服务器地址', () => {
       assert.deepEqual(concurrent.storage, {
+        api_base_url: 'https://api.example.com/api/v1'
+      })
+    })
+
+    const storageFailureStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'storage-failure-token',
+      current_user: { id: 73 },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { saved: true }])
+      )
+    }
+    const storageFailureSnapshot = Object.assign({}, storageFailureStorage)
+    const storageFailure = createRequestBoundary(
+      storageFailureStorage,
+      {
+        statusCode: 401,
+        data: { detail: '存储读取期间会话失效' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: storageFailureStorage.current_user
+      },
+      {
+        deferResponse: true,
+        throwOnStorageRead: 3
+      }
+    )
+    const storageFailureObservation = observePromise(request({
+      url: '/patient/dashboard_status'
+    }))
+    const storageFailureCallback = captureCall(() => {
+      storageFailure.respond()
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    recordAssertion(failures, '响应时 storage 读取失败不抛出 callback', () => {
+      assert.equal(storageFailureCallback.error, undefined)
+      assert.equal(storageFailure.getStorageReadCount(), 3)
+    })
+    recordAssertion(failures, '响应时 storage 读取失败仍拒绝原 401', () => {
+      assert.equal(storageFailureObservation.getState(), 'rejected')
+      assert.equal(
+        storageFailureObservation.getValue().message,
+        '存储读取期间会话失效'
+      )
+      assert.equal(storageFailureObservation.getValue().statusCode, 401)
+    })
+    recordAssertion(failures, '无法确认当前 token 时不做破坏性退出', () => {
+      assert.deepEqual(storageFailure.removedKeys, [])
+      assert.deepEqual(storageFailure.reLaunches, [])
+      assert.deepEqual(storageFailure.storage, storageFailureSnapshot)
+      assert.deepEqual(storageFailure.globalWrites.isLoggedIn, [])
+      assert.deepEqual(storageFailure.globalWrites.userInfo, [])
+    })
+
+    const reLaunchFailureStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'relaunch-failure-token',
+      current_user: { id: 74 },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { saved: true }])
+      )
+    }
+    const reLaunchFailure = createRequestBoundary(
+      reLaunchFailureStorage,
+      {
+        statusCode: 401,
+        data: { detail: '跳转期间会话失效' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: reLaunchFailureStorage.current_user
+      },
+      {
+        deferResponse: true,
+        reLaunchError: new Error('reLaunch unavailable')
+      }
+    )
+    const reLaunchFailureObservation = observePromise(request({
+      url: '/patient/dashboard_status'
+    }))
+    const reLaunchFailureCallback = captureCall(() => {
+      reLaunchFailure.respond()
+    })
+    await Promise.resolve()
+    await Promise.resolve()
+
+    recordAssertion(failures, 'reLaunch 同步失败不抛出 callback', () => {
+      assert.equal(reLaunchFailureCallback.error, undefined)
+    })
+    recordAssertion(failures, 'reLaunch 同步失败仍拒绝原 401', () => {
+      assert.equal(reLaunchFailureObservation.getState(), 'rejected')
+      assert.equal(
+        reLaunchFailureObservation.getValue().message,
+        '跳转期间会话失效'
+      )
+      assert.equal(reLaunchFailureObservation.getValue().statusCode, 401)
+    })
+    recordAssertion(failures, 'reLaunch 同步失败前已完成单次清理', () => {
+      assert.deepEqual(
+        reLaunchFailure.removedKeys,
+        [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+      )
+      assert.deepEqual(reLaunchFailure.globalWrites.isLoggedIn, [false])
+      assert.deepEqual(reLaunchFailure.globalWrites.userInfo, [null])
+      assert.deepEqual(reLaunchFailure.reLaunches, [
+        { url: '/pages/login/index' }
+      ])
+      assert.deepEqual(reLaunchFailure.storage, {
         api_base_url: 'https://api.example.com/api/v1'
       })
     })
