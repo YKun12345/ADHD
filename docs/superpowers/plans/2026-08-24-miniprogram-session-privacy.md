@@ -315,11 +315,11 @@ git commit -m "feat(miniprogram): add account privacy controls"
 - Modify: `miniprogram/pages/home/index.wxss`
 - Modify: `miniprogram/tests/home-view.test.js`
 
-- [ ] **Step 1: 写视图结构失败测试**
+- [x] **Step 1: 写视图结构失败测试**
 
 测试要求 WXML 包含患者名称、四类数量、待同步警示、`clearLocalData`、`logout`、`goBack`、二次确认说明、“不会删除服务器数据”和医学免责声明；要求 WXSS 包含摘要卡、危险操作区、删除按钮、退出按钮及按钮内容 flex 居中；首页必须有“账号与隐私”入口。
 
-- [ ] **Step 2: 运行测试确认视图缺失失败**
+- [x] **Step 2: 运行测试确认视图缺失失败**
 
 Run:
 
@@ -330,7 +330,7 @@ node miniprogram/tests/home-view.test.js
 
 Expected: FAIL，明确列出缺失文件或片段。
 
-- [ ] **Step 3: 实现 WXML/WXSS**
+- [x] **Step 3: 实现 WXML/WXSS**
 
 页面顺序固定为：标题与患者名 → 本地数据摘要四格 → 待同步警示 → 隐私说明 → 清理按钮 → 退出按钮 → 医疗提示 → 返回上一页。危险按钮使用红色边框而非夸张实心红色，两个按钮都使用：
 
@@ -342,7 +342,7 @@ justify-content: center;
 
 首页在现有“服务器设置”附近增加低强调度“账号与隐私”入口，不新增 tabBar。
 
-- [ ] **Step 4: 验证视图和现有首页结构**
+- [x] **Step 4: 验证视图和现有首页结构**
 
 Run:
 
@@ -354,7 +354,7 @@ git diff --check
 
 Expected: 全部通过；只允许 LF/CRLF 提示，不得有空白错误。
 
-- [ ] **Step 5: 精确提交**
+- [x] **Step 5: 精确提交**
 
 ```powershell
 git add miniprogram/pages/privacy-settings/index.wxml miniprogram/pages/privacy-settings/index.wxss miniprogram/pages/home/index.wxml miniprogram/pages/home/index.wxss miniprogram/tests/privacy-settings-view.test.js miniprogram/tests/home-view.test.js
@@ -367,13 +367,16 @@ git commit -m "feat(miniprogram): build account privacy view"
 - Modify: `miniprogram/utils/request.js`
 - Modify: `miniprogram/tests/register-error.test.js`
 - Modify: `miniprogram/app.js`
+- Modify: `miniprogram/utils/session-privacy.js`
+- Modify: `miniprogram/tests/session-privacy.test.js`
+- Modify: `miniprogram/tests/runtime-compatibility.test.js`
 - Create: `miniprogram/tests/app-session.test.js`
 - Modify: `项目任务与进度.md`
 - Modify: `docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md`
 
 - [ ] **Step 1: 写 401 与 App 会话失败测试**
 
-扩展请求测试：带 token 的业务请求收到 401 时，应删除两个会话键和九个患者键、保留 `api_base_url`、返回登录并继续抛出带 `statusCode:401` 的错误。新增 App 测试，要求 `onLaunch()` 只有在 token 与患者资料同时有效时才把 `globalData.isLoggedIn` 设为 `true`。
+扩展请求测试：带 token 的业务请求收到 401 时，应删除两个会话键和九个患者键、保留 `api_base_url`、清空内存用户、返回登录并继续抛出带 `statusCode:401` 的错误；`skipAuth` 请求不得触发退出清理。新增 App 测试，要求 `onLaunch()` 只有在 token 与患者资料同时有效时才把 `globalData.isLoggedIn` 设为 `true` 并恢复 `globalData.userInfo`；残缺会话必须清除患者数据和会话、保留服务器地址并把内存用户置空。扩展会话模块测试，要求默认结束会话同时清空 `globalData.userInfo`。
 
 - [ ] **Step 2: 运行测试确认旧行为失败**
 
@@ -384,11 +387,11 @@ node miniprogram/tests/register-error.test.js
 node miniprogram/tests/app-session.test.js
 ```
 
-Expected: 请求测试显示患者键未清除或 App 测试显示只检查 token。
+Expected: 请求测试显示患者键或内存用户未清除；App 测试显示只检查 token、未清理残缺会话或未恢复有效用户。
 
 - [ ] **Step 3: 复用统一会话逻辑**
 
-`request.js` 导入 `endPatientSession`，在 `response.statusCode === 401 && token && !options.skipAuth` 时调用它，再 `wx.reLaunch`。`app.js` 导入 `hasValidPatientSession`，使用实际 storage reader设置 `globalData.isLoggedIn`，不复制判断规则。
+`request.js` 导入 `endPatientSession`，在 `response.statusCode === 401 && token && !options.skipAuth` 时调用它，再 `wx.reLaunch`。`session-privacy.js` 的默认全局状态更新在退出时同时清空 `userInfo`。`app.js` 导入 `hasValidPatientSession` 与 `endPatientSession`：有效会话恢复登录状态和内存用户；无效会话使用统一结束逻辑清患者数据与会话但不额外跳转，不复制判断规则。
 
 - [ ] **Step 4: 运行目标测试和完整自动验证**
 
@@ -422,7 +425,7 @@ Expected: 全部测试、JS、JSON 和 Git 空白检查退出码为 0。
 
 - [ ] **Step 5: 执行路由、事件、边界和用户文件保护检查**
 
-确认全部 app 路由文件齐全、所有 WXML `bind*` 方法存在、生产代码未引入 `.at(` 或 `Object.hasOwn(`、变更中没有 `backend/` 或医生 Web 文件，并确认主工作区 `miniprogram/utils/register-validation.js` SHA-256 仍为开发开始前记录值。
+确认全部 app 路由文件齐全、所有 WXML `bind*` 方法存在、生产代码未引入 `.at(`、`Object.hasOwn(` 或 `Promise.prototype.finally`、变更中没有 `backend/` 或医生 Web 文件，并确认主工作区 `miniprogram/utils/register-validation.js` SHA-256 仍为开发开始前记录值。
 
 - [ ] **Step 6: 更新进度和工作日志**
 
@@ -431,7 +434,7 @@ Expected: 全部测试、JS、JSON 和 Git 空白检查退出码为 0。
 - [ ] **Step 7: 提交并完成分支集成**
 
 ```powershell
-git add miniprogram/utils/request.js miniprogram/app.js miniprogram/tests/register-error.test.js miniprogram/tests/app-session.test.js 项目任务与进度.md docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md
+git add miniprogram/utils/request.js miniprogram/app.js miniprogram/utils/session-privacy.js miniprogram/tests/register-error.test.js miniprogram/tests/app-session.test.js miniprogram/tests/session-privacy.test.js miniprogram/tests/runtime-compatibility.test.js 项目任务与进度.md docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md
 git commit -m "feat(miniprogram): finish session privacy safeguards"
 ```
 
