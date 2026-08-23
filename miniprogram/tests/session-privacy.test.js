@@ -22,6 +22,23 @@ function readFrom(values) {
   return (key) => values[key]
 }
 
+function captureCall(operation) {
+  try {
+    return { value: operation(), error: undefined }
+  } catch (error) {
+    return { value: undefined, error }
+  }
+}
+
+function throwingRemover(attemptedKeys) {
+  return (key) => {
+    attemptedKeys.push(key)
+    if (key === 'scale_draft_asrs' || key === 'access_token') {
+      throw new Error(`failed to remove ${key}`)
+    }
+  }
+}
+
 assert.deepEqual(SESSION_KEYS, [
   'access_token',
   'current_user'
@@ -267,6 +284,55 @@ assert.deepEqual(invalidOptOutCalls.reLaunches, [
 assert.deepEqual(invalidOptOutStorage, {
   api_base_url: 'https://api.example.com/api/v1'
 })
+
+const resilientClearAttempts = []
+const resilientClearCall = captureCall(() => {
+  clearPatientData(throwingRemover(resilientClearAttempts))
+})
+
+const resilientEndAttempts = []
+const resilientEndLoginStates = []
+const resilientEndCall = captureCall(() => {
+  endPatientSession({
+    removeStorage: throwingRemover(resilientEndAttempts),
+    setLoggedIn(value) {
+      resilientEndLoginStates.push(value)
+    }
+  })
+})
+
+const resilientEnsureAttempts = []
+const resilientEnsureLoginStates = []
+const resilientEnsureReLaunches = []
+const resilientEnsureCall = captureCall(() => ensurePatientSession({
+  readStorage: readFrom({ access_token: 'orphan-token' }),
+  removeStorage: throwingRemover(resilientEnsureAttempts),
+  setLoggedIn(value) {
+    resilientEnsureLoginStates.push(value)
+  },
+  reLaunch(options) {
+    resilientEnsureReLaunches.push(options)
+  }
+}))
+
+assert.deepEqual(resilientClearAttempts, PATIENT_DATA_KEYS)
+assert.equal(resilientClearCall.error, undefined)
+assert.deepEqual(
+  resilientEndAttempts,
+  [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+)
+assert.equal(resilientEndCall.error, undefined)
+assert.deepEqual(resilientEndLoginStates, [false])
+assert.deepEqual(
+  resilientEnsureAttempts,
+  [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+)
+assert.equal(resilientEnsureCall.error, undefined)
+assert.equal(resilientEnsureCall.value, false)
+assert.deepEqual(resilientEnsureLoginStates, [false])
+assert.deepEqual(resilientEnsureReLaunches, [
+  { url: '/pages/login/index' }
+])
 
 const previousWx = global.wx
 const previousGetApp = global.getApp

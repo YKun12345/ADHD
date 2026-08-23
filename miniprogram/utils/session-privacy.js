@@ -72,6 +72,14 @@ function safeRead(readStorage, key) {
   }
 }
 
+function safeRemove(removeStorage, key) {
+  try {
+    removeStorage(key)
+  } catch (error) {
+    // Continue clearing the remaining privacy-sensitive storage keys.
+  }
+}
+
 function containsValidContent(value, seen) {
   if (value === null || value === undefined) return false
   if (typeof value === 'string') return value.trim().length > 0
@@ -157,7 +165,7 @@ function summarizePatientData(readStorage = defaultReadStorage) {
 
 function clearPatientData(removeStorage = defaultRemoveStorage) {
   const remove = storageRemover(removeStorage)
-  PATIENT_DATA_KEYS.forEach((key) => remove(key))
+  PATIENT_DATA_KEYS.forEach((key) => safeRemove(remove, key))
 }
 
 function endPatientSession(options = {}) {
@@ -172,7 +180,7 @@ function endPatientSession(options = {}) {
   if (settings.includePatientData !== false) {
     clearPatientData(remove)
   }
-  SESSION_KEYS.forEach((key) => remove(key))
+  SESSION_KEYS.forEach((key) => safeRemove(remove, key))
   setLoggedIn(false)
 }
 
