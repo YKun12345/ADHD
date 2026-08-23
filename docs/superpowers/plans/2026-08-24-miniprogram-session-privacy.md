@@ -16,7 +16,7 @@
 - Create: `miniprogram/utils/session-privacy.js`
 - Create: `miniprogram/tests/session-privacy.test.js`
 
-- [ ] **Step 1: 写会失败的会话和数据边界测试**
+- [x] **Step 1: 写会失败的会话和数据边界测试**
 
 测试必须先引用尚不存在的模块，并覆盖以下期望 API：
 
@@ -47,12 +47,12 @@ assert.deepEqual(summarizePatientData(readPopulatedStorage), {
 
 再验证 `clearPatientData(remove)` 只删除九个患者键，`endPatientSession()` 额外删除两个会话键但不删除 `api_base_url`，以及单次调用 `ensurePatientSession()` 在无效会话下会重启登录并返回 `false`。页面生命周期的重复跳转由 Task 2 包装器拦截。
 
-- [ ] **Step 2: 运行测试确认因模块缺失而失败**
+- [x] **Step 2: 运行测试确认因模块缺失而失败**
 
 Run: `node miniprogram/tests/session-privacy.test.js`  
 Expected: FAIL，提示找不到 `../utils/session-privacy`。
 
-- [ ] **Step 3: 实现纯逻辑与微信运行时适配**
+- [x] **Step 3: 实现纯逻辑与微信运行时适配**
 
 创建常量：
 
@@ -83,7 +83,7 @@ function ensurePatientSession(options = {}) {}
 
 `summarizePatientData()` 的规则：两个草稿各计一项；量表最近结果计一项；认知最近结果按有效对象键数计数；追踪日志按有效数组长度计数；两个认知待同步结果各计一项；追踪待同步对象按键数计数。`endPatientSession()` 默认删除患者数据和会话，调用可注入的 `setLoggedIn(false)`；`ensurePatientSession()` 无效时调用结束会话并 `reLaunch('/pages/login/index')`。
 
-- [ ] **Step 4: 验证纯逻辑转绿并检查语法**
+- [x] **Step 4: 验证纯逻辑转绿并检查语法**
 
 Run:
 
@@ -94,7 +94,7 @@ node --check miniprogram/utils/session-privacy.js
 
 Expected: 显示“会话与本地数据隐私测试全部通过”，语法检查退出码为 0。
 
-- [ ] **Step 5: 精确提交**
+- [x] **Step 5: 精确提交**
 
 ```powershell
 git add miniprogram/utils/session-privacy.js miniprogram/tests/session-privacy.test.js
@@ -165,9 +165,7 @@ function protectPatientPage(definition, guard = ensurePatientSession) {
     },
     onShow(...args) {
       if (this.__patientSessionAllowed === false) return undefined
-      if (this.__patientSessionAllowed !== true) {
-        this.__patientSessionAllowed = guard()
-      }
+      this.__patientSessionAllowed = guard()
       if (!this.__patientSessionAllowed) return undefined
       return originalOnShow ? originalOnShow.apply(this, args) : undefined
     }
