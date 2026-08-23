@@ -231,6 +231,43 @@ assert.deepEqual(invalidEnsureStorage, {
   api_base_url: 'http://192.168.1.9:8000/api/v1'
 })
 
+const invalidOptOutStorage = {
+  api_base_url: 'https://api.example.com/api/v1',
+  access_token: 'orphan-token',
+  ...Object.fromEntries(PATIENT_DATA_KEYS.map((key) => [key, { saved: true }]))
+}
+const invalidOptOutCalls = {
+  removed: [],
+  loginStates: [],
+  reLaunches: []
+}
+const invalidOptOutResult = ensurePatientSession({
+  includePatientData: false,
+  readStorage: readFrom(invalidOptOutStorage),
+  removeStorage(key) {
+    invalidOptOutCalls.removed.push(key)
+    delete invalidOptOutStorage[key]
+  },
+  setLoggedIn(value) {
+    invalidOptOutCalls.loginStates.push(value)
+  },
+  reLaunch(options) {
+    invalidOptOutCalls.reLaunches.push(options)
+  }
+})
+assert.equal(invalidOptOutResult, false)
+assert.deepEqual(
+  invalidOptOutCalls.removed,
+  [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+)
+assert.deepEqual(invalidOptOutCalls.loginStates, [false])
+assert.deepEqual(invalidOptOutCalls.reLaunches, [
+  { url: '/pages/login/index' }
+])
+assert.deepEqual(invalidOptOutStorage, {
+  api_base_url: 'https://api.example.com/api/v1'
+})
+
 const previousWx = global.wx
 const previousGetApp = global.getApp
 delete global.wx

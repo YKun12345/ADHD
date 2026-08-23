@@ -185,7 +185,9 @@ function ensurePatientSession(options = {}) {
     return true
   }
 
-  endPatientSession(settings)
+  endPatientSession(Object.assign({}, settings, {
+    includePatientData: true
+  }))
   const reLaunch = typeof settings.reLaunch === 'function'
     ? settings.reLaunch
     : defaultReLaunch
