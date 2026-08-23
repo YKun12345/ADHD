@@ -120,7 +120,10 @@ Page({
     }
 
     context.setStrokeStyle('#d6e1e9')
-    for (const point of geometry.gridPolygons.at(-1)) {
+    const outerPolygon = geometry.gridPolygons[
+      geometry.gridPolygons.length - 1
+    ]
+    for (const point of outerPolygon) {
       context.beginPath()
       context.moveTo(geometry.center.x, geometry.center.y)
       context.lineTo(point.x, point.y)

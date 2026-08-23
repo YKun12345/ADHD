@@ -109,7 +109,9 @@ Page({
       ...summary.completedDays
     ])).filter((day) => Number.isInteger(day) && day >= 1 && day <= 14).sort((a, b) => a - b)
     wx.setStorageSync('patient_dashboard_cache', {
-      currentDay: completedDays.length ? Math.min(14, completedDays.at(-1) + 1) : 1,
+      currentDay: completedDays.length
+        ? Math.min(14, completedDays[completedDays.length - 1] + 1)
+        : 1,
       completedDays
     })
   },

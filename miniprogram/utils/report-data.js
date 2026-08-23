@@ -123,7 +123,7 @@ function normalizeScaleResult(value, source = 'local') {
   if (
     !schema ||
     totalScore === null ||
-    !Object.hasOwn(RISK_LABELS, riskLevel) ||
+    !Object.prototype.hasOwnProperty.call(RISK_LABELS, riskLevel) ||
     !summaryIsString ||
     !recommendationsAreValid
   ) {
@@ -282,7 +282,7 @@ function normalizeLocalTracking(logs) {
     completedCount: model.completedCount,
     totalDays: 14,
     currentDay: completedDays.length
-      ? Math.min(14, completedDays.at(-1) + 1)
+      ? Math.min(14, completedDays[completedDays.length - 1] + 1)
       : 1,
     averageMood: model.series.mood.average,
     averageAttention: model.series.attention.average,

@@ -93,7 +93,9 @@ function summarizeTrackingLogs(logs) {
       .filter((day) => Number.isInteger(day) && day >= 1 && day <= TOTAL_DAYS)
   )).sort((left, right) => left - right)
   const completedCount = completedDays.length
-  const latestDay = completedDays.length ? completedDays.at(-1) : 0
+  const latestDay = completedDays.length
+    ? completedDays[completedDays.length - 1]
+    : 0
 
   return {
     currentDay: latestDay ? Math.min(TOTAL_DAYS, latestDay + 1) : 1,
