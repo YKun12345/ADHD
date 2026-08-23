@@ -86,6 +86,21 @@ assert.equal(isPatientSessionLeaseCurrent(currentLease, () => {
   throw new Error('storage unavailable')
 }), false)
 
+const unreadableLease = capturePatientSessionLease(() => {
+  throw new Error('storage unavailable')
+})
+assert.equal(isPatientSessionLeaseCurrent(unreadableLease, () => {
+  throw new Error('storage unavailable')
+}), false)
+assert.equal(isPatientSessionLeaseCurrent(
+  capturePatientSessionLease(readFrom({ access_token: '   ' })),
+  readFrom({ access_token: '   ' })
+), false)
+assert.equal(isPatientSessionLeaseCurrent(
+  capturePatientSessionLease(readFrom({})),
+  readFrom({})
+), false)
+
 assert.equal(hasValidPatientSession(readFrom({
   access_token: '  patient-token  ',
   current_user: {

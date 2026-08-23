@@ -108,10 +108,19 @@ function isPatientSessionLeaseCurrent(
   readStorage = defaultReadStorage
 ) {
   if (!lease || typeof lease !== 'object') return false
+  if (
+    typeof lease.token !== 'string' ||
+    lease.token.trim().length === 0
+  ) {
+    return false
+  }
   if (lease.revision !== getPatientDataRevision()) return false
 
   const read = storageReader(readStorage)
-  return safeRead(read, 'access_token') === lease.token
+  const currentToken = safeRead(read, 'access_token')
+  return typeof currentToken === 'string' &&
+    currentToken.trim().length > 0 &&
+    currentToken === lease.token
 }
 
 function safeRemove(removeStorage, key) {
