@@ -33,6 +33,7 @@ function reset(patientType = 'adult') {
   calls.navigateTo = []; calls.navigateBack = []; calls.toasts = []
   calls.clipboard = []; calls.writes = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '科普测试患者',
       patient_profile: { patient_type: patientType }

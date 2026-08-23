@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   COLORS,
@@ -18,7 +19,7 @@ function getColor(key) {
   return COLORS.find((color) => color.key === key) || COLORS[0]
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     phase: 'intro',

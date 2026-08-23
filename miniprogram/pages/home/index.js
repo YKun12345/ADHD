@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   createLocalDashboard,
@@ -6,7 +7,7 @@ const {
   buildQuickEntries
 } = require('../../utils/home-dashboard')
 
-Page({
+registerPatientPage({
   data: {
     userName: '患者',
     currentDay: 1,

@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   SCALE_LATEST_RESULT_KEY,
@@ -18,7 +19,7 @@ const STEP_ROUTES = Object.freeze({
 const initialReport = buildLocalReport()
 const initialPathway = buildCarePathway(initialReport, false)
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     ...initialPathway,

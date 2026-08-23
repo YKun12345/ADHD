@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   TRACKING_LOGS_KEY,
@@ -38,7 +39,7 @@ function formFromLog(log, fallbackDay) {
   }
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     moods: MOODS,

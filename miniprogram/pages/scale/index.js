@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const asrsScale = require('../../utils/asrs-scale')
 const snapScale = require('../../utils/snap-scale')
@@ -45,7 +46,7 @@ function isCompleteResult(result) {
   )
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     patientSupported: false,

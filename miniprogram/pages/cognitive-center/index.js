@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const {
   LATEST_RESULTS_KEY,
   buildCognitiveSummary
@@ -5,7 +6,7 @@ const {
 
 const initialSummary = buildCognitiveSummary({})
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     ...initialSummary

@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { getEducationArticle } = require('../../utils/care-education')
 
 function currentPatientType() {
@@ -9,7 +10,7 @@ function currentPatientType() {
     : ''
 }
 
-Page({
+registerPatientPage({
   data: {
     validArticle: false,
     article: null

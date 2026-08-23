@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 let pageDefinition
-let storage = { tracking_local_logs: [{ day_index: 1, mood_tag: '4', attention_rating: 3, focus_minutes: 60 }] }
+let storage = { access_token: 'test-token', current_user: {}, tracking_local_logs: [{ day_index: 1, mood_tag: '4', attention_rating: 3, focus_minutes: 60 }] }
 const drawCalls = []
 const context = new Proxy({}, { get(_, name) { return (...args) => { drawCalls.push([name, ...args]) } } })
 global.wx = {

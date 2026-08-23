@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   MAX_MESSAGE_LENGTH,
@@ -23,7 +24,7 @@ function patientTypeFromUser(user) {
     : ''
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     patientType: '',

@@ -27,7 +27,7 @@ function createPage() {
 }
 function reset() {
   calls.requests = []; calls.writes = []; calls.toasts = []; calls.modals = []; calls.back = []; calls.navigateTo = []
-  storage = { current_user: { full_name: '追踪患者' }, patient_dashboard_cache: { currentDay: 3, completedDays: [1, 2] } }
+  storage = { access_token: 'test-token', current_user: { full_name: '追踪患者' }, patient_dashboard_cache: { currentDay: 3, completedDays: [1, 2] } }
   requestImplementation = async () => ({ id: 1 })
 }
 

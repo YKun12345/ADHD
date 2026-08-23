@@ -83,6 +83,7 @@ function reset(patientType = 'adult', draft) {
   calls.toasts = []
   calls.navigateBack = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '量表测试患者',
       patient_profile: {

@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const {
   EDUCATION_CATEGORIES,
   listEducationArticles,
@@ -16,7 +17,7 @@ function userProfile() {
   }
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     patientType: '',

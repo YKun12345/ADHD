@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { TRACKING_LOGS_KEY } = require('../../utils/tracking-data')
 const { buildTrackingTrendModel, createChartPoints } = require('../../utils/tracking-trend')
 
@@ -7,7 +8,7 @@ const METRIC_TABS = [
   { key: 'focus', label: '专注时长', color: '#3976b8' }
 ]
 
-Page({
+registerPatientPage({
   data: {
     metricTabs: METRIC_TABS,
     activeMetric: 'mood',

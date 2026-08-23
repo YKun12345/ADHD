@@ -77,6 +77,7 @@ function reset(patientType = 'adult') {
   calls.navigateBack = []
   calls.storageWrites = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: 'AI 测试患者',
       patient_profile: {

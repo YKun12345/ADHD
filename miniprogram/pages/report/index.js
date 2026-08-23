@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   SCALE_LATEST_RESULT_KEY,
@@ -33,7 +34,7 @@ function drawPolygon(context, points, closePath = true) {
   if (closePath) context.closePath()
 }
 
-Page({
+registerPatientPage({
   data: {
     ...initialReport,
     loading: false

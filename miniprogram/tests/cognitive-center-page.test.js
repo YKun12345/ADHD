@@ -56,6 +56,7 @@ function reset() {
   calls.navigateTo = []
   calls.navigateBack = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '认知中心患者'
     }

@@ -66,6 +66,7 @@ function reset(overrides = {}) {
   calls.toasts = []
   calls.navigateTo = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '首页测试患者'
     },

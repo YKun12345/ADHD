@@ -43,6 +43,7 @@ function scaleResult() {
 function reset() {
   calls.requests = []; calls.navigateTo = []; calls.navigateBack = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '路径测试患者',
       patient_profile: { patient_type: 'adult' }

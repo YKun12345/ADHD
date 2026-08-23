@@ -100,6 +100,7 @@ function reset() {
   calls.storageRemovals = []
   calls.navigateBack = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '认知测试患者'
     }

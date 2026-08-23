@@ -1,3 +1,4 @@
+const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
 const {
   TRIAL_SEQUENCE,
@@ -33,7 +34,7 @@ function feedbackFor(record) {
   return messages[record.errorType] || '请集中注意力'
 }
 
-Page({
+registerPatientPage({
   data: {
     patientName: '患者',
     phase: 'intro',

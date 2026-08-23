@@ -122,6 +122,7 @@ function reset(withData = true) {
   calls.navigateBack = []
   calls.canvas = []
   storage = {
+    access_token: 'test-token',
     current_user: {
       full_name: '报告测试患者',
       patient_profile: {
