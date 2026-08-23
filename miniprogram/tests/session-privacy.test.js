@@ -165,6 +165,46 @@ assert.deepEqual(fullStorage, {
   api_base_url: 'http://192.168.1.8:8000/api/v1'
 })
 
+const defaultEndStorage = {
+  api_base_url: 'https://api.example.com/api/v1',
+  access_token: 'patient-token',
+  current_user: { id: 70 },
+  ...Object.fromEntries(PATIENT_DATA_KEYS.map((key) => [key, { saved: true }]))
+}
+const defaultEndRemovedKeys = []
+const defaultEndApp = {
+  globalData: {
+    isLoggedIn: true,
+    userInfo: defaultEndStorage.current_user
+  }
+}
+const previousDefaultEndWx = global.wx
+const previousDefaultEndGetApp = global.getApp
+global.wx = {
+  removeStorageSync(key) {
+    defaultEndRemovedKeys.push(key)
+    delete defaultEndStorage[key]
+  }
+}
+global.getApp = () => defaultEndApp
+try {
+  endPatientSession()
+} finally {
+  if (previousDefaultEndWx === undefined) delete global.wx
+  else global.wx = previousDefaultEndWx
+  if (previousDefaultEndGetApp === undefined) delete global.getApp
+  else global.getApp = previousDefaultEndGetApp
+}
+assert.deepEqual(
+  defaultEndRemovedKeys,
+  [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+)
+assert.deepEqual(defaultEndStorage, {
+  api_base_url: 'https://api.example.com/api/v1'
+})
+assert.equal(defaultEndApp.globalData.isLoggedIn, false)
+assert.equal(defaultEndApp.globalData.userInfo, null)
+
 const sessionOnlyStorage = {
   api_base_url: 'https://api.example.com/api/v1',
   access_token: 'patient-token',

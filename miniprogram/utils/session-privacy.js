@@ -38,6 +38,9 @@ function defaultSetLoggedIn(value) {
     const app = getApp()
     if (app && app.globalData && typeof app.globalData === 'object') {
       app.globalData.isLoggedIn = value
+      if (value === false) {
+        app.globalData.userInfo = null
+      }
     }
   } catch (error) {
     // The app instance can be unavailable while the runtime is starting.

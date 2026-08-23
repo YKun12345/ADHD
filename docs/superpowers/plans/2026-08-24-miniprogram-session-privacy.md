@@ -370,15 +370,16 @@ git commit -m "feat(miniprogram): build account privacy view"
 - Modify: `miniprogram/utils/session-privacy.js`
 - Modify: `miniprogram/tests/session-privacy.test.js`
 - Modify: `miniprogram/tests/runtime-compatibility.test.js`
+- Modify: `miniprogram/tests/privacy-settings-page.test.js`
 - Create: `miniprogram/tests/app-session.test.js`
 - Modify: `项目任务与进度.md`
 - Modify: `docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md`
 
-- [ ] **Step 1: 写 401 与 App 会话失败测试**
+- [x] **Step 1: 写 401 与 App 会话失败测试**
 
-扩展请求测试：带 token 的业务请求收到 401 时，应删除两个会话键和九个患者键、保留 `api_base_url`、清空内存用户、返回登录并继续抛出带 `statusCode:401` 的错误；`skipAuth` 请求不得触发退出清理。新增 App 测试，要求 `onLaunch()` 只有在 token 与患者资料同时有效时才把 `globalData.isLoggedIn` 设为 `true` 并恢复 `globalData.userInfo`；残缺会话必须清除患者数据和会话、保留服务器地址并把内存用户置空。扩展会话模块测试，要求默认结束会话同时清空 `globalData.userInfo`。
+扩展请求测试：带 token 的业务请求收到 401 时，应删除两个会话键和九个患者键、保留 `api_base_url`、清空内存用户、返回登录并继续抛出带 `statusCode:401` 的错误；`skipAuth` 请求不得触发退出清理。新增 App 测试，要求 `onLaunch()` 只有在 token 与患者资料同时有效时才把 `globalData.isLoggedIn` 设为 `true` 并恢复 `globalData.userInfo`；残缺会话必须清除患者数据和会话、保留服务器地址并把内存用户置空。扩展会话模块测试，要求默认结束会话同时清空 `globalData.userInfo`；同步把账号与隐私页退出后的旧断言升级为 `userInfo === null`，这是安全契约升级而非放宽测试。
 
-- [ ] **Step 2: 运行测试确认旧行为失败**
+- [x] **Step 2: 运行测试确认旧行为失败**
 
 Run:
 
@@ -389,11 +390,11 @@ node miniprogram/tests/app-session.test.js
 
 Expected: 请求测试显示患者键或内存用户未清除；App 测试显示只检查 token、未清理残缺会话或未恢复有效用户。
 
-- [ ] **Step 3: 复用统一会话逻辑**
+- [x] **Step 3: 复用统一会话逻辑**
 
 `request.js` 导入 `endPatientSession`，在 `response.statusCode === 401 && token && !options.skipAuth` 时调用它，再 `wx.reLaunch`。`session-privacy.js` 的默认全局状态更新在退出时同时清空 `userInfo`。`app.js` 导入 `hasValidPatientSession` 与 `endPatientSession`：有效会话恢复登录状态和内存用户；无效会话使用统一结束逻辑清患者数据与会话但不额外跳转，不复制判断规则。
 
-- [ ] **Step 4: 运行目标测试和完整自动验证**
+- [x] **Step 4: 运行目标测试和完整自动验证**
 
 依次执行：
 
@@ -423,18 +424,18 @@ git diff --check
 
 Expected: 全部测试、JS、JSON 和 Git 空白检查退出码为 0。
 
-- [ ] **Step 5: 执行路由、事件、边界和用户文件保护检查**
+- [x] **Step 5: 执行路由、事件、边界和用户文件保护检查**
 
 确认全部 app 路由文件齐全、所有 WXML `bind*` 方法存在、生产代码未引入 `.at(`、`Object.hasOwn(` 或 `Promise.prototype.finally`、变更中没有 `backend/` 或医生 Web 文件，并确认主工作区 `miniprogram/utils/register-validation.js` SHA-256 仍为开发开始前记录值。
 
-- [ ] **Step 6: 更新进度和工作日志**
+- [x] **Step 6: 更新进度和工作日志**
 
 在 `项目任务与进度.md` 新增“会话与隐私安全收尾”记录，写明测试数量、清理白名单、服务器地址保留和真机确认仍待 A；不得把未执行的真机点击记为完成。
 
 - [ ] **Step 7: 提交并完成分支集成**
 
 ```powershell
-git add miniprogram/utils/request.js miniprogram/app.js miniprogram/utils/session-privacy.js miniprogram/tests/register-error.test.js miniprogram/tests/app-session.test.js miniprogram/tests/session-privacy.test.js miniprogram/tests/runtime-compatibility.test.js 项目任务与进度.md docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md
+git add miniprogram/utils/request.js miniprogram/app.js miniprogram/utils/session-privacy.js miniprogram/tests/register-error.test.js miniprogram/tests/app-session.test.js miniprogram/tests/session-privacy.test.js miniprogram/tests/runtime-compatibility.test.js miniprogram/tests/privacy-settings-page.test.js 项目任务与进度.md docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md
 git commit -m "feat(miniprogram): finish session privacy safeguards"
 ```
 

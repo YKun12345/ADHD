@@ -3,6 +3,7 @@ const {
   DEFAULT_API_BASE_URL,
   resolveApiBaseUrl
 } = require('./api-config')
+const { endPatientSession } = require('./session-privacy')
 
 const BASE_URL = DEFAULT_API_BASE_URL
 
@@ -54,10 +55,8 @@ function request(options) {
             ? response.data.detail
             : `请求失败（${response.statusCode}）`
 
-        if (response.statusCode === 401 && token) {
-          wx.removeStorageSync('access_token')
-          wx.removeStorageSync('current_user')
-
+        if (response.statusCode === 401 && token && !options.skipAuth) {
+          endPatientSession()
           wx.reLaunch({
             url: '/pages/login/index'
           })

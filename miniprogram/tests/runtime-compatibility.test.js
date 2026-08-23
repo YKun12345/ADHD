@@ -5,7 +5,8 @@ const path = require('node:path')
 const miniprogramRoot = path.join(__dirname, '..')
 const forbiddenPatterns = [
   { label: '.at(', pattern: /\.at\s*\(/ },
-  { label: 'Object.hasOwn(', pattern: /Object\.hasOwn\s*\(/ }
+  { label: 'Object.hasOwn(', pattern: /Object\.hasOwn\s*\(/ },
+  { label: '.finally(', pattern: /\.finally\s*\(/ }
 ]
 
 function collectJavaScriptFiles(directory) {

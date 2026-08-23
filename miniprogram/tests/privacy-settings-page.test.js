@@ -298,7 +298,7 @@ async function run() {
   assert.equal(Object.prototype.hasOwnProperty.call(storage, 'current_user'), false)
   assert.equal(storage.api_base_url, 'https://api.example.com/api/v1')
   assert.equal(app.globalData.isLoggedIn, false)
-  assert.equal(app.globalData.userInfo.id, 7)
+  assert.equal(app.globalData.userInfo, null)
   assert.equal(calls.reLaunches.length, 1)
   assert.equal(calls.reLaunches[0].url, '/pages/login/index')
   assert.equal(typeof calls.reLaunches[0].fail, 'function')
