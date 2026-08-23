@@ -17,6 +17,7 @@ require.cache[requestModulePath] = {
 let pageDefinition
 let storage = {}
 const reLaunchCalls = []
+const navigateToCalls = []
 
 global.Page = (definition) => {
   pageDefinition = definition
@@ -28,6 +29,9 @@ global.wx = {
   },
   reLaunch(options) {
     reLaunchCalls.push(options)
+  },
+  navigateTo(options) {
+    navigateToCalls.push(options)
   }
 }
 
@@ -74,5 +78,15 @@ assert.equal(
   0,
   '缺少 token 时应保留在登录页'
 )
+
+assert.equal(
+  typeof pageDefinition.openServerSettings,
+  'function',
+  '登录页缺少服务器设置入口控制逻辑'
+)
+pageDefinition.openServerSettings()
+assert.deepEqual(navigateToCalls, [
+  { url: '/pages/server-settings/index' }
+])
 
 console.log('登录页面会话恢复测试全部通过')

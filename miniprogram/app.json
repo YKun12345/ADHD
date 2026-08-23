@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/login/index",
+    "pages/server-settings/index",
     "pages/home/index",
     "pages/register/index",
     "pages/scale/index",

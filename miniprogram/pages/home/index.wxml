@@ -86,4 +86,8 @@
   <text class="medical-tip">
     本平台仅用于辅助筛查，不替代专业医生诊断
   </text>
+
+  <view class="server-settings-entry" bindtap="openServerSettings">
+    服务器设置
+  </view>
 </view>

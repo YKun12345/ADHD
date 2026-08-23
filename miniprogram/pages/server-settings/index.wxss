@@ -1,0 +1,159 @@
+page {
+  min-height: 100%;
+  background: #f4f7fa;
+}
+
+.settings-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48rpx 32rpx 64rpx;
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-title {
+  color: #17324d;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.settings-subtitle {
+  margin-top: 16rpx;
+  color: #64748b;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.environment-card,
+.settings-card,
+.notice-card {
+  margin-top: 30rpx;
+  padding: 32rpx;
+  border-radius: 26rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 36rpx rgba(23, 50, 77, 0.08);
+}
+
+.environment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.environment-title,
+.environment-address,
+.field-label,
+.field-help,
+.notice-title,
+.notice-item,
+.status-message {
+  display: block;
+}
+
+.environment-title,
+.field-label,
+.notice-title {
+  color: #17324d;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.environment-address {
+  max-width: 450rpx;
+  margin-top: 10rpx;
+  overflow-wrap: anywhere;
+  color: #718096;
+  font-size: 21rpx;
+}
+
+.environment-badge {
+  flex-shrink: 0;
+  margin-left: 20rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: #245e59;
+  background: #e7f4f1;
+  font-size: 21rpx;
+}
+
+.address-input {
+  height: 92rpx;
+  box-sizing: border-box;
+  margin-top: 18rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #dce5ec;
+  border-radius: 18rpx;
+  color: #17324d;
+  background: #f7f9fb;
+  font-size: 27rpx;
+}
+
+.input-placeholder {
+  color: #9aa8b5;
+}
+
+.field-help,
+.notice-item {
+  margin-top: 16rpx;
+  color: #718096;
+  font-size: 22rpx;
+  line-height: 1.7;
+}
+
+.test-button,
+.reset-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  margin-top: 30rpx;
+  border-radius: 18rpx;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.test-button {
+  color: #ffffff;
+  background: #17324d;
+}
+
+.reset-button {
+  color: #3f7c78;
+  background: #edf7f5;
+}
+
+.test-button::after,
+.reset-button::after {
+  border: none;
+}
+
+.status-message {
+  margin-top: 20rpx;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.status-message--success {
+  color: #2f6f68;
+}
+
+.status-message--error {
+  color: #b54747;
+}
+
+.notice-title {
+  margin-bottom: 6rpx;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68rpx;
+  margin-top: 24rpx;
+  color: #3f7c78;
+  font-size: 24rpx;
+}

@@ -38,6 +38,10 @@
     <text class="login-tip" bindtap="goToRegister">
   首次使用请先注册患者账号
 </text>
+
+    <view class="server-entry" bindtap="openServerSettings">
+      服务器连接设置
+    </view>
   </view>
 
   <text class="disclaimer">

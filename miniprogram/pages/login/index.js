@@ -36,6 +36,12 @@ Page({
     })
   },
 
+  openServerSettings() {
+    wx.navigateTo({
+      url: '/pages/server-settings/index'
+    })
+  },
+
   async handleLogin() {
     const identifier = this.data.identifier.trim()
     const password = this.data.password

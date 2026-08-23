@@ -88,6 +88,16 @@ page {
   font-size: 25rpx;
 }
 
+.server-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  margin-top: 18rpx;
+  color: #3f7c78;
+  font-size: 24rpx;
+}
+
 .disclaimer {
   margin-top: auto;
   padding-top: 50rpx;

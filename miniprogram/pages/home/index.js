@@ -110,5 +110,11 @@ Page({
       this.data.quickEntries,
       event.currentTarget.dataset.id
     )
+  },
+
+  openServerSettings() {
+    wx.navigateTo({
+      url: '/pages/server-settings/index'
+    })
   }
 })

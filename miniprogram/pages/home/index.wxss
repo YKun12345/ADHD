@@ -249,3 +249,13 @@ page {
   color: #8795a3;
   font-size: 22rpx;
 }
+
+.server-settings-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  margin-top: 14rpx;
+  color: #3f7c78;
+  font-size: 23rpx;
+}
