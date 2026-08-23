@@ -56,10 +56,14 @@ function request(options) {
             : `请求失败（${response.statusCode}）`
 
         if (response.statusCode === 401 && token && !options.skipAuth) {
-          endPatientSession()
-          wx.reLaunch({
-            url: '/pages/login/index'
-          })
+          const currentToken = wx.getStorageSync('access_token')
+
+          if (currentToken === token) {
+            endPatientSession()
+            wx.reLaunch({
+              url: '/pages/login/index'
+            })
+          }
         }
 
         const error = new Error(message)

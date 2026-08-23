@@ -26,14 +26,50 @@ function recordAssertion(failures, label, assertion) {
   }
 }
 
-function createRequestBoundary(initialStorage, response, initialGlobalData) {
+function createRequestBoundary(
+  initialStorage,
+  response,
+  initialGlobalData,
+  settings = {}
+) {
   const storage = Object.assign({}, initialStorage)
   const removedKeys = []
   const reLaunches = []
-  const app = {
-    globalData: Object.assign({}, initialGlobalData)
+  const requestOptions = []
+  const globalWrites = {
+    isLoggedIn: [],
+    userInfo: []
   }
-  let requestOptions
+  let isLoggedIn = initialGlobalData.isLoggedIn
+  let userInfo = initialGlobalData.userInfo
+  const globalData = {}
+
+  Object.defineProperties(globalData, {
+    isLoggedIn: {
+      enumerable: true,
+      get() {
+        return isLoggedIn
+      },
+      set(value) {
+        globalWrites.isLoggedIn.push(value)
+        isLoggedIn = value
+      }
+    },
+    userInfo: {
+      enumerable: true,
+      get() {
+        return userInfo
+      },
+      set(value) {
+        globalWrites.userInfo.push(value)
+        userInfo = value
+      }
+    }
+  })
+
+  const app = {
+    globalData
+  }
 
   global.getApp = () => app
   global.wx = {
@@ -48,27 +84,33 @@ function createRequestBoundary(initialStorage, response, initialGlobalData) {
       reLaunches.push(options)
     },
     request(options) {
-      requestOptions = options
-      options.success(response)
+      requestOptions.push(options)
+      if (!settings.deferResponse) {
+        options.success(response)
+      }
     }
   }
 
   return {
     app,
+    globalWrites,
     storage,
     removedKeys,
     reLaunches,
-    getRequestOptions() {
-      return requestOptions
+    getRequestOptions(index = 0) {
+      return requestOptions[index]
+    },
+    respond(index = 0, nextResponse = response) {
+      requestOptions[index].success(nextResponse)
     }
   }
 }
 
-async function captureRequestRejection(options) {
+async function capturePromiseRejection(promise) {
   let rejection
 
   await assert.rejects(
-    request(options),
+    promise,
     (error) => {
       rejection = error
       return true
@@ -76,6 +118,10 @@ async function captureRequestRejection(options) {
   )
 
   return rejection
+}
+
+function captureRequestRejection(options) {
+  return capturePromiseRejection(request(options))
 }
 
 async function run() {
@@ -200,6 +246,140 @@ async function run() {
     recordAssertion(failures, '带 token 的 401 保留后端错误详情', () => {
       assert.equal(authenticatedError.message, '登录状态已过期，请重新登录')
       assert.equal(authenticatedError.statusCode, 401)
+    })
+
+    const staleStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'old-token',
+      current_user: { id: 'old-user' },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { owner: 'old-user' }])
+      )
+    }
+    const stale = createRequestBoundary(
+      staleStorage,
+      {
+        statusCode: 401,
+        data: { detail: '旧会话已经失效' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: staleStorage.current_user
+      },
+      { deferResponse: true }
+    )
+    const staleRejection = capturePromiseRejection(request({
+      url: '/patient/dashboard_status'
+    }))
+    const newUser = { id: 'new-user' }
+    const newPatientData = Object.fromEntries(
+      PATIENT_DATA_KEYS.map((key) => [key, { owner: 'new-user' }])
+    )
+    Object.assign(stale.storage, newPatientData, {
+      access_token: 'new-token',
+      current_user: newUser
+    })
+    stale.app.globalData.isLoggedIn = true
+    stale.app.globalData.userInfo = newUser
+    stale.globalWrites.isLoggedIn.length = 0
+    stale.globalWrites.userInfo.length = 0
+    const newSessionSnapshot = Object.assign({}, stale.storage)
+
+    stale.respond()
+    const staleError = await staleRejection
+
+    recordAssertion(failures, '旧 token 的延迟 401 不清理新会话', () => {
+      assert.deepEqual(stale.removedKeys, [])
+      assert.deepEqual(stale.storage, newSessionSnapshot)
+    })
+    recordAssertion(failures, '旧 token 的延迟 401 不修改新账号全局状态', () => {
+      assert.deepEqual(stale.globalWrites.isLoggedIn, [])
+      assert.deepEqual(stale.globalWrites.userInfo, [])
+      assert.equal(stale.app.globalData.isLoggedIn, true)
+      assert.strictEqual(stale.app.globalData.userInfo, newUser)
+    })
+    recordAssertion(failures, '旧 token 的延迟 401 不跳转', () => {
+      assert.deepEqual(stale.reLaunches, [])
+    })
+    recordAssertion(failures, '旧 token 请求使用发送时认证头', () => {
+      assert.equal(
+        stale.getRequestOptions().header.Authorization,
+        'Bearer old-token'
+      )
+    })
+    recordAssertion(failures, '旧 token 的延迟 401 仍拒绝原错误', () => {
+      assert.equal(staleError.message, '旧会话已经失效')
+      assert.equal(staleError.statusCode, 401)
+    })
+
+    const concurrentStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'shared-token',
+      current_user: { id: 72 },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { saved: true }])
+      )
+    }
+    const concurrent = createRequestBoundary(
+      concurrentStorage,
+      undefined,
+      {
+        isLoggedIn: true,
+        userInfo: concurrentStorage.current_user
+      },
+      { deferResponse: true }
+    )
+    const firstConcurrentRejection = capturePromiseRejection(request({
+      url: '/patient/dashboard_status'
+    }))
+    const secondConcurrentRejection = capturePromiseRejection(request({
+      url: '/patient/dashboard_status'
+    }))
+
+    concurrent.respond(0, {
+      statusCode: 401,
+      data: { detail: '第一个并发请求失效' }
+    })
+    const firstConcurrentError = await firstConcurrentRejection
+    concurrent.respond(1, {
+      statusCode: 401,
+      data: { detail: '第二个并发请求失效' }
+    })
+    const secondConcurrentError = await secondConcurrentRejection
+
+    recordAssertion(failures, '同 token 并发 401 只清理一次', () => {
+      assert.deepEqual(
+        concurrent.removedKeys,
+        [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+      )
+      assert.deepEqual(concurrent.globalWrites.isLoggedIn, [false])
+      assert.deepEqual(concurrent.globalWrites.userInfo, [null])
+    })
+    recordAssertion(failures, '同 token 并发 401 只跳转一次', () => {
+      assert.deepEqual(concurrent.reLaunches, [
+        { url: '/pages/login/index' }
+      ])
+    })
+    recordAssertion(failures, '同 token 并发请求使用相同认证头', () => {
+      assert.equal(
+        concurrent.getRequestOptions(0).header.Authorization,
+        'Bearer shared-token'
+      )
+      assert.equal(
+        concurrent.getRequestOptions(1).header.Authorization,
+        'Bearer shared-token'
+      )
+    })
+    recordAssertion(failures, '同 token 并发 401 都拒绝原错误', () => {
+      assert.equal(firstConcurrentError.message, '第一个并发请求失效')
+      assert.equal(firstConcurrentError.statusCode, 401)
+      assert.equal(secondConcurrentError.message, '第二个并发请求失效')
+      assert.equal(secondConcurrentError.statusCode, 401)
+    })
+    recordAssertion(failures, '同 token 并发清理保留服务器地址', () => {
+      assert.deepEqual(concurrent.storage, {
+        api_base_url: 'https://api.example.com/api/v1'
+      })
     })
 
     const forbiddenStorage = {
