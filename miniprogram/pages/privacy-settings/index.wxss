@@ -1,0 +1,161 @@
+page {
+  min-height: 100%;
+  background: #f4f7fa;
+}
+
+.privacy-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48rpx 32rpx 64rpx;
+}
+
+.privacy-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.privacy-title {
+  color: #17324d;
+  font-size: 42rpx;
+  font-weight: 700;
+}
+
+.privacy-subtitle {
+  margin-top: 16rpx;
+  color: #64748b;
+  font-size: 25rpx;
+  line-height: 1.6;
+}
+
+.summary-card,
+.privacy-card,
+.danger-card {
+  margin-top: 30rpx;
+  padding: 32rpx;
+  border-radius: 26rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 36rpx rgba(23, 50, 77, 0.08);
+}
+
+.card-title,
+.card-description,
+.summary-value,
+.summary-label,
+.summary-total,
+.medical-disclaimer {
+  display: block;
+}
+
+.card-title {
+  color: #17324d;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.summary-item {
+  width: 48%;
+  box-sizing: border-box;
+  margin-bottom: 18rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #f7f9fb;
+}
+
+.summary-value {
+  color: #17324d;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.summary-label {
+  margin-top: 8rpx;
+  color: #64748b;
+  font-size: 22rpx;
+}
+
+.summary-total {
+  color: #64748b;
+  font-size: 21rpx;
+  text-align: right;
+}
+
+.pending-warning {
+  margin-top: 24rpx;
+  padding: 24rpx 28rpx;
+  border-radius: 20rpx;
+  color: #7a5b2b;
+  background: #fff8e9;
+  font-size: 23rpx;
+  line-height: 1.6;
+}
+
+.card-description {
+  margin-top: 16rpx;
+  color: #64748b;
+  font-size: 23rpx;
+  line-height: 1.7;
+}
+
+.clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  margin-top: 28rpx;
+  border: 2rpx solid #3f7c78;
+  border-radius: 18rpx;
+  color: #3f7c78;
+  background: #edf7f5;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  margin-top: 18rpx;
+  border: 2rpx solid #b54747;
+  border-radius: 18rpx;
+  color: #b54747;
+  background: #ffffff;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.clear-button::after,
+.logout-button::after {
+  border: none;
+}
+
+.clear-button:disabled,
+.logout-button:disabled {
+  opacity: 0.5;
+}
+
+.medical-disclaimer {
+  margin-top: 30rpx;
+  color: #64748b;
+  font-size: 22rpx;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  margin-top: 18rpx;
+  border-radius: 18rpx;
+  color: #3f7c78;
+  font-size: 24rpx;
+}

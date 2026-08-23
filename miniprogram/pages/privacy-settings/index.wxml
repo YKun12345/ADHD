@@ -1,0 +1,65 @@
+<view class="privacy-page">
+  <view class="privacy-header">
+    <text class="privacy-title">账号与隐私</text>
+    <text class="privacy-subtitle">
+      {{patientName}}，你可以在这里查看并管理本机保存的数据
+    </text>
+  </view>
+
+  <view class="summary-card">
+    <text class="card-title">本地数据摘要</text>
+    <view class="summary-grid">
+      <view class="summary-item">
+        <text class="summary-value">{{draftCount}}</text>
+        <text class="summary-label">草稿</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{resultCount}}</text>
+        <text class="summary-label">结果</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{trackingDayCount}}</text>
+        <text class="summary-label">追踪天数</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-value">{{pendingCount}}</text>
+        <text class="summary-label">待同步</text>
+      </view>
+    </view>
+    <text class="summary-total">本机共保存 {{totalLocalItems}} 项记录</text>
+  </view>
+
+  <view class="pending-warning" wx:if="{{pendingCount > 0}}">
+    当前有 {{pendingCount}} 项数据待同步，请在网络恢复后完成同步再退出账号
+  </view>
+
+  <view class="privacy-card">
+    <text class="card-title">隐私说明</text>
+    <text class="card-description">
+      清除本地数据不会删除服务器已保存数据。服务器端数据仍按平台规则保存和管理。
+    </text>
+  </view>
+
+  <view class="danger-card">
+    <text class="card-title">危险操作</text>
+    <text class="card-description">
+      清除和退出都会再次确认，请先留意尚未同步的数据
+    </text>
+    <button
+      class="clear-button"
+      disabled="{{acting}}"
+      bindtap="clearLocalData"
+    >清除本地数据</button>
+    <button
+      class="logout-button"
+      disabled="{{acting}}"
+      bindtap="logout"
+    >退出账号</button>
+  </view>
+
+  <text class="medical-disclaimer">
+    本平台仅用于辅助筛查，不替代专业医生诊断
+  </text>
+
+  <view class="back-link" bindtap="goBack">返回上一页</view>
+</view>

@@ -87,6 +87,10 @@
     本平台仅用于辅助筛查，不替代专业医生诊断
   </text>
 
+  <view class="privacy-settings-entry" bindtap="openPrivacySettings">
+    账号与隐私
+  </view>
+
   <view class="server-settings-entry" bindtap="openServerSettings">
     服务器设置
   </view>

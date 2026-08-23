@@ -250,6 +250,7 @@ page {
   font-size: 22rpx;
 }
 
+.privacy-settings-entry,
 .server-settings-entry {
   display: flex;
   align-items: center;

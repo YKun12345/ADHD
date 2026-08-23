@@ -38,13 +38,26 @@ for (const fragment of requiredWxml) {
   )
 }
 
+assert.match(
+  wxml,
+  /<view\s+class=["']privacy-settings-entry["']\s+bindtap=["']openPrivacySettings["']\s*>\s*账号与隐私\s*<\/view>/s,
+  '首页缺少账号与隐私入口'
+)
+assert.match(
+  wxml,
+  /<view\s+class=["']server-settings-entry["']\s+bindtap=["']openServerSettings["']\s*>\s*服务器设置\s*<\/view>/s,
+  '首页需要保留服务器设置入口及原事件'
+)
+
 const requiredSelectors = [
   '.dashboard-source',
   '.dashboard-message',
   '.task-status',
   '.entry-status',
   '.task-item--disabled',
-  '.quick-item--disabled'
+  '.quick-item--disabled',
+  '.privacy-settings-entry',
+  '.server-settings-entry'
 ]
 
 for (const selector of requiredSelectors) {
@@ -54,6 +67,12 @@ for (const selector of requiredSelectors) {
     `WXSS 缺少：${selector}`
   )
 }
+
+assert.match(
+  wxss,
+  /\.privacy-settings-entry\s*,\s*\.server-settings-entry\s*\{/,
+  '账号与隐私、服务器设置入口需要共用低强调样式'
+)
 
 const dashboardSourceRule = wxss.match(
   /\.dashboard-source\s*\{([^}]*)\}/
