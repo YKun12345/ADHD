@@ -85,6 +85,8 @@ function reset(patientType = 'adult', draft) {
   storage = {
     access_token: 'test-token',
     current_user: {
+      id: 1,
+      role: 'patient',
       full_name: '量表测试患者',
       patient_profile: {
         patient_type: patientType

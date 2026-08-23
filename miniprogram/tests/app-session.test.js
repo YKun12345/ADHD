@@ -19,13 +19,22 @@ function recordAssertion(failures, label, assertion) {
   }
 }
 
-function launchWith(initialStorage) {
+function launchWith(initialStorage, options = {}) {
   const storage = Object.assign({}, initialStorage)
   const removedKeys = []
   const reLaunches = []
+  const readCounts = {}
 
   global.wx = {
     getStorageSync(key) {
+      readCounts[key] = (readCounts[key] || 0) + 1
+      if (
+        options.throwOnRepeatedCurrentUserRead &&
+        key === 'current_user' &&
+        readCounts[key] > 1
+      ) {
+        throw new Error('current_user changed during launch')
+      }
       return storage[key]
     },
     removeStorageSync(key) {
@@ -49,6 +58,7 @@ function launchWith(initialStorage) {
   return {
     app: appDefinition,
     storage,
+    readCounts,
     removedKeys,
     reLaunches
   }
@@ -73,6 +83,7 @@ function run() {
 
     const currentUser = {
       id: 7,
+      role: 'patient',
       full_name: '会话恢复患者'
     }
     const validSession = launchWith({
@@ -80,11 +91,15 @@ function run() {
       access_token: '  patient-token  ',
       current_user: currentUser,
       patient_dashboard_cache: { saved: true }
+    }, {
+      throwOnRepeatedCurrentUserRead: true
     })
 
     recordAssertion(failures, '有效会话恢复登录状态', () => {
       assert.equal(validSession.app.globalData.isLoggedIn, true)
       assert.strictEqual(validSession.app.globalData.userInfo, currentUser)
+      assert.equal(validSession.readCounts.access_token, 1)
+      assert.equal(validSession.readCounts.current_user, 1)
     })
     recordAssertion(failures, '有效会话不清理本地数据', () => {
       assert.deepEqual(validSession.removedKeys, [])
@@ -126,6 +141,13 @@ function run() {
         storage: {
           access_token: 'patient-token',
           current_user: [{ id: 10 }]
+        }
+      },
+      {
+        name: 'empty-content user',
+        storage: {
+          access_token: 'patient-token',
+          current_user: { full_name: '   ' }
         }
       },
       {

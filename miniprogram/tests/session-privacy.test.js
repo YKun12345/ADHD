@@ -59,7 +59,23 @@ assert.equal(PATIENT_DATA_KEYS.includes('api_base_url'), false)
 
 assert.equal(hasValidPatientSession(readFrom({
   access_token: '  patient-token  ',
-  current_user: {}
+  current_user: {
+    id: 7,
+    email: 'adult@example.com',
+    full_name: 'Adult Patient',
+    role: 'patient',
+    patient_profile: { patient_type: 'adult' }
+  }
+})), true)
+assert.equal(hasValidPatientSession(readFrom({
+  access_token: 'child-token',
+  current_user: {
+    id: 8,
+    email: 'child@example.com',
+    full_name: 'Child Patient',
+    role: 'patient',
+    patient_profile: { patient_type: 'child' }
+  }
 })), true)
 
 for (const invalidStorage of [
@@ -69,6 +85,14 @@ for (const invalidStorage of [
   { access_token: 123, current_user: {} },
   { access_token: 'token' },
   { access_token: 'token', current_user: null },
+  { access_token: 'token', current_user: {} },
+  { access_token: 'token', current_user: { foo: 1 } },
+  { access_token: 'token', current_user: { nickname: '   ' } },
+  { access_token: 'token', current_user: { profile: { nickname: '' } } },
+  { access_token: 'token', current_user: { id: 7 } },
+  { access_token: 'token', current_user: { id: 0, role: 'patient' } },
+  { access_token: 'token', current_user: { id: 7, role: 'doctor' } },
+  { access_token: 'token', current_user: { id: 7, role: 'researcher' } },
   { access_token: 'token', current_user: [] },
   { access_token: 'token', current_user: 'patient' }
 ]) {
@@ -115,10 +139,10 @@ assert.deepEqual(summarizePatientData(readFrom({
   tracking_pending_logs: [{ id: 1 }, '', false]
 })), {
   draftCount: 0,
-  resultCount: 2,
+  resultCount: 0,
   trackingDayCount: 0,
-  pendingCount: 2,
-  totalLocalItems: 4
+  pendingCount: 0,
+  totalLocalItems: 0
 })
 
 assert.deepEqual(summarizePatientData(readFrom({
@@ -136,8 +160,9 @@ assert.deepEqual(summarizePatientData(() => {
 }), EMPTY_SUMMARY)
 
 const clearedKeys = []
-clearPatientData((key) => clearedKeys.push(key))
+const clearResult = clearPatientData((key) => clearedKeys.push(key))
 assert.deepEqual(clearedKeys, PATIENT_DATA_KEYS)
+assert.deepEqual(clearResult, { ok: true, failedKeys: [] })
 assert.equal(clearedKeys.includes('access_token'), false)
 assert.equal(clearedKeys.includes('current_user'), false)
 assert.equal(clearedKeys.includes('api_base_url'), false)
@@ -150,7 +175,7 @@ const fullStorage = {
 }
 const fullRemovedKeys = []
 const fullLoginStates = []
-endPatientSession({
+const fullEndResult = endPatientSession({
   removeStorage(key) {
     fullRemovedKeys.push(key)
     delete fullStorage[key]
@@ -160,9 +185,45 @@ endPatientSession({
   }
 })
 assert.deepEqual(fullRemovedKeys, [...PATIENT_DATA_KEYS, ...SESSION_KEYS])
+assert.deepEqual(fullEndResult, { ok: true, failedKeys: [] })
 assert.deepEqual(fullLoginStates, [false])
 assert.deepEqual(fullStorage, {
   api_base_url: 'http://192.168.1.8:8000/api/v1'
+})
+
+let endedHookCalls = 0
+const scrubbedPage = {
+  __patientSessionAllowed: true,
+  data: {
+    patientName: 'Sensitive Patient',
+    score: 19,
+    answers: [1, 2, 3],
+    latestResult: { score: 19 },
+    active: true
+  },
+  setData(changes) {
+    Object.assign(this.data, changes)
+  },
+  onPatientSessionEnded() {
+    endedHookCalls += 1
+  }
+}
+const scrubbedEndResult = endPatientSession({
+  removeStorage() {},
+  setLoggedIn() {},
+  getPages() {
+    return [scrubbedPage]
+  }
+})
+assert.deepEqual(scrubbedEndResult, { ok: true, failedKeys: [] })
+assert.equal(scrubbedPage.__patientSessionAllowed, false)
+assert.equal(endedHookCalls, 1)
+assert.deepEqual(scrubbedPage.data, {
+  patientName: '',
+  score: 0,
+  answers: [],
+  latestResult: null,
+  active: false
 })
 
 const defaultEndStorage = {
@@ -238,7 +299,7 @@ const validEnsureCalls = {
 assert.equal(ensurePatientSession({
   readStorage: readFrom({
     access_token: 'valid-token',
-    current_user: { id: 9 }
+    current_user: { id: 9, role: 'patient' }
   }),
   removeStorage(key) {
     validEnsureCalls.removed.push(key)
@@ -279,11 +340,15 @@ assert.equal(ensurePatientSession({
     invalidEnsureCalls.reLaunches.push(options)
   }
 }), false)
-assert.deepEqual(invalidEnsureCalls, {
-  removed: [...PATIENT_DATA_KEYS, ...SESSION_KEYS],
-  loginStates: [false],
-  reLaunches: [{ url: '/pages/login/index' }]
-})
+assert.deepEqual(
+  invalidEnsureCalls.removed,
+  [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
+)
+assert.deepEqual(invalidEnsureCalls.loginStates, [false])
+assert.equal(invalidEnsureCalls.reLaunches.length, 1)
+assert.equal(invalidEnsureCalls.reLaunches[0].url, '/pages/login/index')
+assert.equal(typeof invalidEnsureCalls.reLaunches[0].success, 'function')
+assert.equal(typeof invalidEnsureCalls.reLaunches[0].fail, 'function')
 assert.deepEqual(invalidEnsureStorage, {
   api_base_url: 'http://192.168.1.9:8000/api/v1'
 })
@@ -318,22 +383,23 @@ assert.deepEqual(
   [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
 )
 assert.deepEqual(invalidOptOutCalls.loginStates, [false])
-assert.deepEqual(invalidOptOutCalls.reLaunches, [
-  { url: '/pages/login/index' }
-])
+assert.equal(invalidOptOutCalls.reLaunches.length, 1)
+assert.equal(invalidOptOutCalls.reLaunches[0].url, '/pages/login/index')
+assert.equal(typeof invalidOptOutCalls.reLaunches[0].success, 'function')
+assert.equal(typeof invalidOptOutCalls.reLaunches[0].fail, 'function')
 assert.deepEqual(invalidOptOutStorage, {
   api_base_url: 'https://api.example.com/api/v1'
 })
 
 const resilientClearAttempts = []
 const resilientClearCall = captureCall(() => {
-  clearPatientData(throwingRemover(resilientClearAttempts))
+  return clearPatientData(throwingRemover(resilientClearAttempts))
 })
 
 const resilientEndAttempts = []
 const resilientEndLoginStates = []
 const resilientEndCall = captureCall(() => {
-  endPatientSession({
+  return endPatientSession({
     removeStorage: throwingRemover(resilientEndAttempts),
     setLoggedIn(value) {
       resilientEndLoginStates.push(value)
@@ -357,11 +423,19 @@ const resilientEnsureCall = captureCall(() => ensurePatientSession({
 
 assert.deepEqual(resilientClearAttempts, PATIENT_DATA_KEYS)
 assert.equal(resilientClearCall.error, undefined)
+assert.deepEqual(resilientClearCall.value, {
+  ok: false,
+  failedKeys: ['scale_draft_asrs']
+})
 assert.deepEqual(
   resilientEndAttempts,
   [...PATIENT_DATA_KEYS, ...SESSION_KEYS]
 )
 assert.equal(resilientEndCall.error, undefined)
+assert.deepEqual(resilientEndCall.value, {
+  ok: false,
+  failedKeys: ['scale_draft_asrs', 'access_token']
+})
 assert.deepEqual(resilientEndLoginStates, [false])
 assert.deepEqual(
   resilientEnsureAttempts,
@@ -370,9 +444,24 @@ assert.deepEqual(
 assert.equal(resilientEnsureCall.error, undefined)
 assert.equal(resilientEnsureCall.value, false)
 assert.deepEqual(resilientEnsureLoginStates, [false])
-assert.deepEqual(resilientEnsureReLaunches, [
-  { url: '/pages/login/index' }
-])
+assert.equal(resilientEnsureReLaunches.length, 1)
+assert.equal(resilientEnsureReLaunches[0].url, '/pages/login/index')
+assert.equal(typeof resilientEnsureReLaunches[0].success, 'function')
+assert.equal(typeof resilientEnsureReLaunches[0].fail, 'function')
+
+let synchronousReLaunchFailures = 0
+assert.equal(ensurePatientSession({
+  readStorage: readFrom({}),
+  removeStorage() {},
+  setLoggedIn() {},
+  reLaunch() {
+    throw new Error('reLaunch crashed')
+  },
+  onReLaunchFail() {
+    synchronousReLaunchFailures += 1
+  }
+}), false)
+assert.equal(synchronousReLaunchFailures, 1)
 
 const previousWx = global.wx
 const previousGetApp = global.getApp
@@ -383,7 +472,13 @@ try {
   assert.deepEqual(summarizePatientData(), EMPTY_SUMMARY)
   assert.doesNotThrow(() => clearPatientData())
   assert.doesNotThrow(() => endPatientSession())
-  assert.equal(ensurePatientSession(), false)
+  let unavailableReLaunchFailures = 0
+  assert.equal(ensurePatientSession({
+    onReLaunchFail() {
+      unavailableReLaunchFailures += 1
+    }
+  }), false)
+  assert.equal(unavailableReLaunchFailures, 1)
 } finally {
   if (previousWx === undefined) delete global.wx
   else global.wx = previousWx

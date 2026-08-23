@@ -1,4 +1,53 @@
 const { request } = require('../../utils/request')
+const {
+  hasValidPatientSession,
+  clearPatientData,
+  endPatientSession
+} = require('../../utils/session-privacy')
+
+function readStorageSafely(key) {
+  try {
+    return wx.getStorageSync(key)
+  } catch (error) {
+    return undefined
+  }
+}
+
+function isValidAuthResult(result) {
+  return Boolean(result) && hasValidPatientSession((key) => (
+    key === 'access_token' ? result.access_token : result.user
+  ))
+}
+
+function isSamePatient(currentUser, nextUser) {
+  return currentUser &&
+    currentUser.role === 'patient' &&
+    Number.isInteger(currentUser.id) &&
+    currentUser.id > 0 &&
+    currentUser.id === nextUser.id
+}
+
+function updateAppSession(user) {
+  try {
+    const app = getApp()
+    if (app && app.globalData) {
+      app.globalData.isLoggedIn = true
+      app.globalData.userInfo = user
+    }
+  } catch (error) {
+    // Storage remains the source of truth if the app instance is unavailable.
+  }
+}
+
+function storeSession(result) {
+  try {
+    wx.setStorageSync('current_user', result.user)
+    wx.setStorageSync('access_token', result.access_token)
+  } catch (error) {
+    endPatientSession({ includePatientData: false })
+    throw new Error('登录凭证保存失败，请重试')
+  }
+}
 
 Page({
   data: {
@@ -8,10 +57,7 @@ Page({
   },
 
   onShow() {
-    const token = wx.getStorageSync('access_token')
-    const user = wx.getStorageSync('current_user')
-
-    if (token && user) {
+    if (hasValidPatientSession((key) => wx.getStorageSync(key))) {
       wx.reLaunch({
         url: '/pages/home/index'
       })
@@ -86,6 +132,7 @@ Page({
       const result = await request({
         url: '/auth/login',
         method: 'POST',
+        skipAuth: true,
         data: {
           identifier,
           password,
@@ -93,12 +140,20 @@ Page({
         }
       })
 
-      if (!result.access_token) {
+      if (!isValidAuthResult(result)) {
         throw new Error('服务器未返回登录凭证')
       }
 
-      wx.setStorageSync('access_token', result.access_token)
-      wx.setStorageSync('current_user', result.user)
+      const currentUser = readStorageSafely('current_user')
+      if (!isSamePatient(currentUser, result.user)) {
+        const clearResult = clearPatientData()
+        if (!clearResult.ok) {
+          throw new Error('本地患者数据清理失败，请重试')
+        }
+      }
+
+      storeSession(result)
+      updateAppSession(result.user)
 
       wx.showToast({
         title: '登录成功',

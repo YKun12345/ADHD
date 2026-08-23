@@ -25,10 +25,11 @@ function defaultReadStorage(key) {
 
 function defaultRemoveStorage(key) {
   if (typeof wx === 'undefined' || !wx || typeof wx.removeStorageSync !== 'function') {
-    return
+    return false
   }
 
   wx.removeStorageSync(key)
+  return true
 }
 
 function defaultSetLoggedIn(value) {
@@ -49,10 +50,24 @@ function defaultSetLoggedIn(value) {
 
 function defaultReLaunch(options) {
   if (typeof wx === 'undefined' || !wx || typeof wx.reLaunch !== 'function') {
+    if (options && typeof options.fail === 'function') {
+      options.fail(new Error('reLaunch unavailable'))
+    }
     return
   }
 
   wx.reLaunch(options)
+}
+
+function defaultGetPages() {
+  if (typeof getCurrentPages !== 'function') return []
+
+  try {
+    const pages = getCurrentPages()
+    return Array.isArray(pages) ? pages : []
+  } catch (error) {
+    return []
+  }
 }
 
 function storageReader(readStorage) {
@@ -77,10 +92,63 @@ function safeRead(readStorage, key) {
 
 function safeRemove(removeStorage, key) {
   try {
-    removeStorage(key)
+    return removeStorage(key) !== false
   } catch (error) {
     // Continue clearing the remaining privacy-sensitive storage keys.
+    return false
   }
+}
+
+function neutralPageValue(value) {
+  if (Array.isArray(value)) return []
+  if (value !== null && typeof value === 'object') return null
+  if (typeof value === 'string') return ''
+  if (typeof value === 'number') return 0
+  if (typeof value === 'boolean') return false
+  return null
+}
+
+function scrubPatientPages(getPages = defaultGetPages) {
+  let pages = []
+
+  try {
+    pages = getPages()
+  } catch (error) {
+    return
+  }
+
+  if (!Array.isArray(pages)) return
+
+  pages.forEach((page) => {
+    if (!page || typeof page !== 'object') return
+
+    page.__patientSessionAllowed = false
+
+    try {
+      if (typeof page.onPatientSessionEnded === 'function') {
+        page.onPatientSessionEnded()
+      }
+    } catch (error) {
+      // Continue scrubbing this page even if its optional cleanup hook fails.
+    }
+
+    if (!page.data || typeof page.data !== 'object') return
+
+    const scrubbedData = {}
+    Object.keys(page.data).forEach((key) => {
+      scrubbedData[key] = neutralPageValue(page.data[key])
+    })
+
+    try {
+      if (typeof page.setData === 'function') {
+        page.setData(scrubbedData)
+      } else {
+        Object.assign(page.data, scrubbedData)
+      }
+    } catch (error) {
+      // A failing page must not prevent the remaining page stack from clearing.
+    }
+  })
 }
 
 function containsValidContent(value, seen) {
@@ -105,13 +173,9 @@ function hasValidContent(value) {
   }
 }
 
-function countValidEntries(value) {
+function countValidMapEntries(value) {
   try {
-    if (Array.isArray(value)) {
-      return value.filter(hasValidContent).length
-    }
-
-    if (value && typeof value === 'object') {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
       return Object.keys(value).filter((key) => (
         hasValidContent(value[key])
       )).length
@@ -132,7 +196,10 @@ function hasValidPatientSession(readStorage = defaultReadStorage) {
     token.trim().length > 0 &&
     currentUser !== null &&
     typeof currentUser === 'object' &&
-    !Array.isArray(currentUser)
+    !Array.isArray(currentUser) &&
+    Number.isInteger(currentUser.id) &&
+    currentUser.id > 0 &&
+    currentUser.role === 'patient'
 }
 
 function summarizePatientData(readStorage = defaultReadStorage) {
@@ -144,7 +211,7 @@ function summarizePatientData(readStorage = defaultReadStorage) {
 
   const resultCount = (
     hasValidContent(safeRead(read, 'scale_latest_result')) ? 1 : 0
-  ) + countValidEntries(safeRead(read, 'cognitive_latest_results'))
+  ) + countValidMapEntries(safeRead(read, 'cognitive_latest_results'))
 
   const trackingLogs = safeRead(read, 'tracking_local_logs')
   const trackingDayCount = Array.isArray(trackingLogs)
@@ -155,7 +222,7 @@ function summarizePatientData(readStorage = defaultReadStorage) {
     'pending_cognitive_result',
     'pending_stroop_result'
   ].filter((key) => hasValidContent(safeRead(read, key))).length +
-    countValidEntries(safeRead(read, 'tracking_pending_logs'))
+    countValidMapEntries(safeRead(read, 'tracking_pending_logs'))
 
   return {
     draftCount,
@@ -168,7 +235,12 @@ function summarizePatientData(readStorage = defaultReadStorage) {
 
 function clearPatientData(removeStorage = defaultRemoveStorage) {
   const remove = storageRemover(removeStorage)
-  PATIENT_DATA_KEYS.forEach((key) => safeRemove(remove, key))
+  const failedKeys = PATIENT_DATA_KEYS.filter((key) => !safeRemove(remove, key))
+
+  return {
+    ok: failedKeys.length === 0,
+    failedKeys
+  }
 }
 
 function endPatientSession(options = {}) {
@@ -180,11 +252,25 @@ function endPatientSession(options = {}) {
     ? settings.setLoggedIn
     : defaultSetLoggedIn
 
-  if (settings.includePatientData !== false) {
-    clearPatientData(remove)
+  const patientResult = settings.includePatientData !== false
+    ? clearPatientData(remove)
+    : { ok: true, failedKeys: [] }
+  const failedSessionKeys = SESSION_KEYS.filter((key) => !safeRemove(remove, key))
+  try {
+    setLoggedIn(false)
+  } catch (error) {
+    // Storage cleanup and page scrubbing must still finish.
   }
-  SESSION_KEYS.forEach((key) => safeRemove(remove, key))
-  setLoggedIn(false)
+  const getPages = typeof settings.getPages === 'function'
+    ? settings.getPages
+    : defaultGetPages
+  scrubPatientPages(getPages)
+
+  const failedKeys = patientResult.failedKeys.concat(failedSessionKeys)
+  return {
+    ok: failedKeys.length === 0,
+    failedKeys
+  }
 }
 
 function ensurePatientSession(options = {}) {
@@ -202,7 +288,22 @@ function ensurePatientSession(options = {}) {
   const reLaunch = typeof settings.reLaunch === 'function'
     ? settings.reLaunch
     : defaultReLaunch
-  reLaunch({ url: '/pages/login/index' })
+  const onSuccess = typeof settings.onReLaunchSuccess === 'function'
+    ? settings.onReLaunchSuccess
+    : () => {}
+  const onFail = typeof settings.onReLaunchFail === 'function'
+    ? settings.onReLaunchFail
+    : () => {}
+
+  try {
+    reLaunch({
+      url: '/pages/login/index',
+      success: onSuccess,
+      fail: onFail
+    })
+  } catch (error) {
+    onFail(error)
+  }
   return false
 }
 

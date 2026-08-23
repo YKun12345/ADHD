@@ -58,6 +58,8 @@ function reset() {
   storage = {
     access_token: 'test-token',
     current_user: {
+      id: 1,
+      role: 'patient',
       full_name: '认知中心患者'
     }
   }

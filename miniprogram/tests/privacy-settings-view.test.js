@@ -131,6 +131,15 @@ const warningRule = ruleBodyFor('.pending-warning')
 assert.match(warningRule, /background:\s*#fff8e9/i, '待同步警示背景色不正确')
 assert.match(warningRule, /color:\s*#7a5b2b/i, '待同步警示文字色不正确')
 
+const clearRule = ruleBodyFor('.clear-button')
+assert.match(clearRule, /color:\s*#b54747/i, 'clear button needs restrained red text')
+assert.match(
+  clearRule,
+  /border:\s*[^;]*#b54747/i,
+  'clear button needs a restrained red outline'
+)
+assert.match(clearRule, /background:\s*#fff(?:fff)?/i, 'clear button needs a white background')
+
 const logoutRule = ruleBodyFor('.logout-button')
 assert.match(logoutRule, /color:\s*#b54747/i, '退出按钮需要使用红色文字')
 assert.match(

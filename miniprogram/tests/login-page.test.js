@@ -47,6 +47,8 @@ assert.equal(
 storage = {
   access_token: 'existing-token',
   current_user: {
+    id: 1,
+    role: 'patient',
     full_name: '会话恢复患者'
   }
 }

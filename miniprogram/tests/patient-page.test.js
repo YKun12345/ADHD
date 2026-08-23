@@ -96,6 +96,32 @@ assert.equal(rejectedGuardCalls, 1)
 assert.equal(rejectedLoadCalls, 0)
 assert.equal(rejectedShowCalls, 0)
 
+let retryGuardCalls = 0
+let retryGuardOptions
+let retryShowCalls = 0
+const retryPage = {}
+const retryDefinition = protectPatientPage({
+  onShow() {
+    retryShowCalls += 1
+    return 'retried-show'
+  }
+}, (options) => {
+  retryGuardCalls += 1
+  retryGuardOptions = options
+  return retryGuardCalls > 1
+})
+
+assert.equal(retryDefinition.onLoad.call(retryPage), undefined)
+assert.equal(retryDefinition.onShow.call(retryPage), undefined)
+assert.equal(retryGuardCalls, 1)
+assert.equal(retryPage.__patientSessionRedirectPending, true)
+assert.equal(typeof retryGuardOptions.onReLaunchFail, 'function')
+retryGuardOptions.onReLaunchFail(new Error('navigation failed'))
+assert.equal(retryPage.__patientSessionRedirectPending, false)
+assert.equal(retryDefinition.onShow.call(retryPage), 'retried-show')
+assert.equal(retryGuardCalls, 2)
+assert.equal(retryShowCalls, 1)
+
 const onlyShowArgs = [{ resumed: true }]
 let onlyShowGuardCalls = 0
 let onlyShowLifecycleCalls = 0

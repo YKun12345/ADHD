@@ -109,10 +109,10 @@ page {
   justify-content: center;
   height: 88rpx;
   margin-top: 28rpx;
-  border: 2rpx solid #3f7c78;
+  border: 2rpx solid #b54747;
   border-radius: 18rpx;
-  color: #3f7c78;
-  background: #edf7f5;
+  color: #b54747;
+  background: #ffffff;
   font-size: 27rpx;
   font-weight: 600;
 }

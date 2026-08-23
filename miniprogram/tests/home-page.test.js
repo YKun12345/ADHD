@@ -68,6 +68,8 @@ function reset(overrides = {}) {
   storage = {
     access_token: 'test-token',
     current_user: {
+      id: 1,
+      role: 'patient',
       full_name: '首页测试患者'
     },
     ...overrides

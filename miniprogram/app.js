@@ -5,7 +5,16 @@ const {
 
 App({
   onLaunch() {
-    const readStorage = (key) => wx.getStorageSync(key)
+    const sessionValues = {}
+    const loadedKeys = {}
+    const readStorage = (key) => {
+      if (!loadedKeys[key]) {
+        loadedKeys[key] = true
+        sessionValues[key] = wx.getStorageSync(key)
+      }
+
+      return sessionValues[key]
+    }
 
     if (hasValidPatientSession(readStorage)) {
       this.globalData.isLoggedIn = true

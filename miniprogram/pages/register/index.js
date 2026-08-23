@@ -8,6 +8,45 @@ const {
 const {
   getRegistrationErrorMessage
 } = require('../../utils/register-error')
+const {
+  hasValidPatientSession,
+  clearPatientData,
+  endPatientSession
+} = require('../../utils/session-privacy')
+
+function readStorageSafely(key) {
+  try {
+    return wx.getStorageSync(key)
+  } catch (error) {
+    return undefined
+  }
+}
+
+function isValidAuthResult(result) {
+  return Boolean(result) && hasValidPatientSession((key) => (
+    key === 'access_token' ? result.access_token : result.user
+  ))
+}
+
+function isSamePatient(currentUser, nextUser) {
+  return currentUser &&
+    currentUser.role === 'patient' &&
+    Number.isInteger(currentUser.id) &&
+    currentUser.id > 0 &&
+    currentUser.id === nextUser.id
+}
+
+function storeSession(result) {
+  try {
+    wx.setStorageSync('current_user', result.user)
+    wx.setStorageSync('access_token', result.access_token)
+  } catch (error) {
+    endPatientSession({ includePatientData: false })
+    const storageError = new Error('登录凭证保存失败，请重试')
+    storageError.code = 'SESSION_STORAGE_FAILED'
+    throw storageError
+  }
+}
 
 const EDITABLE_FIELDS = [
   'fullName',
@@ -135,17 +174,27 @@ Page({
       const result = await request({
         url: '/auth/register',
         method: 'POST',
+        skipAuth: true,
         data: buildRegistrationPayload(this.data)
       })
 
-      if (!result || !result.access_token || !result.user) {
+      if (!isValidAuthResult(result)) {
         const error = new Error('服务器未返回完整登录信息')
         error.code = 'INCOMPLETE_AUTH_RESPONSE'
         throw error
       }
 
-      wx.setStorageSync('access_token', result.access_token)
-      wx.setStorageSync('current_user', result.user)
+      const currentUser = readStorageSafely('current_user')
+      if (!isSamePatient(currentUser, result.user)) {
+        const clearResult = clearPatientData()
+        if (!clearResult.ok) {
+          const clearError = new Error('本地患者数据清理失败，请重试')
+          clearError.code = 'PATIENT_DATA_CLEAR_FAILED'
+          throw clearError
+        }
+      }
+
+      storeSession(result)
 
       const app = getApp()
       app.globalData.isLoggedIn = true
@@ -165,7 +214,10 @@ Page({
       })
 
       wx.showToast({
-        title: getRegistrationErrorMessage(error),
+        title: (
+          error.code === 'PATIENT_DATA_CLEAR_FAILED' ||
+          error.code === 'SESSION_STORAGE_FAILED'
+        ) ? error.message : getRegistrationErrorMessage(error),
         icon: 'none',
         duration: 2500
       })

@@ -22,6 +22,7 @@ let pageDefinition
 const calls = {
   modals: [],
   navigateBack: [],
+  removed: [],
   reLaunch: [],
   request: [],
   storage: [],
@@ -41,11 +42,17 @@ global.Page = (definition) => {
 global.getApp = () => app
 global.getCurrentPages = () => pageStack
 global.wx = {
+  getStorageSync() {
+    return undefined
+  },
   navigateBack(options) {
     calls.navigateBack.push(options)
   },
   reLaunch(options) {
     calls.reLaunch.push(options)
+  },
+  removeStorageSync(key) {
+    calls.removed.push(key)
   },
   setStorageSync(key, value) {
     calls.storage.push([key, value])
@@ -174,6 +181,7 @@ async function run() {
     {
       url: '/auth/register',
       method: 'POST',
+      skipAuth: true,
       data: {
         email: 'patient@example.com',
         password: 'BrainMap#2026',
@@ -189,8 +197,8 @@ async function run() {
     }
   ])
   assert.deepEqual(calls.storage, [
-    ['access_token', 'test-token'],
-    ['current_user', responseUser]
+    ['current_user', responseUser],
+    ['access_token', 'test-token']
   ])
   assert.equal(app.globalData.isLoggedIn, true)
   assert.equal(app.globalData.userInfo, responseUser)

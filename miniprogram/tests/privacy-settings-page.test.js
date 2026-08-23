@@ -33,6 +33,7 @@ const calls = {
 let storage = {}
 let showModalImplementation
 let reLaunchImplementation
+let failedRemovalKey
 let pageDefinition
 const app = {
   globalData: {
@@ -49,6 +50,9 @@ global.wx = {
   },
   removeStorageSync(key) {
     calls.removals.push(key)
+    if (key === failedRemovalKey) {
+      throw new Error(`cannot remove ${key}`)
+    }
     delete storage[key]
   },
   showModal(options) {
@@ -83,6 +87,7 @@ function patientFixture(overrides = {}) {
     access_token: 'patient-token',
     current_user: {
       id: 7,
+      role: 'patient',
       full_name: '  李小明  '
     },
     patient_dashboard_cache: { currentDay: 3 },
@@ -133,10 +138,13 @@ function reset(overrides = {}) {
   calls.navigateBack = []
   calls.navigateTo = []
   storage = patientFixture(overrides)
+  failedRemovalKey = ''
   showModalImplementation = (options) => {
     options.success({ confirm: false, cancel: true })
   }
-  reLaunchImplementation = () => undefined
+  reLaunchImplementation = (options) => {
+    if (typeof options.success === 'function') options.success()
+  }
   app.globalData.isLoggedIn = true
   app.globalData.userInfo = { id: 7 }
 }
@@ -175,7 +183,9 @@ async function run() {
     ]
   )
 
-  reset({ current_user: { full_name: '   ' } })
+  reset({
+    current_user: { id: 7, role: 'patient', full_name: '   ' }
+  })
   const fallbackNamePage = createPage()
   fallbackNamePage.onLoad()
   assert.equal(fallbackNamePage.data.patientName, '患者')
@@ -244,6 +254,7 @@ async function run() {
   assert.equal(storage.access_token, 'patient-token')
   assert.deepEqual(storage.current_user, {
     id: 7,
+    role: 'patient',
     full_name: '  李小明  '
   })
   assert.equal(storage.api_base_url, 'https://api.example.com/api/v1')
@@ -275,6 +286,26 @@ async function run() {
   assert.equal(confirmedClearPage.data.acting, false)
 
   reset()
+  failedRemovalKey = 'scale_latest_result'
+  showModalImplementation = (options) => {
+    options.success({ confirm: true })
+  }
+  const failedClearPage = createPage()
+  failedClearPage.onLoad()
+  assert.equal(await failedClearPage.clearLocalData(), false)
+  assert.deepEqual(calls.removals, PATIENT_DATA_KEYS)
+  assert.equal(failedClearPage.data.acting, false)
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'scale_latest_result'),
+    true
+  )
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
+  assert.equal(
+    calls.toasts.some((toast) => toast.icon === 'success'),
+    false
+  )
+
+  reset()
   const cancelledLogoutPage = createPage()
   cancelledLogoutPage.onLoad()
   assert.equal(await cancelledLogoutPage.logout(), false)
@@ -301,9 +332,26 @@ async function run() {
   assert.equal(app.globalData.userInfo, null)
   assert.equal(calls.reLaunches.length, 1)
   assert.equal(calls.reLaunches[0].url, '/pages/login/index')
+  assert.equal(typeof calls.reLaunches[0].success, 'function')
   assert.equal(typeof calls.reLaunches[0].fail, 'function')
   assert.equal(calls.navigateTo.length, 0)
   assert.equal(confirmedLogoutPage.data.acting, true)
+
+  reset()
+  failedRemovalKey = 'current_user'
+  showModalImplementation = (options) => {
+    options.success({ confirm: true })
+  }
+  const failedCleanupLogoutPage = createPage()
+  failedCleanupLogoutPage.onLoad()
+  assert.equal(await failedCleanupLogoutPage.logout(), false)
+  assert.deepEqual(calls.removals, [
+    ...PATIENT_DATA_KEYS,
+    ...SESSION_KEYS
+  ])
+  assert.equal(calls.reLaunches.length, 0)
+  assert.equal(failedCleanupLogoutPage.data.acting, false)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
 
   reset()
   showModalImplementation = (options) => {
@@ -315,9 +363,11 @@ async function run() {
   }
   const failedReLaunchPage = createPage()
   failedReLaunchPage.onLoad()
-  assert.equal(await failedReLaunchPage.logout(), true)
+  const failedReLaunchResult = failedReLaunchPage.logout()
+  await Promise.resolve()
   assert.equal(failedReLaunchPage.data.acting, true)
   failReLaunch(new Error('reLaunch failed'))
+  assert.equal(await failedReLaunchResult, false)
   assert.equal(failedReLaunchPage.data.acting, false)
 
   reset()

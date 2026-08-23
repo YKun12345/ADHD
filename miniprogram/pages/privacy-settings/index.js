@@ -75,8 +75,16 @@ registerPatientPage({
 
       if (!confirmed) return false
 
-      clearPatientData()
+      const clearResult = clearPatientData()
       this.refreshSummary()
+      if (!clearResult.ok) {
+        wx.showToast({
+          title: '本地数据清理失败，请重试',
+          icon: 'none'
+        })
+        return false
+      }
+
       wx.showToast({
         title: '本地数据已清除',
         icon: 'none'
@@ -102,22 +110,39 @@ registerPatientPage({
 
       if (!confirmed) return false
 
-      endPatientSession()
-
-      let reLaunchFailed = false
-      try {
-        wx.reLaunch({
-          url: '/pages/login/index',
-          fail: () => {
-            reLaunchFailed = true
-            this.setData({ acting: false })
-          }
+      const endResult = endPatientSession()
+      if (!endResult.ok) {
+        wx.showToast({
+          title: '账号退出清理失败，请重试',
+          icon: 'none'
         })
-      } catch (error) {
         return false
       }
 
-      if (reLaunchFailed) return false
+      const reLaunchSucceeded = await new Promise((resolve) => {
+        let settled = false
+        const settle = (value) => {
+          if (settled) return
+          settled = true
+          resolve(value)
+        }
+
+        try {
+          wx.reLaunch({
+            url: '/pages/login/index',
+            success() {
+              settle(true)
+            },
+            fail() {
+              settle(false)
+            }
+          })
+        } catch (error) {
+          settle(false)
+        }
+      })
+
+      if (!reLaunchSucceeded) return false
 
       keepActing = true
       return true
