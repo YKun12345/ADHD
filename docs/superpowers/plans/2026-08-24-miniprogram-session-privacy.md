@@ -228,7 +228,7 @@ git commit -m "feat(miniprogram): guard patient pages"
 - Modify: `miniprogram/tests/home-page.test.js`
 - Modify: `miniprogram/tests/protected-pages.test.js`
 
-- [ ] **Step 1: 写页面控制失败测试**
+- [x] **Step 1: 写页面控制失败测试**
 
 测试先断言页面控制器存在，再通过注入/缓存模块捕获 Page 定义。覆盖：
 
@@ -250,12 +250,12 @@ assert.deepEqual(reLaunchCalls, [{ url: '/pages/login/index' }])
 
 同时验证快速重复点击只打开一次确认框、确认框失败不删除、清理数据保持会话、退出删除会话。
 
-- [ ] **Step 2: 运行测试确认页面缺失失败**
+- [x] **Step 2: 运行测试确认页面缺失失败**
 
 Run: `node miniprogram/tests/privacy-settings-page.test.js`  
 Expected: FAIL，提示账号与隐私页面尚未创建。
 
-- [ ] **Step 3: 实现页面控制器**
+- [x] **Step 3: 实现页面控制器**
 
 页面使用 `registerPatientPage`，数据结构固定为：
 
@@ -273,7 +273,7 @@ data: {
 
 实现 `refreshSummary()`、返回 Promise 的 `_confirm(options)`、`clearLocalData()`、`logout()` 和 `goBack()`。取消或弹窗失败时必须恢复 `acting:false`；确认清理后刷新摘要；确认退出后调用统一 `endPatientSession()` 并 `wx.reLaunch`。
 
-- [ ] **Step 4: 登记路由和首页入口**
+- [x] **Step 4: 登记路由和首页入口**
 
 在 `app.json` 登记 `pages/privacy-settings/index`。首页增加：
 
@@ -285,7 +285,7 @@ openPrivacySettings() {
 
 在首页控制测试中验证唯一导航目标，并把新页面加入受保护页面静态测试。
 
-- [ ] **Step 5: 验证页面与入口逻辑**
+- [x] **Step 5: 验证页面与入口逻辑**
 
 Run:
 
@@ -298,7 +298,7 @@ node --check miniprogram/pages/privacy-settings/index.js
 
 Expected: 全部通过。
 
-- [ ] **Step 6: 精确提交**
+- [x] **Step 6: 精确提交**
 
 ```powershell
 git add miniprogram/app.json miniprogram/pages/privacy-settings/index.js miniprogram/pages/privacy-settings/index.json miniprogram/pages/home/index.js miniprogram/tests/privacy-settings-page.test.js miniprogram/tests/home-page.test.js miniprogram/tests/protected-pages.test.js
