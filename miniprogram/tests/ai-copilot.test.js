@@ -5,6 +5,9 @@ const {
   getCopilotConfig,
   buildAiChatUrl
 } = require('../utils/ai-copilot')
+const {
+  normalizeInitialPrompt
+} = require('../utils/ai-chat')
 
 const expectedKeys = [
   'home',
@@ -32,7 +35,12 @@ for (const pageKey of expectedKeys) {
 
   const url = buildAiChatUrl(pageKey, 'help')
   assert.match(url, /^\/pages\/ai-chat\/index\?scope=general&prompt=/)
-  assert.equal(decodeURIComponent(url.split('prompt=')[1]), config.helpPrompt)
+  const promptParameter = url.split('prompt=')[1]
+  assert.equal(normalizeInitialPrompt(promptParameter), config.helpPrompt)
+  assert.equal(
+    normalizeInitialPrompt(decodeURIComponent(promptParameter)),
+    config.helpPrompt
+  )
 }
 
 assert.equal(getCopilotConfig('unknown').pageKey, 'general')
@@ -44,6 +52,6 @@ assert.equal(
   buildAiChatUrl('home', 'invalid'),
   '/pages/ai-chat/index?scope=general'
 )
-assert.match(buildAiChatUrl('scale', 'help'), /%E8%AF%B7/)
+assert.match(buildAiChatUrl('scale', 'help'), /copilot-v1%3A/)
 
 console.log('AI Copilot 页面配置测试全部通过')

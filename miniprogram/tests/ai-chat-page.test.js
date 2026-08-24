@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict')
 const { advancePatientDataRevision } = require('../utils/session-privacy')
+const { buildAiChatUrl } = require('../utils/ai-copilot')
 
 const calls = {
   requests: [],
@@ -108,16 +109,30 @@ function datasetEvent(dataset) {
 
 async function run() {
   reset()
+  const pageHelpUrl = buildAiChatUrl('home', 'help')
+  const promptParameter = pageHelpUrl.split('prompt=')[1]
   const prefilledPage = createPage()
   prefilledPage.onLoad({
     scope: 'general',
-    prompt: encodeURIComponent('请介绍患者首页应该怎样使用。')
+    prompt: promptParameter
   })
   assert.equal(
     prefilledPage.data.inputValue,
-    '请介绍患者首页应该怎样使用。'
+    '请介绍患者首页的任务、进度和快捷入口应该怎样使用。'
   )
-  assert.equal(prefilledPage.data.inputLength, 14)
+  assert.equal(prefilledPage.data.inputLength, 25)
+  assert.equal(calls.requests.length, 0)
+
+  reset()
+  const decodedPrefilledPage = createPage()
+  decodedPrefilledPage.onLoad({
+    scope: 'general',
+    prompt: decodeURIComponent(promptParameter)
+  })
+  assert.equal(
+    decodedPrefilledPage.data.inputValue,
+    '请介绍患者首页的任务、进度和快捷入口应该怎样使用。'
+  )
   assert.equal(calls.requests.length, 0)
 
   reset()

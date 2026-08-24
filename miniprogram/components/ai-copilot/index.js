@@ -13,6 +13,7 @@ Component({
 
   data: {
     expanded: false,
+    navigating: false,
     config: getCopilotConfig('')
   },
 
@@ -50,6 +51,11 @@ Component({
     },
 
     navigateToAi(url) {
+      if (this.data.navigating) return
+
+      this.setData({
+        navigating: true
+      })
       wx.navigateTo({
         url,
         success: () => {
@@ -61,6 +67,11 @@ Component({
           wx.showToast({
             title: '暂时无法打开AI助手',
             icon: 'none'
+          })
+        },
+        complete: () => {
+          this.setData({
+            navigating: false
           })
         }
       })

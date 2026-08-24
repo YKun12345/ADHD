@@ -1,6 +1,8 @@
 .ai-copilot {
   position: fixed;
   right: 28rpx;
+  bottom: 32rpx;
+  bottom: calc(32rpx + constant(safe-area-inset-bottom));
   bottom: calc(32rpx + env(safe-area-inset-bottom));
   z-index: 1200;
   display: flex;
@@ -55,8 +57,11 @@
 
 .ai-copilot__actions {
   display: flex;
-  gap: 12rpx;
   margin-top: 22rpx;
+}
+
+.ai-copilot__action + .ai-copilot__action {
+  margin-left: 12rpx;
 }
 
 .ai-copilot__action {

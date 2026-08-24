@@ -8,12 +8,19 @@ const calls = {
 }
 let componentDefinition
 let navigationShouldFail = false
+let navigationShouldWait = false
+let pendingNavigation
 
 global.wx = {
   navigateTo(options) {
     calls.navigation.push(options.url)
+    if (navigationShouldWait) {
+      pendingNavigation = options
+      return
+    }
     if (navigationShouldFail) options.fail()
     else options.success()
+    if (options.complete) options.complete()
   },
   showToast(options) {
     calls.toasts.push(options)
@@ -71,6 +78,23 @@ assert.deepEqual(calls.toasts.at(-1), {
   icon: 'none'
 })
 
+navigationShouldFail = false
+navigationShouldWait = true
+const guardedComponent = createComponent('home')
+componentDefinition.lifetimes.attached.call(guardedComponent)
+const navigationCountBeforeGuard = calls.navigation.length
+guardedComponent.openPageHelp()
+guardedComponent.openFreeQuestion()
+assert.equal(
+  calls.navigation.length,
+  navigationCountBeforeGuard + 1,
+  '导航完成前的快速重复点击只能打开一次页面'
+)
+assert.equal(guardedComponent.data.navigating, true)
+pendingNavigation.success()
+pendingNavigation.complete()
+assert.equal(guardedComponent.data.navigating, false)
+
 const directory = path.join(
   __dirname,
   '..',
@@ -122,5 +146,32 @@ for (const fragment of [
     `WXSS 缺少：${fragment}`
   )
 }
+
+const copilotRule = wxss.match(/\.ai-copilot\s*\{([^}]*)\}/)
+assert.ok(copilotRule, 'WXSS 缺少 .ai-copilot 样式规则')
+const baseBottomIndex = copilotRule[1].indexOf('bottom: 32rpx')
+const constantBottomIndex = copilotRule[1].indexOf(
+  'bottom: calc(32rpx + constant(safe-area-inset-bottom))'
+)
+const envBottomIndex = copilotRule[1].indexOf(
+  'bottom: calc(32rpx + env(safe-area-inset-bottom))'
+)
+assert.equal(baseBottomIndex >= 0, true, 'WXSS 缺少基础 bottom 回退')
+assert.equal(
+  constantBottomIndex > baseBottomIndex,
+  true,
+  'constant() 安全区回退顺序错误'
+)
+assert.equal(
+  envBottomIndex > constantBottomIndex,
+  true,
+  'env() 安全区回退顺序错误'
+)
+
+const actionFallbackRule = wxss.match(
+  /\.ai-copilot__action\s*\+\s*\.ai-copilot__action\s*\{([^}]*)\}/
+)
+assert.ok(actionFallbackRule, 'WXSS 缺少按钮间距回退规则')
+assert.match(actionFallbackRule[1], /margin-left:\s*12rpx/)
 
 console.log('AI Copilot 组件测试全部通过')

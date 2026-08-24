@@ -1,4 +1,7 @@
 const MAX_PROMPT_LENGTH = 4000
+const {
+  encodeInitialPrompt
+} = require('./ai-chat')
 
 const COPILOT_PAGE_KEYS = Object.freeze([
   'home',
@@ -103,7 +106,7 @@ function buildAiChatUrl(pageKey, mode = 'free') {
     0,
     MAX_PROMPT_LENGTH
   )
-  return `${baseUrl}&prompt=${encodeURIComponent(prompt)}`
+  return `${baseUrl}&prompt=${encodeInitialPrompt(prompt)}`
 }
 
 module.exports = {

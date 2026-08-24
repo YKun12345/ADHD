@@ -1,4 +1,5 @@
 const MAX_MESSAGE_LENGTH = 4000
+const INITIAL_PROMPT_PREFIX = 'copilot-v1:'
 const DEFAULT_DISCLAIMER = 'AI内容仅用于健康教育和追踪辅助，不能替代医生诊断或处方建议。'
 const CHAT_CONTEXTS = Object.freeze([
   {
@@ -55,17 +56,38 @@ function normalizeContextScope(value) {
     : 'general'
 }
 
+function encodeInitialPrompt(value) {
+  const prompt = typeof value === 'string'
+    ? value.slice(0, MAX_MESSAGE_LENGTH)
+    : ''
+  const wrappedPrompt = `${INITIAL_PROMPT_PREFIX}${encodeURIComponent(prompt)}`
+  return encodeURIComponent(wrappedPrompt)
+}
+
 function normalizeInitialPrompt(value) {
   if (typeof value !== 'string') return ''
 
-  let prompt = value
-  try {
-    prompt = decodeURIComponent(value)
-  } catch (error) {
-    prompt = value
+  let wrappedPrompt = value
+  if (wrappedPrompt.indexOf(INITIAL_PROMPT_PREFIX) !== 0) {
+    let decodedValue = ''
+    try {
+      decodedValue = decodeURIComponent(value)
+    } catch (error) {
+      return value.slice(0, MAX_MESSAGE_LENGTH)
+    }
+
+    if (decodedValue.indexOf(INITIAL_PROMPT_PREFIX) !== 0) {
+      return value.slice(0, MAX_MESSAGE_LENGTH)
+    }
+    wrappedPrompt = decodedValue
   }
 
-  return prompt.slice(0, MAX_MESSAGE_LENGTH)
+  const encodedPrompt = wrappedPrompt.slice(INITIAL_PROMPT_PREFIX.length)
+  try {
+    return decodeURIComponent(encodedPrompt).slice(0, MAX_MESSAGE_LENGTH)
+  } catch (error) {
+    return ''
+  }
 }
 
 function buildConversation(messages, limit = 6) {
@@ -186,6 +208,7 @@ module.exports = {
   CHAT_CONTEXTS,
   validateChatMessage,
   normalizeContextScope,
+  encodeInitialPrompt,
   normalizeInitialPrompt,
   buildConversation,
   buildChatPayload,
