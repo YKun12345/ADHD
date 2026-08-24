@@ -1,0 +1,29 @@
+<view class="ai-copilot">
+  <view class="ai-copilot__panel" wx:if="{{expanded}}">
+    <view class="ai-copilot__header">
+      <text class="ai-copilot__title">{{config.title}}</text>
+      <view class="ai-copilot__close" bindtap="closePanel">×</view>
+    </view>
+
+    <text class="ai-copilot__advice">{{config.advice}}</text>
+
+    <view class="ai-copilot__actions">
+      <view
+        class="ai-copilot__action ai-copilot__action--primary"
+        bindtap="openPageHelp"
+      >如何使用本页</view>
+      <view
+        class="ai-copilot__action ai-copilot__action--secondary"
+        bindtap="openFreeQuestion"
+      >自己提问</view>
+    </view>
+
+    <text class="ai-copilot__notice">
+      AI仅提供辅助信息，不替代医生诊断
+    </text>
+  </view>
+
+  <view class="ai-copilot__trigger" bindtap="togglePanel">
+    <text>AI</text>
+  </view>
+</view>
