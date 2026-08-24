@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "ASRS 成人量表"
+  "navigationBarTitleText": "ASRS 成人量表",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
 }

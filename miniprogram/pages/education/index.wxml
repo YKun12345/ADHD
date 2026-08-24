@@ -1,3 +1,4 @@
+<ai-copilot page-key="education" />
 <view class="education-page">
   <view class="education-nav">
     <view class="education-nav__back" bindtap="goBack">‹</view>

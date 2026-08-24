@@ -1,3 +1,4 @@
+<ai-copilot page-key="scale" />
 <view class="scale-page">
   <view class="scale-header">
     <text class="scale-kicker">{{scaleKicker}}</text>

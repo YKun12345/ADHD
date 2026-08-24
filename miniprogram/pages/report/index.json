@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "综合报告"
+  "navigationBarTitleText": "综合报告",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
 }

@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "Stroop 测试",
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
 }

@@ -1,3 +1,4 @@
+<ai-copilot page-key="care-pathway" />
 <view class="pathway-page">
   <view class="pathway-nav">
     <view class="pathway-nav__back" bindtap="goBack">‹</view>

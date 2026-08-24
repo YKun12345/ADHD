@@ -1,3 +1,4 @@
+<ai-copilot page-key="tracking" />
 <view class="tracking-page">
   <view class="tracking-nav">
     <view class="nav-back" bindtap="goBack">‹</view>

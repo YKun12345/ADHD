@@ -1,3 +1,4 @@
+<ai-copilot page-key="home" />
 <view class="home-page">
   <view class="welcome-section">
     <text class="welcome-text">你好，{{userName}}</text>

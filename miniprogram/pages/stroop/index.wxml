@@ -1,3 +1,4 @@
+<ai-copilot page-key="stroop" />
 <view class="stroop-page">
   <view class="stroop-nav">
     <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>

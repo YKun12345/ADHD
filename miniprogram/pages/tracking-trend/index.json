@@ -1,1 +1,7 @@
-{"navigationBarTitleText":"14天趋势","navigationStyle":"custom"}
+{
+  "navigationBarTitleText": "14天趋势",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
+}

@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "科普详情"
+  "navigationBarTitleText": "科普详情",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
 }

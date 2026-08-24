@@ -1,3 +1,4 @@
+<ai-copilot page-key="education-detail" />
 <view class="article-page" wx:if="{{validArticle}}">
   <view class="article-nav">
     <view class="article-nav__back" bindtap="goBack">‹</view>

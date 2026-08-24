@@ -1,3 +1,4 @@
+<ai-copilot page-key="cognitive-center" />
 <view class="cognitive-center-page">
   <view class="center-nav">
     <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>

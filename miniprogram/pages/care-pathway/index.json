@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "我的路径"
+  "navigationBarTitleText": "我的路径",
+  "usingComponents": {
+    "ai-copilot": "/components/ai-copilot/index"
+  }
 }

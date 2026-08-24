@@ -1,3 +1,4 @@
+<ai-copilot page-key="report" />
 <view class="report-page">
   <view class="report-nav">
     <view class="report-nav__back" bindtap="goBack" aria-label="返回上一页">‹</view>
