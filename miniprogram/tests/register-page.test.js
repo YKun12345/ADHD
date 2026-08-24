@@ -203,9 +203,8 @@ async function run() {
   assert.equal(app.globalData.isLoggedIn, true)
   assert.equal(app.globalData.userInfo, responseUser)
   assert.equal(successPage.data.submitting, true)
-  assert.deepEqual(calls.reLaunch.at(-1), {
-    url: '/pages/home/index'
-  })
+  assert.equal(calls.reLaunch.at(-1).url, '/pages/home/index')
+  assert.equal(typeof calls.reLaunch.at(-1).fail, 'function')
 
   resetCalls()
   const incompletePage = createPage()
@@ -284,9 +283,9 @@ async function run() {
   resetCalls()
   pageStack = [{}]
   navigationPage.goBackToLogin()
-  assert.deepEqual(calls.reLaunch, [
-    { url: '/pages/login/index' }
-  ])
+  assert.equal(calls.reLaunch.length, 1)
+  assert.equal(calls.reLaunch[0].url, '/pages/login/index')
+  assert.equal(typeof calls.reLaunch[0].fail, 'function')
 
   console.log('注册页面控制逻辑测试全部通过')
 }

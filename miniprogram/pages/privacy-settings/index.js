@@ -3,6 +3,7 @@ const {
   summarizePatientData,
   clearPatientData,
   endPatientSession,
+  hasValidPatientSession,
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent
 } = require('../../utils/session-privacy')
@@ -122,6 +123,9 @@ registerPatientPage({
           title: '账号退出清理失败，请重试',
           icon: 'none'
         })
+      }
+
+      if (hasValidPatientSession()) {
         return false
       }
 
@@ -148,10 +152,16 @@ registerPatientPage({
         }
       })
 
-      if (!reLaunchSucceeded) return false
+      if (!reLaunchSucceeded) {
+        wx.showToast({
+          title: '返回登录页失败，请重试',
+          icon: 'none'
+        })
+        return false
+      }
 
       keepActing = true
-      return true
+      return endResult.ok
     } finally {
       if (!keepActing) {
         this.setData({ acting: false })

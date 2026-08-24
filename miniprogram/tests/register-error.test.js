@@ -35,6 +35,7 @@ function createRequestBoundary(
   const storage = Object.assign({}, initialStorage)
   const removedKeys = []
   const reLaunches = []
+  const toasts = []
   const requestOptions = []
   let storageReadCount = 0
   const globalWrites = {
@@ -83,6 +84,9 @@ function createRequestBoundary(
     },
     removeStorageSync(key) {
       removedKeys.push(key)
+      if ((settings.failedRemovalKeys || []).includes(key)) {
+        throw new Error(`cannot remove ${key}`)
+      }
       delete storage[key]
     },
     reLaunch(options) {
@@ -90,6 +94,15 @@ function createRequestBoundary(
       if (settings.reLaunchError) {
         throw settings.reLaunchError
       }
+      if (
+        settings.reLaunchFail &&
+        typeof options.fail === 'function'
+      ) {
+        options.fail(new Error('reLaunch failed'))
+      }
+    },
+    showToast(options) {
+      toasts.push(options)
     },
     request(options) {
       requestOptions.push(options)
@@ -105,6 +118,7 @@ function createRequestBoundary(
     storage,
     removedKeys,
     reLaunches,
+    toasts,
     getStorageReadCount() {
       return storageReadCount
     },
@@ -277,9 +291,15 @@ async function run() {
       assert.equal(authenticated.app.globalData.userInfo, null)
     })
     recordAssertion(failures, '带 token 的 401 只重启登录一次', () => {
-      assert.deepEqual(authenticated.reLaunches, [
-        { url: '/pages/login/index' }
-      ])
+      assert.equal(authenticated.reLaunches.length, 1)
+      assert.equal(
+        authenticated.reLaunches[0].url,
+        '/pages/login/index'
+      )
+      assert.equal(
+        typeof authenticated.reLaunches[0].fail,
+        'function'
+      )
     })
     recordAssertion(failures, '带 token 的业务请求携带 Authorization', () => {
       assert.equal(
@@ -357,6 +377,48 @@ async function run() {
       assert.equal(staleError.code, 'SESSION_CHANGED')
     })
 
+    const staleOriginStorage = {
+      api_base_url: 'https://api-a.example.com/api/v1',
+      access_token: 'same-token',
+      current_user: { id: 70, role: 'patient' },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { server: 'a' }])
+      )
+    }
+    const staleOrigin = createRequestBoundary(
+      staleOriginStorage,
+      {
+        statusCode: 401,
+        data: { detail: '旧服务器拒绝了请求' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: staleOriginStorage.current_user
+      },
+      { deferResponse: true }
+    )
+    const staleOriginRejection = capturePromiseRejection(request({
+      url: '/patient/dashboard_status'
+    }))
+    staleOrigin.storage.api_base_url = 'https://api-b.example.com/api/v1'
+    staleOrigin.respond()
+    const staleOriginError = await staleOriginRejection
+
+    recordAssertion(failures, '旧服务器 401 不清理新来源会话', () => {
+      assert.deepEqual(staleOrigin.removedKeys, [])
+      assert.deepEqual(staleOrigin.reLaunches, [])
+      assert.equal(staleOrigin.storage.access_token, 'same-token')
+      assert.deepEqual(
+        staleOrigin.storage.scale_latest_result,
+        { server: 'a' }
+      )
+    })
+    recordAssertion(failures, '旧服务器 401 标记为会话已变更', () => {
+      assert.equal(staleOriginError.code, 'SESSION_CHANGED')
+      assert.equal(staleOriginError.statusCode, 401)
+      assert.equal(staleOriginError.message, '旧服务器拒绝了请求')
+    })
+
     const concurrentStorage = {
       api_base_url: 'https://api.example.com/api/v1',
       access_token: 'shared-token',
@@ -401,9 +463,11 @@ async function run() {
       assert.deepEqual(concurrent.globalWrites.userInfo, [null])
     })
     recordAssertion(failures, '同 token 并发 401 只跳转一次', () => {
-      assert.deepEqual(concurrent.reLaunches, [
-        { url: '/pages/login/index' }
-      ])
+      assert.equal(concurrent.reLaunches.length, 1)
+      assert.equal(
+        concurrent.reLaunches[0].url,
+        '/pages/login/index'
+      )
     })
     recordAssertion(failures, '同 token 并发请求使用相同认证头', () => {
       assert.equal(
@@ -481,6 +545,51 @@ async function run() {
       assert.deepEqual(storageFailure.globalWrites.userInfo, [])
     })
 
+    const cleanupFailureStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'cleanup-failure-token',
+      current_user: { id: 75, role: 'patient' },
+      ...Object.fromEntries(
+        PATIENT_DATA_KEYS.map((key) => [key, { saved: true }])
+      )
+    }
+    const cleanupFailure = createRequestBoundary(
+      cleanupFailureStorage,
+      {
+        statusCode: 401,
+        data: { detail: '登录状态已失效' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: cleanupFailureStorage.current_user
+      },
+      {
+        failedRemovalKeys: SESSION_KEYS
+      }
+    )
+    const cleanupFailureError = await captureRequestRejection({
+      url: '/patient/dashboard_status'
+    })
+
+    recordAssertion(failures, '401 凭证清理失败时不进入登录重定向循环', () => {
+      assert.deepEqual(cleanupFailure.reLaunches, [])
+      assert.equal(
+        cleanupFailure.storage.access_token,
+        'cleanup-failure-token'
+      )
+      assert.deepEqual(
+        cleanupFailure.storage.current_user,
+        { id: 75, role: 'patient' }
+      )
+    })
+    recordAssertion(failures, '401 凭证清理失败时提示用户关闭重试', () => {
+      assert.match(cleanupFailure.toasts.at(-1).title, /清理失败/)
+    })
+    recordAssertion(failures, '401 凭证清理失败仍拒绝原始请求', () => {
+      assert.equal(cleanupFailureError.message, '登录状态已失效')
+      assert.equal(cleanupFailureError.statusCode, 401)
+    })
+
     const reLaunchFailureStorage = {
       api_base_url: 'https://api.example.com/api/v1',
       access_token: 'relaunch-failure-token',
@@ -531,12 +640,52 @@ async function run() {
       )
       assert.deepEqual(reLaunchFailure.globalWrites.isLoggedIn, [false])
       assert.deepEqual(reLaunchFailure.globalWrites.userInfo, [null])
-      assert.deepEqual(reLaunchFailure.reLaunches, [
-        { url: '/pages/login/index' }
-      ])
+      assert.equal(reLaunchFailure.reLaunches.length, 1)
+      assert.equal(
+        reLaunchFailure.reLaunches[0].url,
+        '/pages/login/index'
+      )
       assert.deepEqual(reLaunchFailure.storage, {
         api_base_url: 'https://api.example.com/api/v1'
       })
+    })
+
+    const asyncReLaunchFailureStorage = {
+      api_base_url: 'https://api.example.com/api/v1',
+      access_token: 'async-relaunch-failure-token',
+      current_user: { id: 76, role: 'patient' }
+    }
+    const asyncReLaunchFailure = createRequestBoundary(
+      asyncReLaunchFailureStorage,
+      {
+        statusCode: 401,
+        data: { detail: '异步跳转期间会话失效' }
+      },
+      {
+        isLoggedIn: true,
+        userInfo: asyncReLaunchFailureStorage.current_user
+      },
+      {
+        reLaunchFail: true
+      }
+    )
+    const asyncReLaunchFailureError = await captureRequestRejection({
+      url: '/patient/dashboard_status'
+    })
+
+    recordAssertion(failures, 'reLaunch 异步失败仍拒绝原始 401', () => {
+      assert.equal(
+        asyncReLaunchFailureError.message,
+        '异步跳转期间会话失效'
+      )
+      assert.equal(asyncReLaunchFailureError.statusCode, 401)
+    })
+    recordAssertion(failures, 'reLaunch 异步失败显示恢复提示', () => {
+      assert.equal(asyncReLaunchFailure.reLaunches.length, 1)
+      assert.match(
+        asyncReLaunchFailure.toasts.at(-1).title,
+        /返回登录页失败/
+      )
     })
 
     const forbiddenStorage = {

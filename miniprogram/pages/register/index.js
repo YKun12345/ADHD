@@ -11,9 +11,15 @@ const {
 const {
   hasValidPatientSession,
   clearPatientData,
-  endPatientSession,
-  advancePatientDataRevision
+  replacePatientSession
 } = require('../../utils/session-privacy')
+const {
+  beginAuthAttempt,
+  isAuthAttemptActive,
+  isAuthAttemptCurrent,
+  invalidateAuthAttempt
+} = require('../../utils/auth-attempt')
+const { reLaunchSafely } = require('../../utils/safe-navigation')
 
 function readStorageSafely(key) {
   try {
@@ -35,24 +41,6 @@ function isSamePatient(currentUser, nextUser) {
     Number.isInteger(currentUser.id) &&
     currentUser.id > 0 &&
     currentUser.id === nextUser.id
-}
-
-function storeSession(result) {
-  try {
-    wx.setStorageSync('current_user', result.user)
-    wx.setStorageSync('access_token', result.access_token)
-  } catch (error) {
-    const rollbackResult = endPatientSession({ includePatientData: false })
-    const storageError = new Error(
-      rollbackResult.ok
-        ? '登录凭证保存失败，请重试'
-        : '登录凭证保存及回滚失败，请关闭小程序后重试'
-    )
-    storageError.code = 'SESSION_STORAGE_FAILED'
-    storageError.failedKeys = rollbackResult.failedKeys
-    storageError.failedPageCount = rollbackResult.failedPageCount
-    throw storageError
-  }
 }
 
 const EDITABLE_FIELDS = [
@@ -77,6 +65,14 @@ Page({
     showPassword: false,
     showConfirmPassword: false,
     submitting: false
+  },
+
+  onHide() {
+    invalidateAuthAttempt(this)
+  },
+
+  onUnload() {
+    invalidateAuthAttempt(this, false)
   },
 
   onFieldInput(event) {
@@ -132,6 +128,7 @@ Page({
   },
 
   goBackToLogin() {
+    invalidateAuthAttempt(this)
     const pages = getCurrentPages()
 
     if (pages.length > 1) {
@@ -141,9 +138,10 @@ Page({
       return
     }
 
-    wx.reLaunch({
-      url: '/pages/login/index'
-    })
+    reLaunchSafely(
+      '/pages/login/index',
+      '返回登录页失败，请重试'
+    )
   },
 
   async handleSubmit() {
@@ -176,6 +174,8 @@ Page({
     this.setData({
       submitting: true
     })
+    const authAttempt = beginAuthAttempt(this)
+    let responseAccepted = false
 
     try {
       const result = await request({
@@ -184,6 +184,14 @@ Page({
         skipAuth: true,
         data: buildRegistrationPayload(this.data)
       })
+
+      if (!isAuthAttemptCurrent(this, authAttempt)) {
+        if (this._authAttemptId === authAttempt.id) {
+          this.setData({ submitting: false })
+        }
+        return
+      }
+      responseAccepted = true
 
       if (!isValidAuthResult(result)) {
         const error = new Error('服务器未返回完整登录信息')
@@ -201,22 +209,24 @@ Page({
         }
       }
 
-      storeSession(result)
-      advancePatientDataRevision()
-
-      const app = getApp()
-      app.globalData.isLoggedIn = true
-      app.globalData.userInfo = result.user
+      replacePatientSession(result)
 
       wx.showToast({
         title: '注册成功',
         icon: 'success'
       })
 
-      wx.reLaunch({
-        url: '/pages/home/index'
-      })
+      reLaunchSafely(
+        '/pages/home/index',
+        '进入患者首页失败，请重试'
+      )
     } catch (error) {
+      if (
+        !isAuthAttemptActive(this, authAttempt) ||
+        (!responseAccepted && !isAuthAttemptCurrent(this, authAttempt))
+      ) {
+        return
+      }
       this.setData({
         submitting: false
       })
@@ -224,6 +234,7 @@ Page({
       wx.showToast({
         title: (
           error.code === 'PATIENT_DATA_CLEAR_FAILED' ||
+          error.code === 'SESSION_PREPARE_FAILED' ||
           error.code === 'SESSION_STORAGE_FAILED'
         ) ? error.message : getRegistrationErrorMessage(error),
         icon: 'none',

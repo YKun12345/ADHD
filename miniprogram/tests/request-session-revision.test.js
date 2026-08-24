@@ -103,6 +103,19 @@ async function run() {
     assert.equal(replacedTokenError.code, 'SESSION_CHANGED')
 
     configureBoundary(authenticatedStorage())
+    const replacedOriginRequest = request({
+      url: '/patient/dashboard_status'
+    })
+    storage.api_base_url = 'https://api-b.example.com/api/v1'
+    requests[0].success({
+      statusCode: 200,
+      data: { current_day: 11 }
+    })
+    const replacedOriginError = await rejectedValue(replacedOriginRequest)
+    assert.equal(replacedOriginError.code, 'SESSION_CHANGED')
+    assert.equal(replacedOriginError.sessionChanged, true)
+
+    configureBoundary(authenticatedStorage())
     const currentRequest = request({ url: '/patient/dashboard_status' })
     requests[0].success({
       statusCode: 200,

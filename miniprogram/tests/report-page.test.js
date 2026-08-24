@@ -9,6 +9,9 @@ const {
 const {
   TRACKING_LOGS_KEY
 } = require('../utils/tracking-data')
+const {
+  advancePatientDataRevision
+} = require('../utils/session-privacy')
 
 const calls = {
   requests: [],
@@ -273,6 +276,20 @@ async function run() {
 
   emptyPage.goBack()
   assert.deepEqual(calls.navigateBack, [{ delta: 1 }])
+
+  reset()
+  const delayedDrawPage = createPage()
+  delayedDrawPage.onLoad()
+  const delayedNextTicks = []
+  global.wx.nextTick = (callback) => {
+    delayedNextTicks.push(callback)
+  }
+  delayedDrawPage._scheduleDraw()
+  delayedDrawPage.setData({ scale: null, tracking: null })
+  advancePatientDataRevision()
+  assert.equal(delayedNextTicks.length, 1)
+  assert.doesNotThrow(() => delayedNextTicks[0]())
+  assert.equal(calls.canvas.length, 0)
 
   console.log('综合报告页面控制逻辑测试全部通过')
 }

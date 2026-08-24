@@ -35,6 +35,7 @@ let storage = {}
 let showModalImplementation
 let reLaunchImplementation
 let failedRemovalKey
+let failedRemovalKeys
 let currentPages = []
 let pageDefinition
 const app = {
@@ -53,7 +54,7 @@ global.wx = {
   },
   removeStorageSync(key) {
     calls.removals.push(key)
-    if (key === failedRemovalKey) {
+    if (key === failedRemovalKey || failedRemovalKeys.has(key)) {
       throw new Error(`cannot remove ${key}`)
     }
     delete storage[key]
@@ -142,6 +143,7 @@ function reset(overrides = {}) {
   calls.navigateTo = []
   storage = patientFixture(overrides)
   failedRemovalKey = ''
+  failedRemovalKeys = new Set()
   currentPages = []
   showModalImplementation = (options) => {
     options.success({ confirm: false, cancel: true })
@@ -367,8 +369,8 @@ async function run() {
     ...PATIENT_DATA_KEYS,
     ...SESSION_KEYS
   ])
-  assert.equal(calls.reLaunches.length, 0)
-  assert.equal(failedCleanupLogoutPage.data.acting, false)
+  assert.equal(calls.reLaunches.length, 1)
+  assert.equal(failedCleanupLogoutPage.data.acting, true)
   assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
 
   reset()
@@ -384,8 +386,22 @@ async function run() {
   }]
   failedPageScrubLogout.onLoad()
   assert.equal(await failedPageScrubLogout.logout(), false)
+  assert.equal(calls.reLaunches.length, 1)
+  assert.equal(failedPageScrubLogout.data.acting, true)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
+
+  reset()
+  failedRemovalKeys = new Set(SESSION_KEYS)
+  showModalImplementation = (options) => {
+    options.success({ confirm: true })
+  }
+  const retainedSessionLogoutPage = createPage()
+  retainedSessionLogoutPage.onLoad()
+  assert.equal(await retainedSessionLogoutPage.logout(), false)
   assert.equal(calls.reLaunches.length, 0)
-  assert.equal(failedPageScrubLogout.data.acting, false)
+  assert.equal(storage.access_token, 'patient-token')
+  assert.equal(storage.current_user.id, 7)
+  assert.equal(retainedSessionLogoutPage.data.acting, false)
   assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
 
   reset()

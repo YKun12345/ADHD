@@ -1,3 +1,8 @@
+const {
+  API_BASE_URL_KEY,
+  resolveApiBaseUrl
+} = require('./api-config')
+
 const SESSION_KEYS = [
   'access_token',
   'current_user'
@@ -34,19 +39,29 @@ function defaultRemoveStorage(key) {
   return true
 }
 
-function defaultSetLoggedIn(value) {
-  if (typeof getApp !== 'function') return
+function defaultWriteStorage(key, value) {
+  if (typeof wx === 'undefined' || !wx || typeof wx.setStorageSync !== 'function') {
+    throw new Error('storage unavailable')
+  }
+
+  wx.setStorageSync(key, value)
+  return true
+}
+
+function defaultSetLoggedIn(value, user = null) {
+  if (typeof getApp !== 'function') return true
 
   try {
     const app = getApp()
     if (app && app.globalData && typeof app.globalData === 'object') {
       app.globalData.isLoggedIn = value
-      if (value === false) {
-        app.globalData.userInfo = null
-      }
+      app.globalData.userInfo = value === true ? user : null
+      return true
     }
+    return false
   } catch (error) {
     // The app instance can be unavailable while the runtime is starting.
+    return false
   }
 }
 
@@ -78,11 +93,27 @@ function storageRemover(removeStorage) {
     : defaultRemoveStorage
 }
 
+function storageWriter(writeStorage) {
+  return typeof writeStorage === 'function'
+    ? writeStorage
+    : defaultWriteStorage
+}
+
 function safeRead(readStorage, key) {
+  return readStorageResult(readStorage, key).value
+}
+
+function readStorageResult(readStorage, key) {
   try {
-    return readStorage(key)
+    return {
+      ok: true,
+      value: readStorage(key)
+    }
   } catch (error) {
-    return undefined
+    return {
+      ok: false,
+      value: undefined
+    }
   }
 }
 
@@ -95,12 +126,36 @@ function advancePatientDataRevision() {
   return patientDataRevision
 }
 
+function capturePatientDataLease(readStorage = defaultReadStorage) {
+  const read = storageReader(readStorage)
+  const apiBaseUrlResult = readStorageResult(read, API_BASE_URL_KEY)
+
+  return {
+    revision: getPatientDataRevision(),
+    apiBaseUrl: resolveApiBaseUrl(apiBaseUrlResult.value),
+    storageReadable: apiBaseUrlResult.ok
+  }
+}
+
+function isPatientDataLeaseCurrent(
+  lease,
+  readStorage = defaultReadStorage
+) {
+  if (!lease || typeof lease !== 'object') return false
+  if (lease.storageReadable !== true) return false
+  if (lease.revision !== getPatientDataRevision()) return false
+
+  const read = storageReader(readStorage)
+  const apiBaseUrlResult = readStorageResult(read, API_BASE_URL_KEY)
+  return apiBaseUrlResult.ok &&
+    resolveApiBaseUrl(apiBaseUrlResult.value) === lease.apiBaseUrl
+}
+
 function capturePatientSessionLease(readStorage = defaultReadStorage) {
   const read = storageReader(readStorage)
-  return {
-    token: safeRead(read, 'access_token'),
-    revision: getPatientDataRevision()
-  }
+  return Object.assign(capturePatientDataLease(read), {
+    token: safeRead(read, 'access_token')
+  })
 }
 
 function isPatientSessionLeaseCurrent(
@@ -114,7 +169,7 @@ function isPatientSessionLeaseCurrent(
   ) {
     return false
   }
-  if (lease.revision !== getPatientDataRevision()) return false
+  if (!isPatientDataLeaseCurrent(lease, readStorage)) return false
 
   const read = storageReader(readStorage)
   const currentToken = safeRead(read, 'access_token')
@@ -180,6 +235,26 @@ function scrubPatientPages(getPages = defaultGetPages) {
         }
       } catch (error) {
         pageFailed = true
+        Object.keys(scrubbedData).forEach((key) => {
+          let updatedThroughRuntime = false
+
+          if (typeof page.setData === 'function') {
+            try {
+              page.setData({ [key]: scrubbedData[key] })
+              updatedThroughRuntime = true
+            } catch (setDataError) {
+              // Fall back to the in-memory page object below.
+            }
+          }
+
+          if (!updatedThroughRuntime) {
+            try {
+              page.data[key] = scrubbedData[key]
+            } catch (assignmentError) {
+              // The failed page remains counted so callers can destroy it.
+            }
+          }
+        })
       }
     }
 
@@ -311,10 +386,12 @@ function endPatientSession(options = {}) {
     ? removePatientData(remove)
     : { ok: true, failedKeys: [] }
   const failedSessionKeys = SESSION_KEYS.filter((key) => !safeRemove(remove, key))
+  let appStateCleared = true
   try {
-    setLoggedIn(false)
+    appStateCleared = setLoggedIn(false) !== false
   } catch (error) {
     // Storage cleanup and page scrubbing must still finish.
+    appStateCleared = false
   }
   const getPages = typeof settings.getPages === 'function'
     ? settings.getPages
@@ -323,10 +400,60 @@ function endPatientSession(options = {}) {
 
   const failedKeys = patientResult.failedKeys.concat(failedSessionKeys)
   return {
-    ok: failedKeys.length === 0 && pageResult.ok,
+    ok: failedKeys.length === 0 && pageResult.ok && appStateCleared,
     failedKeys,
     failedPageCount: pageResult.failedPageCount
   }
+}
+
+function replacePatientSession(result, options = {}) {
+  const settings = options && typeof options === 'object'
+    ? options
+    : {}
+  const endOptions = {
+    includePatientData: false,
+    removeStorage: settings.removeStorage,
+    setLoggedIn: settings.setLoggedIn,
+    getPages: settings.getPages
+  }
+  const setLoggedIn = typeof settings.setLoggedIn === 'function'
+    ? settings.setLoggedIn
+    : defaultSetLoggedIn
+  const preparationResult = endPatientSession(endOptions)
+
+  if (!preparationResult.ok) {
+    const preparationError = new Error('旧登录凭证清理失败，请重试')
+    preparationError.code = 'SESSION_PREPARE_FAILED'
+    preparationError.failedKeys = preparationResult.failedKeys
+    preparationError.failedPageCount = preparationResult.failedPageCount
+    throw preparationError
+  }
+
+  const write = storageWriter(settings.writeStorage)
+  try {
+    if (write('current_user', result.user) === false) {
+      throw new Error('current_user write failed')
+    }
+    if (write('access_token', result.access_token) === false) {
+      throw new Error('access_token write failed')
+    }
+    if (setLoggedIn(true, result.user) === false) {
+      throw new Error('app state write failed')
+    }
+  } catch (error) {
+    const rollbackResult = endPatientSession(endOptions)
+    const storageError = new Error(
+      rollbackResult.ok
+        ? '登录凭证保存失败，请重试'
+        : '登录凭证保存及回滚失败，请关闭小程序后重试'
+    )
+    storageError.code = 'SESSION_STORAGE_FAILED'
+    storageError.failedKeys = rollbackResult.failedKeys
+    storageError.failedPageCount = rollbackResult.failedPageCount
+    throw storageError
+  }
+
+  return true
 }
 
 function ensurePatientSession(options = {}) {
@@ -370,9 +497,12 @@ module.exports = {
   summarizePatientData,
   clearPatientData,
   endPatientSession,
+  replacePatientSession,
   ensurePatientSession,
   getPatientDataRevision,
   advancePatientDataRevision,
+  capturePatientDataLease,
+  isPatientDataLeaseCurrent,
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent
 }

@@ -110,14 +110,18 @@ registerPatientPage({
   },
 
   _scheduleDraw() {
-    wx.nextTick(() => this._drawCharts())
+    const lease = capturePatientSessionLease()
+    wx.nextTick(() => {
+      if (!isPatientSessionLeaseCurrent(lease)) return
+      this._drawCharts()
+    })
   },
 
   _drawCharts() {
-    if (this.data.scale.hasRadar) {
+    if (this.data.scale && this.data.scale.hasRadar) {
       this._drawRadar()
     }
-    if (this.data.tracking.hasTrend) {
+    if (this.data.tracking && this.data.tracking.hasTrend) {
       this._drawTrend()
     }
   },

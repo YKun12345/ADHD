@@ -10,6 +10,8 @@ const {
   ensurePatientSession,
   getPatientDataRevision,
   advancePatientDataRevision,
+  capturePatientDataLease,
+  isPatientDataLeaseCurrent,
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent
 } = require('../utils/session-privacy')
@@ -99,6 +101,36 @@ assert.equal(isPatientSessionLeaseCurrent(
 assert.equal(isPatientSessionLeaseCurrent(
   capturePatientSessionLease(readFrom({})),
   readFrom({})
+), false)
+
+const dataLeaseStorage = {
+  api_base_url: 'https://api-a.example.com/api/v1'
+}
+const dataLease = capturePatientDataLease(readFrom(dataLeaseStorage))
+assert.equal(isPatientDataLeaseCurrent(
+  dataLease,
+  readFrom(dataLeaseStorage)
+), true)
+dataLeaseStorage.api_base_url = 'https://api-b.example.com/api/v1'
+assert.equal(isPatientDataLeaseCurrent(
+  dataLease,
+  readFrom(dataLeaseStorage)
+), false)
+assert.equal(isPatientDataLeaseCurrent(dataLease, () => {
+  throw new Error('storage unavailable')
+}), false)
+
+const originSessionStorage = {
+  access_token: 'origin-token',
+  api_base_url: 'https://api-a.example.com/api/v1'
+}
+const originSessionLease = capturePatientSessionLease(
+  readFrom(originSessionStorage)
+)
+originSessionStorage.api_base_url = 'https://api-b.example.com/api/v1'
+assert.equal(isPatientSessionLeaseCurrent(
+  originSessionLease,
+  readFrom(originSessionStorage)
 ), false)
 
 assert.equal(hasValidPatientSession(readFrom({
@@ -303,16 +335,22 @@ assert.deepEqual(scrubbedPage.data, {
   active: false
 })
 
+const fallbackScrubbedPage = {
+  data: {
+    patientName: 'First patient',
+    report: { secret: 'private' },
+    answers: [1, 2],
+    active: true
+  },
+  setData() {
+    throw new Error('setData failed')
+  }
+}
 const failedPageEndResult = endPatientSession({
   removeStorage() {},
   setLoggedIn() {},
   getPages() {
-    return [{
-      data: { patientName: 'First patient' },
-      setData() {
-        throw new Error('setData failed')
-      }
-    }, {
+    return [fallbackScrubbedPage, {
       data: { patientName: 'Second patient' },
       setData(changes) {
         Object.assign(this.data, changes)
@@ -328,6 +366,12 @@ assert.deepEqual(failedPageEndResult, {
   failedKeys: [],
   failedPageCount: 2
 })
+assert.deepEqual(fallbackScrubbedPage.data, {
+  patientName: '',
+  report: null,
+  answers: [],
+  active: false
+})
 
 const failedGetPagesEndResult = endPatientSession({
   removeStorage() {},
@@ -340,6 +384,21 @@ assert.deepEqual(failedGetPagesEndResult, {
   ok: false,
   failedKeys: [],
   failedPageCount: 1
+})
+
+const failedAppStateEndResult = endPatientSession({
+  removeStorage() {},
+  setLoggedIn() {
+    throw new Error('app state unavailable')
+  },
+  getPages() {
+    return []
+  }
+})
+assert.deepEqual(failedAppStateEndResult, {
+  ok: false,
+  failedKeys: [],
+  failedPageCount: 0
 })
 
 const defaultEndStorage = {

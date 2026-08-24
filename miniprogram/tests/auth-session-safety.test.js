@@ -1,8 +1,11 @@
 const assert = require('node:assert/strict')
 
 const {
+  SESSION_KEYS,
   PATIENT_DATA_KEYS,
-  getPatientDataRevision
+  hasValidPatientSession,
+  getPatientDataRevision,
+  advancePatientDataRevision
 } = require('../utils/session-privacy')
 
 const requestModulePath = require.resolve('../utils/request')
@@ -19,8 +22,12 @@ let requestImplementation
 let pageDefinition
 let storage
 let failedRemovalKey
+let failedRemovalKeys
 let failedWriteKey
 let timerCallbacks
+let getAppCallCount
+let throwOnGetAppCall
+let reLaunchImplementation
 
 const app = {
   globalData: {
@@ -40,8 +47,14 @@ const calls = {
 function reset(initialStorage) {
   storage = Object.assign({}, initialStorage)
   failedRemovalKey = ''
+  failedRemovalKeys = new Set()
   failedWriteKey = ''
   timerCallbacks = []
+  getAppCallCount = 0
+  throwOnGetAppCall = 0
+  reLaunchImplementation = (options) => {
+    if (typeof options.success === 'function') options.success()
+  }
   app.globalData.isLoggedIn = true
   app.globalData.userInfo = storage.current_user || null
 
@@ -114,7 +127,13 @@ function configureGlobals() {
   global.Page = (definition) => {
     pageDefinition = definition
   }
-  global.getApp = () => app
+  global.getApp = () => {
+    getAppCallCount += 1
+    if (getAppCallCount === throwOnGetAppCall) {
+      throw new Error('app state unavailable')
+    }
+    return app
+  }
   global.getCurrentPages = () => [{}]
   global.setTimeout = (callback) => {
     timerCallbacks.push(callback)
@@ -126,7 +145,7 @@ function configureGlobals() {
     },
     removeStorageSync(key) {
       calls.removals.push(key)
-      if (key === failedRemovalKey) {
+      if (key === failedRemovalKey || failedRemovalKeys.has(key)) {
         throw new Error(`cannot remove ${key}`)
       }
       delete storage[key]
@@ -143,7 +162,7 @@ function configureGlobals() {
     },
     reLaunch(options) {
       calls.reLaunches.push(options)
-      if (typeof options.success === 'function') options.success()
+      return reLaunchImplementation(options)
     },
     navigateTo() {},
     navigateBack() {},
@@ -166,7 +185,10 @@ async function runLoginScenarios() {
 
   assert.equal(calls.requests.length, 1)
   assert.equal(calls.requests[0].skipAuth, true)
-  assert.deepEqual(calls.removals, PATIENT_DATA_KEYS)
+  assert.deepEqual(calls.removals, [
+    ...PATIENT_DATA_KEYS,
+    ...SESSION_KEYS
+  ])
   assert.deepEqual(calls.writes.map(([key]) => key), [
     'current_user',
     'access_token'
@@ -203,7 +225,7 @@ async function runLoginScenarios() {
   const revisionBeforeSamePatientLogin = getPatientDataRevision()
   await samePatientPage.handleLogin()
 
-  assert.deepEqual(calls.removals, [])
+  assert.deepEqual(calls.removals, SESSION_KEYS)
   assert.deepEqual(storage.patient_dashboard_cache, { owner: 2 })
   assert.deepEqual(calls.writes.map(([key]) => key), [
     'current_user',
@@ -259,8 +281,178 @@ async function runLoginScenarios() {
     false
   )
   assert.equal(storage.access_token, 'old-token-2')
-  assert.match(calls.toasts[calls.toasts.length - 1].title, /回滚失败/)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
   assert.equal(timerCallbacks.length, 0)
+
+  reset(patientStorage(1))
+  failedWriteKey = 'access_token'
+  failedRemovalKeys = new Set(SESSION_KEYS)
+  requestImplementation = async () => authResponse(2)
+  const correlatedStorageFailurePage = createPage(definition)
+  correlatedStorageFailurePage.setData({
+    identifier: 'patient-2@example.com',
+    password: 'BrainMap#2026'
+  })
+
+  await correlatedStorageFailurePage.handleLogin()
+
+  assert.deepEqual(calls.writes, [])
+  assert.equal(storage.access_token, 'old-token-1')
+  assert.equal(storage.current_user.id, 1)
+  assert.equal(hasValidPatientSession((key) => storage[key]), true)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
+
+  reset(patientStorage(1))
+  throwOnGetAppCall = 2
+  requestImplementation = async () => authResponse(2)
+  const failedAppCommitPage = createPage(definition)
+  failedAppCommitPage.setData({
+    identifier: 'patient-2@example.com',
+    password: 'BrainMap#2026'
+  })
+
+  await failedAppCommitPage.handleLogin()
+
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'access_token'),
+    false
+  )
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'current_user'),
+    false
+  )
+  assert.equal(app.globalData.isLoggedIn, false)
+  assert.equal(app.globalData.userInfo, null)
+  assert.equal(timerCallbacks.length, 0)
+  assert.match(calls.toasts.at(-1).title, /保存|回滚/)
+
+  reset(patientStorage(1))
+  let releaseStaleLogin
+  requestImplementation = () => new Promise((resolve) => {
+    releaseStaleLogin = resolve
+  })
+  const staleLoginPage = createPage(definition)
+  staleLoginPage.setData({
+    identifier: 'patient-1@example.com',
+    password: 'BrainMap#2026'
+  })
+  const staleLogin = staleLoginPage.handleLogin()
+  storage = patientStorage(2)
+  advancePatientDataRevision()
+  releaseStaleLogin(authResponse(1))
+  await staleLogin
+
+  assert.equal(storage.access_token, 'old-token-2')
+  assert.equal(storage.current_user.id, 2)
+  assert.deepEqual(storage.scale_latest_result, { owner: 2 })
+  assert.deepEqual(calls.writes, [])
+
+  reset(patientStorage(1))
+  let releaseHiddenLogin
+  requestImplementation = () => new Promise((resolve) => {
+    releaseHiddenLogin = resolve
+  })
+  const hiddenLoginPage = createPage(definition)
+  hiddenLoginPage.setData({
+    identifier: 'patient-1@example.com',
+    password: 'BrainMap#2026'
+  })
+  const hiddenLogin = hiddenLoginPage.handleLogin()
+  assert.equal(typeof hiddenLoginPage.onHide, 'function')
+  hiddenLoginPage.onHide()
+  releaseHiddenLogin(authResponse(1))
+  await hiddenLogin
+
+  assert.equal(storage.access_token, 'old-token-1')
+  assert.equal(storage.current_user.id, 1)
+  assert.deepEqual(calls.writes, [])
+
+  for (const navigationMethod of ['goToRegister', 'openServerSettings']) {
+    reset(patientStorage(1))
+    let releaseNavigatedLogin
+    requestImplementation = () => new Promise((resolve) => {
+      releaseNavigatedLogin = resolve
+    })
+    const navigatedLoginPage = createPage(definition)
+    navigatedLoginPage.setData({
+      identifier: 'patient-2@example.com',
+      password: 'BrainMap#2026'
+    })
+    const navigatedLogin = navigatedLoginPage.handleLogin()
+    navigatedLoginPage[navigationMethod]()
+    releaseNavigatedLogin(authResponse(2))
+    await navigatedLogin
+
+    assert.equal(storage.access_token, 'old-token-1')
+    assert.equal(storage.current_user.id, 1)
+    assert.deepEqual(calls.writes, [])
+  }
+
+  reset(patientStorage(1))
+  let releaseOriginChangedLogin
+  requestImplementation = () => new Promise((resolve) => {
+    releaseOriginChangedLogin = resolve
+  })
+  const originChangedLoginPage = createPage(definition)
+  originChangedLoginPage.setData({
+    identifier: 'patient-1@example.com',
+    password: 'BrainMap#2026'
+  })
+  const originChangedLogin = originChangedLoginPage.handleLogin()
+  storage.api_base_url = 'https://api-b.example.com/api/v1'
+  releaseOriginChangedLogin(authResponse(1))
+  await originChangedLogin
+
+  assert.equal(storage.access_token, 'old-token-1')
+  assert.equal(storage.current_user.id, 1)
+  assert.deepEqual(calls.writes, [])
+
+  reset(patientStorage(1))
+  let rejectHiddenLogin
+  requestImplementation = () => new Promise((resolve, reject) => {
+    rejectHiddenLogin = reject
+  })
+  const hiddenFailedLoginPage = createPage(definition)
+  hiddenFailedLoginPage.setData({
+    identifier: 'patient-1@example.com',
+    password: 'BrainMap#2026'
+  })
+  const hiddenFailedLogin = hiddenFailedLoginPage.handleLogin()
+  hiddenFailedLoginPage.onHide()
+  rejectHiddenLogin(new Error('stale login failure'))
+  await hiddenFailedLogin
+
+  assert.deepEqual(calls.toasts, [])
+
+  reset(patientStorage(1))
+  requestImplementation = async () => authResponse(2)
+  const completedLoginPage = createPage(definition)
+  completedLoginPage.setData({
+    identifier: 'patient-2@example.com',
+    password: 'BrainMap#2026'
+  })
+  await completedLoginPage.handleLogin()
+  assert.equal(timerCallbacks.length, 1)
+  completedLoginPage.onHide()
+  timerCallbacks[0]()
+  assert.deepEqual(calls.reLaunches, [])
+
+  reset(patientStorage(1))
+  requestImplementation = async () => authResponse(2)
+  const failedHomeNavigationPage = createPage(definition)
+  failedHomeNavigationPage.setData({
+    identifier: 'patient-2@example.com',
+    password: 'BrainMap#2026'
+  })
+  await failedHomeNavigationPage.handleLogin()
+  reLaunchImplementation = () => {
+    throw new Error('reLaunch crashed')
+  }
+  assert.doesNotThrow(() => timerCallbacks[0]())
+  assert.equal(storage.access_token, 'token-2')
+  assert.equal(storage.current_user.id, 2)
+  assert.equal(app.globalData.isLoggedIn, true)
+  assert.match(calls.toasts.at(-1).title, /进入患者首页失败/)
 
   reset({
     access_token: 'bad-token',
@@ -273,9 +465,13 @@ async function runLoginScenarios() {
     access_token: 'valid-token',
     current_user: authResponse(3).user
   })
-  definition.onShow()
+  reLaunchImplementation = () => {
+    throw new Error('onShow reLaunch crashed')
+  }
+  assert.doesNotThrow(() => definition.onShow())
   assert.equal(calls.reLaunches.length, 1)
   assert.equal(calls.reLaunches[0].url, '/pages/home/index')
+  assert.match(calls.toasts.at(-1).title, /进入患者首页失败/)
 }
 
 async function runRegisterScenarios() {
@@ -300,7 +496,10 @@ async function runRegisterScenarios() {
 
   assert.equal(calls.requests.length, 1)
   assert.equal(calls.requests[0].skipAuth, true)
-  assert.deepEqual(calls.removals, PATIENT_DATA_KEYS)
+  assert.deepEqual(calls.removals, [
+    ...PATIENT_DATA_KEYS,
+    ...SESSION_KEYS
+  ])
   assert.deepEqual(calls.writes.map(([key]) => key), [
     'current_user',
     'access_token'
@@ -338,8 +537,99 @@ async function runRegisterScenarios() {
   )
   assert.equal(storage.access_token, 'old-token-3')
   assert.equal(failedRegisterRollbackPage.data.submitting, false)
-  assert.match(calls.toasts[calls.toasts.length - 1].title, /回滚失败/)
+  assert.match(calls.toasts[calls.toasts.length - 1].title, /清理失败/)
   assert.equal(calls.reLaunches.length, 0)
+
+  reset(patientStorage(1))
+  throwOnGetAppCall = 2
+  requestImplementation = async () => authResponse(3)
+  const failedAppCommitPage = createPage(definition)
+  failedAppCommitPage.setData(validForm)
+
+  await failedAppCommitPage.handleSubmit()
+
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'access_token'),
+    false
+  )
+  assert.equal(
+    Object.prototype.hasOwnProperty.call(storage, 'current_user'),
+    false
+  )
+  assert.equal(app.globalData.isLoggedIn, false)
+  assert.equal(app.globalData.userInfo, null)
+  assert.equal(calls.reLaunches.length, 0)
+  assert.match(calls.toasts.at(-1).title, /保存|回滚/)
+
+  reset(patientStorage(1))
+  requestImplementation = async () => authResponse(3)
+  reLaunchImplementation = () => {
+    throw new Error('register reLaunch crashed')
+  }
+  const failedHomeNavigationPage = createPage(definition)
+  failedHomeNavigationPage.setData(validForm)
+
+  await failedHomeNavigationPage.handleSubmit()
+
+  assert.equal(storage.access_token, 'token-3')
+  assert.equal(storage.current_user.id, 3)
+  assert.equal(app.globalData.isLoggedIn, true)
+  assert.equal(calls.reLaunches.length, 1)
+  assert.match(calls.toasts.at(-1).title, /进入患者首页失败/)
+  assert.equal(
+    calls.toasts.some((toast) => /注册失败/.test(toast.title)),
+    false
+  )
+
+  reset(patientStorage(2))
+  let releaseStaleRegister
+  requestImplementation = () => new Promise((resolve) => {
+    releaseStaleRegister = resolve
+  })
+  const staleRegisterPage = createPage(definition)
+  staleRegisterPage.setData(validForm)
+  const staleRegister = staleRegisterPage.handleSubmit()
+  storage = patientStorage(3)
+  advancePatientDataRevision()
+  releaseStaleRegister(authResponse(2))
+  await staleRegister
+
+  assert.equal(storage.access_token, 'old-token-3')
+  assert.equal(storage.current_user.id, 3)
+  assert.deepEqual(storage.scale_latest_result, { owner: 3 })
+  assert.deepEqual(calls.writes, [])
+
+  reset(patientStorage(1))
+  let releaseNavigatedRegister
+  requestImplementation = () => new Promise((resolve) => {
+    releaseNavigatedRegister = resolve
+  })
+  const navigatedRegisterPage = createPage(definition)
+  navigatedRegisterPage.setData(validForm)
+  const navigatedRegister = navigatedRegisterPage.handleSubmit()
+  navigatedRegisterPage.goBackToLogin()
+  releaseNavigatedRegister(authResponse(3))
+  await navigatedRegister
+
+  assert.equal(storage.access_token, 'old-token-1')
+  assert.equal(storage.current_user.id, 1)
+  assert.deepEqual(calls.writes, [])
+  assert.equal(calls.reLaunches.length, 1)
+  assert.equal(calls.reLaunches[0].url, '/pages/login/index')
+
+  reset(patientStorage(1))
+  let rejectHiddenRegister
+  requestImplementation = () => new Promise((resolve, reject) => {
+    rejectHiddenRegister = reject
+  })
+  const hiddenFailedRegisterPage = createPage(definition)
+  hiddenFailedRegisterPage.setData(validForm)
+  const hiddenFailedRegister = hiddenFailedRegisterPage.handleSubmit()
+  hiddenFailedRegisterPage.onHide()
+  rejectHiddenRegister(new Error('stale register failure'))
+  await hiddenFailedRegister
+
+  assert.deepEqual(calls.toasts, [])
 }
 
 async function run() {

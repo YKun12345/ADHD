@@ -53,9 +53,9 @@ storage = {
   }
 }
 pageDefinition.onShow()
-assert.deepEqual(reLaunchCalls, [
-  { url: '/pages/home/index' }
-])
+assert.equal(reLaunchCalls.length, 1)
+assert.equal(reLaunchCalls[0].url, '/pages/home/index')
+assert.equal(typeof reLaunchCalls[0].fail, 'function')
 
 reLaunchCalls.length = 0
 storage = {

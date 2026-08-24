@@ -2,9 +2,17 @@ const { request } = require('../../utils/request')
 const {
   hasValidPatientSession,
   clearPatientData,
-  endPatientSession,
-  advancePatientDataRevision
+  replacePatientSession,
+  capturePatientSessionLease,
+  isPatientSessionLeaseCurrent
 } = require('../../utils/session-privacy')
+const {
+  beginAuthAttempt,
+  isAuthAttemptActive,
+  isAuthAttemptCurrent,
+  invalidateAuthAttempt
+} = require('../../utils/auth-attempt')
+const { reLaunchSafely } = require('../../utils/safe-navigation')
 
 function readStorageSafely(key) {
   try {
@@ -28,36 +36,6 @@ function isSamePatient(currentUser, nextUser) {
     currentUser.id === nextUser.id
 }
 
-function updateAppSession(user) {
-  try {
-    const app = getApp()
-    if (app && app.globalData) {
-      app.globalData.isLoggedIn = true
-      app.globalData.userInfo = user
-    }
-  } catch (error) {
-    // Storage remains the source of truth if the app instance is unavailable.
-  }
-}
-
-function storeSession(result) {
-  try {
-    wx.setStorageSync('current_user', result.user)
-    wx.setStorageSync('access_token', result.access_token)
-  } catch (error) {
-    const rollbackResult = endPatientSession({ includePatientData: false })
-    const storageError = new Error(
-      rollbackResult.ok
-        ? '登录凭证保存失败，请重试'
-        : '登录凭证保存及回滚失败，请关闭小程序后重试'
-    )
-    storageError.code = 'SESSION_STORAGE_FAILED'
-    storageError.failedKeys = rollbackResult.failedKeys
-    storageError.failedPageCount = rollbackResult.failedPageCount
-    throw storageError
-  }
-}
-
 Page({
   data: {
     identifier: '',
@@ -67,10 +45,19 @@ Page({
 
   onShow() {
     if (hasValidPatientSession((key) => wx.getStorageSync(key))) {
-      wx.reLaunch({
-        url: '/pages/home/index'
-      })
+      reLaunchSafely(
+        '/pages/home/index',
+        '进入患者首页失败，请重试'
+      )
     }
+  },
+
+  onHide() {
+    invalidateAuthAttempt(this)
+  },
+
+  onUnload() {
+    invalidateAuthAttempt(this, false)
   },
 
   onIdentifierInput(event) {
@@ -86,18 +73,22 @@ Page({
   },
 
   goToRegister() {
+    invalidateAuthAttempt(this)
     wx.navigateTo({
       url: '/pages/register/index'
     })
   },
 
   openServerSettings() {
+    invalidateAuthAttempt(this)
     wx.navigateTo({
       url: '/pages/server-settings/index'
     })
   },
 
   async handleLogin() {
+    if (this.data.submitting) return
+
     const identifier = this.data.identifier.trim()
     const password = this.data.password
 
@@ -136,6 +127,8 @@ Page({
     this.setData({
       submitting: true
     })
+    const authAttempt = beginAuthAttempt(this)
+    let responseAccepted = false
 
     try {
       const result = await request({
@@ -149,6 +142,9 @@ Page({
         }
       })
 
+      if (!isAuthAttemptCurrent(this, authAttempt)) return
+      responseAccepted = true
+
       if (!isValidAuthResult(result)) {
         throw new Error('服务器未返回登录凭证')
       }
@@ -161,9 +157,8 @@ Page({
         }
       }
 
-      storeSession(result)
-      advancePatientDataRevision()
-      updateAppSession(result.user)
+      replacePatientSession(result)
+      const destinationLease = capturePatientSessionLease()
 
       wx.showToast({
         title: '登录成功',
@@ -171,20 +166,35 @@ Page({
       })
 
       setTimeout(() => {
-        wx.reLaunch({
-          url: '/pages/home/index'
-        })
+        if (
+          !isAuthAttemptActive(this, authAttempt) ||
+          !isPatientSessionLeaseCurrent(destinationLease)
+        ) {
+          return
+        }
+        reLaunchSafely(
+          '/pages/home/index',
+          '进入患者首页失败，请重试'
+        )
       }, 600)
     } catch (error) {
+      if (
+        !isAuthAttemptActive(this, authAttempt) ||
+        (!responseAccepted && !isAuthAttemptCurrent(this, authAttempt))
+      ) {
+        return
+      }
       wx.showToast({
         title: error.message || '登录失败',
         icon: 'none',
         duration: 2500
       })
     } finally {
-      this.setData({
-        submitting: false
-      })
+      if (this._authAttemptId === authAttempt.id) {
+        this.setData({
+          submitting: false
+        })
+      }
     }
   }
 })

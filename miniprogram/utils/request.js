@@ -4,9 +4,12 @@ const {
   resolveApiBaseUrl
 } = require('./api-config')
 const {
+  SESSION_KEYS,
   endPatientSession,
-  getPatientDataRevision
+  getPatientDataRevision,
+  hasValidPatientSession
 } = require('./session-privacy')
+const { reLaunchSafely } = require('./safe-navigation')
 
 const BASE_URL = DEFAULT_API_BASE_URL
 
@@ -53,6 +56,26 @@ function isPatientSessionError(error) {
   )
 }
 
+function showSessionRecoveryMessage(title) {
+  try {
+    if (typeof wx.showToast === 'function') {
+      wx.showToast({
+        title,
+        icon: 'none'
+      })
+    }
+  } catch (error) {
+    // Recovery feedback must never replace the original request error.
+  }
+}
+
+function returnToLogin() {
+  reLaunchSafely(
+    '/pages/login/index',
+    '返回登录页失败，请关闭小程序后重试'
+  )
+}
+
 function request(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('access_token')
@@ -66,7 +89,10 @@ function request(options) {
       if (getPatientDataRevision() !== patientDataRevision) return true
 
       try {
-        return wx.getStorageSync('access_token') !== token
+        if (wx.getStorageSync('access_token') !== token) return true
+        return resolveApiBaseUrl(
+          wx.getStorageSync(API_BASE_URL_KEY)
+        ) !== baseUrl
       } catch (error) {
         return true
       }
@@ -111,28 +137,55 @@ function request(options) {
           }
 
           let currentToken
-          let tokenReadSucceeded = false
+          let currentBaseUrl
+          let sessionStateReadSucceeded = false
 
           try {
             currentToken = wx.getStorageSync('access_token')
-            tokenReadSucceeded = true
+            currentBaseUrl = resolveApiBaseUrl(
+              wx.getStorageSync(API_BASE_URL_KEY)
+            )
+            sessionStateReadSucceeded = true
           } catch (error) {
-            // Without a current token, the active session cannot be confirmed.
+            // Without current state, destructive cleanup is not safe.
           }
 
-          if (tokenReadSucceeded && currentToken !== token) {
+          if (
+            sessionStateReadSucceeded &&
+            (currentToken !== token || currentBaseUrl !== baseUrl)
+          ) {
             reject(createSessionChangedError(httpError))
             return
           }
 
-          if (tokenReadSucceeded && currentToken === token) {
+          if (
+            sessionStateReadSucceeded &&
+            currentToken === token &&
+            currentBaseUrl === baseUrl
+          ) {
             try {
-              endPatientSession()
-              wx.reLaunch({
-                url: '/pages/login/index'
-              })
+              const cleanupResult = endPatientSession()
+              const allCredentialRemovalsFailed = SESSION_KEYS.every(
+                (key) => cleanupResult.failedKeys.includes(key)
+              )
+
+              if (!cleanupResult.ok) {
+                showSessionRecoveryMessage(
+                  '登录状态清理失败，请关闭小程序后重试'
+                )
+              }
+
+              if (
+                !allCredentialRemovalsFailed &&
+                !hasValidPatientSession()
+              ) {
+                returnToLogin()
+              }
             } catch (error) {
               // Session side effects must not replace the HTTP rejection.
+              showSessionRecoveryMessage(
+                '登录状态清理失败，请关闭小程序后重试'
+              )
             }
           }
         } else if (hasSessionChanged()) {
