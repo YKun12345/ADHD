@@ -45,7 +45,7 @@
 - Modify: `miniprogram/tests/scale-page.test.js`
 - Modify: `miniprogram/pages/scale/index.js:202-216`
 
-- [ ] **Step 1: 写儿童 26 题失败测试**
+- [x] **Step 1: 写儿童 26 题失败测试**
 
 在 `childPage` 初始化断言之后加入：
 
@@ -61,13 +61,13 @@
   assert.equal(incompleteChildPage.data.currentIndex, 0)
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**
 
 Run: `node miniprogram/tests/scale-page.test.js`
 
 Expected: FAIL，实际标题为“请完成全部18道题目”，期望为“请完成全部26道题目”。
 
-- [ ] **Step 3: 写最小动态题数实现**
+- [x] **Step 3: 写最小动态题数实现**
 
 将 `submitScale()` 的硬编码 toast 攂为：
 
@@ -81,7 +81,7 @@ Expected: FAIL，实际标题为“请完成全部18道题目”，期望为“�
       })
 ```
 
-- [ ] **Step 4: 验证成人和儿童均通过**
+- [x] **Step 4: 验证成人和儿童均通过**
 
 在同一测试中补充成人未完成断言：
 
@@ -97,7 +97,7 @@ Run: `node miniprogram/tests/scale-page.test.js`
 
 Expected: `ASRS 页面控制逻辑测试全部通过`。
 
-- [ ] **Step 5: 语法检查并提交**
+- [x] **Step 5: 语法检查并提交**
 
 ```powershell
 node --check miniprogram/pages/scale/index.js
@@ -116,7 +116,7 @@ Expected: 两个 `node --check` 无输出，差异检查无错误，只提交以
 - Create: `miniprogram/tests/ai-copilot.test.js`
 - Create: `miniprogram/utils/ai-copilot.js`
 
-- [ ] **Step 1: 写配置模块失败测试**
+- [x] **Step 1: 写配置模块失败测试**
 
 创建测试，完整覆盖页面键、配置、通用回退、自由提问和编码：
 
@@ -169,13 +169,13 @@ assert.match(buildAiChatUrl('scale', 'help'), /%E8%AF%B7/)
 console.log('AI Copilot 页面配置测试全部通过')
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**
 
 Run: `node miniprogram/tests/ai-copilot.test.js`
 
 Expected: FAIL，包含 `Cannot find module '../utils/ai-copilot'`。
 
-- [ ] **Step 3: 写页面白名单和纯配置**
+- [x] **Step 3: 写页面白名单和纯配置**
 
 创建 `miniprogram/utils/ai-copilot.js`：
 
@@ -291,13 +291,13 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 4: 运行测试并确认 GREEN**
+- [x] **Step 4: 运行测试并确认 GREEN**
 
 Run: `node miniprogram/tests/ai-copilot.test.js`
 
 Expected: `AI Copilot 页面配置测试全部通过`。
 
-- [ ] **Step 5: 兼容性、语法与提交**
+- [x] **Step 5: 兼容性、语法与提交**
 
 ```powershell
 node --check miniprogram/utils/ai-copilot.js
@@ -320,7 +320,7 @@ Expected: Copilot 和旧微信内核兼容测试通过，只提交配置模块�
 - Create: `miniprogram/components/ai-copilot/index.wxml`
 - Create: `miniprogram/components/ai-copilot/index.wxss`
 
-- [ ] **Step 1: 写组件失败测试**
+- [x] **Step 1: 写组件失败测试**
 
 创建测试，用 `global.Component` 捕获组件定义，并读取 WXML/WXSS/JSON：
 
@@ -410,13 +410,13 @@ for (const fragment of [
 console.log('AI Copilot 组件测试全部通过')
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**
 
 Run: `node miniprogram/tests/ai-copilot-component.test.js`
 
 Expected: FAIL，包含 `Cannot find module '../components/ai-copilot/index'`。
 
-- [ ] **Step 3: 实现组件控制器和声明**
+- [x] **Step 3: 实现组件控制器和声明**
 
 `index.json`：
 
@@ -480,7 +480,7 @@ Component({
 })
 ```
 
-- [ ] **Step 4: 实现紧凑卡片结构和固定布局**
+- [x] **Step 4: 实现紧凑卡片结构和固定布局**
 
 `index.wxml`：
 
@@ -615,7 +615,7 @@ Component({
 }
 ```
 
-- [ ] **Step 5: 验证组件并提交**
+- [x] **Step 5: 验证组件并提交**
 
 ```powershell
 node miniprogram/tests/ai-copilot-component.test.js
@@ -639,7 +639,7 @@ Expected: `AI Copilot 组件测试全部通过`，精确提交五个组件/测�
 - Modify: `miniprogram/tests/ai-chat-view.test.js`
 - Modify: `miniprogram/pages/ai-chat/index.wxml:100-111`
 
-- [ ] **Step 1: 写纯函数和页面失败测试**
+- [x] **Step 1: 写纯函数和页面失败测试**
 
 在 `ai-chat.test.js` 的导入中加入 `normalizeInitialPrompt`，并加入：
 
@@ -678,7 +678,7 @@ assert.equal(normalizeInitialPrompt('问'.repeat(4001)).length, 4000)
 '可以询问健康问题或小程序使用方法'
 ```
 
-- [ ] **Step 2: 运行三项测试并确认 RED**
+- [x] **Step 2: 运行三项测试并确认 RED**
 
 ```powershell
 node miniprogram/tests/ai-chat.test.js
@@ -688,7 +688,7 @@ node miniprogram/tests/ai-chat-view.test.js
 
 Expected: 依次因 `normalizeInitialPrompt` 不存在、输入仍为空、旧 placeholder 缺少新文案而失败。
 
-- [ ] **Step 3: 实现纯预填清洗函数**
+- [x] **Step 3: 实现纯预填清洗函数**
 
 在 `utils/ai-chat.js` 中加入并导出：
 
@@ -707,7 +707,7 @@ function normalizeInitialPrompt(value) {
 
 并在 `module.exports` 中加入 `normalizeInitialPrompt`。
 
-- [ ] **Step 4: 页面只预填、不发送**
+- [x] **Step 4: 页面只预填、不发送**
 
 在 `pages/ai-chat/index.js` 导入 `normalizeInitialPrompt`，并在 `onLoad` 的 `setData` 前计算：
 
@@ -730,7 +730,7 @@ function normalizeInitialPrompt(value) {
 placeholder="可以询问健康问题或小程序使用方法"
 ```
 
-- [ ] **Step 5: 验证回归并提交**
+- [x] **Step 5: 验证回归并提交**
 
 ```powershell
 node miniprogram/tests/ai-chat.test.js
@@ -762,7 +762,7 @@ Expected: 三项 AI 测试全部通过；页面加载仍没有请求，只有用
 - Modify: `miniprogram/pages/education/index.json`, `miniprogram/pages/education/index.wxml`
 - Modify: `miniprogram/pages/education-detail/index.json`, `miniprogram/pages/education-detail/index.wxml`
 
-- [ ] **Step 1: 写页面接线失败测试**
+- [x] **Step 1: 写页面接线失败测试**
 
 创建：
 
@@ -823,13 +823,13 @@ for (const pageKey of excludedPages) {
 console.log('AI Copilot 页面接线测试全部通过')
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**
 
 Run: `node miniprogram/tests/ai-copilot-wiring.test.js`
 
 Expected: FAIL，首个失败为 `home 未声明 ai-copilot`。
 
-- [ ] **Step 3: 在 11 个 JSON 中声明组件**
+- [x] **Step 3: 在 11 个 JSON 中声明组件**
 
 保留每个页面原有 `navigationBarTitleText` 和 `navigationStyle`，新增或合并以下字段：
 
@@ -860,7 +860,7 @@ Expected: FAIL，首个失败为 `home 未声明 ai-copilot`。
 }
 ```
 
-- [ ] **Step 4: 在 11 个 WXML 中渲染唯一页面键**
+- [x] **Step 4: 在 11 个 WXML 中渲染唯一页面键**
 
 分别在各页面最外层内容结尾加入以下精确实例：
 
@@ -880,7 +880,7 @@ Expected: FAIL，首个失败为 `home 未声明 ai-copilot`。
 
 每个页面只加入与自身页面键对应的一行；不得把 11 行同时放进同一页面。
 
-- [ ] **Step 5: 验证接线、JSON 和既有页面结构**
+- [x] **Step 5: 验证接线、JSON 和既有页面结构**
 
 ```powershell
 node miniprogram/tests/ai-copilot-wiring.test.js
@@ -907,7 +907,7 @@ Get-ChildItem -LiteralPath miniprogram -Recurse -Filter '*.json' -File | ForEach
 
 Expected: 页面接线和全部既有视图测试通过，JSON 解析无错误。
 
-- [ ] **Step 6: 精确提交接线**
+- [x] **Step 6: 精确提交接线**
 
 ```powershell
 git add miniprogram/tests/ai-copilot-wiring.test.js
@@ -935,7 +935,7 @@ Expected: 缓存区仅含 23 个本任务文件，无 `backend/`、登录、注�
 - Modify: `项目任务与进度.md`
 - Modify: `docs/superpowers/plans/2026-08-24-miniprogram-ai-copilot.md`
 
-- [ ] **Step 1: 运行全部 56 个测试文件**
+- [x] **Step 1: 运行全部 56 个测试文件**
 
 ```powershell
 $tests = @(Get-ChildItem -LiteralPath 'miniprogram/tests' -Filter '*.test.js' -File | Sort-Object Name)
@@ -948,7 +948,7 @@ Write-Output "全部自动测试通过，共 $($tests.Count) 个测试文件"
 
 Expected: `全部自动测试通过，共 56 个测试文件`。
 
-- [ ] **Step 2: 运行 JavaScript、JSON、运行时和差异检查**
+- [x] **Step 2: 运行 JavaScript、JSON、运行时和差异检查**
 
 ```powershell
 $jsFiles = @(Get-ChildItem -LiteralPath 'miniprogram' -Recurse -Filter '*.js' -File)
@@ -969,23 +969,23 @@ git diff --check
 git status --short
 ```
 
-Expected: 98 个 JavaScript 文件和 23 个 JSON 文件通过；运行时兼容测试通过；差异检查无错误；状态中只含本计划和进度记录的待提交变化。
+Expected: 98 个 JavaScript 文件和 22 个受 Git 管理的 JSON 文件通过；运行时兼容测试通过；差异检查无错误；状态中只含本计划和进度记录的待提交变化。主工作区可能额外包含微信开发者工具的私有 JSON，该文件不纳入 Git 交付统计。
 
-- [ ] **Step 3: 审计范围与敏感信息**
+- [x] **Step 3: 审计范围与敏感信息**
 
 ```powershell
 git diff --name-only HEAD~4..HEAD
-rg -n "QWEN_API_KEY|DASHSCOPE_API_KEY|sk-[A-Za-z0-9]" miniprogram
+rg -n "QWEN_API_KEY|DASHSCOPE_API_KEY|(^|[^A-Za-z0-9])sk-[A-Za-z0-9]{16,}" miniprogram
 ```
 
 Expected: 差异只涉及本计划列出的 `miniprogram/`、计划和进度文件；密钥扫描无输出；无 `backend/`、医生 Web、PPT 或部署文件。
 
-- [ ] **Step 4: 更新项目进度和工作日志**
+- [x] **Step 4: 更新项目进度和工作日志**
 
 在 `项目任务与进度.md` 的当前结论中保持 D13 为 75%、D14 不提前记为完成，并在工作日志追加：
 
 ```markdown
-| 2026-08-24 | Codex | 按 TDD 完成儿童量表题数提示修正和患者业务页浮动 AI Copilot | SNAP-IV 未完成提示按实际配置显示 26 题，ASRS 保持 18 题；11 个业务页面接入本地静态 Copilot 卡片；“如何使用本页”只预填不自动发送，“自己提问”保持空白输入；继续复用 `/ai/chat`，未修改后端或写入外部 AI 密钥；56 个测试文件、98 个 JavaScript 文件、23 个 JSON 文件及 Git 差异检查通过 | 在微信开发者工具中人工确认 11 页浮动位置、卡片交互、预填无自动请求和 SNAP-IV 26 题提示；外部 AI 密钥与正式部署仍由 B 负责 |
+| 2026-08-24 | Codex | 按 TDD 完成儿童量表题数提示修正和患者业务页浮动 AI Copilot | SNAP-IV 未完成提示按实际配置显示 26 题，ASRS 保持 18 题；11 个业务页面接入本地静态 Copilot 卡片；“如何使用本页”只预填不自动发送，“自己提问”保持空白输入；继续复用 `/ai/chat`，未修改后端或写入外部 AI 密钥；56 个测试文件、98 个 JavaScript 文件、22 个受 Git 管理 JSON 文件及 Git 差异检查通过 | 在微信开发者工具中人工确认 11 页浮动位置、卡片交互、预填无自动请求和 SNAP-IV 26 题提示；外部 AI 密钥与正式部署仍由 B 负责 |
 ```
 
 在“阻塞与决策”追加：
@@ -994,7 +994,7 @@ Expected: 差异只涉及本计划列出的 `miniprogram/`、计划和进度文�
 | 2026-08-24 | 页面级 AI Copilot | 采用精简 A-only 方案：本地静态页面建议 + 跳转现有 AI 助手；小程序不直连外部 AI，不修改 B 后端；预填问题必须由用户手动发送 |
 ```
 
-- [ ] **Step 5: 勾选本计划已完成步骤并提交记录**
+- [x] **Step 5: 勾选本计划已完成步骤并提交记录**
 
 先把本计划实际完成的 `- [ ]` 改为 `- [x]`，不得勾选未执行的微信开发者工具人工验收。然后：
 
