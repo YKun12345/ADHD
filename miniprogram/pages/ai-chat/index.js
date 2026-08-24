@@ -10,6 +10,7 @@ const {
   CHAT_CONTEXTS,
   validateChatMessage,
   normalizeContextScope,
+  normalizeInitialPrompt,
   buildChatPayload,
   normalizeChatResponse,
   createGuideMessage,
@@ -52,6 +53,7 @@ registerPatientPage({
     const patientName = user && typeof user.full_name === 'string' && user.full_name.trim()
       ? user.full_name.trim()
       : '患者'
+    const inputValue = normalizeInitialPrompt(options.prompt)
 
     this._active = true
     this._messageSequence = 0
@@ -62,8 +64,8 @@ registerPatientPage({
       contextScope: normalizeContextScope(options.scope),
       messages: [createGuideMessage(patientType)],
       suggestions: buildSuggestions(patientType),
-      inputValue: '',
-      inputLength: 0,
+      inputValue,
+      inputLength: inputValue.length,
       sending: false,
       statusMessage: '',
       scrollIntoView: '',

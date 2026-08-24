@@ -43,6 +43,7 @@ const requiredWxml = [
   'bindtap="applySuggestion"',
   'bindinput="handleInput"',
   'bindconfirm="handleSend"',
+  '可以询问健康问题或小程序使用方法',
   'maxlength="{{maxMessageLength}}"',
   'value="{{inputValue}}"',
   '{{inputLength}} / {{maxMessageLength}}',

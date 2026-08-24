@@ -55,6 +55,19 @@ function normalizeContextScope(value) {
     : 'general'
 }
 
+function normalizeInitialPrompt(value) {
+  if (typeof value !== 'string') return ''
+
+  let prompt = value
+  try {
+    prompt = decodeURIComponent(value)
+  } catch (error) {
+    prompt = value
+  }
+
+  return prompt.slice(0, MAX_MESSAGE_LENGTH)
+}
+
 function buildConversation(messages, limit = 6) {
   if (!Array.isArray(messages)) return []
 
@@ -173,6 +186,7 @@ module.exports = {
   CHAT_CONTEXTS,
   validateChatMessage,
   normalizeContextScope,
+  normalizeInitialPrompt,
   buildConversation,
   buildChatPayload,
   normalizeChatResponse,

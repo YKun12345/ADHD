@@ -102,7 +102,7 @@
       class="message-input"
       value="{{inputValue}}"
       maxlength="{{maxMessageLength}}"
-      placeholder="请输入想咨询的内容"
+      placeholder="可以询问健康问题或小程序使用方法"
       auto-height="true"
       cursor-spacing="24"
       confirm-type="send"

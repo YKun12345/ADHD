@@ -108,6 +108,26 @@ function datasetEvent(dataset) {
 
 async function run() {
   reset()
+  const prefilledPage = createPage()
+  prefilledPage.onLoad({
+    scope: 'general',
+    prompt: encodeURIComponent('请介绍患者首页应该怎样使用。')
+  })
+  assert.equal(
+    prefilledPage.data.inputValue,
+    '请介绍患者首页应该怎样使用。'
+  )
+  assert.equal(prefilledPage.data.inputLength, 14)
+  assert.equal(calls.requests.length, 0)
+
+  reset()
+  const freeQuestionPage = createPage()
+  freeQuestionPage.onLoad({ scope: 'general' })
+  assert.equal(freeQuestionPage.data.inputValue, '')
+  assert.equal(freeQuestionPage.data.inputLength, 0)
+  assert.equal(calls.requests.length, 0)
+
+  reset()
   requestImplementation = async () => ({
     reply: '  当前结果需要结合完整记录理解。  ',
     model: 'fallback-rule',

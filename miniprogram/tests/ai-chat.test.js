@@ -6,6 +6,7 @@ const {
   CHAT_CONTEXTS,
   validateChatMessage,
   normalizeContextScope,
+  normalizeInitialPrompt,
   buildConversation,
   buildChatPayload,
   normalizeChatResponse,
@@ -51,6 +52,20 @@ assert.equal(normalizeContextScope('tracking'), 'tracking')
 assert.equal(normalizeContextScope('REPORT'), 'general')
 assert.equal(normalizeContextScope('unknown'), 'general')
 assert.equal(normalizeContextScope(null), 'general')
+
+assert.equal(normalizeInitialPrompt(undefined), '')
+assert.equal(normalizeInitialPrompt('请介绍首页'), '请介绍首页')
+assert.equal(
+  normalizeInitialPrompt(
+    '%E8%AF%B7%E4%BB%8B%E7%BB%8D%E9%A6%96%E9%A1%B5'
+  ),
+  '请介绍首页'
+)
+assert.equal(normalizeInitialPrompt('%E0%A4%A'), '%E0%A4%A')
+assert.equal(
+  normalizeInitialPrompt('问'.repeat(4001)).length,
+  4000
+)
 
 const history = [
   { role: 'guide', content: '本地欢迎引导', status: 'sent' },
