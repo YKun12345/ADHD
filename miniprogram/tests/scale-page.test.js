@@ -178,6 +178,22 @@ async function run() {
   assert.equal(childPage.data.currentIndex, 2)
   assert.deepEqual(childPage.data.answers, [0, 1])
 
+  reset('child')
+  const incompleteChildPage = createPage()
+  incompleteChildPage.onLoad()
+  await incompleteChildPage.submitScale()
+  assert.deepEqual(calls.toasts.at(-1), {
+    title: '请完成全部26道题目',
+    icon: 'none'
+  })
+  assert.equal(incompleteChildPage.data.currentIndex, 0)
+
+  reset('adult')
+  const incompleteAdultPage = createPage()
+  incompleteAdultPage.onLoad()
+  await incompleteAdultPage.submitScale()
+  assert.equal(calls.toasts.at(-1).title, '请完成全部18道题目')
+
   reset('unknown')
   const unknownPage = createPage()
   unknownPage.onLoad()

@@ -209,8 +209,11 @@ registerPatientPage({
           this.data.answers
         )
       })
+      const totalQuestions = Number.isInteger(this.data.totalQuestions)
+        ? this.data.totalQuestions
+        : this.scaleModel.config.questions.length
       wx.showToast({
-        title: '请完成全部18道题目',
+        title: `请完成全部${totalQuestions}道题目`,
         icon: 'none'
       })
       return
