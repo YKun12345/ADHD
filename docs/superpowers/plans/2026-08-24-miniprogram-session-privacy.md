@@ -432,7 +432,9 @@ Expected: 全部测试、JS、JSON 和 Git 空白检查退出码为 0。
 
 在 `项目任务与进度.md` 新增“会话与隐私安全收尾”记录，写明测试数量、清理白名单、服务器地址保留和真机确认仍待 A；不得把未执行的真机点击记为完成。
 
-- [ ] **Step 7: 提交并完成分支集成**
+复审加固实际补充：认证请求使用页面活动状态、操作代次、患者数据修订号和 API 来源租约阻止旧响应写回；新凭证与 App 内存态统一提交，失败时回滚；切换服务器前必须完整结束旧来源会话；当前会话 401、退出和服务器切换均区分凭证残留、页面清空失败及导航失败；安全跳转统一处理同步异常和异步失败。最终在功能分支和合并后的 `main` 均通过 53 个测试文件、94 个 JavaScript 文件语法检查、全部 JSON 解析、16 条路由和 92 个 WXML 事件绑定检查。
+
+- [x] **Step 7: 提交并完成分支集成**
 
 ```powershell
 git add miniprogram/utils/request.js miniprogram/app.js miniprogram/utils/session-privacy.js miniprogram/tests/register-error.test.js miniprogram/tests/app-session.test.js miniprogram/tests/session-privacy.test.js miniprogram/tests/runtime-compatibility.test.js miniprogram/tests/privacy-settings-page.test.js 项目任务与进度.md docs/superpowers/plans/2026-08-24-miniprogram-session-privacy.md
