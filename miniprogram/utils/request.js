@@ -7,9 +7,9 @@ const {
   SESSION_KEYS,
   endPatientSession,
   getPatientDataRevision,
-  hasValidPatientSession
+  hasValidPatientSession,
+  reLaunchSafely
 } = require('./session-privacy')
-const { reLaunchSafely } = require('./safe-navigation')
 
 const BASE_URL = DEFAULT_API_BASE_URL
 

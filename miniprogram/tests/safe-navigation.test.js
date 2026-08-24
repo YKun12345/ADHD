@@ -2,7 +2,7 @@ const assert = require('node:assert/strict')
 
 const {
   reLaunchSafely
-} = require('../utils/safe-navigation')
+} = require('../utils/session-privacy')
 
 const previousWx = global.wx
 const reLaunches = []

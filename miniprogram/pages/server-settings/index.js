@@ -9,9 +9,9 @@ const {
   endPatientSession,
   hasValidPatientSession,
   capturePatientDataLease,
-  isPatientDataLeaseCurrent
+  isPatientDataLeaseCurrent,
+  reLaunchSafely
 } = require('../../utils/session-privacy')
-const { reLaunchSafely } = require('../../utils/safe-navigation')
 
 const ENVIRONMENT_LABELS = {
   local: '本机开发',

@@ -4,7 +4,8 @@ const {
   clearPatientData,
   replacePatientSession,
   capturePatientSessionLease,
-  isPatientSessionLeaseCurrent
+  isPatientSessionLeaseCurrent,
+  reLaunchSafely
 } = require('../../utils/session-privacy')
 const {
   beginAuthAttempt,
@@ -12,7 +13,6 @@ const {
   isAuthAttemptCurrent,
   invalidateAuthAttempt
 } = require('../../utils/auth-attempt')
-const { reLaunchSafely } = require('../../utils/safe-navigation')
 
 function readStorageSafely(key) {
   try {
