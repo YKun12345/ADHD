@@ -1006,9 +1006,11 @@ git commit -m "docs: record miniprogram AI copilot delivery"
 
 Expected: 只提交进度总表和本计划。
 
-- [ ] **Step 6: 请求代码审查并处理结论**
+- [x] **Step 6: 请求代码审查并处理结论**
 
 使用 `superpowers:requesting-code-review` 审查：设计覆盖、11 页接线、未自动发送、导航失败、动态题数、A/B 边界、旧微信兼容和用户文件保护。任何修正先运行对应失败测试，再提交独立修复。
+
+执行结果：独立审查无 Critical；两个 Important 分别为 WXSS 旧内核回退和异步导航防重。另修正带 `%20/%25` 的普通文本二次解码边界，并收窄兼容性记录措辞。所有修正均先观察失败测试，再通过 56 项全量回归；提交 `1dab22c`。
 
 - [ ] **Step 7: 完成分支前验证并集成**
 
