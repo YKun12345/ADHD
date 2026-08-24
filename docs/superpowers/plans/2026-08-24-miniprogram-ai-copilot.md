@@ -1012,7 +1012,7 @@ Expected: 只提交进度总表和本计划。
 
 执行结果：独立审查无 Critical；两个 Important 分别为 WXSS 旧内核回退和异步导航防重。另修正带 `%20/%25` 的普通文本二次解码边界，并收窄兼容性记录措辞。所有修正均先观察失败测试，再通过 56 项全量回归；提交 `1dab22c`。
 
-- [ ] **Step 7: 完成分支前验证并集成**
+- [x] **Step 7: 完成分支前验证并集成**
 
 使用 `superpowers:verification-before-completion` 重新运行 Task 6 Step 1—3；全部通过后使用 `superpowers:finishing-a-development-branch` 合并到 `main`。合并后在主工作区执行：
 
@@ -1023,6 +1023,8 @@ git log -8 --oneline
 ```
 
 Expected: 用户文件 SHA-256 仍为 `E57487BEE100A4C52F593C280CD16CF9E5D776BE6C173933D2232C1AE699F094`；`git status --short` 仍只显示该用户文件的原有 `M`，不会出现未提交的 Copilot 文件。
+
+执行结果：`feature/ai-copilot` 已快进合并到 `main`。合并后的主工作区重新通过 56 个测试文件、98 个 JavaScript 文件、23 个本机 JSON（22 个受 Git 管理）、敏感密钥扫描、旧内核高风险 JS API 静态检查和 Git 差异检查；用户文件 SHA-256 与执行前一致。微信开发者工具和真机视觉项目仍保留为人工验收，不在本计划中提前勾选。
 
 ## 人工验收清单（不提前记为自动完成）
 
