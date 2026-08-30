@@ -54,7 +54,9 @@ def sim(z1: torch.Tensor, z2: torch.Tensor):
 
 
 def semi_loss(z1: torch.Tensor, z2: torch.Tensor, temperature, op_sim, use_sim):
-    f = lambda x: torch.exp(x / temperature)
+    def f(x):
+        return torch.exp(x / temperature)
+
     sim1_1 = sim(z1, z1)
     sim1_2 = sim(z1, z2)
     refl_sim = f(sim1_1)
@@ -238,4 +240,3 @@ class MLPClassifier(nn.Module):
     def forward(self, x, hg=None, *args):
         x = self.relu(self.linear1(x))
         return self.linear2(x)
-

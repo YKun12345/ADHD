@@ -125,3 +125,33 @@ def test_production_rejects_placeholder_secret() -> None:
 
     assert result.returncode != 0
     assert "non-placeholder SECRET_KEY" in result.stderr
+
+
+def test_backend_import_avoids_owned_deprecations(tmp_path: Path) -> None:
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "APP_ENV": "test",
+            "DATABASE_URL": f"sqlite:///{(tmp_path / 'warnings.db').as_posix()}",
+            "SECRET_KEY": "warning-test-secret",
+            "QWEN_API_KEY": "",
+        }
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-W",
+            "always::DeprecationWarning",
+            "-c",
+            "from backend.app.main import app",
+        ],
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "on_event is deprecated" not in result.stderr
+    assert "class-based `config` is deprecated" not in result.stderr

@@ -6,7 +6,8 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 
-load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
+if os.getenv("APP_ENV", "development").strip().lower() == "development":
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
 
 
 class Settings:

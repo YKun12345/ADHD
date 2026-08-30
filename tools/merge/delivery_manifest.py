@@ -116,7 +116,11 @@ def create_manifest(root: Path, output: Path) -> dict:
         "files": build_entries(root, list(paths)),
     }
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    output.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     return manifest
 
 

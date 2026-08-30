@@ -26,7 +26,7 @@ Expected: FAIL；临时数据库未创建、生产配置未拒绝、旧库未升
 
 - [ ] **Step 2: 修复 dotenv 优先级**
 
-将：
+将开发环境文件加载限制为开发模式，并禁止覆盖进程变量：
 
 ```python
 load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
@@ -35,7 +35,8 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
 改为：
 
 ```python
-load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
+if os.getenv("APP_ENV", "development").strip().lower() == "development":
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
 ```
 
 - [ ] **Step 3: 验证配置与完整后端测试**

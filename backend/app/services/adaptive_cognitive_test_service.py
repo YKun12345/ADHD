@@ -10,7 +10,6 @@
 
 from __future__ import annotations
 
-import math
 import random
 from dataclasses import dataclass
 from enum import Enum
@@ -292,8 +291,6 @@ class AdaptiveCognitiveTestService:
         """更新能力估计（基于IRT模型）"""
         # 简化的能力估计更新
         difficulty = adaptive_state.current_difficulty
-        ability = adaptive_state.ability_estimate
-
         # 正确回答增加能力估计
         if is_correct:
             # 难度越高，正确回答带来的能力提升越大

@@ -416,8 +416,6 @@ class AdaptiveAssessmentService:
             return None
 
         avg_time = np.mean(response_times)
-        std_time = np.std(response_times)
-
         # 检测过快作答（平均<2秒）
         if avg_time < 2000:
             fast_count = sum(1 for t in response_times if t < 1500)

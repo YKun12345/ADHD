@@ -18,6 +18,9 @@ from typing import Any
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
+from backend.app.models.patient import Patient
+from backend.app.models.scale_result import ScaleResult
+
 
 @dataclass
 class QueryIntent:
@@ -50,7 +53,6 @@ class NaturalLanguageQueryService:
         "最近一周": 7,
         "最近两周": 14,
         "最近一个月": 30,
-        "最近两周": 14,
         "本周": 7,
         "上周": 7,
         "本月": 30,
@@ -141,9 +143,6 @@ class NaturalLanguageQueryService:
 
         # 提取比较条件
         comparison = self._extract_comparison(query)
-
-        # 提取数量限制
-        limit = self._extract_limit(query)
 
         # 判断意图类型
         intent_type = self._classify_intent(query, metrics, comparison)
@@ -302,8 +301,6 @@ class NaturalLanguageQueryService:
     ) -> bool:
         """验证研究人员访问权限"""
         # 检查研究人员是否有患者
-        from backend.app.models.patient import Patient
-
         patient_count = self.db.scalar(
             select(func.count(Patient.id))
             .where(Patient.assigned_researcher_id == researcher_id)
@@ -317,10 +314,6 @@ class NaturalLanguageQueryService:
         intent: QueryIntent,
     ) -> dict[str, Any]:
         """执行查询"""
-        from backend.app.models.patient import Patient
-        from backend.app.models.scale_result import ScaleResult
-        from backend.app.models.tracking_log import TrackingLog
-
         # 获取研究人员的患者列表
         patients = self.db.scalars(
             select(Patient)
@@ -483,9 +476,6 @@ class NaturalLanguageQueryService:
         intent: QueryIntent,
     ) -> dict[str, Any]:
         """执行统计汇总查询"""
-        from backend.app.models.scale_result import ScaleResult
-        from backend.app.models.tracking_log import TrackingLog
-
         total_patients = len(patients)
         risk_distribution = {"high": 0, "medium": 0, "low": 0}
         scale_scores = []
@@ -698,7 +688,7 @@ class NaturalLanguageQueryService:
         risk_dist = result_data.get("risk_distribution", {})
         avg_score = result_data.get("avg_scale_score")
 
-        answer = f"患者统计汇总：\n"
+        answer = "患者统计汇总：\n"
         answer += f"- 总患者数：{total}人\n"
 
         if risk_dist:

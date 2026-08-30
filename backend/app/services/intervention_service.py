@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 
@@ -125,7 +125,6 @@ class InterventionService:
     def _analyze_patient_profile(self, patient_id: int) -> dict[str, Any]:
         """分析患者当前状态"""
         from backend.app.models.scale_result import ScaleResult
-        from backend.app.models.cognitive_test import CognitiveTest
         from backend.app.models.tracking_log import TrackingLog
 
         profile = {

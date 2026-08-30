@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import io
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -13,7 +12,6 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 from backend.app.core.config import settings
 from backend.app.services.hgst_runtime.preprocessing import (
-    HGSTPreprocessError,
     construct_hyperedges_from_time_series,
     load_adhd_dataset,
     normalize_timeseries_shape,

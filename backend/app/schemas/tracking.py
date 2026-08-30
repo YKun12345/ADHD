@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class TrackingLogBase(BaseModel):
@@ -66,12 +66,11 @@ class TrackingLogUpdate(BaseModel):
 
 
 class TrackingLogResponse(TrackingLogBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     patient_id: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class DashboardStatusResponse(BaseModel):

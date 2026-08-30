@@ -47,7 +47,6 @@ from backend.app.schemas.intervention import (
 from backend.app.services.adaptive_assessment_service import (
     get_adaptive_difficulty_for_frontend,
     check_scale_anomalies,
-    AdaptiveAssessmentService,
 )
 from backend.app.services.multimodal_analysis_service import (
     get_patient_insights_summary,

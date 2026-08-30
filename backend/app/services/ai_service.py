@@ -845,7 +845,7 @@ def _provider_or_fallback_reminder(snapshot: dict, tone: str) -> tuple[dict, str
     result = qwen_client.chat(
         model=settings.QWEN_REMINDER_MODEL,
         messages=[
-            {"role": "system", "content": CHAT_SYSTEM_PROMPT},
+            {"role": "system", "content": REMINDER_SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
         ],
         temperature=0.4,

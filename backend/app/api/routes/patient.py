@@ -9,7 +9,7 @@ from backend.app.api.deps import get_db, require_roles
 from backend.app.models.cognitive_test import CognitiveTest
 from backend.app.models.imaging_visualization import ImagingVisualization
 from backend.app.models.model_prediction import ModelPrediction
-from backend.app.models.patient import Patient, PatientType
+from backend.app.models.patient import Patient
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole

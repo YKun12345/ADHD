@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from backend.app.models.patient_task import PatientTask
     from backend.app.models.scale_result import ScaleResult
     from backend.app.models.tracking_log import TrackingLog
+    from backend.app.models.upload import Upload
     from backend.app.models.user import User
 
 

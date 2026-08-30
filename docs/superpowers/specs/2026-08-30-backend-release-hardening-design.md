@@ -22,7 +22,7 @@
 
 ## 3. 架构与边界
 
-- 配置层：`backend/.env` 只补充进程中未提供的变量。操作系统、测试夹具和部署平台显式设置的变量拥有更高优先级。
+- 配置层：进程已显式声明 `APP_ENV=test/production` 时不读取开发用 `backend/.env`；开发模式下 `.env` 只补充进程中未提供的变量。操作系统、测试夹具和部署平台显式设置的变量始终拥有更高优先级。
 - 应用生命周期：数据库初始化由 FastAPI `lifespan` 管理，保持启动时建表/升级行为不变，移除弃用的 `on_event` 注册。
 - Schema：使用 Pydantic v2 `ConfigDict` 表达 ORM 属性读取能力，响应字段和接口契约不变。
 - AI 服务：提醒生成必须使用专用 `REMINDER_SYSTEM_PROMPT`；自然语言查询所需模型在模块作用域显式导入，避免局部导入造成运行时 `NameError`。

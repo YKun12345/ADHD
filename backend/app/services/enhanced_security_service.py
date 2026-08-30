@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 
@@ -167,7 +167,6 @@ class EnhancedSecurityService:
     ) -> list[AuditLogEntry]:
         """获取审计日志"""
         from backend.app.models.security import SecurityAuditLog
-        from backend.app.models.user import User
 
         query = select(SecurityAuditLog)
 
@@ -188,7 +187,6 @@ class EnhancedSecurityService:
 
         result = []
         for log in logs:
-            user = self.db.get(User, log.actor_user_id)
             detail_json = log.detail_json or {}
 
             try:
@@ -573,7 +571,6 @@ class EnhancedSecurityService:
     ) -> dict[str, Any]:
         """生成合规报告"""
         from backend.app.models.patient import Patient
-        from backend.app.models.user import User
 
         # 获取研究人员的患者
         patients = self.db.scalars(

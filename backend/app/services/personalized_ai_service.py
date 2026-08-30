@@ -475,7 +475,7 @@ class PersonalizedAIService:
         """专业风格的消息"""
         streak_alert = next((a for a in alerts if a.alert_type == "streak_miss"), None)
         if streak_alert:
-            return f"已有数日未记录，建议尽快补充，连续记录有助于生成更准确的趋势分析。"
+            return "已有数日未记录，建议尽快补充，连续记录有助于生成更准确的趋势分析。"
 
         if completed == 0:
             return "建议开始14天追踪，每日记录情绪和专注情况，为后续分析提供数据基础。"

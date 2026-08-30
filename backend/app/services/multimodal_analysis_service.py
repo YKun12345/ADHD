@@ -9,13 +9,12 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import numpy as np
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 
@@ -219,8 +218,6 @@ class MultimodalAnalysisService:
         # 获取最新量表的风险评分
         latest_scale = scales[-1]
         scale_score = latest_scale.total_score or 0
-        risk_level = latest_scale.risk_level or "unknown"
-
         # 分析量表评分与追踪指标的关系
         mood_values = [m for m in metrics["mood"] if not np.isnan(m)]
         focus_values = [f for f in metrics["focus"] if not np.isnan(f)]
@@ -384,8 +381,6 @@ class MultimodalAnalysisService:
 
         # 生成预测
         predictions = []
-        last_value = arr[-1]
-
         for day_offset in range(1, forecast_days + 1):
             future_x = n + day_offset - 1
             trend_value = intercept + slope * future_x
@@ -485,10 +480,6 @@ class MultimodalAnalysisService:
 
         融合量表、认知测试、追踪数据、fMRI特征
         """
-        from backend.app.models.scale_result import ScaleResult
-        from backend.app.models.cognitive_test import CognitiveTest
-        from backend.app.models.tracking_log import TrackingLog
-        from backend.app.models.model_prediction import ModelPrediction
 
         # 1. 行为评分（量表 + 追踪）
         behavioral_score = self._compute_behavioral_score(patient_id)

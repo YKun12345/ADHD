@@ -263,7 +263,7 @@ def get_dashboard_stats(
         .outerjoin(ImagingVisualization, Patient.id == ImagingVisualization.patient_id)
         .where(
             Patient.assigned_researcher_id == current_user.id,
-            ImagingVisualization.id == None
+            ImagingVisualization.id.is_(None)
         )
     ) or 0
 
