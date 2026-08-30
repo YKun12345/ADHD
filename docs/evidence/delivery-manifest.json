@@ -1,10 +1,10 @@
 {
-  "schema_version": 1,
-  "generated_at": "2026-08-30T10:47:14.979178+00:00",
-  "verified_base_commit": "8345da21a322431684ac6ac543e19f1f8f308d8c",
+  "schema_version": 2,
+  "generated_at": "2026-08-30T11:17:22.762864+00:00",
+  "content_commit": "6f83ace684d212ba7c8d28cfd13dc20ffaea6f78",
   "manifest_path": "docs/evidence/delivery-manifest.json",
-  "scope": "All Git-tracked files at verified_base_commit, excluding this manifest file.",
-  "file_count": 582,
+  "scope": "All Git-tracked files at content_commit, excluding this manifest file.",
+  "file_count": 584,
   "files": [
     {
       "path": ".env.example",
@@ -88,8 +88,8 @@
     },
     {
       "path": "README.md",
-      "size": 5543,
-      "sha256": "bea39a26064484c2f5eafc2671695cec111c886a1467f59db729b7c5b5368093"
+      "size": 6589,
+      "sha256": "5c85488e94718fc1fedb37234b0cb17a8048dbcb7fa1a187c160e728209420de"
     },
     {
       "path": "archive/legacy-patient-web/README.md",
@@ -293,13 +293,13 @@
     },
     {
       "path": "backend/app/api/routes/model_inference.py",
-      "size": 7757,
-      "sha256": "7e40ce6cb51ecace8c5e84144478cd80cd3d9c99cb283cc16057b273c9306a83"
+      "size": 7884,
+      "sha256": "1b3905a52fd5a83cc8767c76248a2ce405506b0516f4c7e22363378dc10f1adc"
     },
     {
       "path": "backend/app/api/routes/patient.py",
-      "size": 26131,
-      "sha256": "6f61e855a41027e27ad372e326ea73ee2b7732d0debff94f933d2a747663e223"
+      "size": 26363,
+      "sha256": "2cf239ff338f23e54749b97749e0a468e85e048a5ad43cf30c8fef5ff81db8e9"
     },
     {
       "path": "backend/app/api/routes/security.py",
@@ -338,8 +338,8 @@
     },
     {
       "path": "backend/app/db/init_db.py",
-      "size": 9493,
-      "sha256": "23b1315924b38b7ba68962af63f926923cf712641cfa1adacd728c2da50d7ec2"
+      "size": 12146,
+      "sha256": "f72bd3177107a5fccff0eff01df040130f38e95d0c7b2ad2c9f31aa317785bc6"
     },
     {
       "path": "backend/app/db/session.py",
@@ -348,8 +348,8 @@
     },
     {
       "path": "backend/app/main.py",
-      "size": 2089,
-      "sha256": "55f8ec474da8b67b66069d52792653c02716886881fa4820ba06e191f93a5056"
+      "size": 2040,
+      "sha256": "8a4705464209bb348aec323bedd8ac581bd5c1985c2f8c60f0bfc68f1bfd18b8"
     },
     {
       "path": "backend/app/models/__init__.py",
@@ -523,8 +523,8 @@
     },
     {
       "path": "backend/app/services/cognitive_contract.py",
-      "size": 3914,
-      "sha256": "9fcfc5772d11ba1bd34609b34d1c12d8f908199073f157fffe8b431a697e7ffc"
+      "size": 4905,
+      "sha256": "84711c9f9aff850092d4df2eb1204f18294e7177dc1ab42280ee6d411487192c"
     },
     {
       "path": "backend/app/services/enhanced_security_service.py",
@@ -588,8 +588,8 @@
     },
     {
       "path": "backend/app/services/upload_storage.py",
-      "size": 1682,
-      "sha256": "594876577691d3b0678d19215f43e06980a6bd18842ac63e692021461fefd9e8"
+      "size": 2698,
+      "sha256": "7e6dd56963dca75b20f16329116731fc79aaf87c78ffe1516d200d38dfa79559"
     },
     {
       "path": "backend/create_tables.py",
@@ -618,13 +618,18 @@
     },
     {
       "path": "backend/scripts/seed_demo_data.py",
-      "size": 9683,
-      "sha256": "0ba4e71523feffc7f066d1f03819d3b2ed6e51984324f33502320e970dfec080"
+      "size": 10898,
+      "sha256": "ee5a74c81334abfbac7c9677fec89819d3932936baca534395cbf8a07dee6ad2"
     },
     {
       "path": "backend/sql/init_mysql.sql",
       "size": 872,
       "sha256": "9751ea8d54aca8a10e23affb274ec90a523ca9e2791eeb4205cfc0cdea5c8616"
+    },
+    {
+      "path": "backend/sql/migrations/20260830_model_prediction_upload_link_mysql.sql",
+      "size": 1445,
+      "sha256": "6ed37605bde5c23d8febcd7ad143651d025405280d341e4375ae18e4201f8e9a"
     },
     {
       "path": "backend/tests/__init__.py",
@@ -638,23 +643,28 @@
     },
     {
       "path": "backend/tests/test_cognitive_contract.py",
-      "size": 4299,
-      "sha256": "e959aca69f8b22487a817076cdf6b11ec0aef33a50cd4c1108d1f87f52e66370"
+      "size": 7155,
+      "sha256": "f05b271a08cbf910df61da1dcf5d45da6a5691b9e733ef2a36ef0b1903ae8647"
     },
     {
       "path": "backend/tests/test_health.py",
-      "size": 2206,
-      "sha256": "592f2207a581458998658025397dca8bd235c5c3e00cc33002b55ee4c72d851e"
+      "size": 3833,
+      "sha256": "aac94b91ee25ff2aa1c4f529a33ba1791ad8604a24083a3626a06e3b189c908d"
     },
     {
       "path": "backend/tests/test_model_upload.py",
-      "size": 5486,
-      "sha256": "cf95c98fcc89aa476a97f57c10738dd6fb3c2cf8098359fbc8c8984b4426e72a"
+      "size": 6480,
+      "sha256": "b87a7591c85381c8a115e1a5676f839ec72d3b62f8b9894ea1995fda11a2c9e2"
+    },
+    {
+      "path": "backend/tests/test_schema_upgrade.py",
+      "size": 4279,
+      "sha256": "d4a8de15ff6b25eb07a805e263b503d460989786270cfc154cdd860d18e67d0e"
     },
     {
       "path": "backend/tests/test_seed_idempotency.py",
-      "size": 2892,
-      "sha256": "7409460e655f8dfe80496ed0701ad64e5fe4eca458d3f6c398c02a68538c5baf"
+      "size": 3410,
+      "sha256": "1410216d7309efa5877f3fe6f85101b4f1f7293546994add47d80fe4b4d4926a"
     },
     {
       "path": "docs/evidence/api-contract.md",
@@ -688,8 +698,8 @@
     },
     {
       "path": "docs/evidence/verification-report.md",
-      "size": 5189,
-      "sha256": "c2a5545e46e475afa77b47991ad11baacda9eaeea77f39b4847442929353d8d7"
+      "size": 6404,
+      "sha256": "3db7cf32c328d59d69ae1b6385c313ea4f3a2c70d55bf94ebd5cf6c3ab515cf0"
     },
     {
       "path": "docs/evidence/web-dependency-report.json",
@@ -933,8 +943,8 @@
     },
     {
       "path": "doctor-web/doctor_report.html",
-      "size": 20148,
-      "sha256": "071ca3c995610c4e85b1d3ccde71240f955211ca42f9ea6daedbd171d3804717"
+      "size": 20403,
+      "sha256": "b295c7498f605c8842bcaeeea0cc7efc651224e72bfbba41404f422b5263a2ae"
     },
     {
       "path": "doctor-web/doctor_visualization.html",
@@ -968,8 +978,8 @@
     },
     {
       "path": "doctor-web/js/doctor_report.js",
-      "size": 29778,
-      "sha256": "98d627c3301ffe79d7659f7afa65354b4fe50fc4d4955f16bfd18782797a9ea8"
+      "size": 30426,
+      "sha256": "78db02687bb2a6a3aade57e3b5cef094c51fffbb8e560af2cf669aa437d6a959"
     },
     {
       "path": "doctor-web/js/doctor_visualization.js",
@@ -2883,8 +2893,8 @@
     },
     {
       "path": "tests/test_delivery_manifest.py",
-      "size": 2029,
-      "sha256": "a37585dc8e5684d884e9be015ef2f33fda0445e7695acc2483f4f61f7a1d6873"
+      "size": 2889,
+      "sha256": "07a58c618069526e7456c263c84f2ef9a4099354c6e1708e23f252908dc3951b"
     },
     {
       "path": "tests/test_repository_cleanliness.py",
@@ -2893,13 +2903,13 @@
     },
     {
       "path": "tests/test_web_dependency_audit.py",
-      "size": 4636,
-      "sha256": "870c2af93f649133420ce205eee03fb1251f20b68047a5b2216e62655e52b311"
+      "size": 5169,
+      "sha256": "6f9e142074f1665a824fea08149f5dc631820624283d5b46f692819b8cb4949d"
     },
     {
       "path": "tools/merge/delivery_manifest.py",
       "size": 5553,
-      "sha256": "1e26a08eebd964b5187fd00f0c25fd83ea3611f8bc8468730c38b2a780e03e73"
+      "sha256": "2c7dbc25e464e16a2c9e8afb66841e690034b0fd4ab08e39b4c81bf1439f06f0"
     },
     {
       "path": "tools/merge/source_inventory.ps1",
