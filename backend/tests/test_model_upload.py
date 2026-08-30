@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 
 from sqlalchemy import select
@@ -28,6 +29,38 @@ def prediction_rows():
 
     with SessionLocal() as db:
         return list(db.scalars(select(ModelPrediction).order_by(ModelPrediction.id)).all())
+
+
+def test_upload_reader_enforces_limit_with_bounded_reads() -> None:
+    from backend.app.services.upload_storage import (
+        UploadTooLargeError,
+        read_upload_bytes_limited,
+    )
+
+    class FakeUpload:
+        def __init__(self, payload: bytes) -> None:
+            self.payload = payload
+            self.offset = 0
+            self.requested_sizes: list[int] = []
+
+        async def read(self, size: int) -> bytes:
+            self.requested_sizes.append(size)
+            chunk = self.payload[self.offset : self.offset + size]
+            self.offset += len(chunk)
+            return chunk
+
+    upload = FakeUpload(b"x" * 10_000)
+
+    try:
+        asyncio.run(read_upload_bytes_limited(upload, max_bytes=64, chunk_size=16))
+    except UploadTooLargeError:
+        pass
+    else:
+        raise AssertionError("oversized streamed upload was accepted")
+
+    assert upload.requested_sizes
+    assert max(upload.requested_sizes) <= 16
+    assert upload.offset == 65
 
 
 def test_empty_upload_is_rejected_without_database_row(client) -> None:

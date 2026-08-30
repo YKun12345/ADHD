@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from sqlalchemy import func, select
 
 
@@ -15,6 +16,7 @@ def test_demo_seed_is_idempotent_and_contract_correct(client) -> None:
     from backend.scripts.seed_demo_data import (
         ADULT_EMAIL,
         CHILD_EMAIL,
+        DAC_EMAIL,
         DOCTOR_EMAIL,
         seed_demo_data,
     )
@@ -22,7 +24,7 @@ def test_demo_seed_is_idempotent_and_contract_correct(client) -> None:
     seed_demo_data()
     seed_demo_data()
 
-    demo_emails = (ADULT_EMAIL, CHILD_EMAIL, DOCTOR_EMAIL)
+    demo_emails = (ADULT_EMAIL, CHILD_EMAIL, DOCTOR_EMAIL, DAC_EMAIL)
     expected_types = {
         "reaction",
         "simple_reaction",
@@ -35,9 +37,16 @@ def test_demo_seed_is_idempotent_and_contract_correct(client) -> None:
 
     with SessionLocal() as db:
         demo_users = list(db.scalars(select(User).where(User.email.in_(demo_emails))).all())
-        assert len(demo_users) == 3
+        assert len(demo_users) == 4
 
-        patient_user_ids = [user.id for user in demo_users if user.email != DOCTOR_EMAIL]
+        dac_user = next(user for user in demo_users if user.email == DAC_EMAIL)
+        assert dac_user.subrole.value == "dac"
+
+        patient_user_ids = [
+            user.id
+            for user in demo_users
+            if user.email not in {DOCTOR_EMAIL, DAC_EMAIL}
+        ]
         patients = list(db.scalars(select(Patient).where(Patient.user_id.in_(patient_user_ids))).all())
         assert len(patients) == 2
 
@@ -74,3 +83,11 @@ def test_demo_seed_is_idempotent_and_contract_correct(client) -> None:
                 .select_from(ModelPrediction)
                 .where(ModelPrediction.patient_id == patient.id)
             ) == 1
+
+
+def test_demo_seed_is_rejected_in_production(client, monkeypatch) -> None:
+    from backend.scripts.seed_demo_data import seed_demo_data
+
+    monkeypatch.setenv("APP_ENV", "production")
+    with pytest.raises(RuntimeError, match="disabled in production"):
+        seed_demo_data()

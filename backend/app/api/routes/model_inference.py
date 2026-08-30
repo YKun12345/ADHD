@@ -22,6 +22,7 @@ from backend.app.services.hgst_runtime.service import (
 from backend.app.services.upload_storage import (
     UploadTooLargeError,
     UploadValidationError,
+    read_upload_bytes_limited,
     store_timeseries_upload,
 )
 
@@ -101,8 +102,11 @@ async def predict_fmri(
     """Persist and run a real HGST-compatible time-series inference request."""
 
     _get_patient_for_researcher_or_self(db, patient_id, current_user)
-    file_bytes = await timeseries_file.read()
     try:
+        file_bytes = await read_upload_bytes_limited(
+            timeseries_file,
+            max_bytes=settings.UPLOAD_MAX_BYTES,
+        )
         stored = store_timeseries_upload(
             file_bytes=file_bytes,
             file_name=timeseries_file.filename or "",

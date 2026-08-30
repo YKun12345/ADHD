@@ -1,5 +1,18 @@
 # AB 合并版自动验证报告
 
+## 最终独立审查修复复验（2026-08-30）
+
+独立代码审查发现的公开源码暴露、固定 DAC 账号、数字广度字段不一致、旧认知类型遗漏、Mock 标识不醒目、旧库上传关联约束不足和无界上传读取均已修复，并加入回归测试。
+
+- 微信小程序：`node --test miniprogram/tests/*.test.js`，77/77 通过。
+- 后端：`python -m pytest backend/tests -q`，24/24 通过；包含旧 SQLite 升级的唯一性、引用完整性和删除置空测试。
+- Web/仓库：`python -m unittest tests.test_web_dependency_audit tests.test_repository_cleanliness -v`，11/11 通过。
+- Python 编译：`python -m compileall -q backend findviz`，通过。
+- 已确认 `/doctor-web/login.html` 返回 200，而 `/backend/app/main.py`、`/miniprogram/app.json` 和 `/archive/legacy-patient-web/patient_home.html` 返回 404。
+- 仍有 55 条第三方/旧接口弃用警告（Starlette WSGI、FastAPI `on_event`、Pydantic class `Config`），不阻断测试，但属于后续技术债。
+
+真实 MySQL 服务、真实 HGST 权重、微信开发者工具、真机、医院网络及医学/合规验收仍未在本机完成，不得据此宣称临床或生产就绪。
+
 - 验证日期：2026-08-30（Asia/Shanghai）
 - 被验证提交：`7aa1ff0`（`feature/ab-merge`）
 - 环境：Windows、Python 3.11.9、Node.js 24.19.0

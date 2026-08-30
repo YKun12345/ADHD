@@ -51,6 +51,11 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 # Add specific static mount for findviz templates to prevent WSGI shadowing
 app.mount("/findviz/templates", StaticFiles(directory=str(BASE_DIR / "findviz" / "templates")), name="findviz_templates")
 app.mount("/findviz", LazyFindvizMount())
+app.mount(
+    "/doctor-web",
+    StaticFiles(directory=str(BASE_DIR / "doctor-web"), html=True),
+    name="doctor_web",
+)
 
 @app.on_event("startup")
 def on_startup() -> None:
@@ -62,6 +67,3 @@ def read_root() -> dict[str, str]:
         "message": "ADHD Assist Platform API is running.",
         "docs": "/docs",
     }
-
-# Mount project root for static files (HTML, JS, CSS) - Mount LAST to avoid route shadowing
-app.mount("/", StaticFiles(directory=str(BASE_DIR), html=True), name="static")

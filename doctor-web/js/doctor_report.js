@@ -545,6 +545,17 @@ function renderModelPredictionSummary(prediction) {
     const controlProbability = getControlProbability(prediction);
 
     document.getElementById('modelPredictionBadge').textContent = `${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
+    const demoNotice = document.getElementById('modelPredictionDemoNotice');
+    if (demoNotice) {
+        if (prediction.is_demo) {
+            demoNotice.textContent = `演示 Mock：${prediction.disclaimer || '该结果仅用于界面演示，不是真实模型推理，也不得用于医学诊断。'}`;
+            demoNotice.classList.remove('hidden');
+            document.getElementById('modelPredictionBadge').textContent = `演示 Mock · ${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
+        } else {
+            demoNotice.textContent = '';
+            demoNotice.classList.add('hidden');
+        }
+    }
     document.getElementById('modelPredictionLabel').textContent = prediction.prediction_label || '--';
     document.getElementById('modelPredictionConfidence').textContent = getConfidenceLevel(prediction.probability);
     document.getElementById('modelPredictionSummary').textContent =

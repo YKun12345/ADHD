@@ -39,6 +39,7 @@ from backend.app.services.security_service import (
 )
 from backend.app.services.cognitive_contract import (
     CANONICAL_COGNITIVE_TYPES,
+    canonical_test_type,
     normalize_result_json,
 )
 
@@ -286,8 +287,12 @@ def _extract_latest_cognitive_profile(
 
     latest_by_type: dict[str, CognitiveTest] = {}
     for record in records:
-        if record.test_type not in latest_by_type:
-            latest_by_type[record.test_type] = record
+        try:
+            normalized_type = canonical_test_type(record.test_type)
+        except (AttributeError, ValueError):
+            continue
+        if normalized_type not in latest_by_type:
+            latest_by_type[normalized_type] = record
 
     reaction = latest_by_type.get("reaction")
     simple_reaction = latest_by_type.get("simple_reaction")
@@ -382,9 +387,10 @@ def _extract_latest_cognitive_profile(
                 parsed_finished_at = datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
             except ValueError:
                 parsed_finished_at = None
+        normalized_type = canonical_test_type(record.test_type)
         return CognitiveTestReportItem(
-            test_type=record.test_type,
-            test_name=result_json.get("test_name") or record.test_type,
+            test_type=normalized_type,
+            test_name=result_json.get("test_name") or normalized_type,
             status_text=result_json.get("status_text") or "已记录",
             key_metric=str(key_metric),
             finished_at=parsed_finished_at,

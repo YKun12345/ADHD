@@ -1,7 +1,6 @@
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
-from backend.app.core.security import get_password_hash
 from backend.app.db.base import Base
 from backend.app.db.session import engine
 from backend.app.models import (  # noqa: F401
@@ -23,8 +22,6 @@ from backend.app.models import (  # noqa: F401
     TrackingLog,
     Upload,
     User,
-    UserRole,
-    UserSubrole,
 )
 
 
@@ -126,12 +123,98 @@ def _ensure_model_prediction_detail_columns() -> None:
         for name, definition in detail_columns.items()
         if name not in column_names
     }
-    if not missing_columns:
+    if missing_columns:
+        with engine.begin() as conn:
+            for name, definition in missing_columns.items():
+                conn.exec_driver_sql(f"ALTER TABLE model_predictions ADD COLUMN {name} {definition}")
+
+    _ensure_model_prediction_upload_constraints()
+
+
+def _ensure_model_prediction_upload_constraints() -> None:
+    """Complete the legacy ``upload_id`` upgrade for supported databases."""
+
+    inspector = inspect(engine)
+    if not {"model_predictions", "uploads"}.issubset(inspector.get_table_names()):
         return
 
-    with engine.begin() as conn:
-        for name, definition in missing_columns.items():
-            conn.exec_driver_sql(f"ALTER TABLE model_predictions ADD COLUMN {name} {definition}")
+    if engine.dialect.name == "sqlite":
+        # SQLite cannot add a FOREIGN KEY to an existing table. These triggers
+        # provide the same insert/update and ON DELETE SET NULL semantics while
+        # preserving the legacy table and its data.
+        indexes = inspector.get_indexes("model_predictions")
+        has_unique_upload_index = any(
+            index.get("unique")
+            and index.get("column_names") == ["upload_id"]
+            for index in indexes
+        )
+        with engine.begin() as conn:
+            if not has_unique_upload_index:
+                conn.exec_driver_sql(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ux_model_predictions_upload_id "
+                    "ON model_predictions (upload_id)"
+                )
+            conn.exec_driver_sql(
+                """
+                CREATE TRIGGER IF NOT EXISTS trg_model_predictions_upload_insert
+                BEFORE INSERT ON model_predictions
+                FOR EACH ROW
+                WHEN NEW.upload_id IS NOT NULL
+                     AND NOT EXISTS (SELECT 1 FROM uploads WHERE id = NEW.upload_id)
+                BEGIN
+                    SELECT RAISE(ABORT, 'model_predictions.upload_id references a missing upload');
+                END
+                """
+            )
+            conn.exec_driver_sql(
+                """
+                CREATE TRIGGER IF NOT EXISTS trg_model_predictions_upload_update
+                BEFORE UPDATE OF upload_id ON model_predictions
+                FOR EACH ROW
+                WHEN NEW.upload_id IS NOT NULL
+                     AND NOT EXISTS (SELECT 1 FROM uploads WHERE id = NEW.upload_id)
+                BEGIN
+                    SELECT RAISE(ABORT, 'model_predictions.upload_id references a missing upload');
+                END
+                """
+            )
+            conn.exec_driver_sql(
+                """
+                CREATE TRIGGER IF NOT EXISTS trg_uploads_prediction_set_null
+                AFTER DELETE ON uploads
+                FOR EACH ROW
+                BEGIN
+                    UPDATE model_predictions SET upload_id = NULL WHERE upload_id = OLD.id;
+                END
+                """
+            )
+        return
+
+    if engine.dialect.name == "mysql":
+        indexes = inspector.get_indexes("model_predictions")
+        has_unique_upload_index = any(
+            index.get("unique")
+            and index.get("column_names") == ["upload_id"]
+            for index in indexes
+        )
+        foreign_keys = inspector.get_foreign_keys("model_predictions")
+        has_upload_foreign_key = any(
+            foreign_key.get("constrained_columns") == ["upload_id"]
+            and foreign_key.get("referred_table") == "uploads"
+            for foreign_key in foreign_keys
+        )
+        with engine.begin() as conn:
+            if not has_unique_upload_index:
+                conn.exec_driver_sql(
+                    "CREATE UNIQUE INDEX ux_model_predictions_upload_id "
+                    "ON model_predictions (upload_id)"
+                )
+            if not has_upload_foreign_key:
+                conn.exec_driver_sql(
+                    "ALTER TABLE model_predictions "
+                    "ADD CONSTRAINT fk_model_predictions_upload_id_uploads "
+                    "FOREIGN KEY (upload_id) REFERENCES uploads(id) ON DELETE SET NULL"
+                )
 
 
 def _ensure_user_security_columns() -> None:
@@ -156,42 +239,20 @@ def _ensure_user_security_columns() -> None:
             conn.exec_driver_sql(f"ALTER TABLE users ADD COLUMN {name} {definition}")
 
 
-def _ensure_default_dac_account() -> None:
+def _disable_legacy_fixed_dac_account() -> None:
+    """Disable the old public demo administrator if an upgraded database contains it."""
+
     with Session(engine) as db:
-        existing = db.query(User).filter(User.staff_id == "admin123").one_or_none()
-        if existing is not None:
-            existing.email = "admin123@qq.com"
-            existing.password_hash = get_password_hash("admin1111")
-            existing.role = UserRole.RESEARCHER
-            existing.subrole = UserSubrole.DAC
-            existing.is_active = True
+        legacy_accounts = db.query(User).filter(
+            (User.staff_id == "admin123") | (User.email == "admin123@qq.com")
+        ).all()
+        changed = False
+        for account in legacy_accounts:
+            if account.is_active:
+                account.is_active = False
+                changed = True
+        if changed:
             db.commit()
-            return
-
-        existing_email = db.query(User).filter(User.email.in_(["dac_admin@smartbrain.local", "dac_admin@smartbrainmap.com", "admin123@qq.com"])).one_or_none()
-        if existing_email is not None:
-            existing_email.email = "admin123@qq.com"
-            existing_email.staff_id = "admin123"
-            existing_email.password_hash = get_password_hash("admin1111")
-            existing_email.role = UserRole.RESEARCHER
-            existing_email.subrole = UserSubrole.DAC
-            existing_email.is_active = True
-            db.commit()
-            return
-
-        db.add(
-            User(
-                email="admin123@qq.com",
-                staff_id="admin123",
-                full_name="DAC 审计员",
-                password_hash=get_password_hash("admin1111"),
-                role=UserRole.RESEARCHER,
-                subrole=UserSubrole.DAC,
-                consent_agreed=True,
-                is_active=True,
-            )
-        )
-        db.commit()
 
 
 def _ensure_default_mcs_node() -> None:
@@ -256,7 +317,7 @@ def init_db() -> None:
     _ensure_imaging_visualization_screenshot_columns()
     _ensure_model_prediction_detail_columns()
     _ensure_security_runtime_columns()
-    _ensure_default_dac_account()
+    _disable_legacy_fixed_dac_account()
     _ensure_default_mcs_node()
 
     from backend.app.services.security_service import get_security_config, sync_security_runtime_entities

@@ -104,7 +104,20 @@ def _legacy_raw_result(test_type: str, source: dict[str, Any]) -> dict[str, Any]
     if test_type == "reaction":
         _copy_number(raw, source, "false_starts", "false_starts")
     if test_type == "digit":
+        _copy_number(raw, source, "forward_max_span", "forward_max_span")
+        _copy_number(raw, source, "backward_max_span", "backward_max_span")
         _copy_number(raw, source, "highest_span", "highest_span", "max_span")
+        if "highest_span" not in raw:
+            spans = [
+                value
+                for value in (
+                    _number(source.get("forward_max_span")),
+                    _number(source.get("backward_max_span")),
+                )
+                if value is not None
+            ]
+            if spans:
+                raw["highest_span"] = max(spans)
     if test_type == "nback":
         _copy_number(raw, source, "n", "n")
 
@@ -123,6 +136,18 @@ def normalize_result_json(test_type: str, value: dict[str, Any]) -> dict[str, An
             accuracy = _accuracy_percent(raw.get("accuracy"))
             if accuracy is not None:
                 raw["accuracy"] = accuracy
+        if canonical_type == "digit" and _number(raw.get("highest_span")) is None:
+            spans = [
+                value
+                for value in (
+                    _number(raw.get("forward_max_span")),
+                    _number(raw.get("backward_max_span")),
+                    _number(raw.get("max_span")),
+                )
+                if value is not None
+            ]
+            if spans:
+                raw["highest_span"] = max(spans)
     else:
         raw = _legacy_raw_result(canonical_type, normalized)
 

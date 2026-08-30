@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Awaitable, Protocol
 from uuid import uuid4
 
 
@@ -15,6 +16,38 @@ class UploadValidationError(ValueError):
 
 class UploadTooLargeError(UploadValidationError):
     pass
+
+
+class AsyncReadable(Protocol):
+    def read(self, size: int) -> Awaitable[bytes]: ...
+
+
+async def read_upload_bytes_limited(
+    upload: AsyncReadable,
+    *,
+    max_bytes: int,
+    chunk_size: int = 64 * 1024,
+) -> bytes:
+    """Read at most ``max_bytes + 1`` bytes using bounded chunks."""
+
+    if max_bytes < 1:
+        raise ValueError("max_bytes must be positive")
+    if chunk_size < 1:
+        raise ValueError("chunk_size must be positive")
+
+    content = bytearray()
+    while len(content) <= max_bytes:
+        probe_remaining = max_bytes + 1 - len(content)
+        chunk = await upload.read(min(chunk_size, probe_remaining))
+        if not chunk:
+            return bytes(content)
+        content.extend(chunk)
+        if len(content) > max_bytes:
+            raise UploadTooLargeError(
+                f"The uploaded file exceeds the {max_bytes}-byte limit."
+            )
+
+    raise UploadTooLargeError(f"The uploaded file exceeds the {max_bytes}-byte limit.")
 
 
 @dataclass(frozen=True)

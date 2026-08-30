@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+import os
+
 from sqlalchemy import delete
 
 from backend.app.api.routes.patient import (
@@ -21,6 +23,7 @@ from backend.app.api.routes.patient import (
     _snap_scores,
 )
 from backend.app.core.security import get_password_hash
+from backend.app.core.config import settings
 from backend.app.db.session import SessionLocal
 from backend.app.models.cognitive_test import CognitiveTest
 from backend.app.models.imaging_visualization import ImagingVisualization
@@ -36,6 +39,8 @@ PASSWORD = "Demo#2026"
 ADULT_EMAIL = "adult@demo.com"
 CHILD_EMAIL = "child@demo.com"
 DOCTOR_EMAIL = "doctor@demo.com"
+DAC_EMAIL = "dac@demo.com"
+DAC_STAFF_ID = "dac-demo"
 
 
 def _tracking_logs() -> list[dict]:
@@ -190,6 +195,10 @@ def _seed_prediction(db, patient_id: int, label: str) -> None:
 
 
 def seed_demo_data() -> None:
+    app_env = os.getenv("APP_ENV", settings.APP_ENV).strip().lower()
+    if app_env == "production":
+        raise RuntimeError("Demo data seed is disabled in production.")
+
     with SessionLocal() as db:
         doctor = db.query(User).filter(User.email == DOCTOR_EMAIL).one_or_none()
         if doctor is None:
@@ -204,6 +213,28 @@ def seed_demo_data() -> None:
             )
             db.add(doctor)
             db.flush()
+
+        dac_user = db.query(User).filter(User.email == DAC_EMAIL).one_or_none()
+        if dac_user is None:
+            dac_user = User(
+                email=DAC_EMAIL,
+                staff_id=DAC_STAFF_ID,
+                full_name="演示 DAC 审计员",
+                password_hash=get_password_hash(PASSWORD),
+                role=UserRole.RESEARCHER,
+                subrole=UserSubrole.DAC,
+                consent_agreed=True,
+                is_active=True,
+            )
+            db.add(dac_user)
+        else:
+            dac_user.staff_id = DAC_STAFF_ID
+            dac_user.full_name = "演示 DAC 审计员"
+            dac_user.password_hash = get_password_hash(PASSWORD)
+            dac_user.role = UserRole.RESEARCHER
+            dac_user.subrole = UserSubrole.DAC
+            dac_user.consent_agreed = True
+            dac_user.is_active = True
 
         def ensure_patient(email: str, name: str, age: int, gender: str, ptype: PatientType) -> int:
             user = db.query(User).filter(User.email == email).one_or_none()
@@ -269,6 +300,7 @@ def seed_demo_data() -> None:
     print(f"  {ADULT_EMAIL} / {PASSWORD}  (成人 ASRS 高风险)")
     print(f"  {CHILD_EMAIL} / {PASSWORD}  (儿童 SNAP-IV 低风险)")
     print(f"  {DOCTOR_EMAIL} / {PASSWORD}  (研究者)")
+    print(f"  {DAC_EMAIL} / {PASSWORD}  (DAC 演示账号)")
 
 
 if __name__ == "__main__":

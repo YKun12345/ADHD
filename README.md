@@ -1,5 +1,13 @@
 # ADHD 智慧辅助诊断平台 — AB 合并版
 
+## 发布安全边界（2026-08-30 审查后）
+
+- 后端只公开 `/doctor-web` 和 `/findviz` 所需资源，不再把仓库根目录作为静态站点；`.env`、数据库、上传文件、小程序源码和历史归档不能通过 HTTP 读取。
+- 服务启动不会创建固定 DAC 管理账号，也会禁用旧库中的公开遗留账号 `admin123`。演示 DAC 只由 `python -m backend.scripts.seed_demo_data` 显式创建，且该脚本拒绝在 `APP_ENV=production` 下运行。
+- 旧 SQLite 库启动升级时会为 `model_predictions.upload_id` 增加唯一索引及关联完整性触发器。旧 MySQL 库请先备份，再执行 `backend/sql/migrations/20260830_model_prediction_upload_link_mysql.sql`；全新数据库由 SQLAlchemy 模型创建等价的唯一外键。
+- 影像 Mock 结果在医生报告中显示红色“演示 Mock”提示和后端免责声明；真实推理失败不会静默降级成 Mock。
+- 上传接口分块读取并执行服务器端硬上限，不会在检查大小前读取整个任意大文件。
+
 这是独立于 A、B 原目录的新版本：患者端以 A 的原生微信小程序为主，服务端以 B 的 FastAPI 后端为主，B 的医生/研究人员 Web 保留为活动入口。B 的旧患者网页没有删除，已放入只读意义上的历史归档。
 
 本项目是科研与演示软件，不是独立医疗器械。自动测试通过不代表医学有效性、临床安全性或生产合规性已经验证。

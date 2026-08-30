@@ -111,6 +111,16 @@ class WebDependencyAuditTests(unittest.TestCase):
         self.assertIn("'/pages/tracking/index'", task_script)
         self.assertIn("'/pages/report/index'", task_script)
 
+    def test_doctor_report_renders_explicit_mock_disclaimer(self) -> None:
+        html = (ROOT / "doctor-web" / "doctor_report.html").read_text(encoding="utf-8")
+        script = (ROOT / "doctor-web" / "js" / "doctor_report.js").read_text(encoding="utf-8")
+
+        self.assertIn('id="modelPredictionDemoNotice"', html)
+        self.assertIn("prediction.is_demo", script)
+        self.assertIn("prediction.disclaimer", script)
+        self.assertIn("modelPredictionDemoNotice", script)
+        self.assertIn("演示 Mock", script)
+
 
 if __name__ == "__main__":
     unittest.main()

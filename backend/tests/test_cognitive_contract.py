@@ -134,3 +134,84 @@ def test_simple_reaction_alone_drives_reaction_speed(client) -> None:
     cognitive = report.json()["cognitive_profile"]
     assert cognitive["radar_scores"]["reaction_speed"] > 0
     assert [item["test_type"] for item in cognitive["latest_tests"]] == ["simple_reaction"]
+
+
+def test_miniprogram_digit_span_fields_drive_working_memory(client) -> None:
+    headers = register_patient(client)
+
+    response = client.post(
+        "/api/v1/patient/submit_cognitive_test",
+        headers=headers,
+        json={
+            "test_type": "digit",
+            "result_json": {
+                "test_name": "数字广度",
+                "status_text": "已完成",
+                "finished_at": "2026-08-30T08:00:00Z",
+                "metrics": [
+                    {"label": "顺背最大跨度", "value": "7"},
+                    {"label": "倒背最大跨度", "value": "5"},
+                ],
+                "raw_result": {
+                    "forward_max_span": 7,
+                    "backward_max_span": 5,
+                    "accuracy": 0.85,
+                },
+            },
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["result_json"]["raw_result"]["highest_span"] == 7
+
+    report = client.get("/api/v1/patient/comprehensive_report", headers=headers)
+
+    assert report.status_code == 200, report.text
+    assert report.json()["cognitive_profile"]["radar_scores"]["working_memory"] > 0
+
+
+def test_preexisting_legacy_type_rows_appear_under_canonical_types(client) -> None:
+    headers = register_patient(client)
+
+    from sqlalchemy import select
+
+    from backend.app.db.session import SessionLocal
+    from backend.app.models.cognitive_test import CognitiveTest
+    from backend.app.models.patient import Patient
+    from backend.app.models.user import User
+
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.email == "cognitive@example.com"))
+        assert user is not None
+        patient = db.scalar(select(Patient).where(Patient.user_id == user.id))
+        assert patient is not None
+        db.add_all(
+            [
+                CognitiveTest(
+                    patient_id=patient.id,
+                    test_type="gonogo",
+                    result_json={"avg_reaction_ms": 420, "correct_rate": 0.9},
+                ),
+                CognitiveTest(
+                    patient_id=patient.id,
+                    test_type="digit_span",
+                    result_json={
+                        "forward_max_span": 6,
+                        "backward_max_span": 4,
+                        "accuracy": 0.8,
+                    },
+                ),
+            ]
+        )
+        db.commit()
+
+    report = client.get("/api/v1/patient/comprehensive_report", headers=headers)
+
+    assert report.status_code == 200, report.text
+    cognitive = report.json()["cognitive_profile"]
+    assert [item["test_type"] for item in cognitive["latest_tests"]] == [
+        "reaction",
+        "digit",
+    ]
+    assert cognitive["radar_scores"]["reaction_speed"] > 0
+    assert cognitive["radar_scores"]["working_memory"] > 0

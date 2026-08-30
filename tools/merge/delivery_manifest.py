@@ -105,12 +105,13 @@ def create_manifest(root: Path, output: Path) -> dict:
     output_relative = output.relative_to(root).as_posix()
     paths = tracked_files(root)
     paths.discard(output_relative)
+    content_commit = git(root, "rev-parse", "HEAD")
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "verified_base_commit": git(root, "rev-parse", "HEAD"),
+        "content_commit": content_commit,
         "manifest_path": output_relative,
-        "scope": "All Git-tracked files at verified_base_commit, excluding this manifest file.",
+        "scope": "All Git-tracked files at content_commit, excluding this manifest file.",
         "file_count": len(paths),
         "files": build_entries(root, list(paths)),
     }
@@ -140,7 +141,7 @@ def main() -> int:
 
     if args.action == "create":
         manifest = create_manifest(root, manifest_path)
-        print(f"verified_base_commit={manifest['verified_base_commit']}")
+        print(f"content_commit={manifest['content_commit']}")
         print(f"file_count={manifest['file_count']}")
         print(f"manifest={manifest_path}")
         return 0
@@ -154,7 +155,7 @@ def main() -> int:
             print(f"ERROR {failure}")
         return 1
     print(f"verified_files={len(manifest['files'])}")
-    print(f"verified_base_commit={manifest['verified_base_commit']}")
+    print(f"content_commit={manifest['content_commit']}")
     return 0
 
 

@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from sqlalchemy import func, select
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -39,6 +41,54 @@ def test_health_uses_temporary_sqlite(client, sqlite_database_path: Path) -> Non
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert sqlite_database_path.exists()
+
+
+def test_static_routes_expose_only_the_doctor_web(client) -> None:
+    assert client.get("/doctor-web/login.html").status_code == 200
+    for private_path in (
+        "/backend/app/main.py",
+        "/miniprogram/app.json",
+        "/archive/legacy-patient-web/patient_home.html",
+    ):
+        assert client.get(private_path).status_code == 404, private_path
+
+
+def test_startup_does_not_provision_a_fixed_dac_account(client) -> None:
+    from backend.app.db.session import SessionLocal
+    from backend.app.models.user import User, UserSubrole
+
+    with SessionLocal() as db:
+        dac_count = db.scalar(
+            select(func.count()).select_from(User).where(User.subrole == UserSubrole.DAC)
+        )
+    assert dac_count == 0
+
+
+def test_startup_disables_an_existing_legacy_fixed_dac_account(client) -> None:
+    from backend.app.core.security import get_password_hash
+    from backend.app.db.init_db import init_db
+    from backend.app.db.session import SessionLocal
+    from backend.app.models.user import User, UserRole, UserSubrole
+
+    with SessionLocal() as db:
+        legacy = User(
+            email="admin123@qq.com",
+            staff_id="admin123",
+            full_name="Legacy DAC",
+            password_hash=get_password_hash("admin1111"),
+            role=UserRole.RESEARCHER,
+            subrole=UserSubrole.DAC,
+            consent_agreed=True,
+            is_active=True,
+        )
+        db.add(legacy)
+        db.commit()
+        legacy_id = legacy.id
+
+    init_db()
+
+    with SessionLocal() as db:
+        assert db.get(User, legacy_id).is_active is False
 
 
 def test_production_requires_explicit_database_url() -> None:
