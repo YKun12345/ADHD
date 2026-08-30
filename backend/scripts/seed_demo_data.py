@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+from sqlalchemy import delete
+
 from backend.app.api.routes.patient import (
     _asrs_scores,
     _build_recommendations,
@@ -27,6 +29,7 @@ from backend.app.models.patient import Patient, PatientType
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole, UserSubrole
+from backend.app.services.cognitive_contract import normalize_result_json
 
 PASSWORD = "Demo#2026"
 
@@ -88,17 +91,64 @@ def _seed_scale(db, patient_id: int, scale_type: str, answers: list[int], respon
     ))
 
 
+def _clear_demo_patient_data(db, patient_id: int) -> None:
+    for model in (
+        ModelPrediction,
+        ImagingVisualization,
+        TrackingLog,
+        CognitiveTest,
+        ScaleResult,
+    ):
+        db.execute(delete(model).where(model.patient_id == patient_id))
+
+
 def _seed_cognitive(db, patient_id: int) -> None:
     tests = [
-        ("reaction", {"avg_reaction_ms": 412.5, "correct_rate": 0.91}),
-        ("stroop", {"total_trials": 24, "correct": 21, "wrong": 3}),
-        ("trail", {"duration_s": 58.2, "errors": 2}),
-        ("flanker", {"total_trials": 24, "correct": 20, "wrong": 4}),
-        ("nback", {"n": 2, "accuracy": 0.78}),
-        ("digit", {"max_span": 6}),
+        (
+            "reaction",
+            {"average_reaction_time_ms": 412.5, "accuracy": 91, "false_starts": 1},
+            "正确率 91%",
+        ),
+        (
+            "simple_reaction",
+            {"average_reaction_time_ms": 338.0, "accuracy": 100},
+            "平均反应时 338 ms",
+        ),
+        (
+            "stroop",
+            {"average_reaction_time_ms": 735.0, "accuracy": 87.5},
+            "正确率 87.5%",
+        ),
+        (
+            "trail",
+            {"elapsed_ms": 58_200, "errors": 2, "accuracy": 92},
+            "用时 58.2 s",
+        ),
+        (
+            "flanker",
+            {"average_reaction_time_ms": 680.0, "accuracy": 83.33},
+            "正确率 83.33%",
+        ),
+        ("nback", {"n": 2, "accuracy": 78}, "正确率 78%"),
+        ("digit", {"highest_span": 6, "accuracy": 85}, "最高广度 6"),
     ]
-    for test_type, result_json in tests:
-        db.add(CognitiveTest(patient_id=patient_id, test_type=test_type, result_json=result_json))
+    for test_type, raw_result, metric_text in tests:
+        result_json = normalize_result_json(
+            test_type,
+            {
+                "status_text": "已完成",
+                "finished_at": "2026-08-30T08:00:00Z",
+                "metrics": [{"label": "关键指标", "value": metric_text}],
+                "raw_result": raw_result,
+            },
+        )
+        db.add(
+            CognitiveTest(
+                patient_id=patient_id,
+                test_type=test_type,
+                result_json=result_json,
+            )
+        )
 
 
 def _seed_imaging(db, patient_id: int, researcher_id: int) -> None:
@@ -186,6 +236,9 @@ def seed_demo_data() -> None:
 
         adult_id = ensure_patient(ADULT_EMAIL, "演示成人患者", 20, "male", PatientType.ADULT)
         child_id = ensure_patient(CHILD_EMAIL, "演示儿童患者", 9, "female", PatientType.CHILD)
+
+        _clear_demo_patient_data(db, adult_id)
+        _clear_demo_patient_data(db, child_id)
 
         # 成人 ASRS 高风险（18 题，多数 3~4 分）
         _seed_scale(db, adult_id, "ASRS",
