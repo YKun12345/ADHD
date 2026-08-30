@@ -22,8 +22,8 @@ function resolveFindvizBasePath() {
 
 window.FINDVIZ_BASE_PATH = resolveFindvizBasePath();
 
-import { initBootstrapComponents } from '../findviz/static/js/utils.js';
-import { DOM_IDS } from '../findviz/static/js/constants/DomIds.js';
+import { initBootstrapComponents } from '../../findviz/static/js/utils.js';
+import { DOM_IDS } from '../../findviz/static/js/constants/DomIds.js';
 
 let boundPatients = [];
 let currentSelectedPatient = null;
@@ -83,20 +83,20 @@ async function ensureFindvizFragments() {
         averageModal,
         correlationModal
     ] = await Promise.all([
-        fetchFragment('findviz/templates/components/modals/uploadErrorModal.html'),
-        fetchFragment('findviz/templates/components/modals/viewerErrorModal.html'),
-        fetchFragment('findviz/templates/components/fmriVisualizationOptions.html'),
-        fetchFragment('findviz/templates/components/fmriPreprocessingOptions.html'),
-        fetchFragment('findviz/templates/components/fmriVisualizationCard.html'),
-        fetchFragment('findviz/templates/components/timeCourseVisualizationOptions.html'),
-        fetchFragment('findviz/templates/components/timeCourseMarkerOptions.html'),
-        fetchFragment('findviz/templates/components/timeCoursePreprocessingOptions.html'),
-        fetchFragment('findviz/templates/components/timeCourseVisualizationCard.html'),
-        fetchFragment('findviz/templates/components/analyticsToolbox.html'),
-        fetchFragment('findviz/templates/components/modals/distanceModal.html'),
-        fetchFragment('findviz/templates/components/modals/saveSceneModal.html'),
-        fetchFragment('findviz/templates/components/modals/averageModal.html'),
-        fetchFragment('findviz/templates/components/modals/correlationModal.html')
+        fetchFragment('../findviz/templates/components/modals/uploadErrorModal.html'),
+        fetchFragment('../findviz/templates/components/modals/viewerErrorModal.html'),
+        fetchFragment('../findviz/templates/components/fmriVisualizationOptions.html'),
+        fetchFragment('../findviz/templates/components/fmriPreprocessingOptions.html'),
+        fetchFragment('../findviz/templates/components/fmriVisualizationCard.html'),
+        fetchFragment('../findviz/templates/components/timeCourseVisualizationOptions.html'),
+        fetchFragment('../findviz/templates/components/timeCourseMarkerOptions.html'),
+        fetchFragment('../findviz/templates/components/timeCoursePreprocessingOptions.html'),
+        fetchFragment('../findviz/templates/components/timeCourseVisualizationCard.html'),
+        fetchFragment('../findviz/templates/components/analyticsToolbox.html'),
+        fetchFragment('../findviz/templates/components/modals/distanceModal.html'),
+        fetchFragment('../findviz/templates/components/modals/saveSceneModal.html'),
+        fetchFragment('../findviz/templates/components/modals/averageModal.html'),
+        fetchFragment('../findviz/templates/components/modals/correlationModal.html')
     ]);
 
     const analyticsResolved = analyticsToolbox
@@ -413,7 +413,7 @@ function updatePatientLinks(patient) {
     let baseUrl = '';
     let authParams = '';
     if (window.location.protocol === 'file:') {
-        baseUrl = 'http://127.0.0.1:8000/';
+        baseUrl = 'http://127.0.0.1:8000/doctor-web/';
         authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
     }
     const visualizationUrl = patientId ? `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}` : `${baseUrl}doctor_visualization.html?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Failed to initialize doctor visualization page:', error);
         setStartupAlert(
-            `影像可视化初始化失败：${error.message || '请确认后端已启动。'} 若本地后端尚未启动，请先运行 <code>uvicorn backend.app.main:app --reload</code>，再通过 <code>http://127.0.0.1:8000/doctor_visualization.html</code> 访问本页。`
+            `影像可视化初始化失败：${error.message || '请确认后端已启动。'} 若本地后端尚未启动，请先运行 <code>uvicorn backend.app.main:app --reload</code>，再通过 <code>http://127.0.0.1:8000/doctor-web/doctor_visualization.html</code> 访问本页。`
         );
         return;
     }

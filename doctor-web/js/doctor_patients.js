@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let baseUrl = '';
                 let authParams = '';
                 if (window.location.protocol === 'file:') {
-                    baseUrl = 'http://127.0.0.1:8000/';
+                    baseUrl = 'http://127.0.0.1:8000/doctor-web/';
                     authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
                 }
                 window.location.href = `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}`;
@@ -365,10 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const targetPageMap = {
-                    scale: 'patient_scale.html',
-                    cognitive: 'patient_test.html',
-                    tracking: 'patient_tracking.html',
-                    report_review: 'patient_report.html'
+                    scale: '/pages/scale/index',
+                    cognitive: '/pages/cognitive-center/index',
+                    tracking: '/pages/tracking/index',
+                    report_review: '/pages/report/index'
                 };
 
                 try {
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         task_type: taskType,
                         task_title: taskTitle,
                         task_description: taskDescription,
-                        target_page: targetPageMap[taskType] || 'patient_home.html'
+                        target_page: targetPageMap[taskType] || '/pages/home/index'
                     });
 
                     form.reset();

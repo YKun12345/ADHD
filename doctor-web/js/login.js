@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const splitLeft = document.querySelector('.split-left');
     const neuronBg = document.querySelector('.neuron-bg');
 
-    let currentRole = 'patient';
+    let currentRole = 'researcher';
     let isSubmitting = false;
 
     const isRegisterMode = () => document.body.classList.contains('mode-register');
@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRedirectPath(role, user = null) {
-        if (role === 'patient') return 'patient_home.html';
         if (user?.subrole === 'dac') return 'dac_dashboard.html';
         return 'doctor_analysis.html';
     }

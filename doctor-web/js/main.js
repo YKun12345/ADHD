@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let baseUrl = '';
         let authParams = '';
         if (window.location.protocol === 'file:') {
-            baseUrl = 'http://127.0.0.1:8000/';
+            baseUrl = 'http://127.0.0.1:8000/doctor-web/';
             authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
         }
         const visualizationUrl = patientId ? `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}` : `${baseUrl}doctor_visualization.html?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;

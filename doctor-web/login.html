@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>登录 | 知行合“医”</title>
+    <title>医生与研究人员登录 | 知行合“医”</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
@@ -12,7 +12,7 @@
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 
-<body>
+<body class="theme-researcher">
 
     <div class="login-split">
         <!-- Left Side: Brand & Background -->
@@ -55,20 +55,13 @@
         <!-- Right Side: Interaction Form -->
         <div class="split-right">
             <div class="form-container slide-up" style="animation-delay: 0.1s;">
-                <!-- Role Selection Segmented Control -->
+                <!-- AB 合并版的患者主入口是微信小程序；本页仅服务医生/研究人员 Web。 -->
                 <div class="role-segmented-control" id="roleSelector">
-                    <div class="segment-pill active" data-role="patient" tabindex="0">
-                        <ion-icon name="heart"></ion-icon>
-                        <div class="role-text">
-                            <span class="role-title">就诊者</span>
-                            <span class="role-desc">我是来就诊的</span>
-                        </div>
-                    </div>
-                    <div class="segment-pill" data-role="researcher" tabindex="0">
+                    <div class="segment-pill active" data-role="researcher" tabindex="0">
                         <ion-icon name="flask"></ion-icon>
                         <div class="role-text">
-                            <span class="role-title">研究人员</span>
-                            <span class="role-desc">我是来进行科研的</span>
+                            <span class="role-title">医生 / 研究人员</span>
+                            <span class="role-desc">患者请使用微信小程序</span>
                         </div>
                     </div>
                 </div>

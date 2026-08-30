@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let baseUrl = '';
         let authParams2 = '';
         if (window.location.protocol === 'file:') {
-            baseUrl = 'http://127.0.0.1:8000/';
+            baseUrl = 'http://127.0.0.1:8000/doctor-web/';
             authParams2 = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
         }
         focusPatientVizBtn.href = `${baseUrl}doctor_visualization.html?patient_id=${patient.patient_id}${authParams2}`;

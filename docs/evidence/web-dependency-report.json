@@ -1,0 +1,617 @@
+{
+  "schema_version": 1,
+  "root": ".",
+  "excluded_prefixes": [
+    "archive",
+    "miniprogram",
+    "findviz/templates",
+    "findviz/static/js/main.js",
+    "HGST-main"
+  ],
+  "scanned_files": 95,
+  "missing_count": 0,
+  "references": [
+    {
+      "source": "doctor-web/dac_dashboard.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/dac_dashboard.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/dac_dashboard.html",
+      "reference": "dac_dashboard.html",
+      "resolved_target": "doctor-web/dac_dashboard.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/dac_dashboard.html",
+      "reference": "js/api.js?v=20260406c",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/dac_dashboard.html",
+      "reference": "js/dac_dashboard.js?v=20260406c",
+      "resolved_target": "doctor-web/js/dac_dashboard.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "dac_dashboard.html",
+      "resolved_target": "doctor-web/dac_dashboard.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_analysis.html",
+      "resolved_target": "doctor-web/doctor_analysis.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "doctor_visualization.html",
+      "resolved_target": "doctor-web/doctor_visualization.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "js/api.js",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_analysis.html",
+      "reference": "js/doctor_home.js",
+      "resolved_target": "doctor-web/js/doctor_home.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "doctor_imaging.html",
+      "resolved_target": "doctor-web/doctor_imaging.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "doctor_visualization.html",
+      "resolved_target": "doctor-web/doctor_visualization.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "js/api.js?v=20260407a",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_imaging.html",
+      "reference": "js/main.js?v=20260407a",
+      "resolved_target": "doctor-web/js/main.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "doctor_analysis.html",
+      "resolved_target": "doctor-web/doctor_analysis.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "js/api.js",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_patients.html",
+      "reference": "js/doctor_patients.js",
+      "resolved_target": "doctor-web/js/doctor_patients.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.htm",
+      "reference": "doctor_report.html",
+      "resolved_target": "doctor-web/doctor_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "doctor_analysis.html",
+      "resolved_target": "doctor-web/doctor_analysis.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "js/api.js?v=20260405d",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_report.html",
+      "reference": "js/doctor_report.js?v=20260405d",
+      "resolved_target": "doctor-web/js/doctor_report.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/css/styles.css",
+      "resolved_target": "findviz/static/css/styles.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/css/vendor/all.min.css",
+      "resolved_target": "findviz/static/css/vendor/all.min.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/css/vendor/bootstrap-select.min.css",
+      "resolved_target": "findviz/static/css/vendor/bootstrap-select.min.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/css/vendor/bootstrap-slider.min.css",
+      "resolved_target": "findviz/static/css/vendor/bootstrap-slider.min.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/css/vendor/bootstrap.min.css",
+      "resolved_target": "findviz/static/css/vendor/bootstrap.min.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/bootstrap-select.min.js",
+      "resolved_target": "findviz/static/js/vendor/bootstrap-select.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/bootstrap-slider.min.js",
+      "resolved_target": "findviz/static/js/vendor/bootstrap-slider.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/bootstrap.min.js",
+      "resolved_target": "findviz/static/js/vendor/bootstrap.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/html2canvas.min.js",
+      "resolved_target": "findviz/static/js/vendor/html2canvas.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/jquery-3.5.1.min.js",
+      "resolved_target": "findviz/static/js/vendor/jquery-3.5.1.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/plotly-latest.min.js",
+      "resolved_target": "findviz/static/js/vendor/plotly-latest.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "../findviz/static/js/vendor/popper.min.js",
+      "resolved_target": "findviz/static/js/vendor/popper.min.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "css/patient.css",
+      "resolved_target": "doctor-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "doctor_imaging.html",
+      "resolved_target": "doctor-web/doctor_imaging.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "doctor_patients.html",
+      "resolved_target": "doctor-web/doctor_patients.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "doctor_visualization.html",
+      "resolved_target": "doctor-web/doctor_visualization.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "js/api.js?v=20260407a",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/doctor_visualization.html",
+      "reference": "js/doctor_visualization.js?v=20260407a",
+      "resolved_target": "doctor-web/js/doctor_visualization.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/index.html",
+      "reference": "login.html",
+      "resolved_target": "doctor-web/login.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/login.html",
+      "reference": "css/login.css",
+      "resolved_target": "doctor-web/css/login.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/login.html",
+      "reference": "css/style.css",
+      "resolved_target": "doctor-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/login.html",
+      "reference": "js/api.js",
+      "resolved_target": "doctor-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "doctor-web/login.html",
+      "reference": "js/login.js",
+      "resolved_target": "doctor-web/js/login.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-brands-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-brands-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-regular-400.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-regular-400.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-solid-900.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-solid-900.woff2",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-v4compatibility.ttf",
+      "resolved_target": "findviz/static/css/webfonts/fa-v4compatibility.ttf",
+      "exists": true,
+      "kind": "css"
+    },
+    {
+      "source": "findviz/static/css/vendor/all.min.css",
+      "reference": "../webfonts/fa-v4compatibility.woff2",
+      "resolved_target": "findviz/static/css/webfonts/fa-v4compatibility.woff2",
+      "exists": true,
+      "kind": "css"
+    }
+  ]
+}
