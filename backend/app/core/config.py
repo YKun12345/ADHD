@@ -10,6 +10,7 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
 
 
 class Settings:
+    APP_ENV: str = os.getenv("APP_ENV", "development").strip().lower()
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "ADHD Assist Platform API")
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
@@ -55,10 +56,21 @@ class Settings:
     HGST_DEFAULT_DATA_DIR: str = os.getenv("HGST_DEFAULT_DATA_DIR", "").strip()
     HGST_DEFAULT_LABELS_PATH: str = os.getenv("HGST_DEFAULT_LABELS_PATH", "").strip()
 
+    def __init__(self) -> None:
+        if self.APP_ENV == "production":
+            if not self.DATABASE_URL:
+                raise RuntimeError("DATABASE_URL is required when APP_ENV=production.")
+            if self.SECRET_KEY in {"", "change-me", "placeholder", "example"}:
+                raise RuntimeError("A non-placeholder SECRET_KEY is required in production.")
+
     @cached_property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         if self.DATABASE_URL:
             return self.DATABASE_URL
+
+        if self.APP_ENV in {"development", "test"}:
+            sqlite_path = (Path(__file__).resolve().parents[2] / "app.db").as_posix()
+            return f"sqlite:///{sqlite_path}"
 
         password = quote_plus(self.MYSQL_PASSWORD)
         return (
