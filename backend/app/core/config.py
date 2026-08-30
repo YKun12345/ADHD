@@ -12,7 +12,7 @@ load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
 class Settings:
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "ADHD Assist Platform API")
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-this-secret-before-production")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
@@ -20,7 +20,7 @@ class Settings:
     MYSQL_HOST: str = os.getenv("MYSQL_HOST", "127.0.0.1")
     MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", "3306"))
     MYSQL_USER: str = os.getenv("MYSQL_USER", "root")
-    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "123456")
+    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "")
     MYSQL_DB: str = os.getenv("MYSQL_DB", "adhd_demo")
 
     BACKEND_CORS_ORIGINS: str = os.getenv(
