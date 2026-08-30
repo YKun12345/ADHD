@@ -174,6 +174,38 @@ class RepositoryCleanlinessTests(unittest.TestCase):
         self.assertNotIn("CREATE TABLE IF NOT EXISTS `uploads`", sql)
         self.assertIn("python -m backend.create_tables", sql)
 
+    def test_no_machine_specific_or_one_off_root_scripts(self) -> None:
+        obsolete = {
+            "export_chat_logs.py",
+            "setup_server.sh",
+            "tools/patch_findviz.ps1",
+            "tools/patch_findviz_embed.py",
+        }
+        tracked = {
+            path.relative_to(ROOT).as_posix()
+            for path in tracked_files()
+            if path.exists()
+        }
+        self.assertEqual([], sorted(obsolete & tracked))
+
+    def test_absolute_windows_paths_only_appear_in_provenance_documents(self) -> None:
+        violations: list[str] = []
+        allowed_prefixes = ("docs/evidence/", "docs/superpowers/")
+        windows_path = re.compile(r"[A-Z]:\\")
+        for path in tracked_files():
+            relative = path.relative_to(ROOT).as_posix()
+            if relative.startswith(allowed_prefixes):
+                continue
+            if path.suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            if windows_path.search(text):
+                violations.append(relative)
+        self.assertEqual([], violations)
+
 
 if __name__ == "__main__":
     unittest.main()

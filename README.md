@@ -100,7 +100,7 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ## 8. 自动测试
 
 ```bash
-node --test miniprogram/tests
+node --test miniprogram/tests/*.test.js
 python -m pytest backend/tests -q
 python -m unittest tests.test_web_dependency_audit tests.test_repository_cleanliness -v
 ```
