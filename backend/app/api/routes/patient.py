@@ -37,6 +37,10 @@ from backend.app.services.security_service import (
     capture_scale_result_cipher,
     capture_tracking_log_cipher,
 )
+from backend.app.services.cognitive_contract import (
+    CANONICAL_COGNITIVE_TYPES,
+    normalize_result_json,
+)
 
 
 router = APIRouter(prefix="/patient", tags=["patient"])
@@ -279,22 +283,31 @@ def _extract_latest_cognitive_profile(
             latest_by_type[record.test_type] = record
 
     reaction = latest_by_type.get("reaction")
+    simple_reaction = latest_by_type.get("simple_reaction")
     stroop = latest_by_type.get("stroop")
     trail = latest_by_type.get("trail")
     flanker = latest_by_type.get("flanker")
     nback = latest_by_type.get("nback")
     digit = latest_by_type.get("digit")
 
-    reaction_raw = (reaction.result_json or {}).get("raw_result", {}) if reaction else {}
-    stroop_raw = (stroop.result_json or {}).get("raw_result", {}) if stroop else {}
-    trail_raw = (trail.result_json or {}).get("raw_result", {}) if trail else {}
-    flanker_raw = (flanker.result_json or {}).get("raw_result", {}) if flanker else {}
-    nback_raw = (nback.result_json or {}).get("raw_result", {}) if nback else {}
-    digit_raw = (digit.result_json or {}).get("raw_result", {}) if digit else {}
+    def raw_result(record: CognitiveTest | None) -> dict:
+        if record is None:
+            return {}
+        normalized = normalize_result_json(record.test_type, record.result_json or {})
+        return normalized.get("raw_result", {})
+
+    reaction_raw = raw_result(reaction)
+    simple_reaction_raw = raw_result(simple_reaction)
+    stroop_raw = raw_result(stroop)
+    trail_raw = raw_result(trail)
+    flanker_raw = raw_result(flanker)
+    nback_raw = raw_result(nback)
+    digit_raw = raw_result(digit)
+    reaction_speed_raw = simple_reaction_raw or reaction_raw
 
     reaction_speed = _clamp_score(
         (
-            _inverse_time_score(_extract_float(reaction_raw, "average_reaction_time_ms"), 250, 900) * 0.45
+            _inverse_time_score(_extract_float(reaction_speed_raw, "average_reaction_time_ms"), 250, 900) * 0.45
             + _inverse_time_score(_extract_float(stroop_raw, "average_reaction_time_ms"), 500, 1800) * 0.2
             + _inverse_time_score(_extract_float(flanker_raw, "average_reaction_time_ms"), 400, 1600) * 0.2
             + _inverse_time_score(_extract_float(trail_raw, "elapsed_ms"), 6000, 40000) * 0.15
@@ -352,7 +365,7 @@ def _extract_latest_cognitive_profile(
     def build_item(record: CognitiveTest | None) -> CognitiveTestReportItem | None:
         if record is None:
             return None
-        result_json = record.result_json or {}
+        result_json = normalize_result_json(record.test_type, record.result_json or {})
         metrics = result_json.get("metrics") or []
         key_metric = metrics[0]["value"] if metrics and isinstance(metrics[0], dict) and "value" in metrics[0] else "--"
         finished_at = result_json.get("finished_at")
@@ -373,12 +386,8 @@ def _extract_latest_cognitive_profile(
     latest_tests = [
         item
         for item in [
-            build_item(reaction),
-            build_item(stroop),
-            build_item(trail),
-            build_item(flanker),
-            build_item(nback),
-            build_item(digit),
+            build_item(latest_by_type.get(test_type))
+            for test_type in CANONICAL_COGNITIVE_TYPES
         ]
         if item is not None
     ]
