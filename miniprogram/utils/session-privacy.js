@@ -16,6 +16,12 @@ const PATIENT_DATA_KEYS = [
   'cognitive_latest_results',
   'pending_cognitive_result',
   'pending_stroop_result',
+  'pending_simple_reaction_result',
+  'pending_trail_result',
+  'pending_flanker_result',
+  'pending_nback_result',
+  'pending_digit_result',
+  'cognitive_battery_state',
   'tracking_local_logs',
   'tracking_pending_logs'
 ]
@@ -390,7 +396,12 @@ function summarizePatientData(readStorage = defaultReadStorage) {
 
   const pendingCount = [
     'pending_cognitive_result',
-    'pending_stroop_result'
+    'pending_stroop_result',
+    'pending_simple_reaction_result',
+    'pending_trail_result',
+    'pending_flanker_result',
+    'pending_nback_result',
+    'pending_digit_result'
   ].filter((key) => hasValidContent(safeRead(read, key))).length +
     countValidMapEntries(safeRead(read, 'tracking_pending_logs'))
 

@@ -1,3 +1,8 @@
 {
-  "navigationBarTitleText": "患者注册"
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "患者注册",
+  "usingComponents": {
+    "ui-icon": "/components/ui-icon/index",
+    "ui-nav": "/components/ui-nav/index"
+  }
 }

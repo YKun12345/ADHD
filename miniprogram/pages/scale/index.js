@@ -123,6 +123,8 @@ registerPatientPage({
   },
 
   selectOption(event) {
+    if (this.data.submitting) return
+
     const value = Number(event.currentTarget.dataset.value)
     if (!this.scaleModel) {
       return

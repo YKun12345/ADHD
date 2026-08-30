@@ -142,6 +142,19 @@ async function run() {
     [2]
   ])
 
+  const storageWritesBeforeLockedSelection = calls.storageWrites.length
+  adultPage.setData({ submitting: true })
+  adultPage.selectOption({
+    currentTarget: {
+      dataset: {
+        value: 4
+      }
+    }
+  })
+  assert.deepEqual(adultPage.data.answers, [2], '提交中不得改变量表答案快照')
+  assert.equal(calls.storageWrites.length, storageWritesBeforeLockedSelection, '提交中不得写入量表草稿')
+  adultPage.setData({ submitting: false })
+
   adultPage.goNext()
   assert.equal(adultPage.data.currentIndex, 1)
   assert.equal(adultPage.data.selectedValue, null)

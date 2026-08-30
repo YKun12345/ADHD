@@ -37,6 +37,7 @@ const requiredWxmlSnippets = [
   'bindtap="showConsentSummary"',
   'loading="{{submitting}}"',
   'disabled="{{submitting}}"',
+  'ui-button--disabled',
   'bindtap="goBackToLogin"',
   '本平台仅用于辅助筛查，不替代专业医生诊断'
 ]
@@ -50,7 +51,7 @@ for (const snippet of requiredWxmlSnippets) {
 }
 
 assert.equal(
-  (wxml.match(/class="register-card"/g) || []).length,
+  (wxml.match(/class="register-card\s[^"']*"/g) || []).length,
   2,
   '注册页必须恰好包含患者信息和账号安全两个卡片'
 )
@@ -68,10 +69,10 @@ const requiredWxssSnippets = [
   '.gender-option--active',
   '.password-control',
   '.consent-panel',
-  '.register-button[disabled]',
+  'constant(safe-area-inset-bottom)',
   'env(safe-area-inset-bottom)',
-  '#17324d',
-  '#3f7c78'
+  '#173f50',
+  '#236b80'
 ]
 
 for (const snippet of requiredWxssSnippets) {

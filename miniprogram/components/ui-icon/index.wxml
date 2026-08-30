@@ -1,0 +1,12 @@
+<view
+  class="ui-icon ui-icon--{{name}} ui-icon--shape-{{shape}}"
+  aria-role="{{decorative ? 'none' : 'img'}}"
+  aria-label="{{label}}"
+  aria-hidden="{{decorative}}"
+>
+  <view class="ui-icon__a"></view>
+  <view class="ui-icon__b"></view>
+  <view class="ui-icon__c"></view>
+  <view class="ui-icon__d"></view>
+  <text wx:if="{{name === 'stroop'}}" class="ui-icon__letter">A</text>
+</view>

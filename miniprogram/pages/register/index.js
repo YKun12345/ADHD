@@ -76,6 +76,8 @@ Page({
   },
 
   onFieldInput(event) {
+    if (this.data.submitting) return
+
     const field = event.currentTarget.dataset.field
 
     if (!EDITABLE_FIELDS.includes(field)) {
@@ -88,36 +90,48 @@ Page({
   },
 
   onPatientTypeSelect(event) {
+    if (this.data.submitting) return
+
     this.setData({
       patientType: event.currentTarget.dataset.value
     })
   },
 
   onGenderSelect(event) {
+    if (this.data.submitting) return
+
     this.setData({
       gender: event.currentTarget.dataset.value
     })
   },
 
   togglePasswordVisibility() {
+    if (this.data.submitting) return
+
     this.setData({
       showPassword: !this.data.showPassword
     })
   },
 
   toggleConfirmPasswordVisibility() {
+    if (this.data.submitting) return
+
     this.setData({
       showConfirmPassword: !this.data.showConfirmPassword
     })
   },
 
   onConsentChange(event) {
+    if (this.data.submitting) return
+
     this.setData({
       consentAgreed: event.detail.value.includes('agreed')
     })
   },
 
   showConsentSummary() {
+    if (this.data.submitting) return
+
     wx.showModal({
       title: '知情同意说明摘要',
       content:

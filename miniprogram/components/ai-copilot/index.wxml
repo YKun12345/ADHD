@@ -2,7 +2,17 @@
   <view class="ai-copilot__panel" wx:if="{{expanded}}">
     <view class="ai-copilot__header">
       <text class="ai-copilot__title">{{config.title}}</text>
-      <view class="ai-copilot__close" bindtap="closePanel">×</view>
+      <view
+        class="ai-copilot__close"
+        hover-class="ai-copilot__control--pressed"
+        aria-role="button"
+        aria-label="关闭助手"
+        aria-disabled="{{navigating}}"
+        bindtap="closePanel"
+      >
+        <view class="ai-copilot__close-line ai-copilot__close-line--a"></view>
+        <view class="ai-copilot__close-line ai-copilot__close-line--b"></view>
+      </view>
     </view>
 
     <text class="ai-copilot__advice">{{config.advice}}</text>
@@ -10,10 +20,16 @@
     <view class="ai-copilot__actions">
       <view
         class="ai-copilot__action ai-copilot__action--primary"
+        hover-class="ai-copilot__control--pressed"
+        aria-role="button"
+        aria-disabled="{{navigating}}"
         bindtap="openPageHelp"
       >如何使用本页</view>
       <view
         class="ai-copilot__action ai-copilot__action--secondary"
+        hover-class="ai-copilot__control--pressed"
+        aria-role="button"
+        aria-disabled="{{navigating}}"
         bindtap="openFreeQuestion"
       >自己提问</view>
     </view>
@@ -23,7 +39,18 @@
     </text>
   </view>
 
-  <view class="ai-copilot__trigger" bindtap="togglePanel">
-    <text>AI</text>
+  <view
+    class="ai-copilot__trigger"
+    hover-class="ai-copilot__trigger--pressed"
+    aria-role="button"
+    aria-label="{{expanded ? '收起AI健康助手' : '打开AI健康助手'}}"
+    aria-expanded="{{expanded}}"
+    aria-disabled="{{navigating}}"
+    bindtap="togglePanel"
+  >
+    <view class="ai-copilot__halo"></view>
+    <view class="ai-copilot__icon">
+      <ui-icon name="ai" shape="orb" label="AI健康助手" decorative="{{false}}" />
+    </view>
   </view>
 </view>

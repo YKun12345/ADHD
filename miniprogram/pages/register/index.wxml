@@ -1,13 +1,20 @@
-<view class="register-page">
+<ui-nav title="患者注册" fallbackUrl="/pages/login/index" />
+<view class="register-page ui-page">
+  <view class="ambient-orb ambient-orb--cyan"></view>
+  <view class="ambient-orb ambient-orb--violet"></view>
   <view class="register-header">
+    <view class="register-brand-mark">
+      <ui-icon name="scale" shape="sheet" label="患者注册资料" decorative="{{false}}" />
+    </view>
+    <text class="register-kicker">PATIENT PROFILE</text>
     <text class="register-title">创建患者账号</text>
     <text class="register-subtitle">
       完善基础信息，开始14天辅助筛查计划
     </text>
   </view>
 
-  <form bindsubmit="handleSubmit">
-    <view class="register-card">
+  <form class="register-form {{submitting ? 'register-form--locked' : ''}}" bindsubmit="handleSubmit">
+    <view class="register-card glass-surface register-card--first">
       <text class="section-title">患者信息</text>
       <text class="section-description">
         请填写接受辅助筛查的患者资料
@@ -16,9 +23,10 @@
       <view class="field-block">
         <text class="field-label">患者姓名</text>
         <input
-          class="field-input"
+          class="field-input ui-input"
           type="text"
           maxlength="100"
+          disabled="{{submitting}}"
           value="{{fullName}}"
           placeholder="请输入患者姓名"
           placeholder-class="input-placeholder"
@@ -30,10 +38,14 @@
       <view class="field-block">
         <text class="field-label">患者类型</text>
         <text class="field-help">请主动选择，不根据年龄自动判断</text>
-        <view class="choice-grid patient-type-grid">
+        <view class="choice-grid patient-type-grid" aria-role="radiogroup" aria-label="患者类型">
           <view
             class="choice-card {{patientType === 'adult' ? 'choice-card--active' : ''}}"
             data-value="adult"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{patientType === 'adult'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onPatientTypeSelect"
           >
             <text class="choice-title">成人患者</text>
@@ -42,6 +54,10 @@
           <view
             class="choice-card {{patientType === 'child' ? 'choice-card--active' : ''}}"
             data-value="child"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{patientType === 'child'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onPatientTypeSelect"
           >
             <text class="choice-title">儿童患者</text>
@@ -53,9 +69,10 @@
       <view class="field-block">
         <text class="field-label">年龄</text>
         <input
-          class="field-input"
+          class="field-input ui-input"
           type="number"
           maxlength="3"
+          disabled="{{submitting}}"
           value="{{age}}"
           placeholder="请输入1至120之间的整数"
           placeholder-class="input-placeholder"
@@ -66,32 +83,48 @@
 
       <view class="field-block">
         <text class="field-label">性别（选填）</text>
-        <view class="gender-grid">
+        <view class="gender-grid" aria-role="radiogroup" aria-label="性别">
           <view
             class="gender-option {{gender === 'male' ? 'gender-option--active' : ''}}"
             data-value="male"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{gender === 'male'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onGenderSelect"
           >男</view>
           <view
             class="gender-option {{gender === 'female' ? 'gender-option--active' : ''}}"
             data-value="female"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{gender === 'female'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onGenderSelect"
           >女</view>
           <view
             class="gender-option {{gender === 'other' ? 'gender-option--active' : ''}}"
             data-value="other"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{gender === 'other'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onGenderSelect"
           >其他</view>
           <view
             class="gender-option {{gender === 'undisclosed' ? 'gender-option--active' : ''}}"
             data-value="undisclosed"
+            hover-class="{{submitting ? 'none' : 'choice-card--pressed'}}"
+            aria-role="radio"
+            aria-checked="{{gender === 'undisclosed'}}"
+            aria-disabled="{{submitting}}"
             bindtap="onGenderSelect"
           >不愿透露</view>
         </view>
       </view>
     </view>
 
-    <view class="register-card">
+    <view class="register-card glass-surface register-card--last">
       <text class="section-title">账号安全</text>
       <text class="section-description">
         使用邮箱和安全密码创建患者账号
@@ -100,9 +133,10 @@
       <view class="field-block">
         <text class="field-label">邮箱</text>
         <input
-          class="field-input"
+          class="field-input ui-input"
           type="text"
           maxlength="255"
+          disabled="{{submitting}}"
           value="{{email}}"
           placeholder="例如 patient@example.com"
           placeholder-class="input-placeholder"
@@ -115,20 +149,24 @@
         <text class="field-label">密码</text>
         <view class="password-control">
           <input
-            class="password-input"
+            class="password-input ui-input"
             type="text"
             password="{{!showPassword}}"
             maxlength="128"
+            disabled="{{submitting}}"
             value="{{password}}"
             placeholder="请输入密码"
             placeholder-class="input-placeholder"
             data-field="password"
             bindinput="onFieldInput"
           />
-          <text
+          <view
             class="visibility-button"
+            hover-class="{{submitting ? 'none' : 'visibility-button--pressed'}}"
+            aria-role="button"
+            aria-disabled="{{submitting}}"
             bindtap="togglePasswordVisibility"
-          >{{showPassword ? '隐藏' : '显示'}}</text>
+          >{{showPassword ? '隐藏' : '显示'}}</view>
         </view>
         <text class="password-hint">
           8至128位，不能为纯数字或常见弱密码
@@ -139,20 +177,24 @@
         <text class="field-label">确认密码</text>
         <view class="password-control">
           <input
-            class="password-input"
+            class="password-input ui-input"
             type="text"
             password="{{!showConfirmPassword}}"
             maxlength="128"
+            disabled="{{submitting}}"
             value="{{confirmPassword}}"
             placeholder="请再次输入密码"
             placeholder-class="input-placeholder"
             data-field="confirmPassword"
             bindinput="onFieldInput"
           />
-          <text
+          <view
             class="visibility-button"
+            hover-class="{{submitting ? 'none' : 'visibility-button--pressed'}}"
+            aria-role="button"
+            aria-disabled="{{submitting}}"
             bindtap="toggleConfirmPasswordVisibility"
-          >{{showConfirmPassword ? '隐藏' : '显示'}}</text>
+          >{{showConfirmPassword ? '隐藏' : '显示'}}</view>
         </view>
       </view>
     </view>
@@ -166,20 +208,28 @@
           <checkbox
             value="agreed"
             checked="{{consentAgreed}}"
+            disabled="{{submitting}}"
             color="#3f7c78"
           />
         </label>
       </checkbox-group>
       <view class="consent-copy">
         <text>我已阅读并同意</text>
-        <text class="consent-link" bindtap="showConsentSummary">
+        <view
+          class="consent-link"
+          hover-class="{{submitting ? 'none' : 'entry-link--pressed'}}"
+          aria-role="button"
+          aria-disabled="{{submitting}}"
+          bindtap="showConsentSummary"
+        >
           《知情同意说明摘要》
-        </text>
+        </view>
       </view>
     </view>
 
     <button
-      class="register-button"
+      class="register-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
+      hover-class="ui-button--pressed"
       form-type="submit"
       loading="{{submitting}}"
       disabled="{{submitting}}"
@@ -188,9 +238,15 @@
     </button>
   </form>
 
-  <text class="back-login" bindtap="goBackToLogin">
+  <view
+    class="back-login {{submitting ? 'entry-link--disabled' : ''}}"
+    hover-class="{{submitting ? 'none' : 'entry-link--pressed'}}"
+    aria-role="button"
+    aria-disabled="{{submitting}}"
+    bindtap="goBackToLogin"
+  >
     已有账号，返回登录
-  </text>
+  </view>
 
   <text class="medical-tip">
     本平台仅用于辅助筛查，不替代专业医生诊断

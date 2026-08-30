@@ -8,7 +8,12 @@
     "pages/scale/index",
     "pages/cognitive-center/index",
     "pages/cognitive/index",
+    "pages/simple-reaction/index",
     "pages/stroop/index",
+    "pages/trail/index",
+    "pages/flanker/index",
+    "pages/nback/index",
+    "pages/digit-span/index",
     "pages/tracking/index",
     "pages/tracking-trend/index",
     "pages/report/index",
@@ -18,7 +23,8 @@
     "pages/education-detail/index"
   ],
   "window": {
-    "navigationBarTitleText": "ADHD智慧辅助诊断",
+    "navigationStyle": "custom",
+    "navigationBarTitleText": "ADHD智慧辅助",
     "navigationBarBackgroundColor": "#17324D",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#F4F7FA"

@@ -11,6 +11,25 @@ const TRIAL_SEQUENCE = Object.freeze([
   'nogo'
 ])
 
+function shuffled(values, random) {
+  const result = values.slice()
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const sample = Number(random())
+    const target = Math.min(index, Math.max(0, Math.floor((Number.isFinite(sample) ? sample : 0) * (index + 1))))
+    ;[result[index], result[target]] = [result[target], result[index]]
+  }
+  return result
+}
+
+function buildGoNoGoTrials(count, random = Math.random) {
+  const size = Math.max(0, Math.floor(count / 5) * 5)
+  const noGoCount = size / 5
+  return shuffled([
+    ...Array.from({ length: size - noGoCount }, () => 'go'),
+    ...Array.from({ length: noGoCount }, () => 'nogo')
+  ], random)
+}
+
 function normalizeReactionTime(value) {
   const number = Number(value)
 
@@ -129,17 +148,18 @@ function summarizeTrials(records = []) {
   }
 }
 
-function buildCognitivePayload(records, finishedAt = new Date().toISOString()) {
-  if (!Array.isArray(records) || records.length !== TRIAL_SEQUENCE.length) {
+function buildCognitivePayload(records, finishedAt = new Date().toISOString(), context = null) {
+  const expectedLength = context ? records && records.length : TRIAL_SEQUENCE.length
+  if (!Array.isArray(records) || !records.length || records.length !== expectedLength) {
     return null
   }
 
   const rawResult = summarizeTrials(records)
-  if (rawResult.total_trials !== TRIAL_SEQUENCE.length) {
+  if (rawResult.total_trials !== expectedLength) {
     return null
   }
 
-  return {
+  const payload = {
     test_type: 'reaction',
     result_json: {
       test_name: 'Go/No-Go 测试',
@@ -159,10 +179,24 @@ function buildCognitivePayload(records, finishedAt = new Date().toISOString()) {
       finished_at: String(finishedAt)
     }
   }
+  if (context) {
+    const flags = []
+    if (rawResult.omission_errors > rawResult.total_trials * 0.15) flags.push('high_omissions')
+    if (rawResult.false_starts > rawResult.total_trials * 0.15) flags.push('high_false_starts')
+    Object.assign(payload.result_json, {
+      schema_version: 2,
+      age_group: context.ageGroup === 'adult' ? 'adult' : 'child',
+      mode: context.mode === 'battery' ? 'battery' : 'single',
+      quality: { valid: !flags.length, flags, interrupted_count: Number(context.interruptedCount) || 0, practice_attempts: Number(context.practiceAttempts) || 1 },
+      trials: records.map((record, index) => ({ trial: index + 1, ...record }))
+    })
+  }
+  return payload
 }
 
 module.exports = {
   TRIAL_SEQUENCE,
+  buildGoNoGoTrials,
   evaluateTrial,
   summarizeTrials,
   buildCognitivePayload

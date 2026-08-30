@@ -1,13 +1,6 @@
-<view class="chat-page">
-  <view class="chat-nav">
-    <view class="chat-nav__back" bindtap="goBack" aria-label="返回上一页">‹</view>
-    <view class="chat-nav__title-group">
-      <text class="chat-nav__title">AI健康助手</text>
-      <text class="chat-nav__subtitle">{{patientName}}</text>
-    </view>
-    <view class="chat-nav__clear" bindtap="clearConversation">清空</view>
-  </view>
-
+<view class="chat-shell">
+  <ui-nav title="AI 健康助手" rightText="清空" bind:righttap="clearConversation" />
+  <view class="chat-page">
   <view class="safety-banner">
     <text class="safety-banner__title">安全使用提示</text>
     <text>AI内容仅用于健康教育和追踪辅助，不能替代医生诊断或处方建议。</text>
@@ -20,13 +13,16 @@
 
   <view class="context-section">
     <text class="context-section__label">选择咨询方向</text>
-    <view class="context-tabs">
+    <view class="context-tabs" aria-role="radiogroup" aria-label="咨询方向">
       <view
         wx:for="{{contexts}}"
         wx:key="id"
         class="context-tab context-tab--{{contextScope === item.id ? 'active' : 'idle'}}"
+        hover-class="chat-control--pressed"
         data-scope="{{item.id}}"
         bindtap="selectScope"
+        aria-role="radio"
+        aria-checked="{{contextScope === item.id}}"
       >
         <text class="context-tab__label">{{item.label}}</text>
         <text class="context-tab__description">{{item.description}}</text>
@@ -37,14 +33,21 @@
   <scroll-view
     class="message-list"
     scroll-y="true"
-    scroll-with-animation="true"
+    scroll-with-animation="{{false}}"
     scroll-into-view="{{scrollIntoView}}"
+    aria-live="polite"
   >
     <view
       wx:for="{{messages}}"
       wx:key="id"
       class="message-row message-row--{{item.role}}"
     >
+      <view wx:if="{{item.role !== 'user'}}" class="message-avatar message-avatar--assistant">
+        <view class="message-avatar__icon-scale">
+          <ui-icon name="ai" shape="orb" label="AI助手" decorative="{{false}}" />
+        </view>
+      </view>
+
       <view class="message-bubble message-bubble--{{item.role}}">
         <view class="message-bubble__header">
           <text>{{item.role === 'user' ? '我' : item.role === 'assistant' ? 'AI助手' : '使用引导'}}</text>
@@ -65,19 +68,21 @@
         <text wx:if="{{item.role === 'user' && item.status === 'sending'}}" class="message-status">发送中…</text>
         <view wx:if="{{item.role === 'user' && item.status === 'failed'}}" class="message-failed">
           <text>发送失败</text>
-          <view class="retry-button" data-id="{{item.id}}" bindtap="retryMessage">重新发送</view>
+          <view class="retry-button" hover-class="chat-control--pressed" data-id="{{item.id}}" bindtap="retryMessage" aria-role="button">重新发送</view>
         </view>
       </view>
+
+      <view wx:if="{{item.role === 'user'}}" class="message-avatar message-avatar--user">你</view>
     </view>
 
-    <view wx:if="{{sending}}" class="assistant-thinking">
+    <view wx:if="{{sending}}" class="assistant-thinking" aria-role="status" aria-live="polite">
       <view class="thinking-dot"></view>
       <view class="thinking-dot"></view>
       <view class="thinking-dot"></view>
       <text>正在生成回答…</text>
     </view>
 
-    <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
+    <text wx:if="{{statusMessage}}" class="status-message" aria-role="status" aria-live="assertive">{{statusMessage}}</text>
     <view id="chat-bottom" class="chat-bottom"></view>
   </scroll-view>
 
@@ -88,8 +93,10 @@
         wx:for="{{suggestions}}"
         wx:key="id"
         class="suggestion-item"
+        hover-class="chat-control--pressed"
         data-id="{{item.id}}"
         bindtap="applySuggestion"
+        aria-role="button"
       >
         <text class="suggestion-item__label">{{item.label}}</text>
         <text class="suggestion-item__text">{{item.text}}</text>
@@ -113,6 +120,9 @@
       <text class="input-count">{{inputLength}} / {{maxMessageLength}}</text>
       <view
         class="send-button send-button--{{sending ? 'disabled' : 'active'}}"
+        hover-class="{{sending ? 'none' : 'send-button--pressed'}}"
+        aria-role="button"
+        aria-disabled="{{sending}}"
         bindtap="handleSend"
       >{{sending ? '发送中' : '发送'}}</view>
     </view>
@@ -122,4 +132,5 @@
     <text>{{lastDisclaimer}}</text>
     <text>如有紧急危险或明显不适，请立即联系当地急救服务或专业医疗人员。</text>
   </view>
+</view>
 </view>

@@ -61,12 +61,16 @@ Page({
   },
 
   onIdentifierInput(event) {
+    if (this.data.submitting) return
+
     this.setData({
       identifier: event.detail.value
     })
   },
 
   onPasswordInput(event) {
+    if (this.data.submitting) return
+
     this.setData({
       password: event.detail.value
     })

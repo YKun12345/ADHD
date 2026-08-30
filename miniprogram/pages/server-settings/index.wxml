@@ -1,55 +1,66 @@
+<ui-nav title="服务器设置" />
 <view class="settings-page">
   <view class="settings-header">
-    <text class="settings-title">服务器连接设置</text>
-    <text class="settings-subtitle">真机预览前检查小程序与后端的连接</text>
-  </view>
-
-  <view class="environment-card">
-    <view>
-      <text class="environment-title">当前环境</text>
-      <text class="environment-address">{{address}}</text>
+    <view class="settings-header__mark"><ui-icon name="plan" shape="orbit" decorative="true" /></view>
+    <view class="settings-header__copy">
+      <text class="settings-title">服务器连接设置</text>
+      <text class="settings-subtitle">真机预览前检查小程序与后端的连接</text>
     </view>
-    <text class="environment-badge">{{environmentLabel}}</text>
   </view>
 
-  <view class="settings-card">
-    <text class="field-label">服务器地址</text>
+  <view class="settings-card glass-surface">
+    <view class="environment-card">
+      <view>
+        <text class="environment-title">当前环境</text>
+        <text class="environment-address">{{address}}</text>
+      </view>
+      <text class="environment-badge">{{environmentLabel}}</text>
+    </view>
+    <view class="settings-form">
+      <text class="field-label">服务器地址</text>
     <input
-      class="address-input"
+      class="address-input ui-input"
+      aria-label="服务器地址"
       type="text"
       value="{{address}}"
       placeholder="例如 http://192.168.1.8:8000"
       placeholder-class="input-placeholder"
+      confirm-type="done"
       bindinput="onAddressInput"
+      bindconfirm="testAndSave"
     />
     <text class="field-help">输入根地址或以 /api/v1 结尾的地址，保存时会自动规范格式。</text>
 
     <button
-      class="test-button"
+      class="test-button ui-button ui-button--primary {{testing ? 'ui-button--disabled' : ''}}"
+      hover-class="{{testing ? 'none' : 'ui-button--pressed'}}"
       loading="{{testing}}"
       disabled="{{testing}}"
       bindtap="testAndSave"
     >测试连接并保存</button>
 
-    <text
+    <view
       wx:if="{{statusMessage}}"
       class="status-message status-message--{{statusType}}"
-    >{{statusMessage}}</text>
+      aria-live="polite"
+    ><view class="status-mark status-mark--{{statusType}}" aria-hidden="true"></view><text>{{statusMessage}}</text></view>
 
     <button
-      class="reset-button"
+      class="reset-button ui-button ui-button--secondary {{testing ? 'ui-button--disabled' : ''}}"
+      hover-class="{{testing ? 'none' : 'ui-button--pressed'}}"
       disabled="{{testing}}"
       bindtap="restoreDefault"
     >恢复开发者工具默认地址</button>
+    </view>
   </view>
 
   <view class="notice-card">
     <text class="notice-title">使用说明</text>
-    <text class="notice-item">• 开发者工具可使用 127.0.0.1。</text>
-    <text class="notice-item">• 局域网 HTTP 仅用于开发调试，手机和电脑必须连接同一 Wi-Fi。</text>
-    <text class="notice-item">• 正式发布必须使用 HTTPS 合法域名，并在微信公众平台登记。</text>
-    <text class="notice-item">• 本页面只保存服务器地址，不会保存密码、token 或医疗资料。</text>
+    <view class="notice-item"><view class="notice-item__mark"></view><text>开发者工具可使用 127.0.0.1。</text></view>
+    <view class="notice-item"><view class="notice-item__mark"></view><text>局域网 HTTP 仅用于开发调试，手机和电脑必须连接同一 Wi-Fi。</text></view>
+    <view class="notice-item"><view class="notice-item__mark"></view><text>正式发布必须使用 HTTPS 合法域名，并在微信公众平台登记。</text></view>
+    <view class="notice-item"><view class="notice-item__mark"></view><text>本页面只保存服务器地址，不会保存密码、token 或医疗资料。</text></view>
   </view>
 
-  <view class="back-link" bindtap="goBack">返回上一页</view>
+  <view class="back-link" hover-class="settings-control--pressed" aria-role="button" bindtap="goBack">返回上一页</view>
 </view>

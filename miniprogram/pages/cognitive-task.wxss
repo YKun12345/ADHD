@@ -1,0 +1,26 @@
+page { min-height: 100%; background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa 58%, #edf5f7 100%); }
+.task-page { min-height: 100vh; color: #17324d; }
+.task-content { box-sizing: border-box; padding: 42rpx 32rpx 54rpx; }
+.task-heading { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.task-kicker { color: #3f7c78; font-size: 23rpx; font-weight: 600; letter-spacing: 2rpx; }
+.task-title { margin-top: 12rpx; font-size: 40rpx; font-weight: 700; }
+.task-subtitle { margin-top: 14rpx; color: #5d747d; font-size: 24rpx; line-height: 1.6; }
+.task-card { margin-top: 30rpx; padding: 32rpx 28rpx; border: 1rpx solid rgba(255,255,255,.94); border-radius: 32rpx; background: rgba(255,255,255,.82); box-shadow: 0 18rpx 48rpx rgba(49,90,105,.08); }
+.section-title { display: block; font-size: 29rpx; font-weight: 700; }
+.instruction { display: block; margin-top: 16rpx; color: #506b75; font-size: 24rpx; line-height: 1.75; }
+.notice { margin-top: 22rpx; padding: 18rpx 20rpx; border-radius: 18rpx; color: #5b6f78; background: #eff6f7; font-size: 22rpx; line-height: 1.6; }
+.primary-button,.secondary-button { min-height: 88rpx; margin-top: 26rpx; border-radius: 22rpx; font-size: 26rpx; font-weight: 650; }
+.primary-button { color: #fff; background: #236b80; }
+.secondary-button { color: #236b80; background: #e9f3f5; }
+.progress-row { display: flex; justify-content: space-between; color: #5d747d; font-size: 22rpx; }
+.progress-track { height: 10rpx; margin-top: 16rpx; overflow: hidden; border-radius: 999rpx; background: #dfeaed; }
+.progress-value { height: 100%; border-radius: inherit; background: #3f8b7f; }
+.stimulus-area { min-height: 420rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 24rpx; border-radius: 28rpx; background: #fff; }
+.result-grid { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 24rpx; }
+.result-stat { box-sizing: border-box; width: calc(50% - 9rpx); padding: 22rpx; border-radius: 20rpx; background: #eff6f7; text-align: center; }
+.result-value { display: block; font-size: 34rpx; font-weight: 700; }
+.result-label { display: block; margin-top: 8rpx; color: #5d747d; font-size: 21rpx; }
+.sync-status { display: block; margin-top: 18rpx; color: #3f7c78; font-size: 22rpx; text-align: center; }
+.medical-tip { display: block; margin-top: 32rpx; color: #5d747d; font-size: 21rpx; line-height: 1.65; text-align: center; }
+.paused-text { display: block; color: #9b5a36; font-size: 26rpx; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .progress-value { transition: none; } }

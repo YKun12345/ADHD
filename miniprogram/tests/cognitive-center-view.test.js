@@ -14,6 +14,16 @@ const appConfig = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8')
 )
 
+for (const route of [
+  'pages/simple-reaction/index',
+  'pages/trail/index',
+  'pages/flanker/index',
+  'pages/nback/index',
+  'pages/digit-span/index'
+]) {
+  assert.equal(appConfig.pages.includes(route), true, `app.json 缺少 ${route} 路由`)
+}
+
 assert.equal(
   appConfig.pages.includes('pages/cognitive-center/index'),
   true,
@@ -28,12 +38,15 @@ const requiredWxml = [
   'wx:for="{{cards}}"',
   'data-id="{{item.id}}"',
   'bindtap="handleTestTap"',
+  'bindtap="startOrResumeBattery"',
+  '{{batteryActionText}}',
+  '预计剩余 {{remainingMinutes}} 分钟',
   '{{item.title}}',
   '{{item.description}}',
   '{{item.primaryMetric}}',
   '{{item.statusLabel}}',
   "item.completed ? 'test-card--completed' : ''",
-  'bindtap="goBack"',
+  '<ui-nav title="认知测试中心" />',
   '本中心仅汇总任务完成情况和客观指标，不替代专业医生诊断'
 ]
 
@@ -43,7 +56,6 @@ for (const fragment of requiredWxml) {
 
 const requiredSelectors = [
   '.cognitive-center-page',
-  '.center-nav',
   '.summary-card',
   '.summary-progress-value',
   '.test-list',

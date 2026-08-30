@@ -1,0 +1,5 @@
+@import "../cognitive-task.wxss";
+.task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
+.flanker-stimulus { color: #17324d; font-size: 58rpx; font-weight: 700; letter-spacing: 10rpx; }
+.answer-row { display: flex; gap: 20rpx; margin-top: 22rpx; }
+.answer-row button { min-height: 96rpx; flex: 1; border-radius: 22rpx; color: #fff; background: #236b80; font-size: 28rpx; }

@@ -5,14 +5,70 @@ const TEST_DEFINITIONS = Object.freeze([
     title: 'Go/No-Go',
     description: '反应速度与抑制控制',
     icon: '反',
+    iconName: 'gonogo',
+    iconShape: 'pill',
+    estimatedMinutes: 5,
     url: '/pages/cognitive/index'
+  },
+  {
+    id: 'simple_reaction',
+    title: '简单反应时',
+    description: '基础反应速度与稳定性',
+    icon: '速',
+    iconName: 'speed',
+    iconShape: 'target',
+    estimatedMinutes: 4,
+    url: '/pages/simple-reaction/index'
   },
   {
     id: 'stroop',
     title: 'Stroop',
     description: '颜色选择与冲突抑制',
     icon: '色',
+    iconName: 'stroop',
+    iconShape: 'lens',
+    estimatedMinutes: 6,
     url: '/pages/stroop/index'
+  },
+  {
+    id: 'trail',
+    title: '连线测试',
+    description: '视觉搜索与认知转换',
+    icon: '线',
+    iconName: 'trail',
+    iconShape: 'path',
+    estimatedMinutes: 5,
+    url: '/pages/trail/index'
+  },
+  {
+    id: 'flanker',
+    title: 'Flanker',
+    description: '目标聚焦与干扰抑制',
+    icon: '向',
+    iconName: 'flanker',
+    iconShape: 'arrows',
+    estimatedMinutes: 6,
+    url: '/pages/flanker/index'
+  },
+  {
+    id: 'nback',
+    title: '2-back',
+    description: '空间工作记忆更新',
+    icon: '忆',
+    iconName: 'nback',
+    iconShape: 'grid',
+    estimatedMinutes: 8,
+    url: '/pages/nback/index'
+  },
+  {
+    id: 'digit',
+    title: '数字广度',
+    description: '短时记忆与信息操作',
+    icon: '数',
+    iconName: 'digit',
+    iconShape: 'digits',
+    estimatedMinutes: 10,
+    url: '/pages/digit-span/index'
   }
 ])
 
@@ -86,12 +142,12 @@ function buildCognitiveSummary(value) {
   const completedCount = cards.filter((card) => card.completed).length
   const totalCount = cards.length
   const allCompleted = completedCount === totalCount
-  let summaryText = '完成两项认知任务，补充客观注意与抑制表现。'
+  let summaryText = '完成七项认知任务，补充客观注意、抑制与工作记忆表现。'
 
   if (allCompleted) {
-    summaryText = '两项认知任务均已完成，可继续进入每日追踪。'
+    summaryText = '七项认知任务均已完成，可继续进入每日追踪。'
   } else if (completedCount > 0) {
-    summaryText = '已完成 1/2 项，继续完成另一项认知任务。'
+    summaryText = `已完成 ${completedCount}/7 项，可继续完成剩余认知任务。`
   }
 
   return {

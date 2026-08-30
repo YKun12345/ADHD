@@ -9,6 +9,7 @@ const {
 } = require('../../utils/session-privacy')
 const {
   TRIAL_SEQUENCE,
+  buildGoNoGoTrials,
   evaluateTrial,
   summarizeTrials,
   buildCognitivePayload
@@ -17,6 +18,8 @@ const {
   LATEST_RESULTS_KEY,
   mergeLatestResult
 } = require('../../utils/cognitive-results')
+const { getTaskConfig } = require('../../utils/cognitive-config')
+const { loadCognitiveContext, recordBatteryCompletion, goNextBatteryTask } = require('../../utils/cognitive-page-support')
 
 const PENDING_RESULT_KEY = 'pending_cognitive_result'
 const WAITING_DELAYS = [800, 1000, 1200, 1400]
@@ -44,6 +47,9 @@ function feedbackFor(record) {
 registerPatientPage({
   data: {
     patientName: '患者',
+    ageGroup: 'child',
+    mode: 'single',
+    nextTaskId: '',
     phase: 'intro',
     running: false,
     submitting: false,
@@ -60,12 +66,21 @@ registerPatientPage({
     hasPendingResult: false
   },
 
-  onLoad() {
+  onLoad(query) {
     const user = wx.getStorageSync('current_user') || {}
     const pendingResult = wx.getStorageSync(PENDING_RESULT_KEY)
+    this._context = loadCognitiveContext(query)
+    this._config = getTaskConfig('reaction', this._context.ageGroup)
+    this._useFullProtocol = Boolean(user.patient_profile && user.patient_profile.patient_type)
+    this._trials = this._useFullProtocol
+      ? buildGoNoGoTrials(this._config.formalTrials)
+      : TRIAL_SEQUENCE.slice()
 
     this.setData({
       patientName: user.full_name || '患者',
+      ageGroup: this._context.ageGroup,
+      mode: this._context.mode,
+      totalTrials: this._trials.length,
       hasPendingResult: Boolean(pendingResult)
     })
   },
@@ -76,6 +91,10 @@ registerPatientPage({
     }
 
     this._clearTimers()
+    this._trials = Array.isArray(this._trials) && this._trials.length
+      ? this._trials
+      : TRIAL_SEQUENCE.slice()
+    this._context = this._context || { ageGroup: 'child', mode: 'single' }
     this._records = []
     this._finishedAt = ''
     this.setData({
@@ -116,7 +135,10 @@ registerPatientPage({
   },
 
   _showStimulus() {
-    const type = TRIAL_SEQUENCE[this.data.currentTrialIndex]
+    this._trials = Array.isArray(this._trials) && this._trials.length
+      ? this._trials
+      : TRIAL_SEQUENCE.slice()
+    const type = this._trials[this.data.currentTrialIndex]
     if (!type || !this.data.running) {
       return
     }
@@ -145,7 +167,7 @@ registerPatientPage({
       return
     }
 
-    const type = TRIAL_SEQUENCE[this.data.currentTrialIndex]
+    const type = this._trials[this.data.currentTrialIndex]
 
     if (this.data.phase === 'waiting') {
       if (this._stimulusTimer) {
@@ -201,7 +223,7 @@ registerPatientPage({
       feedbackText: feedbackFor(record),
       feedbackCorrect: record.correct,
       progressPercent: Math.round(
-        (completed / TRIAL_SEQUENCE.length) * 100
+        (completed / this._trials.length) * 100
       )
     })
 
@@ -209,7 +231,7 @@ registerPatientPage({
     this._feedbackTimer = setTimeout(() => {
       this._feedbackTimer = null
       if (!isPatientSessionLeaseCurrent(lease)) return
-      if (completed >= TRIAL_SEQUENCE.length) {
+      if (completed >= this._trials.length) {
         this._completeTest()
         return
       }
@@ -224,8 +246,11 @@ registerPatientPage({
   },
 
   async _completeTest() {
+    this._trials = Array.isArray(this._trials) && this._trials.length
+      ? this._trials
+      : TRIAL_SEQUENCE.slice()
     const result = summarizeTrials(this._records)
-    if (result.total_trials !== TRIAL_SEQUENCE.length) {
+    if (result.total_trials !== this._trials.length) {
       return
     }
 
@@ -233,19 +258,22 @@ registerPatientPage({
     this._finishedAt = this._finishedAt || new Date().toISOString()
     const payload = buildCognitivePayload(
       this._records,
-      this._finishedAt
+      this._finishedAt,
+      this._useFullProtocol ? this._context : null
     )
     const latestResults = mergeLatestResult(
       wx.getStorageSync(LATEST_RESULTS_KEY),
       payload
     )
     wx.setStorageSync(LATEST_RESULTS_KEY, latestResults)
+    const nextTaskId = recordBatteryCompletion(this._context, 'reaction')
 
     this.setData({
       phase: 'result',
       running: false,
       progressPercent: 100,
       result,
+      nextTaskId,
       syncStatus: '同步中'
     })
 
@@ -301,7 +329,8 @@ registerPatientPage({
     const pendingPayload = wx.getStorageSync(PENDING_RESULT_KEY)
     const localPayload = buildCognitivePayload(
       this._records,
-      this._finishedAt
+      this._finishedAt,
+      this._useFullProtocol ? this._context : null
     )
     return this._syncResult(pendingPayload || localPayload)
   },
@@ -336,11 +365,29 @@ registerPatientPage({
     })
   },
 
+  onHide() {
+    if (this.data.running) {
+      this._clearTimers()
+      if (this._context) {
+        this._context.interruptedCount =
+          (Number(this._context.interruptedCount) || 0) + 1
+      }
+      this.setData({
+        running: false,
+        phase: 'intro'
+      })
+    }
+  },
+
   onUnload() {
     this._clearTimers()
     this.setData({
       running: false
     })
+  },
+
+  goNext() {
+    goNextBatteryTask(this)
   },
 
   goBack() {

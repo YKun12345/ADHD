@@ -1,6 +1,10 @@
 <ai-copilot page-key="scale" />
-<view class="scale-page">
+<ui-nav title="{{title}}" />
+<view class="scale-page ai-copilot-safe-space">
   <view class="scale-header">
+    <view class="scale-hero-icon">
+      <ui-icon name="scale" shape="sheet" decorative="{{true}}" />
+    </view>
     <text class="scale-kicker">{{scaleKicker}}</text>
     <text class="scale-title">{{title}}</text>
     <text class="scale-subtitle">
@@ -8,15 +12,15 @@
     </text>
   </view>
 
-  <view class="unsupported-card" wx:if="{{!patientSupported}}">
-    <view class="unsupported-icon">!</view>
+  <view class="unsupported-card glass-surface" wx:if="{{!patientSupported}}">
+    <view class="unsupported-icon" aria-hidden="true"></view>
     <text class="unsupported-title">当前量表不适用于该患者</text>
     <text class="unsupported-message">{{unsupportedMessage}}</text>
-    <button class="back-button" bindtap="goBack">返回患者首页</button>
+    <button class="back-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="goBack">返回患者首页</button>
   </view>
 
-  <view class="result-card" wx:elif="{{showResult}}">
-    <view class="result-icon">✓</view>
+  <view class="result-card glass-surface" wx:elif="{{showResult}}">
+    <view class="result-icon" aria-hidden="true"></view>
     <text class="result-title">量表已完成</text>
     <view class="result-summary-row">
       <view class="result-stat">
@@ -39,14 +43,14 @@
         wx:for="{{result.recommendations}}"
         wx:key="index"
       >
-        <text class="recommendation-dot">•</text>
+        <view class="recommendation-dot" aria-hidden="true"></view>
         <text class="recommendation-text">{{item}}</text>
       </view>
     </view>
-    <button class="back-button" bindtap="goBack">返回患者首页</button>
+    <button class="back-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="goBack">返回患者首页</button>
   </view>
 
-  <view class="scale-card" wx:else>
+  <view class="scale-card glass-surface" wx:else>
     <view class="scale-progress-header">
       <text class="scale-progress-text">
         {{questionNumber}} / {{totalQuestions}}
@@ -68,25 +72,31 @@
 
     <view class="option-list">
       <button
-        class="option-button {{selectedValue === item.value ? 'option-button--selected' : ''}}"
+        class="option-button ui-button {{selectedValue === item.value ? 'option-button--selected' : ''}} {{submitting ? 'ui-button--disabled' : ''}}"
         wx:for="{{options}}"
         wx:key="value"
         data-value="{{item.value}}"
+        disabled="{{submitting}}"
+        aria-pressed="{{selectedValue === item.value}}"
+        hover-class="{{submitting ? 'none' : 'ui-clickable--pressed'}}"
         bindtap="selectOption"
       >
         <text class="option-marker">{{item.value}}</text>
         <text class="option-label">{{item.label}}</text>
+        <view class="option-check"></view>
       </button>
     </view>
 
     <view class="navigation-row">
       <button
-        class="navigation-button navigation-button--secondary"
+        class="navigation-button ui-button navigation-button--secondary {{isFirstQuestion || submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{isFirstQuestion || submitting ? 'none' : 'ui-button--pressed'}}"
         disabled="{{isFirstQuestion || submitting}}"
         bindtap="goPrevious"
       >上一题</button>
       <button
-        class="navigation-button navigation-button--primary"
+        class="navigation-button ui-button navigation-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
         loading="{{submitting}}"
         disabled="{{submitting}}"
         bindtap="goNext"

@@ -1,0 +1,9 @@
+@import "../cognitive-task.wxss";
+.task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
+.shown-digit { color: #17324d; font-size: 112rpx; font-weight: 750; }
+.answer-display { min-height: 64rpx; color: #17324d; font-size: 38rpx; font-weight: 650; letter-spacing: 12rpx; }
+.digit-keypad { width: 520rpx; display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 34rpx; }
+.digit-keypad button { width: 92rpx; min-height: 82rpx; margin: 0; border-radius: 18rpx; color: #17324d; background: #eef4f5; font-size: 28rpx; }
+.keypad-actions { width: 520rpx; display: flex; gap: 16rpx; margin-top: 18rpx; }
+.keypad-actions button { min-height: 82rpx; flex: 1; border-radius: 18rpx; color: #365866; background: #e5edef; }
+.keypad-actions .submit-key { color: #fff; background: #236b80; }

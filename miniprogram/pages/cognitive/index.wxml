@@ -1,16 +1,15 @@
-<ai-copilot page-key="cognitive" />
-<view class="cognitive-page">
-  <view class="cognitive-nav">
-    <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>
-    <text class="nav-title">认知测试</text>
-    <view class="nav-placeholder"></view>
-  </view>
-
+<ai-copilot wx:if="{{phase === 'intro' || phase === 'result'}}" page-key="cognitive" />
+<view class="cognitive-shell {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-shell--testing' : ''}}">
+<ui-nav title="Go / No-Go" />
+<view class="cognitive-page {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
   <view class="cognitive-content">
     <view class="page-heading">
+      <view class="assessment-hero-icon">
+        <ui-icon name="gonogo" shape="pill" decorative="{{true}}" />
+      </view>
       <text class="page-kicker">注意与抑制控制</text>
       <text class="page-title">Go / No-Go 认知测试</text>
-      <text class="page-subtitle">全程约 1 分钟，请在安静环境中完成</text>
+      <text class="page-subtitle">共 {{totalTrials}} 个正式试次，请在安静环境中完成</text>
     </view>
 
     <view class="pending-banner" wx:if="{{phase === 'intro' && hasPendingResult}}">
@@ -23,7 +22,7 @@
       >重新同步</button>
     </view>
 
-    <view class="instruction-card" wx:if="{{phase === 'intro'}}">
+    <view class="instruction-card glass-surface" wx:if="{{phase === 'intro'}}">
       <text class="section-title">测试说明</text>
       <text class="section-description">
         每轮图形出现前请保持不动，按颜色完成操作。
@@ -47,13 +46,13 @@
       </view>
 
       <view class="notice-box">
-        提前点击也会记录为误触。共 10 轮，开始后请连续完成。
+        提前点击也会记录为误触。任务按成人/儿童参数自动配置。
       </view>
-      <button class="primary-button" bindtap="startTest">开始测试</button>
+      <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
 
     <view
-      class="test-card"
+      class="test-card glass-surface"
       wx:elif="{{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback'}}"
     >
       <view class="test-progress-header">
@@ -69,7 +68,12 @@
         ></view>
       </view>
 
-      <view class="test-stage" bindtap="handleTestTap">
+      <view
+        class="test-stage"
+        aria-role="button"
+        aria-label="{{phase === 'waiting' ? '等待图形，请不要点击' : phase === 'stimulus' && stimulusType === 'go' ? '目标出现，请点击' : phase === 'stimulus' ? '抑制目标，无需点击' : '本轮反馈'}}"
+        bindtap="handleTestTap"
+      >
         <view class="waiting-state" wx:if="{{phase === 'waiting'}}">
           <view class="waiting-ring"></view>
           <text class="waiting-label">等待图形</text>
@@ -86,18 +90,16 @@
         </view>
 
         <view class="feedback-state" wx:else>
-          <view class="feedback-icon {{feedbackCorrect ? 'feedback-icon--correct' : 'feedback-icon--error'}}">
-            {{feedbackCorrect ? '✓' : '!'}}
-          </view>
+          <view class="feedback-icon {{feedbackCorrect ? 'feedback-icon--correct' : 'feedback-icon--error'}}" aria-hidden="true"></view>
           <text class="feedback-text">{{feedbackText}}</text>
           <text class="feedback-help">准备进入下一轮</text>
         </view>
       </view>
     </view>
 
-    <view class="result-card" wx:elif="{{phase === 'result'}}">
+    <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">
       <view class="result-heading">
-        <view class="result-icon">✓</view>
+        <view class="result-icon" aria-hidden="true"></view>
         <view class="result-heading-copy">
           <text class="result-title">测试已完成</text>
           <text class="sync-badge sync-badge--{{syncStatus}}">{{syncStatus}}</text>
@@ -134,22 +136,26 @@
       </view>
 
       <button
-        class="primary-button"
+        class="primary-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
         wx:if="{{syncStatus === '待同步'}}"
         loading="{{submitting}}"
         disabled="{{submitting}}"
         bindtap="retrySync"
       >重新同步结果</button>
       <button
-        class="secondary-button"
+        class="secondary-button ui-button ui-button--secondary {{submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
         disabled="{{submitting}}"
         bindtap="restartTest"
       >再测一次</button>
-      <button class="text-button" bindtap="goBack">返回患者首页</button>
+      <button wx:if="{{mode === 'battery'}}" class="secondary-button ui-button ui-button--secondary" bindtap="goNext">继续完整评估</button>
+      <button class="text-button ui-button" hover-class="ui-button--pressed" bindtap="goBack">返回患者首页</button>
     </view>
 
     <text class="medical-tip">
       本任务仅用于辅助筛查，不替代专业认知评估或医生诊断
     </text>
   </view>
+</view>
 </view>

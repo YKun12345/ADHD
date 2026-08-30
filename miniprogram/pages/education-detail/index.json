@@ -1,6 +1,8 @@
 {
   "navigationBarTitleText": "科普详情",
   "usingComponents": {
-    "ai-copilot": "/components/ai-copilot/index"
+    "ai-copilot": "/components/ai-copilot/index",
+    "ui-nav": "/components/ui-nav/index",
+    "ui-icon": "/components/ui-icon/index"
   }
 }

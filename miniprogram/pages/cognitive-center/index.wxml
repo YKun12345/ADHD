@@ -1,21 +1,16 @@
 <ai-copilot page-key="cognitive-center" />
-<view class="cognitive-center-page">
-  <view class="center-nav">
-    <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>
-    <text class="nav-title">认知测试中心</text>
-    <view class="nav-placeholder"></view>
-  </view>
-
+<ui-nav title="认知测试中心" />
+<view class="cognitive-center-page ai-copilot-safe-space">
   <view class="center-content">
     <view class="page-heading">
       <text class="page-kicker">你好，{{patientName}}</text>
-      <text class="page-title">完成两项认知任务</text>
+      <text class="page-title">完成七项认知任务</text>
       <text class="page-subtitle">
-        在安静环境中独立完成，每项约 1 分钟
+        成人与儿童参数自动适配，可完整评估或单项完成
       </text>
     </view>
 
-    <view class="summary-card">
+    <view class="summary-card glass-surface">
       <view class="summary-header">
         <view class="summary-copy">
           <text class="summary-title">认知任务进度</text>
@@ -30,8 +25,18 @@
         ></view>
       </view>
       <view class="completion-banner" wx:if="{{allCompleted}}">
-        ✓ 两项任务已完成，最近结果已保存在本机
+        <view class="completion-banner__mark" aria-hidden="true"></view>
+        <text>七项任务已完成，最近结果已保存在本机</text>
       </view>
+    </view>
+
+    <view class="battery-card glass-surface">
+      <view class="battery-copy">
+        <text class="battery-title">完整认知评估</text>
+        <text class="battery-description">按推荐顺序完成七项，项目之间可退出后继续</text>
+        <text class="battery-time">预计剩余 {{remainingMinutes}} 分钟</text>
+      </view>
+      <button class="battery-button ui-button ui-button--primary" bindtap="startOrResumeBattery">{{batteryActionText}}</button>
     </view>
 
     <view class="test-list">
@@ -40,9 +45,17 @@
         wx:for="{{cards}}"
         wx:key="id"
         data-id="{{item.id}}"
+        hover-class="ui-clickable--pressed"
+        aria-role="button"
         bindtap="handleTestTap"
       >
-        <view class="test-icon">{{item.icon}}</view>
+        <view class="test-icon">
+          <ui-icon
+            name="{{item.iconName}}"
+            shape="{{item.iconShape}}"
+            decorative="{{true}}"
+          />
+        </view>
         <view class="test-copy">
           <view class="test-title-row">
             <text class="test-title">{{item.title}}</text>
@@ -53,7 +66,7 @@
         </view>
         <view class="test-action">
           <text>{{item.statusLabel}}</text>
-          <text class="test-arrow">›</text>
+          <view class="test-arrow" aria-hidden="true"></view>
         </view>
       </view>
     </view>

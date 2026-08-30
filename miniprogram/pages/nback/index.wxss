@@ -1,0 +1,7 @@
+@import "../cognitive-task.wxss";
+.task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
+.nback-grid { width: 510rpx; height: 510rpx; display: flex; flex-wrap: wrap; gap: 15rpx; margin: 28rpx auto; }
+.nback-cell { width: 160rpx; height: 160rpx; box-sizing: border-box; border: 2rpx solid #d8e5e8; border-radius: 22rpx; background: #eef4f5; }
+.nback-cell--active { border-color: #236b80; background: #2f8f83; box-shadow: 0 10rpx 28rpx rgba(47,143,131,.2); }
+.answer-row { display: flex; gap: 20rpx; }
+.answer-row button { min-height: 92rpx; flex: 1; border-radius: 22rpx; color: #fff; background: #236b80; font-size: 27rpx; }

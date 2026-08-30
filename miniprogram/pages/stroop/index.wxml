@@ -1,16 +1,15 @@
-<ai-copilot page-key="stroop" />
-<view class="stroop-page">
-  <view class="stroop-nav">
-    <view class="nav-back" bindtap="goBack" aria-label="返回">‹</view>
-    <text class="nav-title">Stroop 测试</text>
-    <view class="nav-placeholder"></view>
-  </view>
-
+<ai-copilot wx:if="{{phase === 'intro' || phase === 'result'}}" page-key="stroop" />
+<view class="stroop-shell {{phase === 'testing' || phase === 'feedback' ? 'stroop-shell--testing' : ''}}">
+<ui-nav title="Stroop 测试" />
+<view class="stroop-page {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'testing' || phase === 'feedback' ? 'stroop-page--testing' : ''}}">
   <view class="stroop-content">
     <view class="page-heading">
+      <view class="assessment-hero-icon">
+        <ui-icon name="stroop" shape="lens" decorative="{{true}}" />
+      </view>
       <text class="page-kicker">选择性注意与冲突抑制</text>
       <text class="page-title">Stroop 颜色词测试</text>
-      <text class="page-subtitle">共 8 题，请准确且尽快作答</text>
+      <text class="page-subtitle">共 {{totalTrials}} 个正式试次，请准确且尽快作答</text>
     </view>
 
     <view class="pending-banner" wx:if="{{phase === 'intro' && hasPendingResult}}">
@@ -23,7 +22,7 @@
       >重新同步</button>
     </view>
 
-    <view class="instruction-card" wx:if="{{phase === 'intro'}}">
+    <view class="instruction-card glass-surface" wx:if="{{phase === 'intro'}}">
       <text class="section-title">测试说明</text>
       <text class="instruction-text">
         判断文字的实际颜色，而不是文字本身的含义。
@@ -36,11 +35,11 @@
       <view class="notice-box">
         每题只能选择一次。请不要朗读文字，直接判断字体颜色。
       </view>
-      <button class="primary-button" bindtap="startTest">开始测试</button>
+      <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
 
     <view
-      class="test-card"
+      class="test-card glass-surface"
       wx:elif="{{phase === 'testing' || phase === 'feedback'}}"
     >
       <view class="progress-header">
@@ -68,10 +67,11 @@
 
       <view class="color-grid">
         <button
-          class="color-button color-button--{{item.key}}"
+          class="color-button color-button--{{item.key}} {{phase !== 'testing' ? 'color-button--disabled' : ''}}"
           wx:for="{{colors}}"
           wx:key="key"
           data-key="{{item.key}}"
+          hover-class="{{phase === 'testing' ? 'color-button--pressed' : 'none'}}"
           disabled="{{phase !== 'testing'}}"
           bindtap="handleAnswer"
         >
@@ -81,9 +81,9 @@
       </view>
     </view>
 
-    <view class="result-card" wx:elif="{{phase === 'result'}}">
+    <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">
       <view class="result-heading">
-        <view class="result-icon">✓</view>
+        <view class="result-icon" aria-hidden="true"></view>
         <view class="result-heading-copy">
           <text class="result-title">Stroop 测试已完成</text>
           <text class="sync-badge">{{syncStatus}}</text>
@@ -97,8 +97,8 @@
 
       <view class="result-grid">
         <view class="result-stat">
-          <text class="result-stat-value">{{result.average_reaction_time_ms}}</text>
-          <text class="result-stat-label">平均反应时（毫秒）</text>
+          <text class="result-stat-value">{{result.median_reaction_time_ms}}</text>
+          <text class="result-stat-label">中位反应时（毫秒）</text>
         </view>
         <view class="result-stat">
           <text class="result-stat-value">{{result.congruent_accuracy}}%</text>
@@ -109,28 +109,32 @@
           <text class="result-stat-label">冲突题正确率</text>
         </view>
         <view class="result-stat">
-          <text class="result-stat-value">{{result.correct}} / {{result.wrong}}</text>
-          <text class="result-stat-label">正确 / 错误</text>
+          <text class="result-stat-value">{{result.interference_effect_ms}}</text>
+          <text class="result-stat-label">干扰效应（毫秒）</text>
         </view>
       </view>
 
       <button
-        class="primary-button"
+        class="primary-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
         wx:if="{{syncStatus === '待同步'}}"
         loading="{{submitting}}"
         disabled="{{submitting}}"
         bindtap="retrySync"
       >重新同步结果</button>
       <button
-        class="secondary-button"
+        class="secondary-button ui-button ui-button--secondary {{submitting ? 'ui-button--disabled' : ''}}"
+        hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
         disabled="{{submitting}}"
         bindtap="restartTest"
       >再测一次</button>
-      <button class="text-button" bindtap="goBack">返回认知中心</button>
+      <button wx:if="{{mode === 'battery'}}" class="secondary-button ui-button ui-button--secondary" bindtap="goNext">继续完整评估</button>
+      <button class="text-button ui-button" hover-class="ui-button--pressed" bindtap="goBack">返回认知中心</button>
     </view>
 
     <text class="medical-tip">
       本任务仅用于辅助筛查，不替代专业认知评估或医生诊断
     </text>
   </view>
+</view>
 </view>

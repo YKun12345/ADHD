@@ -17,10 +17,7 @@ assert.equal(
 )
 
 const requiredWxml = [
-  'AI健康助手',
-  '{{patientName}}',
-  'bindtap="goBack"',
-  'bindtap="clearConversation"',
+  '<ui-nav title="AI 健康助手" rightText="清空" bind:righttap="clearConversation" />',
   'AI内容仅用于健康教育和追踪辅助',
   'wx:if="{{childNotice}}"',
   '建议由监护人陪同',
@@ -65,7 +62,6 @@ assert.equal(wxml.includes('<rich-text'), false, 'AI 回答不得使用 rich-tex
 
 const requiredSelectors = [
   '.chat-page',
-  '.chat-nav',
   '.safety-banner',
   '.child-notice',
   '.context-tabs',

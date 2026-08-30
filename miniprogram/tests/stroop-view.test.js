@@ -29,11 +29,10 @@ const requiredWxml = [
   '{{item.label}}',
   '{{feedbackText}}',
   '{{result.accuracy}}%',
-  '{{result.average_reaction_time_ms}}',
+  '{{result.median_reaction_time_ms}}',
+  '{{result.interference_effect_ms}}',
   '{{result.congruent_accuracy}}%',
   '{{result.incongruent_accuracy}}%',
-  '{{result.correct}}',
-  '{{result.wrong}}',
   '{{syncStatus}}',
   'bindtap="retrySync"',
   'bindtap="restartTest"',
@@ -47,7 +46,7 @@ for (const fragment of requiredWxml) {
 
 const requiredSelectors = [
   '.stroop-page',
-  '.stroop-nav',
+  '.stroop-shell--testing',
   '.instruction-card',
   '.example-word',
   '.test-card',

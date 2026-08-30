@@ -1,17 +1,15 @@
 <ai-copilot page-key="care-pathway" />
-<view class="pathway-page">
-  <view class="pathway-nav">
-    <view class="pathway-nav__back" bindtap="goBack">‹</view>
-    <text class="pathway-nav__title">我的路径</text>
-    <view class="pathway-nav__placeholder"></view>
-  </view>
-
+<ui-nav title="护理路径" />
+<view class="pathway-page ai-copilot-safe-space">
   <view class="pathway-header">
-    <text class="pathway-header__title">辅助筛查路径</text>
-    <text class="pathway-header__subtitle">{{patientName}} · 按已完成的患者端数据更新</text>
+    <view class="pathway-header__mark"><ui-icon name="pathway" shape="orbit" decorative="true" /></view>
+    <view class="pathway-header__copy">
+      <text class="pathway-header__title">辅助筛查路径</text>
+      <text class="pathway-header__subtitle">{{patientName}} · 按已完成的患者端数据更新</text>
+    </view>
   </view>
 
-  <view class="pathway-summary">
+  <view class="pathway-summary glass-surface">
     <view class="pathway-summary__top">
       <view>
         <text class="pathway-summary__label">整体完成进度</text>
@@ -29,30 +27,32 @@
     <text wx:if="{{statusMessage}}" class="sync-message sync-message--warning">{{statusMessage}}</text>
   </view>
 
-  <view wx:if="{{currentStep}}" class="current-step">
+  <view wx:if="{{currentStep}}" class="current-step glass-surface">
     <text class="current-step__eyebrow">当前推荐步骤</text>
     <text class="current-step__title">{{currentStep.title}}</text>
     <text class="current-step__detail">{{currentStep.detail}}</text>
     <view
       wx:if="{{currentStep.actionUrl}}"
       class="step-action"
+      hover-class="pathway-control--pressed"
+      aria-role="button"
       data-step="{{currentStep.id}}"
       bindtap="openStep"
     >{{currentStep.actionLabel}}</view>
   </view>
-  <view wx:else class="current-step current-step--complete">
+  <view wx:else class="current-step current-step--complete glass-surface">
     <text class="current-step__title">患者端路径已完整</text>
     <text class="current-step__detail">可以查看综合报告，并继续保持日常记录。</text>
   </view>
 
-  <view class="pathway-timeline">
+  <view class="pathway-timeline glass-surface">
     <view
       wx:for="{{steps}}"
       wx:key="id"
       class="pathway-step pathway-step--{{item.status}}"
     >
       <view class="pathway-step__rail">
-        <view class="pathway-step__dot">{{index + 1}}</view>
+        <view class="pathway-step__dot"><text class="pathway-step__number">{{index + 1}}</text><view class="pathway-step__state-mark"></view></view>
         <view wx:if="{{index < steps.length - 1}}" class="pathway-step__line"></view>
       </view>
       <view class="pathway-step__card">
@@ -65,6 +65,8 @@
         <view
           wx:if="{{item.actionUrl}}"
           class="step-action step-action--secondary"
+          hover-class="pathway-control--pressed"
+          aria-role="button"
           data-step="{{item.id}}"
           bindtap="openStep"
         >{{item.actionLabel}}</view>
@@ -73,13 +75,13 @@
   </view>
 
   <view class="support-grid">
-    <view class="support-card" bindtap="openAi">
-      <text class="support-card__icon">问</text>
+    <view class="support-card" hover-class="pathway-control--pressed" aria-role="button" bindtap="openAi">
+      <view class="support-card__icon"><ui-icon name="ai" shape="orb" decorative="true" /></view>
       <text class="support-card__title">AI健康助手</text>
       <text class="support-card__text">理解报告与追踪信息</text>
     </view>
-    <view class="support-card" bindtap="openEducation">
-      <text class="support-card__icon">知</text>
+    <view class="support-card" hover-class="pathway-control--pressed" aria-role="button" bindtap="openEducation">
+      <view class="support-card__icon"><ui-icon name="education" shape="book" decorative="true" /></view>
       <text class="support-card__title">科普中心</text>
       <text class="support-card__text">阅读权威健康知识</text>
     </view>

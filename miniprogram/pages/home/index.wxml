@@ -1,13 +1,18 @@
 <ai-copilot page-key="home" />
-<view class="home-page">
+  <ui-nav title="ADHD智慧辅助" showBack="{{false}}" />
+<view class="home-page ui-page ai-copilot-safe-space">
   <view class="welcome-section">
-    <text class="welcome-text">你好，{{userName}}</text>
-    <text class="welcome-subtitle">
-      今天是14天辅助筛查计划的第{{currentDay}}天
-    </text>
+    <view class="welcome-copy">
+      <text class="welcome-eyebrow">TODAY · DAY {{currentDay}}</text>
+      <text class="welcome-text">你好，{{userName}}</text>
+      <text class="welcome-subtitle">今天也按照自己的节奏，完成一小步</text>
+    </view>
+    <view class="welcome-mark">
+      <ui-icon name="plan" shape="orbit" label="14天筛查计划" decorative="{{false}}" />
+    </view>
   </view>
 
-  <view class="progress-card">
+  <view class="progress-card glass-surface">
     <view class="card-header">
       <text class="card-title">14天任务进度</text>
       <view class="progress-meta">
@@ -42,15 +47,20 @@
     <text class="section-extra">第{{currentDay}}天</text>
   </view>
 
-  <view class="task-list">
+  <view class="task-list glass-surface">
     <view
       class="task-item {{item.available ? '' : 'task-item--disabled'}}"
       wx:for="{{tasks}}"
       wx:key="id"
       data-id="{{item.id}}"
+      hover-class="{{item.available ? 'task-item--pressed' : 'none'}}"
+      aria-role="button"
+      aria-disabled="{{!item.available}}"
       bindtap="handleTaskTap"
     >
-      <view class="task-icon">{{item.icon}}</view>
+      <view class="task-icon">
+        <ui-icon name="{{item.iconName}}" shape="{{item.iconShape}}" decorative="{{true}}" />
+      </view>
 
       <view class="task-content">
         <text class="task-title">{{item.title}}</text>
@@ -59,7 +69,7 @@
 
       <view class="task-tail">
         <text class="task-status">{{item.statusLabel}}</text>
-        <text class="task-arrow">›</text>
+        <view class="task-arrow"></view>
       </view>
     </view>
   </view>
@@ -68,15 +78,20 @@
     <text class="section-title">快捷入口</text>
   </view>
 
-  <view class="quick-grid">
+  <view class="quick-grid glass-surface">
     <view
       class="quick-item {{item.available ? '' : 'quick-item--disabled'}}"
       wx:for="{{quickEntries}}"
       wx:key="id"
       data-id="{{item.id}}"
+      hover-class="{{item.available ? 'quick-item--pressed' : 'none'}}"
+      aria-role="button"
+      aria-disabled="{{!item.available}}"
       bindtap="handleEntryTap"
     >
-      <view class="quick-icon">{{item.icon}}</view>
+      <view class="quick-icon">
+        <ui-icon name="{{item.iconName}}" shape="{{item.iconShape}}" decorative="{{true}}" />
+      </view>
       <view class="quick-content">
         <text class="quick-title">{{item.title}}</text>
         <text class="entry-status">{{item.statusLabel}}</text>
@@ -88,11 +103,15 @@
     本平台仅用于辅助筛查，不替代专业医生诊断
   </text>
 
-  <view class="privacy-settings-entry" bindtap="openPrivacySettings">
+  <view class="footer-actions">
+  <view class="privacy-settings-entry" hover-class="footer-entry--pressed" aria-role="button" bindtap="openPrivacySettings">
     账号与隐私
   </view>
 
-  <view class="server-settings-entry" bindtap="openServerSettings">
+  <view class="footer-separator"></view>
+
+  <view class="server-settings-entry" hover-class="footer-entry--pressed" aria-role="button" bindtap="openServerSettings">
     服务器设置
+  </view>
   </view>
 </view>

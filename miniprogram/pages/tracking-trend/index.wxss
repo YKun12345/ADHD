@@ -1,1 +1,182 @@
-page,.trend-page{min-height:100%;background:#f4f7fa;color:#17324d}.trend-nav{height:96rpx;display:flex;align-items:center;justify-content:space-between;padding:0 28rpx;color:#fff;background:#17324d;font-size:29rpx}.trend-nav view{width:60rpx;font-size:58rpx}.trend-content{padding:46rpx 30rpx}.page-title{display:block;font-size:42rpx;font-weight:700}.page-subtitle{display:block;margin-top:12rpx;color:#718096;font-size:24rpx}.demo-badge{display:inline-block;margin-top:14rpx;padding:5rpx 12rpx;border-radius:999rpx;color:#7a5b2b;background:#fff1b8;font-size:20rpx}.metric-tabs{display:flex;justify-content:space-between;margin-top:28rpx}.metric-tab{width:31%;padding:18rpx 0;border-radius:16rpx;color:#64748b;background:#fff;text-align:center}.metric-tab--active{color:#fff;background:#3f7c78;font-weight:600}.chart-card,.empty-card{margin-top:24rpx;padding:30rpx;border-radius:26rpx;background:#fff;box-shadow:0 14rpx 38rpx rgba(23,50,77,.08)}.chart-summary{display:flex;justify-content:space-between;align-items:center;color:#64748b;font-size:23rpx}.average-value{color:#17324d;font-size:30rpx;font-weight:700}.trend-canvas{width:660rpx;height:440rpx;margin-top:20rpx}.axis-labels{display:flex;justify-content:space-between;color:#8795a3;font-size:19rpx}.gap-tip{display:block;margin-top:20rpx;color:#718096;font-size:21rpx;text-align:center}.empty-card{display:flex;flex-direction:column;align-items:center;padding:70rpx 30rpx;color:#718096;text-align:center}.empty-title{margin-bottom:14rpx;color:#17324d;font-size:30rpx;font-weight:700}.medical-tip{display:block;margin-top:32rpx;color:#8795a3;font-size:21rpx;text-align:center}
+page {
+  background: #f2f7f8;
+  color: #17324d;
+}
+
+.trend-page {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 92% 2%, rgba(112, 193, 199, 0.18), transparent 34%),
+    linear-gradient(180deg, #f8fbfc 0%, #edf4f6 100%);
+}
+
+.trend-content {
+  padding: 34rpx 28rpx 72rpx;
+}
+
+.trend-heading {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.trend-heading__mark {
+  width: 84rpx;
+  height: 84rpx;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(255, 255, 255, 0.92);
+  border-radius: 50% 50% 42% 58%;
+  background: linear-gradient(145deg, #ffffff, #d9eff1);
+  box-shadow: 0 14rpx 34rpx rgba(31, 91, 106, 0.12);
+  overflow: hidden;
+}
+
+.page-title,
+.page-subtitle,
+.demo-badge,
+.average-value,
+.gap-tip,
+.empty-title,
+.medical-tip {
+  display: block;
+}
+
+.page-title { font-size: 38rpx; font-weight: 700; }
+.page-subtitle { margin-top: 8rpx; color: #506b75; font-size: 23rpx; }
+
+.demo-badge {
+  display: inline-flex;
+  margin: 12rpx 0 20rpx;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: #eeeafa;
+  color: #584998;
+  font-size: 21rpx;
+  font-weight: 600;
+}
+
+.metric-tabs {
+  display: flex;
+  margin: 22rpx 0;
+  padding: 8rpx;
+  border: 1rpx solid #d9e5e8;
+  border-radius: 26rpx;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.metric-tab + .metric-tab { margin-left: 12rpx; }
+
+.metric-tab {
+  min-height: 88rpx;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  color: #506b75;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+
+.metric-tab--active {
+  background: #dceff1;
+  color: #1f596a;
+  box-shadow: inset 0 0 0 1rpx #b7d5da;
+}
+
+.chart-card,
+.empty-card {
+  padding: 30rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.92);
+  border-radius: 34rpx;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 18rpx 48rpx rgba(38, 80, 94, 0.09);
+}
+
+.chart-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #dbe6e8;
+  color: #506b75;
+  font-size: 23rpx;
+}
+
+.average-value { color: #205f73; font-size: 34rpx; font-weight: 700; }
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 20rpx;
+  color: #294d59;
+  font-size: 21rpx;
+}
+
+.chart-legend__swatch + text { margin-left: 10rpx; }
+.chart-legend text + .axis-label { margin-top: 10rpx; }
+
+.chart-legend__swatch {
+  width: 34rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+}
+
+.chart-legend__swatch--mood { background: #a6424a; }
+.chart-legend__swatch--attention { background: #236b80; }
+.chart-legend__swatch--focus { background: #315f9c; }
+
+.axis-label {
+  width: 100%;
+  color: #506b75;
+  font-size: 21rpx;
+}
+
+.chart-data-summary,
+.chart-status {
+  display: block;
+  margin-top: 14rpx;
+  color: #506b75;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.chart-status {
+  padding: 16rpx 18rpx;
+  border-radius: 18rpx;
+  background: #edf5f6;
+  text-align: center;
+}
+
+.trend-canvas {
+  width: 100%;
+  height: 440rpx;
+  margin-top: 8rpx;
+}
+
+.axis-labels {
+  display: flex;
+  justify-content: space-between;
+  color: #506b75;
+  font-size: 21rpx;
+}
+
+.gap-tip {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #dbe6e8;
+  color: #506b75;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.empty-card { color: #506b75; font-size: 23rpx; line-height: 1.6; text-align: center; }
+.empty-title { margin-bottom: 10rpx; color: #294d59; font-size: 28rpx; font-weight: 700; }
+.medical-tip { margin-top: 24rpx; color: #506b75; font-size: 21rpx; line-height: 1.6; text-align: center; }
+.trend-control--pressed { opacity: 0.78; transform: scale(0.985); }

@@ -1,62 +1,83 @@
-page { min-height: 100%; color: #17324d; background: #f3f7fa; }
-.pathway-page { min-height: 100vh; padding: 0 28rpx 60rpx; box-sizing: border-box; }
-.pathway-nav { height: 88rpx; display: flex; align-items: center; justify-content: space-between; }
-.pathway-nav__back, .pathway-nav__placeholder { width: 64rpx; }
-.pathway-nav__back { font-size: 54rpx; line-height: 64rpx; }
-.pathway-nav__title { font-size: 29rpx; font-weight: 600; }
-.pathway-header { padding: 36rpx 10rpx 30rpx; }
-.pathway-header__title, .pathway-header__subtitle, .pathway-summary__label,
-.pathway-summary__number, .pathway-summary__percent, .source-badge,
-.current-step__eyebrow, .current-step__title, .current-step__detail,
-.pathway-step__title, .pathway-step__description, .pathway-step__detail,
-.support-card text, .professional-note text { display: block; }
-.pathway-header__title { font-size: 42rpx; font-weight: 700; }
-.pathway-header__subtitle { margin-top: 12rpx; color: #71869a; font-size: 24rpx; }
-.pathway-summary { padding: 32rpx; border-radius: 26rpx; color: #fff; background: #17324d; }
+page { min-height: 100%; color: #17324d; background: #f2f7f8; }
+
+.pathway-page {
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 34rpx 28rpx 64rpx;
+  padding-bottom: calc(64rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 8% 0%, rgba(130, 207, 214, .2), transparent 34%),
+    linear-gradient(180deg, #f8fbfc, #edf4f6);
+}
+
+.pathway-header { display: flex; align-items: center; margin: 4rpx 4rpx 28rpx; }
+.pathway-header__mark { width: 88rpx; height: 88rpx; flex: none; overflow: hidden; border-radius: 50%; box-shadow: 0 14rpx 34rpx rgba(35,107,128,.12); }
+.pathway-header__copy { min-width: 0; margin-left: 20rpx; }
+.pathway-header__title, .pathway-header__subtitle, .pathway-summary__label, .pathway-summary__number, .pathway-summary__percent, .source-badge, .sync-message, .current-step__eyebrow, .current-step__title, .current-step__detail, .pathway-step__title, .pathway-step__description, .pathway-step__detail, .support-card__title, .support-card__text, .professional-note text { display: block; }
+.pathway-header__title { font-size: 40rpx; font-weight: 700; }
+.pathway-header__subtitle { margin-top: 8rpx; color: #506b75; font-size: 23rpx; line-height: 1.5; }
+
+.pathway-summary { padding: 30rpx; border: 1rpx solid rgba(255,255,255,.9); border-radius: 34rpx; color: #fff; background: linear-gradient(135deg, #1c5366, #236f7c); box-shadow: 0 18rpx 44rpx rgba(28,83,102,.16); }
 .pathway-summary__top { display: flex; align-items: flex-start; justify-content: space-between; }
-.pathway-summary__label { color: #dbe7ef; font-size: 23rpx; }
-.pathway-summary__number { margin-top: 8rpx; font-size: 36rpx; font-weight: 700; }
-.pathway-summary__right { text-align: right; }
-.pathway-summary__percent { color: #cfe4df; font-size: 34rpx; font-weight: 700; }
-.source-badge { margin-top: 8rpx; color: #dbe7ef; font-size: 20rpx; }
-.pathway-progress { height: 16rpx; margin-top: 26rpx; overflow: hidden; border-radius: 999rpx; background: rgba(255,255,255,.2); }
-.pathway-progress__value { height: 100%; border-radius: inherit; background: #73c7b6; }
+.pathway-summary__right { margin-left: 20rpx; text-align: right; }
+.pathway-summary__label, .source-badge { color: #dcecee; font-size: 21rpx; }
+.pathway-summary__number, .pathway-summary__percent { margin-top: 8rpx; font-size: 35rpx; font-weight: 700; }
+.source-badge { margin-top: 8rpx; }
+.pathway-progress { height: 14rpx; margin-top: 24rpx; overflow: hidden; border-radius: 999rpx; background: rgba(255,255,255,.22); }
+.pathway-progress__value { height: 100%; border-radius: inherit; background: #8cd5c6; }
 .pathway-progress__value--0 { width: 0; }
 .pathway-progress__value--1 { width: 20%; }
 .pathway-progress__value--2 { width: 40%; }
 .pathway-progress__value--3 { width: 60%; }
 .pathway-progress__value--4 { width: 80%; }
 .pathway-progress__value--5 { width: 100%; }
-.sync-message { display: block; margin-top: 16rpx; color: #dbe7ef; font-size: 21rpx; }
-.sync-message--warning { color: #f5dca8; }
-.current-step { margin-top: 26rpx; padding: 28rpx; border: 1rpx solid #b8d6d2; border-radius: 22rpx; background: #e7f3f1; }
-.current-step--complete { border-color: #cfe1df; }
-.current-step__eyebrow { color: #2f716d; font-size: 21rpx; font-weight: 600; }
-.current-step__title { margin-top: 8rpx; font-size: 30rpx; font-weight: 700; }
-.current-step__detail { margin-top: 10rpx; color: #536d83; font-size: 23rpx; line-height: 1.5; }
-.pathway-timeline { margin-top: 34rpx; }
+.sync-message { margin-top: 16rpx; color: #e5f2f3; font-size: 21rpx; }
+.sync-message--warning { color: #ffe5b3; }
+
+.current-step { margin-top: 22rpx; padding: 28rpx; border: 1rpx solid #bdd9dc; border-radius: 28rpx; background: rgba(242,250,250,.84); }
+.current-step--complete { border-color: #c7ded8; }
+.current-step__eyebrow { color: #246b70; font-size: 21rpx; font-weight: 650; }
+.current-step__title { margin-top: 8rpx; font-size: 29rpx; font-weight: 700; }
+.current-step__detail { margin-top: 10rpx; color: #506b75; font-size: 23rpx; line-height: 1.6; }
+
+.pathway-timeline { margin-top: 24rpx; padding: 26rpx 24rpx 4rpx; border: 1rpx solid rgba(255,255,255,.92); border-radius: 34rpx; background: rgba(255,255,255,.74); box-shadow: 0 16rpx 44rpx rgba(36,79,93,.08); }
 .pathway-step { display: flex; align-items: stretch; }
-.pathway-step__rail { width: 62rpx; display: flex; align-items: center; flex-direction: column; }
-.pathway-step__dot { width: 48rpx; height: 48rpx; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; background: #9aaab7; font-size: 22rpx; font-weight: 700; }
-.pathway-step__line { flex: 1; width: 4rpx; min-height: 44rpx; background: #dce6ed; }
-.pathway-step__card { flex: 1; margin: 0 0 24rpx 12rpx; padding: 26rpx; border-radius: 22rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(23,50,77,.06); }
-.pathway-step__header { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
-.pathway-step__title { font-size: 28rpx; font-weight: 700; }
-.pathway-step__status { padding: 6rpx 12rpx; border-radius: 999rpx; color: #71869a; background: #edf3f7; font-size: 19rpx; }
-.pathway-step__description { margin-top: 12rpx; color: #71869a; font-size: 22rpx; line-height: 1.5; }
-.pathway-step__detail { margin-top: 10rpx; color: #3f5e76; font-size: 23rpx; }
-.pathway-step--done .pathway-step__dot { background: #3f7c78; }
-.pathway-step--done .pathway-step__status { color: #2f716d; background: #e7f3f1; }
-.pathway-step--partial .pathway-step__dot { background: #c08a3e; }
-.pathway-step--partial .pathway-step__status { color: #80612d; background: #fff3dc; }
-.pathway-step--pending .pathway-step__dot { background: #9aaab7; }
-.step-action { min-width: 170rpx; height: 66rpx; margin-top: 20rpx; padding: 0 22rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 14rpx; color: #fff; background: #17324d; font-size: 23rpx; font-weight: 600; }
-.step-action--secondary { width: fit-content; color: #2f716d; background: #e7f3f1; }
-.support-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18rpx; margin-top: 12rpx; }
-.support-card { padding: 26rpx; border-radius: 22rpx; background: #fff; }
-.support-card__icon { width: 52rpx; height: 52rpx; display: flex !important; align-items: center; justify-content: center; border-radius: 15rpx; color: #fff; background: #3f7c78; }
-.support-card__title { margin-top: 16rpx; font-size: 25rpx; font-weight: 700; }
-.support-card__text { margin-top: 8rpx; color: #8294a5; font-size: 20rpx; line-height: 1.4; }
-.professional-note { margin-top: 26rpx; padding: 26rpx; border-radius: 20rpx; color: #536d83; background: #edf3f7; font-size: 22rpx; line-height: 1.6; }
-.professional-note__title { margin-bottom: 8rpx; color: #17324d; font-size: 25rpx; font-weight: 700; }
-.medical-tip { display: block; margin-top: 24rpx; color: #8294a5; font-size: 21rpx; text-align: center; }
+.pathway-step + .pathway-step { margin-top: 4rpx; }
+.pathway-step__rail { width: 58rpx; flex: none; display: flex; align-items: center; flex-direction: column; }
+.pathway-step__dot { position: relative; width: 50rpx; height: 50rpx; flex: none; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2rpx solid #9cb0b7; border-radius: 50%; color: #506b75; background: #f8fbfc; font-size: 21rpx; font-weight: 700; }
+.pathway-step__line { width: 3rpx; min-height: 48rpx; flex: 1; background: #cbdadd; }
+.pathway-step__card { min-width: 0; flex: 1; margin-left: 14rpx; padding: 0 0 26rpx; border-bottom: 1rpx solid #dce7e9; }
+.pathway-step:last-child .pathway-step__card { border-bottom: 0; }
+.pathway-step__header { display: flex; align-items: flex-start; justify-content: space-between; }
+.pathway-step__status { flex: none; margin-left: 14rpx; padding: 8rpx 14rpx; border: 1rpx solid #cbdadd; border-radius: 999rpx; color: #506b75; background: #f5f9fa; font-size: 21rpx; font-weight: 600; }
+.pathway-step__title { font-size: 27rpx; font-weight: 700; }
+.pathway-step__description { margin-top: 10rpx; color: #506b75; font-size: 22rpx; line-height: 1.55; }
+.pathway-step__detail { margin-top: 8rpx; color: #385762; font-size: 23rpx; line-height: 1.55; }
+
+.pathway-step--done .pathway-step__dot { border-color: #2d7b70; background: #2d7b70; }
+.pathway-step--done .pathway-step__number { display: none; }
+.pathway-step--done .pathway-step__state-mark { width: 20rpx; height: 11rpx; border-left: 4rpx solid #fff; border-bottom: 4rpx solid #fff; transform: rotate(-45deg); }
+.pathway-step--done .pathway-step__line { background: #7dbab0; }
+.pathway-step--done .pathway-step__status { border-color: #b8d8d1; color: #24685f; background: #e5f2ef; }
+.pathway-step--partial .pathway-step__dot { border: 4rpx solid #287784; color: #205f70; background: #fff; }
+.pathway-step--partial .pathway-step__state-mark { position: absolute; inset: -8rpx; border: 2rpx solid rgba(40,119,132,.38); border-radius: 50%; animation: pathwayPulse 2000ms ease-in-out infinite; }
+.pathway-step--partial .pathway-step__status { border-color: #c8b9e7; color: #5d5091; background: #f0edfa; }
+.pathway-step--pending .pathway-step__dot { border: 2rpx solid #9cb0b7; color: #506b75; background: transparent; }
+
+@keyframes pathwayPulse { 0%,100% { opacity: .42; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .pathway-step--partial .pathway-step__state-mark { animation: none; } }
+
+.step-action { min-width: 176rpx; min-height: 88rpx; margin-top: 18rpx; padding: 14rpx 24rpx; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 22rpx; color: #fff; background: #205f70; font-size: 23rpx; font-weight: 650; }
+.step-action--secondary { border: 1rpx solid #bdd7da; color: #245f68; background: #eaf4f5; }
+.pathway-control--pressed { opacity: .78; transform: scale(.985); }
+
+.support-grid { display: flex; margin-top: 22rpx; }
+.support-card { width: calc(50% - 8rpx); min-height: 188rpx; box-sizing: border-box; padding: 24rpx; border: 1rpx solid #d7e5e7; border-radius: 28rpx; background: rgba(255,255,255,.76); }
+.support-card + .support-card { margin-left: 16rpx; }
+.support-card__icon { width: 84rpx; height: 84rpx; overflow: hidden; }
+.support-card__title { margin-top: 14rpx; font-size: 25rpx; font-weight: 700; }
+.support-card__text { margin-top: 7rpx; color: #506b75; font-size: 21rpx; line-height: 1.5; }
+.professional-note { margin-top: 22rpx; padding: 24rpx; border-left: 6rpx solid #6d5db6; border-radius: 8rpx 22rpx 22rpx 8rpx; color: #506b75; background: #f0edfa; font-size: 22rpx; line-height: 1.65; }
+.professional-note__title { margin-bottom: 8rpx; color: #334c56; font-size: 25rpx; font-weight: 700; }
+.medical-tip { display: block; margin-top: 22rpx; color: #506b75; font-size: 21rpx; line-height: 1.6; text-align: center; }

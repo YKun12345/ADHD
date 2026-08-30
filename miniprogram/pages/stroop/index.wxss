@@ -1,47 +1,59 @@
 page {
   min-height: 100%;
-  background: #f4f7fa;
+  background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa 58%, #edf5f7 100%);
 }
 
 .stroop-page {
-  min-height: 100vh;
+  min-height: 0;
   color: #17324d;
-  background: #f4f7fa;
+  background: transparent;
 }
 
-.stroop-nav {
-  height: 96rpx;
-  box-sizing: border-box;
+.stroop-page--testing {
+  background: #f5f8f9;
+}
+
+.stroop-shell--testing {
+  height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 26rpx;
-  color: #ffffff;
-  background: #17324d;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f5f8f9;
 }
 
-.nav-back,
-.nav-placeholder {
-  width: 68rpx;
-  height: 68rpx;
+.stroop-shell--testing .stroop-page {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.nav-back {
+.stroop-shell--testing .stroop-content {
+  height: 100%;
+  min-height: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 62rpx;
-  line-height: 1;
+  flex-direction: column;
+  padding-top: 22rpx;
+  padding-bottom: 22rpx;
 }
 
-.nav-title {
-  font-size: 29rpx;
-  font-weight: 500;
+.stroop-shell--testing .test-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stroop-shell--testing .prompt-area {
+  flex: 1;
+  min-height: 0;
 }
 
 .stroop-content {
   box-sizing: border-box;
-  padding: 46rpx 32rpx calc(54rpx + env(safe-area-inset-bottom));
+  padding: 42rpx 32rpx 54rpx;
+  padding-bottom: calc(54rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(54rpx + env(safe-area-inset-bottom));
 }
 
 .page-heading {
@@ -49,6 +61,15 @@ page {
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.assessment-hero-icon {
+  width: 104rpx;
+  height: 104rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .page-kicker {
@@ -65,7 +86,7 @@ page {
 
 .page-subtitle {
   margin-top: 14rpx;
-  color: #718096;
+  color: #5d747d;
   font-size: 24rpx;
 }
 
@@ -75,9 +96,10 @@ page {
   margin-top: 34rpx;
   box-sizing: border-box;
   padding: 36rpx 30rpx;
-  border-radius: 28rpx;
-  background: #ffffff;
-  box-shadow: 0 16rpx 44rpx rgba(23, 50, 77, 0.09);
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 18rpx 48rpx rgba(49, 90, 105, 0.08);
 }
 
 .section-title {
@@ -89,7 +111,7 @@ page {
 .instruction-text {
   display: block;
   margin-top: 14rpx;
-  color: #64748b;
+  color: #506b75;
   font-size: 25rpx;
   line-height: 1.6;
 }
@@ -105,7 +127,7 @@ page {
 }
 
 .example-label {
-  color: #718096;
+  color: #5d747d;
   font-size: 22rpx;
 }
 
@@ -202,7 +224,7 @@ page {
 }
 
 .prompt-help {
-  color: #718096;
+  color: #5d747d;
   font-size: 23rpx;
 }
 
@@ -252,14 +274,19 @@ page {
   border: 2rpx solid #dce5ec;
   border-radius: 18rpx;
   color: #17324d;
-  background: #f7f9fb;
+  background: #ffffff;
   font-size: 28rpx;
   font-weight: 600;
   line-height: 1.4;
 }
 
-.color-button[disabled] {
+.color-button--disabled {
   opacity: 0.55;
+}
+
+.color-button--pressed {
+  opacity: 0.82;
+  transform: scale(0.985);
 }
 
 .color-swatch {
@@ -275,6 +302,7 @@ page {
 }
 
 .result-icon {
+  position: relative;
   width: 82rpx;
   height: 82rpx;
   display: flex;
@@ -286,6 +314,16 @@ page {
   background: #3f7c78;
   font-size: 38rpx;
   font-weight: 700;
+}
+
+.result-icon::after {
+  content: '';
+  width: 30rpx;
+  height: 16rpx;
+  margin-top: -7rpx;
+  border-left: 6rpx solid #ffffff;
+  border-bottom: 6rpx solid #ffffff;
+  transform: rotate(-45deg);
 }
 
 .result-heading-copy {
@@ -358,8 +396,8 @@ page {
 
 .result-stat-label {
   margin-top: 7rpx;
-  color: #718096;
-  font-size: 20rpx;
+  color: #5d747d;
+  font-size: 21rpx;
 }
 
 .text-button {
@@ -382,16 +420,42 @@ page {
 }
 
 .pending-action {
+  min-height: 88rpx;
   margin: 0;
   color: #2f6f6b;
   background: transparent;
   font-size: 23rpx;
 }
 
+.stroop-page--testing .page-heading,
+.stroop-page--testing .pending-banner,
+.stroop-page--testing .medical-tip {
+  display: none;
+}
+
+.stroop-page--testing .test-card {
+  margin-top: 0;
+  border-color: #e1e9ec;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.stroop-page--testing .progress-value,
+.stroop-page--testing .color-button {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-value,
+  .color-button {
+    transition: none;
+  }
+}
+
 .medical-tip {
   display: block;
   margin-top: 34rpx;
-  color: #8795a3;
+  color: #5d747d;
   font-size: 21rpx;
   line-height: 1.6;
   text-align: center;

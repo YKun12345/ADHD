@@ -3,15 +3,34 @@ const assert = require('node:assert/strict')
 const {
   COLORS,
   STROOP_TRIALS,
+  buildStroopTrials,
   evaluateStroopChoice,
   summarizeStroopTrials,
   buildStroopPayload
 } = require('../utils/stroop-test')
 
+const fullStroop = buildStroopTrials(96, 0.75)
+assert.equal(fullStroop.length, 96)
+assert.equal(fullStroop.filter((trial) => trial.wordKey === trial.colorKey).length, 72)
+assert.equal(fullStroop.filter((trial) => trial.wordKey !== trial.colorKey).length, 24)
+assert.deepEqual(
+  COLORS.map((color) => fullStroop.filter((trial) => trial.colorKey === color.key).length),
+  [24, 24, 24, 24]
+)
+const controlledStroop = buildStroopTrials(32, 0.75, () => 0)
+assert.equal(controlledStroop.slice(0, 24).some((trial) => trial.wordKey !== trial.colorKey), true)
+assert.equal(controlledStroop.filter((trial) => trial.wordKey === trial.colorKey).length, 24)
+
 assert.deepEqual(
   COLORS.map((color) => color.key),
   ['red', 'green', 'blue', 'yellow']
 )
+
+const fullRecords = fullStroop.map((trial) => evaluateStroopChoice(trial, trial.colorKey, 500))
+const fullPayload = buildStroopPayload(fullRecords, '2026-08-29T03:00:00.000Z', { ageGroup: 'adult', mode: 'battery' })
+assert.equal(fullPayload.result_json.schema_version, 2)
+assert.equal(fullPayload.result_json.age_group, 'adult')
+assert.equal(fullPayload.result_json.trials.length, 96)
 assert.equal(STROOP_TRIALS.length, 8)
 assert.equal(
   STROOP_TRIALS.every((trial) => (
@@ -40,6 +59,15 @@ assert.deepEqual(
 )
 assert.equal(evaluateStroopChoice(STROOP_TRIALS[0], 'purple', 100), null)
 assert.equal(evaluateStroopChoice(null, 'red', 100), null)
+assert.deepEqual(evaluateStroopChoice(STROOP_TRIALS[0], null, null), {
+  wordKey: 'red',
+  colorKey: 'red',
+  selectedKey: '',
+  congruent: true,
+  correct: false,
+  outcome: 'omission',
+  reactionTimeMs: null
+})
 
 const records = STROOP_TRIALS.map((trial, index) => (
   evaluateStroopChoice(
@@ -55,22 +83,32 @@ assert.deepEqual(summarizeStroopTrials(records), {
   total_trials: 8,
   correct: 6,
   wrong: 2,
+  omissions: 0,
   accuracy: 75,
   average_reaction_time_ms: 450,
+  median_reaction_time_ms: 550,
   fastest_reaction_time_ms: 100,
   congruent_accuracy: 67,
-  incongruent_accuracy: 80
+  incongruent_accuracy: 80,
+  congruent_median_reaction_time_ms: 500,
+  incongruent_median_reaction_time_ms: 550,
+  interference_effect_ms: 50
 })
 
 assert.deepEqual(summarizeStroopTrials([]), {
   total_trials: 0,
   correct: 0,
   wrong: 0,
+  omissions: 0,
   accuracy: 0,
   average_reaction_time_ms: 0,
+  median_reaction_time_ms: 0,
   fastest_reaction_time_ms: 0,
   congruent_accuracy: 0,
-  incongruent_accuracy: 0
+  incongruent_accuracy: 0,
+  congruent_median_reaction_time_ms: 0,
+  incongruent_median_reaction_time_ms: 0,
+  interference_effect_ms: 0
 })
 
 assert.equal(buildStroopPayload(records.slice(0, 7)), null)

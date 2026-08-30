@@ -11,6 +11,24 @@ const {
   buildQuickEntries
 } = require('../../utils/home-dashboard')
 
+const MODULE_PRESENTATION = Object.freeze({
+  plan: { iconName: 'plan', iconShape: 'orbit' },
+  scale: { iconName: 'scale', iconShape: 'sheet' },
+  cognitive: { iconName: 'cognitive', iconShape: 'lens' },
+  tracking: { iconName: 'tracking', iconShape: 'lens' },
+  report: { iconName: 'report', iconShape: 'sheet' },
+  ai: { iconName: 'ai', iconShape: 'orb' },
+  pathway: { iconName: 'pathway', iconShape: 'orbit' },
+  education: { iconName: 'education', iconShape: 'book' }
+})
+
+function decorateHomeItems(items = []) {
+  return items.map((item) => ({
+    ...item,
+    ...(MODULE_PRESENTATION[item.id] || MODULE_PRESENTATION.plan)
+  }))
+}
+
 registerPatientPage({
   data: {
     userName: '患者',
@@ -23,8 +41,8 @@ registerPatientPage({
     sourceLabel: '本地计划',
     statusMessage: '',
     loadingDashboard: false,
-    tasks: buildHomeTasks(),
-    quickEntries: buildQuickEntries()
+    tasks: decorateHomeItems(buildHomeTasks()),
+    quickEntries: decorateHomeItems(buildQuickEntries())
   },
 
   onLoad() {
@@ -43,8 +61,8 @@ registerPatientPage({
       ...(user.full_name
         ? { userName: user.full_name }
         : {}),
-      tasks: buildHomeTasks(patientType),
-      quickEntries: buildQuickEntries(patientType)
+      tasks: decorateHomeItems(buildHomeTasks(patientType)),
+      quickEntries: decorateHomeItems(buildQuickEntries(patientType))
     })
   },
 

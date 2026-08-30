@@ -40,12 +40,12 @@ for (const fragment of requiredWxml) {
 
 assert.match(
   wxml,
-  /<view\s+class=["']privacy-settings-entry["']\s+bindtap=["']openPrivacySettings["']\s*>\s*账号与隐私\s*<\/view>/s,
+  /<view\s+class=["']privacy-settings-entry["'][^>]*bindtap=["']openPrivacySettings["'][^>]*>\s*账号与隐私\s*<\/view>/s,
   '首页缺少账号与隐私入口'
 )
 assert.match(
   wxml,
-  /<view\s+class=["']server-settings-entry["']\s+bindtap=["']openServerSettings["']\s*>\s*服务器设置\s*<\/view>/s,
+  /<view\s+class=["']server-settings-entry["'][^>]*bindtap=["']openServerSettings["'][^>]*>\s*服务器设置\s*<\/view>/s,
   '首页需要保留服务器设置入口及原事件'
 )
 

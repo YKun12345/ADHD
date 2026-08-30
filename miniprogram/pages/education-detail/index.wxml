@@ -1,11 +1,8 @@
 <ai-copilot page-key="education-detail" />
-<view class="article-page" wx:if="{{validArticle}}">
-  <view class="article-nav">
-    <view class="article-nav__back" bindtap="goBack">‹</view>
-    <text class="article-nav__title">科普详情</text>
-    <view class="article-nav__placeholder"></view>
-  </view>
+<ui-nav title="科普详情" />
+<view class="article-page ai-copilot-safe-space" wx:if="{{validArticle}}">
   <view class="article-header">
+    <view class="article-header__mark"><ui-icon name="education" shape="book" decorative="true" /></view>
     <text class="article-header__title">{{article.title}}</text>
     <text class="article-header__summary">{{article.summary}}</text>
     <view class="article-header__meta">
@@ -13,36 +10,38 @@
       <text>内容核对 {{article.updatedAt}}</text>
     </view>
   </view>
-  <view
-    wx:for="{{article.sections}}"
-    wx:key="heading"
-    class="article-section"
-  >
-    <text class="article-section__heading">{{item.heading}}</text>
-    <text
-      wx:for="{{item.paragraphs}}"
-      wx:key="*this"
-      class="article-paragraph"
-    >{{item}}</text>
+  <view class="article-body glass-surface">
     <view
-      wx:for="{{item.points}}"
-      wx:key="*this"
-      class="article-point"
+      wx:for="{{article.sections}}"
+      wx:key="heading"
+      class="article-section"
     >
-      <text class="article-point__dot">•</text>
-      <text>{{item}}</text>
+      <text class="article-section__heading">{{item.heading}}</text>
+      <text
+        wx:for="{{item.paragraphs}}"
+        wx:key="*this"
+        class="article-paragraph"
+      >{{item}}</text>
+      <view
+        wx:for="{{item.points}}"
+        wx:key="*this"
+        class="article-point"
+      >
+        <view class="article-point__mark" aria-hidden="true"></view>
+        <text>{{item}}</text>
+      </view>
     </view>
   </view>
   <view class="source-section">
     <text class="source-section__title">权威来源</text>
     <text class="source-section__hint">点击后复制官方链接，可在浏览器中打开核对。</text>
-    <view class="source-list">
+    <view class="source-list glass-surface">
       <view wx:for="{{article.sources}}" wx:key="url" class="source-card">
         <view class="source-card__content">
           <text class="source-card__organization">{{item.organization}}</text>
           <text class="source-card__title">{{item.title}}</text>
         </view>
-        <view class="source-button" data-index="{{index}}" bindtap="copySource">复制官方链接</view>
+        <view class="source-button" hover-class="article-control--pressed" aria-role="button" data-index="{{index}}" bindtap="copySource">复制官方链接</view>
       </view>
     </view>
   </view>

@@ -1,47 +1,137 @@
-page { min-height: 100%; background: #f4f7fa; }
-.tracking-page { min-height: 100vh; color: #17324d; background: #f4f7fa; }
-.tracking-nav { height: 96rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 26rpx; color: #fff; background: #17324d; font-size: 29rpx; }
-.nav-back, .nav-placeholder { width: 68rpx; height: 68rpx; }
-.nav-back { display: flex; align-items: center; justify-content: center; font-size: 62rpx; line-height: 1; }
-.tracking-content { padding: 44rpx 30rpx calc(54rpx + env(safe-area-inset-bottom)); }
-.page-heading { display: flex; flex-direction: column; }
-.page-title { font-size: 42rpx; font-weight: 700; }
-.page-subtitle { margin-top: 12rpx; color: #718096; font-size: 24rpx; }
-.progress-card { margin-top: 30rpx; padding: 30rpx; border-radius: 24rpx; color: #fff; background: #17324d; }
-.progress-header { display: flex; justify-content: space-between; font-size: 27rpx; font-weight: 600; }
-.progress-track { height: 15rpx; margin-top: 22rpx; overflow: hidden; border-radius: 999rpx; background: rgba(255,255,255,.2); }
-.progress-value { height: 100%; border-radius: 999rpx; background: #73c7b6; }
-.demo-badge { display: inline-block; margin-top: 18rpx; padding: 5rpx 12rpx; border-radius: 999rpx; color: #17324d; background: #fff1b8; font-size: 20rpx; }
-.day-strip { width: 100%; margin-top: 24rpx; white-space: nowrap; }
-.day-list { display: flex; padding-bottom: 8rpx; }
-.day-chip { flex-shrink: 0; margin-right: 12rpx; padding: 14rpx 20rpx; border: 2rpx solid #dce5ec; border-radius: 999rpx; color: #64748b; background: #fff; font-size: 22rpx; }
-.day-chip--active { border-color: #3f7c78; color: #2f6f6b; background: #eaf5f3; font-weight: 600; }
-.form-card, .demo-card { margin-top: 24rpx; padding: 34rpx 28rpx; border-radius: 26rpx; background: #fff; box-shadow: 0 14rpx 38rpx rgba(23,50,77,.08); }
-.section-title { display: block; font-size: 31rpx; font-weight: 700; }
-.field-label { display: block; margin-top: 30rpx; margin-bottom: 14rpx; font-size: 26rpx; font-weight: 600; }
-.choice-row, .rating-row, .sleep-row { display: flex; justify-content: space-between; }
-.choice-button { width: 18%; min-height: 86rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2rpx solid #dce5ec; border-radius: 16rpx; color: #526575; background: #f7f9fb; }
-.choice-button--active { border-color: #3f7c78; color: #2f6f6b; background: #eaf5f3; box-shadow: 0 7rpx 18rpx rgba(63,124,120,.12); }
-.choice-caption { margin-top: 5rpx; font-size: 16rpx; }
-.rating-button, .sleep-button { height: 78rpx; display: flex; align-items: center; justify-content: center; border: 2rpx solid #dce5ec; border-radius: 16rpx; background: #f7f9fb; }
-.rating-button { width: 17%; }
-.sleep-button { width: 30%; }
-.field-input, .note-input { width: 100%; box-sizing: border-box; border: 2rpx solid #dce5ec; border-radius: 17rpx; color: #17324d; background: #f7f9fb; font-size: 26rpx; }
-.field-input { height: 84rpx; padding: 0 22rpx; }
-.note-input { height: 180rpx; padding: 20rpx 22rpx; }
-.medication-row { display: flex; align-items: center; margin-top: 32rpx; padding: 22rpx; border-radius: 18rpx; background: #eaf5f3; }
-.check-box { width: 42rpx; height: 42rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-right: 18rpx; border: 2rpx solid #aab8c4; border-radius: 8rpx; color: #fff; background: #fff; }
-.check-box--active { border-color: #3f7c78; background: #3f7c78; }
-.medication-title, .medication-tip { display: block; }
-.medication-title { font-size: 25rpx; font-weight: 600; }
-.medication-tip { margin-top: 5rpx; color: #718096; font-size: 20rpx; }
-.save-button { width: 100%; height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 34rpx; border-radius: 18rpx; color: #fff; background: #17324d; font-size: 28rpx; font-weight: 600; line-height: 1.4; }
-.save-button::after, .demo-button::after { border: none; }
-.save-status { display: block; margin-top: 14rpx; color: #3f7c78; font-size: 23rpx; text-align: center; }
-.trend-button { width: 100%; height: 84rpx; display: flex; align-items: center; justify-content: center; margin-top: 24rpx; border-radius: 18rpx; color: #17324d; background: #e5f4f0; font-size: 26rpx; font-weight: 600; line-height: 1.4; }
-.trend-button::after { border: none; }
-.demo-card { background: #fff8e9; }
-.demo-title { display: block; color: #7a5b2b; font-size: 27rpx; font-weight: 700; }
-.demo-description { display: block; margin-top: 8rpx; color: #8b7044; font-size: 22rpx; }
-.demo-button { margin-top: 18rpx; color: #7a5b2b; background: #fff; font-size: 24rpx; }
-.medical-tip { display: block; margin-top: 32rpx; color: #8795a3; font-size: 21rpx; line-height: 1.6; text-align: center; }
+page {
+  background: #f2f7f8;
+  color: #17324d;
+}
+
+.tracking-page {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 4% 0%, rgba(132, 209, 214, 0.2), transparent 34%),
+    radial-gradient(circle at 96% 20%, rgba(112, 93, 182, 0.07), transparent 30%),
+    linear-gradient(180deg, #f8fbfc 0%, #edf4f6 100%);
+}
+
+.tracking-content { padding: 34rpx 28rpx 72rpx; }
+
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin: 4rpx 4rpx 28rpx;
+}
+
+.page-heading__mark {
+  width: 88rpx;
+  height: 88rpx;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 50% 46% 52% 44%;
+  background: linear-gradient(145deg, #ffffff, #d8eff1);
+  box-shadow: 0 14rpx 36rpx rgba(31, 90, 105, 0.12);
+  overflow: hidden;
+}
+
+.page-heading__copy { min-width: 0; }
+.page-title,
+.page-subtitle,
+.demo-badge,
+.section-title,
+.field-label,
+.choice-caption,
+.medication-title,
+.medication-tip,
+.save-status,
+.demo-title,
+.demo-description,
+.medical-tip { display: block; }
+
+.page-title { font-size: 38rpx; font-weight: 700; }
+.page-subtitle { margin-top: 8rpx; color: #506b75; font-size: 23rpx; line-height: 1.45; }
+
+.progress-card,
+.day-strip,
+.form-card,
+.demo-card {
+  border: 1rpx solid rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 16rpx 44rpx rgba(36, 79, 93, 0.08);
+}
+
+.progress-card { padding: 28rpx; border-radius: 32rpx; }
+.progress-header { display: flex; align-items: center; justify-content: space-between; color: #294d59; font-size: 24rpx; font-weight: 650; }
+.progress-track { height: 14rpx; margin-top: 18rpx; border-radius: 999rpx; background: #dce8eb; overflow: hidden; }
+.progress-value { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #236b80, #54aa9f); }
+.demo-badge { margin-top: 16rpx; color: #584998; font-size: 21rpx; }
+
+.day-strip { margin-top: 20rpx; padding: 12rpx; border-radius: 28rpx; white-space: nowrap; }
+.day-list { display: inline-flex; }
+.day-chip + .day-chip { margin-left: 10rpx; }
+.day-chip { min-width: 94rpx; min-height: 88rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 18rpx; border-radius: 20rpx; color: #506b75; font-size: 22rpx; }
+.day-chip--active { background: #dceff1; color: #205f73; font-weight: 700; box-shadow: inset 0 0 0 1rpx #b7d5da; }
+
+.form-card { margin-top: 22rpx; padding: 30rpx; border-radius: 34rpx; }
+.section-title { padding-bottom: 22rpx; border-bottom: 1rpx solid #dbe6e8; font-size: 30rpx; font-weight: 700; }
+.field-label { margin: 30rpx 0 14rpx; color: #294d59; font-size: 23rpx; font-weight: 650; }
+
+.choice-row,
+.rating-row,
+.sleep-row { display: flex; flex-wrap: wrap; gap: 12rpx; }
+
+.choice-button,
+.rating-button,
+.sleep-button {
+  min-height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1rpx solid #c8d9de;
+  border-radius: 22rpx;
+  background: #f6fafb;
+  color: #3b5661;
+  font-size: 23rpx;
+}
+
+.choice-button { width: calc(20% - 10rpx); flex-direction: column; }
+.rating-button { width: calc(20% - 10rpx); }
+.sleep-button { flex: 1; min-width: 132rpx; padding: 0 20rpx; }
+.choice-caption { margin-top: 4rpx; color: #506b75; font-size: 21rpx; }
+.choice-button--active { border-color: #4b8d99; background: #dceff1; color: #1f596a; font-weight: 700; box-shadow: inset 0 0 0 1rpx #78aeb7; }
+
+.field-input,
+.note-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1rpx solid #c8d9de;
+  border-radius: 22rpx;
+  background: rgba(247, 251, 252, 0.92);
+  color: #17324d;
+  font-size: 24rpx;
+}
+
+.field-input { min-height: 88rpx; padding: 0 24rpx; }
+.note-input { min-height: 200rpx; padding: 22rpx 24rpx; line-height: 1.6; }
+
+.medication-row { min-height: 88rpx; display: flex; align-items: center; gap: 18rpx; margin-top: 30rpx; padding: 18rpx 20rpx; border: 1rpx solid #d1dfe3; border-radius: 22rpx; background: #f4f9fa; }
+.check-box { width: 44rpx; height: 44rpx; flex: none; display: flex; align-items: center; justify-content: center; border: 2rpx solid #5d747d; border-radius: 14rpx; }
+.check-box--active { border-color: #236b80; background: #236b80; }
+.check-box__mark { width: 18rpx; height: 10rpx; border-left: 4rpx solid transparent; border-bottom: 4rpx solid transparent; transform: rotate(-45deg); }
+.check-box--active .check-box__mark { border-color: #ffffff; }
+.medication-title { font-size: 23rpx; font-weight: 650; }
+.medication-tip { margin-top: 6rpx; color: #506b75; font-size: 21rpx; line-height: 1.4; }
+
+.save-button,
+.trend-button,
+.demo-button { min-height: 88rpx; font-size: 24rpx; }
+.save-button { margin-top: 34rpx; }
+.save-status { margin-top: 16rpx; color: #3f5963; font-size: 22rpx; text-align: center; }
+.trend-button { margin-top: 22rpx; }
+.demo-card { margin-top: 22rpx; padding: 28rpx; border-radius: 30rpx; }
+.demo-title { font-size: 26rpx; font-weight: 700; }
+.demo-description { margin-top: 10rpx; color: #506b75; font-size: 22rpx; line-height: 1.6; }
+.demo-button { margin-top: 20rpx; border: 1rpx solid #c5d7dc; border-radius: 22rpx; background: #eef6f7; color: #245e6c; }
+.medical-tip { margin-top: 24rpx; color: #506b75; font-size: 21rpx; line-height: 1.65; text-align: center; }
+.tracking-control--pressed { opacity: 0.78; transform: scale(0.985); }

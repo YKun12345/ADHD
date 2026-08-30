@@ -1,0 +1,5 @@
+@import "../cognitive-task.wxss";
+.task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
+.trail-board { position: relative; height: 760rpx; margin-top: 24rpx; border-radius: 28rpx; background: #f7fafb; overflow: hidden; }
+.trail-node { position: absolute; width: 72rpx; height: 72rpx; margin: -36rpx 0 0 -36rpx; display: flex; align-items: center; justify-content: center; border: 3rpx solid #236b80; border-radius: 50%; color: #17324d; background: #fff; font-size: 25rpx; font-weight: 700; }
+.trail-node--done { color: #fff; border-color: #3f8b7f; background: #3f8b7f; }

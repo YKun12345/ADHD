@@ -22,6 +22,7 @@ const calls = {
 let storage = {}
 let requestImplementation = async () => ({})
 let pageDefinition
+let canvasResultOverrides = {}
 
 const requestPath = require.resolve('../utils/request')
 require.cache[requestPath] = {
@@ -43,10 +44,22 @@ require.cache[requestPath] = {
 
 function canvasContext(canvasId) {
   return new Proxy({}, {
-    get(_, method) {
+    get(target, method) {
+      if (method in target) return target[method]
+      if (method === 'measureText') {
+        return (value) => {
+          calls.canvas.push([canvasId, method, value])
+          return { width: String(value).length * 7 }
+        }
+      }
       return (...args) => {
         calls.canvas.push([canvasId, method, ...args])
       }
+    },
+    set(target, property, value) {
+      target[property] = value
+      calls.canvas.push([canvasId, `set:${String(property)}`, value])
+      return true
     }
   })
 }
@@ -61,9 +74,8 @@ global.wx = {
   navigateBack(options) {
     calls.navigateBack.push(options)
   },
-  createCanvasContext(canvasId) {
-    calls.canvas.push([canvasId, 'create'])
-    return canvasContext(canvasId)
+  getWindowInfo() {
+    return { pixelRatio: 3 }
   },
   nextTick(callback) {
     callback()
@@ -86,6 +98,37 @@ function createPage() {
         ...patch
       }
       if (callback) callback()
+    },
+    createSelectorQuery() {
+      let selector = ''
+      return {
+        select(value) {
+          selector = value
+          return this
+        },
+        fields() {
+          return this
+        },
+        exec(callback) {
+          const canvasId = selector.replace(/^#/, '')
+          calls.canvas.push([canvasId, 'create'])
+          if (Object.prototype.hasOwnProperty.call(canvasResultOverrides, canvasId)) {
+            callback([canvasResultOverrides[canvasId]])
+            return
+          }
+          callback([{
+            node: {
+              width: 0,
+              height: 0,
+              getContext() {
+                return canvasContext(canvasId)
+              }
+            },
+            width: 320,
+            height: selector.includes('Radar') ? 280 : 180
+          }])
+        }
+      }
     }
   }
 }
@@ -154,6 +197,7 @@ function reset(withData = true) {
     }]
   }
   requestImplementation = async () => ({})
+  canvasResultOverrides = {}
 }
 
 async function run() {
@@ -185,6 +229,21 @@ async function run() {
   assert.equal(
     calls.canvas.some((call) => call[0] === 'reportTrendCanvas'),
     true
+  )
+
+  reset()
+  canvasResultOverrides = {
+    reportRadarCanvas: null
+  }
+  const independentStatusPage = createPage()
+  independentStatusPage.onLoad()
+  await independentStatusPage.onShow()
+  assert.equal(typeof independentStatusPage.data.radarStatusMessage, 'string')
+  assert.equal(independentStatusPage.data.radarStatusMessage.length > 0, true)
+  assert.equal(
+    independentStatusPage.data.trendStatusMessage,
+    '',
+    'successful trend rendering must not clear or inherit the radar failure status'
   )
 
   reset()
@@ -246,6 +305,7 @@ async function run() {
   staleSessionPage._localReport = { patientName: 'old patient' }
   staleSessionPage.onPatientSessionEnded()
   assert.equal(staleSessionPage._localReport, null)
+  assert.equal(staleSessionPage._chartRenderToken > 0, true)
 
   reset(false)
   requestImplementation = async () => ({
@@ -285,7 +345,16 @@ async function run() {
     delayedNextTicks.push(callback)
   }
   delayedDrawPage._scheduleDraw()
-  delayedDrawPage.setData({ scale: null, tracking: null })
+  delayedDrawPage.onUnload()
+  assert.equal(delayedNextTicks.length, 1)
+  delayedNextTicks.shift()()
+  assert.equal(calls.canvas.length, 0, 'unloaded report page must not create canvas queries')
+
+  reset()
+  const staleDrawPage = createPage()
+  staleDrawPage.onLoad()
+  staleDrawPage._scheduleDraw()
+  staleDrawPage.setData({ scale: null, tracking: null })
   advancePatientDataRevision()
   assert.equal(delayedNextTicks.length, 1)
   assert.doesNotThrow(() => delayedNextTicks[0]())

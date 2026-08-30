@@ -13,6 +13,9 @@ global.wx = {
   getStorageSync(key) {
     return storage[key]
   },
+  setStorageSync(key, value) {
+    storage[key] = value
+  },
   navigateTo(options) {
     calls.navigateTo.push(options)
   },
@@ -71,23 +74,23 @@ emptyPage.onLoad()
 emptyPage.onShow()
 assert.equal(emptyPage.data.patientName, '认知中心患者')
 assert.equal(emptyPage.data.completedCount, 0)
-assert.equal(emptyPage.data.totalCount, 2)
+assert.equal(emptyPage.data.totalCount, 7)
 assert.equal(emptyPage.data.progressPercent, 0)
-assert.equal(emptyPage.data.cards.length, 2)
+assert.equal(emptyPage.data.cards.length, 7)
 
 storage[LATEST_RESULTS_KEY] = {
   reaction: payload('reaction', 80)
 }
 emptyPage.onShow()
 assert.equal(emptyPage.data.completedCount, 1)
-assert.equal(emptyPage.data.progressPercent, 50)
+assert.equal(emptyPage.data.progressPercent, 14)
 assert.equal(emptyPage.data.cards[0].primaryMetric, '正确率 80%')
 
 storage[LATEST_RESULTS_KEY].stroop = payload('stroop', 75)
 emptyPage.onShow()
 assert.equal(emptyPage.data.completedCount, 2)
-assert.equal(emptyPage.data.allCompleted, true)
-assert.equal(emptyPage.data.progressPercent, 100)
+assert.equal(emptyPage.data.allCompleted, false)
+assert.equal(emptyPage.data.progressPercent, 29)
 
 emptyPage.handleTestTap({
   currentTarget: {
@@ -114,6 +117,12 @@ assert.deepEqual(calls.navigateTo, [
   { url: '/pages/cognitive/index' },
   { url: '/pages/stroop/index' }
 ])
+
+emptyPage.startOrResumeBattery()
+assert.equal(
+  calls.navigateTo.at(-1).url,
+  '/pages/cognitive/index?mode=battery'
+)
 
 emptyPage.goBack()
 assert.deepEqual(calls.navigateBack, [{ delta: 1 }])

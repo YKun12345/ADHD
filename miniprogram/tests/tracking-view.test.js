@@ -21,12 +21,11 @@ const fragments = [
 ]
 for (const fragment of fragments) assert.equal(wxml.includes(fragment), true, `WXML 缺少：${fragment}`)
 
-const selectors = ['.tracking-page', '.tracking-nav', '.progress-card', '.day-strip', '.form-card', '.choice-button', '.choice-button--active', '.field-input', '.medication-row', '.save-button', '.demo-card', '.medical-tip']
+const selectors = ['.tracking-page', '.progress-card', '.day-strip', '.form-card', '.choice-button', '.choice-button--active', '.field-input', '.medication-row', '.save-button', '.demo-card', '.medical-tip']
 for (const selector of selectors) assert.equal(wxss.includes(selector), true, `WXSS 缺少：${selector}`)
 
 const saveRule = wxss.match(/\.save-button\s*\{([^}]*)\}/)
 assert.ok(saveRule)
-assert.match(saveRule[1], /display:\s*flex/)
-assert.match(saveRule[1], /align-items:\s*center/)
-assert.match(saveRule[1], /justify-content:\s*center/)
+assert.equal(wxml.includes('save-button ui-button ui-button--primary'), true)
+assert.match(saveRule[1], /margin-top:/)
 console.log('每日追踪页面视图结构测试全部通过')

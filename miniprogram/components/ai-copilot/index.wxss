@@ -11,15 +11,21 @@
 }
 
 .ai-copilot__panel {
-  width: 430rpx;
-  margin-bottom: 18rpx;
-  padding: 26rpx;
+  width: 440rpx;
+  max-height: calc(100vh - 240rpx);
+  overflow-y: auto;
+  margin-bottom: 20rpx;
+  padding: 28rpx;
   box-sizing: border-box;
-  border: 1rpx solid #d6e4e8;
-  border-radius: 24rpx;
-  color: #17324d;
-  background: #ffffff;
-  box-shadow: 0 16rpx 48rpx rgba(23, 50, 77, 0.18);
+  border: 1rpx solid rgba(255, 255, 255, 0.96);
+  border-radius: 28rpx;
+  color: #173f50;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(80, 190, 224, 0.12) 0, rgba(80, 190, 224, 0) 36%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(239, 248, 250, 0.96));
+  box-shadow:
+    0 22rpx 60rpx rgba(49, 90, 105, 0.16),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.96);
 }
 
 .ai-copilot__header {
@@ -29,18 +35,38 @@
 }
 
 .ai-copilot__title {
-  font-size: 28rpx;
+  color: #173f50;
+  font-size: 29rpx;
   font-weight: 700;
 }
 
 .ai-copilot__close {
-  width: 48rpx;
-  height: 48rpx;
+  position: relative;
+  width: 88rpx;
+  height: 88rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6d8192;
-  font-size: 40rpx;
+  border: 1rpx solid rgba(199, 221, 227, 0.82);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.ai-copilot__close-line {
+  position: absolute;
+  width: 22rpx;
+  height: 2rpx;
+  border-radius: 999rpx;
+  background: #506b75;
+}
+
+.ai-copilot__close-line--a {
+  transform: rotate(45deg);
+}
+
+.ai-copilot__close-line--b {
+  transform: rotate(-45deg);
 }
 
 .ai-copilot__advice,
@@ -49,15 +75,15 @@
 }
 
 .ai-copilot__advice {
-  margin-top: 14rpx;
-  color: #526c82;
+  margin-top: 16rpx;
+  color: #506b75;
   font-size: 23rpx;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .ai-copilot__actions {
   display: flex;
-  margin-top: 22rpx;
+  margin-top: 24rpx;
 }
 
 .ai-copilot__action + .ai-copilot__action {
@@ -66,46 +92,106 @@
 
 .ai-copilot__action {
   min-width: 0;
-  height: 66rpx;
+  min-height: 88rpx;
+  padding: 0 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
   box-sizing: border-box;
-  border-radius: 16rpx;
+  border-radius: 21rpx;
   font-size: 22rpx;
-  font-weight: 600;
+  font-weight: 650;
+  transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .ai-copilot__action--primary {
   color: #ffffff;
-  background: #17324d;
+  background: linear-gradient(135deg, #236b80 0%, #27758a 100%);
+  box-shadow: 0 10rpx 24rpx rgba(35, 107, 128, 0.15);
 }
 
 .ai-copilot__action--secondary {
-  border: 1rpx solid #74a6a2;
-  color: #2f716d;
-  background: #edf7f5;
+  border: 1rpx solid rgba(49, 140, 166, 0.42);
+  color: #236b80;
+  background: rgba(235, 248, 250, 0.88);
 }
 
 .ai-copilot__notice {
-  margin-top: 16rpx;
-  color: #8a9aa8;
-  font-size: 18rpx;
-  line-height: 1.5;
+  margin-top: 17rpx;
+  color: #5d747d;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.ai-copilot__control--pressed {
+  opacity: 0.76;
+  transform: scale(0.98);
 }
 
 .ai-copilot__trigger {
-  width: 92rpx;
-  height: 92rpx;
+  position: relative;
+  width: 104rpx;
+  height: 104rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4rpx solid rgba(255, 255, 255, 0.92);
+  border: 3rpx solid rgba(255, 255, 255, 0.92);
   border-radius: 50%;
-  color: #ffffff;
-  background: #2f716d;
-  box-shadow: 0 10rpx 30rpx rgba(23, 50, 77, 0.24);
-  font-size: 27rpx;
-  font-weight: 700;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 14rpx 36rpx rgba(35, 107, 128, 0.2);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.ai-copilot__halo {
+  position: absolute;
+  top: -11rpx;
+  right: -11rpx;
+  bottom: -11rpx;
+  left: -11rpx;
+  border: 2rpx solid rgba(80, 190, 224, 0.34);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: copilotPulse 2400ms ease-in-out infinite;
+}
+
+.ai-copilot__icon {
+  position: relative;
+  z-index: 1;
+  width: 84rpx;
+  height: 84rpx;
+}
+
+.ai-copilot__trigger--pressed {
+  opacity: 0.84;
+  transform: scale(0.96);
+}
+
+@keyframes copilotPulse {
+  0%, 100% {
+    opacity: 0.42;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-copilot__halo {
+    animation: none;
+  }
+
+  .ai-copilot__close,
+  .ai-copilot__action,
+  .ai-copilot__trigger {
+    transition: none;
+  }
+
+  .ai-copilot__control--pressed,
+  .ai-copilot__trigger--pressed {
+    transform: none;
+  }
 }

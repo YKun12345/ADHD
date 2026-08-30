@@ -2,10 +2,22 @@ const assert = require('node:assert/strict')
 
 const {
   TRIAL_SEQUENCE,
+  buildGoNoGoTrials,
   evaluateTrial,
   summarizeTrials,
   buildCognitivePayload
 } = require('../utils/gonogo-test')
+
+const fullTrials = buildGoNoGoTrials(120)
+assert.equal(fullTrials.length, 120)
+assert.equal(fullTrials.filter((type) => type === 'go').length, 96)
+assert.equal(fullTrials.filter((type) => type === 'nogo').length, 24)
+const controlledGoNoGo = buildGoNoGoTrials(20, () => 0)
+assert.notDeepEqual(
+  controlledGoNoGo,
+  ['go', 'go', 'go', 'nogo', 'go', 'go', 'go', 'go', 'nogo', 'go', 'go', 'go', 'go', 'nogo', 'go', 'go', 'go', 'go', 'nogo', 'go']
+)
+assert.equal(controlledGoNoGo.filter((type) => type === 'nogo').length, 4)
 
 assert.equal(TRIAL_SEQUENCE.length, 10)
 assert.equal(TRIAL_SEQUENCE.filter((type) => type === 'go').length, 6)
@@ -122,5 +134,14 @@ assert.deepEqual(
     }
   }
 )
+
+const fullPayload = buildCognitivePayload(
+  fullTrials.map((type) => evaluateTrial({ type, action: type === 'go' ? 'tap' : 'timeout', reactionTimeMs: 350 })),
+  '2026-08-29T02:00:00.000Z',
+  { ageGroup: 'adult', mode: 'battery' }
+)
+assert.equal(fullPayload.result_json.schema_version, 2)
+assert.equal(fullPayload.result_json.age_group, 'adult')
+assert.equal(fullPayload.result_json.trials.length, 120)
 
 console.log('Go/No-Go 测试数据测试全部通过')

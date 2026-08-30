@@ -1,0 +1,32 @@
+<view class="ui-nav" style="padding-top: {{statusBarHeight}}px">
+  <view
+    class="ui-nav__bar"
+    style="height: {{barHeight}}px; padding-right: {{rightSafeWidth}}px"
+  >
+    <view
+      wx:if="{{showBack}}"
+      class="ui-nav__action ui-nav__action--back"
+      bindtap="handleBack"
+      hover-class="ui-nav__action--pressed"
+      hover-stay-time="80"
+      aria-role="button"
+      aria-label="返回上一页"
+    >
+      <ui-icon name="back" shape="orbit" decorative="{{true}}" />
+    </view>
+    <view wx:else class="ui-nav__action" aria-hidden="{{true}}"></view>
+
+    <text class="ui-nav__title">{{title}}</text>
+
+    <view
+      wx:if="{{rightText}}"
+      class="ui-nav__action ui-nav__action--right"
+      bindtap="handleRightTap"
+      hover-class="ui-nav__action--pressed"
+      hover-stay-time="80"
+      aria-role="button"
+      aria-label="{{rightText}}"
+    >{{rightText}}</view>
+    <view wx:else class="ui-nav__action" aria-hidden="{{true}}"></view>
+  </view>
+</view>

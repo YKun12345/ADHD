@@ -1,17 +1,17 @@
 <ai-copilot page-key="report" />
-<view class="report-page">
-  <view class="report-nav">
-    <view class="report-nav__back" bindtap="goBack" aria-label="返回上一页">‹</view>
-    <text class="report-nav__title">综合报告</text>
-    <view class="report-nav__placeholder"></view>
-  </view>
-
+<ui-nav title="综合报告" />
+<view class="report-page ai-copilot-safe-space">
   <view class="report-header">
-    <text class="report-header__title">综合辅助筛查报告</text>
-    <text class="report-header__subtitle">汇总患者端已完成的辅助筛查数据</text>
+    <view class="report-header__mark" aria-hidden="true">
+      <ui-icon name="report" shape="sheet" decorative="true" />
+    </view>
+    <view class="report-header__copy">
+      <text class="report-header__title">综合辅助筛查报告</text>
+      <text class="report-header__subtitle">汇总患者端已完成的辅助筛查数据</text>
+    </view>
   </view>
 
-  <view class="summary-card">
+  <view class="summary-card glass-surface">
     <view class="summary-card__top">
       <view>
         <text class="summary-card__name">{{patientName}}</text>
@@ -32,7 +32,7 @@
 
   <view wx:if="{{loading}}" class="loading-panel">正在同步报告数据…</view>
 
-  <view class="report-card">
+  <view class="report-card glass-surface">
     <view class="report-card__header">
       <view>
         <text class="report-card__title">行为量表</text>
@@ -64,12 +64,20 @@
 
       <view class="chart-section">
         <text class="section-label">维度分布</text>
+        <view class="chart-legend" wx:if="{{scale.hasRadar}}">
+          <view class="chart-legend__swatch chart-legend__swatch--radar"></view>
+          <text>量表维度得分</text>
+          <text class="axis-label">越靠近外圈表示该维度得分越高</text>
+        </view>
         <canvas
           wx:if="{{scale.hasRadar}}"
           class="radar-canvas"
-          canvas-id="reportRadarCanvas"
+          type="2d"
+          id="reportRadarCanvas"
+          aria-label="行为量表维度雷达图"
         ></canvas>
         <view wx:else class="empty-panel">暂无完整雷达数据</view>
+        <text class="chart-status" wx:if="{{radarStatusMessage}}" aria-live="polite">{{radarStatusMessage}}</text>
       </view>
 
       <view wx:if="{{scale.recommendations.length}}" class="recommendation-list">
@@ -79,7 +87,7 @@
           wx:key="*this"
           class="recommendation-item"
         >
-          <text class="recommendation-item__dot">•</text>
+          <view class="recommendation-item__dot" aria-hidden="true"></view>
           <text>{{item}}</text>
         </view>
       </view>
@@ -87,11 +95,11 @@
 
     <view wx:else class="empty-panel">
       <text>尚无完整行为量表结果</text>
-      <view class="task-button" bindtap="openTask" data-task="scale">前往行为量表</view>
+      <view class="task-button" hover-class="report-control--pressed" aria-role="button" bindtap="openTask" data-task="scale">前往行为量表</view>
     </view>
   </view>
 
-  <view class="report-card">
+  <view class="report-card glass-surface">
     <view class="report-card__header">
       <view>
         <text class="report-card__title">认知测试</text>
@@ -115,16 +123,16 @@
         <text class="cognitive-item__metric">{{item.primaryMetric}}</text>
       </view>
       <text class="section-summary">{{cognitive.summary}}</text>
-      <view class="task-button task-button--secondary" bindtap="openTask" data-task="cognitive">进入认知测试中心</view>
+      <view class="task-button task-button--secondary" hover-class="report-control--pressed" aria-role="button" bindtap="openTask" data-task="cognitive">进入认知测试中心</view>
     </block>
 
     <view wx:else class="empty-panel">
       <text>尚未完成认知测试</text>
-      <view class="task-button" bindtap="openTask" data-task="cognitive">开始认知测试</view>
+      <view class="task-button" hover-class="report-control--pressed" aria-role="button" bindtap="openTask" data-task="cognitive">开始认知测试</view>
     </view>
   </view>
 
-  <view class="report-card">
+  <view class="report-card glass-surface report-card--tracking">
     <view class="report-card__header">
       <view>
         <text class="report-card__title">14天追踪</text>
@@ -158,24 +166,34 @@
 
       <view class="chart-section">
         <text class="section-label">注意力趋势</text>
+        <view class="chart-legend" wx:if="{{tracking.hasTrend}}">
+          <view class="chart-legend__swatch chart-legend__swatch--trend"></view>
+          <text>每日注意力评分</text>
+          <text class="axis-label">纵轴 1–5 分 · 横轴 14 天</text>
+        </view>
+        <text class="chart-data-summary" wx:if="{{tracking.hasTrend}}">已记录 {{tracking.completedCount}} 天 · 平均注意力 {{tracking.averageAttention}} 分 · 可读范围 1–5 分</text>
         <canvas
           wx:if="{{tracking.hasTrend}}"
           class="trend-canvas"
-          canvas-id="reportTrendCanvas"
+          type="2d"
+          id="reportTrendCanvas"
+          aria-label="14天注意力趋势图"
         ></canvas>
-        <view wx:else class="empty-panel">同步数据暂未包含可绘制的注意力趋势</view>
+        <view class="axis-labels" wx:if="{{tracking.hasTrend}}"><text>第1天</text><text>第7天</text><text>第14天</text></view>
+        <text class="chart-status" wx:if="{{trendStatusMessage}}" aria-live="polite">{{trendStatusMessage}}</text>
+        <view wx:if="{{!tracking.hasTrend}}" class="empty-panel">同步数据暂未包含可绘制的注意力趋势</view>
       </view>
 
-      <view class="task-button task-button--secondary" bindtap="openTrend">查看完整追踪趋势</view>
+      <view class="task-button task-button--secondary" hover-class="report-control--pressed" aria-role="button" bindtap="openTrend">查看完整追踪趋势</view>
     </block>
 
     <view wx:else class="empty-panel">
       <text>尚无14天追踪记录</text>
-      <view class="task-button" bindtap="openTask" data-task="tracking">开始每日追踪</view>
+      <view class="task-button" hover-class="report-control--pressed" aria-role="button" bindtap="openTask" data-task="tracking">开始每日追踪</view>
     </view>
   </view>
 
-  <view class="report-card professional-card">
+  <view class="report-card professional-card glass-surface">
     <text class="report-card__title">专业检查</text>
     <view class="empty-panel empty-panel--plain">
       <text>{{professionalData}}</text>

@@ -51,6 +51,17 @@ function cognitivePayload(type, accuracy, reactionTime) {
   }
 }
 
+function cognitiveRawPayload(type, rawResult) {
+  return {
+    test_type: type,
+    result_json: {
+      raw_result: rawResult,
+      quality: { valid: true, flags: [] },
+      finished_at: '2026-08-29T08:20:00.000Z'
+    }
+  }
+}
+
 const user = {
   full_name: '综合报告患者',
   patient_profile: {
@@ -63,7 +74,12 @@ const localReport = buildLocalReport({
   scaleResult: scaleResult(),
   cognitiveResults: {
     reaction: cognitivePayload('reaction', 80, 420),
-    stroop: cognitivePayload('stroop', 75, 690)
+    simple_reaction: cognitiveRawPayload('simple_reaction', { accuracy: 90, median_reaction_time_ms: 310 }),
+    stroop: cognitiveRawPayload('stroop', { accuracy: 75, median_reaction_time_ms: 640, interference_effect_ms: 95 }),
+    trail: cognitiveRawPayload('trail', { accuracy: 92, elapsed_ms: 28000, errors: 2 }),
+    flanker: cognitivePayload('flanker', 83, 510),
+    nback: cognitiveRawPayload('nback', { accuracy: 78, d_prime: 1.42 }),
+    digit: cognitiveRawPayload('digit', { accuracy: 72, forward_max_span: 7, backward_max_span: 5 })
   },
   trackingLogs: [
     {
@@ -99,9 +115,14 @@ assert.deepEqual(
 )
 assert.equal(localReport.scale.riskLabel, '中等风险')
 assert.equal(localReport.scale.respondentLabel, '本人填写')
-assert.equal(localReport.cognitive.completedCount, 2)
+assert.equal(localReport.cognitive.completedCount, 7)
+assert.equal(localReport.cognitive.totalCount, 7)
 assert.equal(localReport.cognitive.cards[0].primaryMetric, '正确率 80%')
-assert.equal(localReport.cognitive.cards[1].secondaryMetric, '平均反应时 690 ms')
+assert.equal(localReport.cognitive.cards[1].primaryMetric, '中位反应时 310 ms')
+assert.equal(localReport.cognitive.cards[2].primaryMetric, '中位反应时 640 ms')
+assert.equal(localReport.cognitive.cards[2].secondaryMetric, '干扰效应 95 ms')
+assert.equal(localReport.cognitive.cards[3].primaryMetric, '总用时 28.0 秒')
+assert.equal(localReport.cognitive.cards[6].primaryMetric, '顺背 7 · 倒背 5')
 assert.equal(localReport.tracking.completedCount, 2)
 assert.equal(localReport.tracking.averageMood, 3)
 assert.equal(localReport.tracking.averageAttention, 4)
@@ -235,7 +256,8 @@ assert.equal(merged.sourceLabel, '已同步')
 assert.equal(merged.scale.totalScore, 35)
 assert.equal(merged.scale.source, 'server')
 assert.equal(merged.cognitive.cards[0].primaryMetric, '正确率 88%')
-assert.equal(merged.cognitive.source, 'local')
+assert.equal(merged.cognitive.source, 'mixed')
+assert.equal(merged.cognitive.completedCount, 2)
 assert.equal(merged.tracking.completedCount, 1)
 assert.equal(merged.tracking.source, 'local')
 

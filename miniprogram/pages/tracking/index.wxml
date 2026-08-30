@@ -1,58 +1,60 @@
 <ai-copilot page-key="tracking" />
-<view class="tracking-page">
-  <view class="tracking-nav">
-    <view class="nav-back" bindtap="goBack">‹</view>
-    <text>14天追踪</text><view class="nav-placeholder"></view>
-  </view>
+<ui-nav title="健康追踪" />
+<view class="tracking-page ai-copilot-safe-space">
   <view class="tracking-content">
     <view class="page-heading">
-      <text class="page-title">14天每日追踪</text>
-      <text class="page-subtitle">你好，{{patientName}}，用几分钟记录今天的状态</text>
+      <view class="page-heading__mark" aria-hidden="true">
+        <ui-icon name="tracking" shape="lens" decorative="true" />
+      </view>
+      <view class="page-heading__copy">
+        <text class="page-title">14天每日追踪</text>
+        <text class="page-subtitle">你好，{{patientName}}，用几分钟记录今天的状态</text>
+      </view>
     </view>
-    <view class="progress-card">
+    <view class="progress-card glass-surface">
       <view class="progress-header"><text>追踪进度</text><text>{{completedCount}} / {{totalDays}}</text></view>
       <view class="progress-track"><view class="progress-value" style="{{'width: ' + progressPercent + '%;'}}"></view></view>
       <text class="demo-badge" wx:if="{{demoMode}}">当前展示本地演示数据</text>
     </view>
-    <scroll-view class="day-strip" scroll-x="true">
+    <scroll-view class="day-strip glass-surface" scroll-x="true">
       <view class="day-list">
-        <view class="day-chip {{dayIndex === item ? 'day-chip--active' : ''}}" wx:for="{{days}}" wx:key="*this" data-day="{{item}}" bindtap="selectDay">第{{item}}天</view>
+    <view class="day-chip {{dayIndex === item ? 'day-chip--active' : ''}}" hover-class="tracking-control--pressed" aria-role="button" aria-pressed="{{dayIndex === item}}" wx:for="{{days}}" wx:key="*this" data-day="{{item}}" bindtap="selectDay">第{{item}}天</view>
       </view>
     </scroll-view>
-    <view class="form-card">
+    <view class="form-card glass-surface">
       <text class="section-title">第 {{dayIndex}} 天记录</text>
       <text class="field-label">今日情绪</text>
       <view class="choice-row">
-        <view class="choice-button {{moodTag === item.value ? 'choice-button--active' : ''}}" wx:for="{{moods}}" wx:key="value" data-field="moodTag" data-value="{{item.value}}" bindtap="selectRating"><text>{{item.value}}</text><text class="choice-caption">{{item.label}}</text></view>
+      <view class="choice-button {{moodTag === item.value ? 'choice-button--active' : ''}}" hover-class="tracking-control--pressed" aria-role="button" aria-pressed="{{moodTag === item.value}}" wx:for="{{moods}}" wx:key="value" data-field="moodTag" data-value="{{item.value}}" bindtap="selectRating"><text>{{item.value}}</text><text class="choice-caption">{{item.label}}</text></view>
       </view>
       <text class="field-label">今日注意力（1低—5高）</text>
       <view class="rating-row">
-        <view class="rating-button {{attentionRating === item ? 'choice-button--active' : ''}}" wx:for="{{ratings}}" wx:key="*this" data-field="attentionRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view>
+      <view class="rating-button {{attentionRating === item ? 'choice-button--active' : ''}}" hover-class="tracking-control--pressed" aria-role="button" aria-pressed="{{attentionRating === item}}" wx:for="{{ratings}}" wx:key="*this" data-field="attentionRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view>
       </view>
       <text class="field-label">专注时长（分钟）</text>
-      <input class="field-input" type="number" value="{{focusMinutes}}" placeholder="例如 60" data-field="focusMinutes" bindinput="onFieldInput" />
+      <input class="field-input ui-input" type="number" value="{{focusMinutes}}" placeholder="例如 60" data-field="focusMinutes" bindinput="onFieldInput" />
       <text class="field-label">昨晚睡眠质量</text>
       <view class="sleep-row">
-        <view class="sleep-button {{sleepQuality === item.value ? 'choice-button--active' : ''}}" wx:for="{{sleepOptions}}" wx:key="value" data-value="{{item.value}}" bindtap="selectSleep">{{item.label}}</view>
+      <view class="sleep-button {{sleepQuality === item.value ? 'choice-button--active' : ''}}" hover-class="tracking-control--pressed" aria-role="button" aria-pressed="{{sleepQuality === item.value}}" wx:for="{{sleepOptions}}" wx:key="value" data-value="{{item.value}}" bindtap="selectSleep">{{item.label}}</view>
       </view>
-      <view class="medication-row" bindtap="toggleMedication">
-        <view class="check-box {{isMedication ? 'check-box--active' : ''}}">{{isMedication ? '✓' : ''}}</view>
+      <view class="medication-row" hover-class="tracking-control--pressed" aria-role="checkbox" aria-checked="{{isMedication}}" bindtap="toggleMedication">
+        <view class="check-box {{isMedication ? 'check-box--active' : ''}}"><view class="check-box__mark"></view></view>
         <view><text class="medication-title">今天有按医嘱用药</text><text class="medication-tip">这里只记录情况，不提供用药建议</text></view>
       </view>
       <view wx:if="{{isMedication}}">
         <text class="field-label">用药记录</text>
-        <input class="field-input" value="{{medicationDosage}}" placeholder="请按实际医嘱填写" data-field="medicationDosage" bindinput="onFieldInput" />
+        <input class="field-input ui-input" value="{{medicationDosage}}" placeholder="请按实际医嘱填写" data-field="medicationDosage" bindinput="onFieldInput" />
       </view>
       <text class="field-label">今日备注（选填）</text>
       <textarea class="note-input" maxlength="500" value="{{note}}" placeholder="记录特殊事件、学习或工作状态" data-field="note" bindinput="onFieldInput"></textarea>
-      <button class="save-button" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTracking">保存今日记录</button>
+      <button class="save-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}" hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTracking">保存今日记录</button>
       <text class="save-status" wx:if="{{saveStatus}}">{{saveStatus}}</text>
     </view>
-    <button class="trend-button" bindtap="openTrend">查看14天趋势</button>
-    <view class="demo-card">
+    <button class="trend-button ui-button ui-button--secondary" hover-class="ui-button--pressed" bindtap="openTrend">查看14天趋势</button>
+    <view class="demo-card glass-surface">
       <text class="demo-title">比赛演示辅助</text>
       <text class="demo-description">仅生成本地演示数据，不会上传服务器</text>
-      <button class="demo-button" bindtap="generateDemoData">生成14天本地演示数据</button>
+    <button class="demo-button ui-button ui-button--secondary" hover-class="ui-button--pressed" bindtap="generateDemoData">生成14天本地演示数据</button>
     </view>
     <text class="medical-tip">本追踪仅用于辅助筛查，不替代专业医生诊断或用药建议</text>
   </view>

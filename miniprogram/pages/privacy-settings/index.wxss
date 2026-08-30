@@ -1,161 +1,24 @@
-page {
-  min-height: 100%;
-  background: #f4f7fa;
-}
-
-.privacy-page {
-  min-height: 100vh;
-  box-sizing: border-box;
-  padding: 48rpx 32rpx 64rpx;
-}
-
-.privacy-header {
-  display: flex;
-  flex-direction: column;
-}
-
-.privacy-title {
-  color: #17324d;
-  font-size: 42rpx;
-  font-weight: 700;
-}
-
-.privacy-subtitle {
-  margin-top: 16rpx;
-  color: #64748b;
-  font-size: 25rpx;
-  line-height: 1.6;
-}
-
-.summary-card,
-.privacy-card,
-.danger-card {
-  margin-top: 30rpx;
-  padding: 32rpx;
-  border-radius: 26rpx;
-  background: #ffffff;
-  box-shadow: 0 12rpx 36rpx rgba(23, 50, 77, 0.08);
-}
-
-.card-title,
-.card-description,
-.summary-value,
-.summary-label,
-.summary-total,
-.medical-disclaimer {
-  display: block;
-}
-
-.card-title {
-  color: #17324d;
-  font-size: 28rpx;
-  font-weight: 600;
-}
-
-.summary-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-top: 20rpx;
-}
-
-.summary-item {
-  width: 48%;
-  box-sizing: border-box;
-  margin-bottom: 18rpx;
-  padding: 24rpx;
-  border-radius: 20rpx;
-  background: #f7f9fb;
-}
-
-.summary-value {
-  color: #17324d;
-  font-size: 38rpx;
-  font-weight: 700;
-}
-
-.summary-label {
-  margin-top: 8rpx;
-  color: #64748b;
-  font-size: 22rpx;
-}
-
-.summary-total {
-  color: #64748b;
-  font-size: 21rpx;
-  text-align: right;
-}
-
-.pending-warning {
-  margin-top: 24rpx;
-  padding: 24rpx 28rpx;
-  border-radius: 20rpx;
-  color: #7a5b2b;
-  background: #fff8e9;
-  font-size: 23rpx;
-  line-height: 1.6;
-}
-
-.card-description {
-  margin-top: 16rpx;
-  color: #64748b;
-  font-size: 23rpx;
-  line-height: 1.7;
-}
-
-.clear-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 88rpx;
-  margin-top: 28rpx;
-  border: 2rpx solid #b54747;
-  border-radius: 18rpx;
-  color: #b54747;
-  background: #ffffff;
-  font-size: 27rpx;
-  font-weight: 600;
-}
-
-.logout-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 88rpx;
-  margin-top: 18rpx;
-  border: 2rpx solid #b54747;
-  border-radius: 18rpx;
-  color: #b54747;
-  background: #ffffff;
-  font-size: 27rpx;
-  font-weight: 600;
-}
-
-.clear-button::after,
-.logout-button::after {
-  border: none;
-}
-
-.clear-button:disabled,
-.logout-button:disabled {
-  opacity: 0.5;
-}
-
-.medical-disclaimer {
-  margin-top: 30rpx;
-  color: #64748b;
-  font-size: 22rpx;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.back-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 88rpx;
-  margin-top: 18rpx;
-  border-radius: 18rpx;
-  color: #3f7c78;
-  font-size: 24rpx;
-}
+page { min-height: 100%; color: #17324d; background: #f2f7f8; }
+.privacy-page { min-height: 0; box-sizing: border-box; padding: 36rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 8% 0%, rgba(135,205,211,.18), transparent 32%), linear-gradient(180deg, #f8fbfc, #eef4f6); }
+.privacy-header { display: flex; align-items: center; margin: 2rpx 4rpx 26rpx; }
+.privacy-header__mark { width: 88rpx; height: 88rpx; flex: none; overflow: hidden; border-radius: 26rpx 26rpx 12rpx 26rpx; }
+.privacy-header__copy { min-width: 0; margin-left: 20rpx; }
+.privacy-title, .privacy-subtitle, .card-title, .card-description, .summary-value, .summary-label, .summary-total, .medical-disclaimer { display: block; }
+.privacy-title { font-size: 40rpx; font-weight: 700; }
+.privacy-subtitle { margin-top: 8rpx; color: #506b75; font-size: 23rpx; line-height: 1.55; }
+.setting-sheet { margin-top: 20rpx; padding: 28rpx; border: 1rpx solid rgba(255,255,255,.92); border-radius: 32rpx; background: rgba(255,255,255,.77); box-shadow: 0 16rpx 42rpx rgba(36,79,93,.08); }
+.card-title { font-size: 28rpx; font-weight: 700; }
+.card-description { margin-top: 14rpx; color: #506b75; font-size: 23rpx; line-height: 1.7; }
+.summary-grid { display: flex; flex-wrap: wrap; margin: 18rpx -6rpx 0; }
+.summary-item { width: calc(50% - 12rpx); min-height: 116rpx; box-sizing: border-box; margin: 6rpx; padding: 20rpx; border: 1rpx solid #dce7e9; border-radius: 20rpx; background: #f4f9fa; }
+.summary-value { font-size: 35rpx; font-weight: 700; }
+.summary-label { margin-top: 7rpx; color: #506b75; font-size: 21rpx; }
+.summary-total { margin-top: 12rpx; color: #506b75; font-size: 21rpx; text-align: right; }
+.pending-warning { margin-top: 20rpx; padding: 22rpx 24rpx; border-left: 6rpx solid #b88943; border-radius: 8rpx 20rpx 20rpx 8rpx; color: #6d542e; background: #fff8e9; font-size: 22rpx; line-height: 1.65; }
+.clear-button, .logout-button { min-height: 88rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: 2rpx solid #b54747; border-radius: 20rpx; color: #b54747; background: transparent; font-size: 24rpx; font-weight: 650; }
+.clear-button { margin-top: 26rpx; }
+.logout-button { margin-top: 14rpx; }
+.clear-button::after, .logout-button::after { border: none; }
+.privacy-control--pressed { opacity: .72; background: #fff1f1; }
+.medical-disclaimer { margin-top: 26rpx; color: #506b75; font-size: 21rpx; line-height: 1.65; text-align: center; }
+.back-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 14rpx; border-radius: 20rpx; color: #245f68; font-size: 23rpx; font-weight: 600; }

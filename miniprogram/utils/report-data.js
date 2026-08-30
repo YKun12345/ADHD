@@ -19,8 +19,13 @@ const RADAR_SCHEMAS = Object.freeze({
   ]
 })
 const COGNITIVE_DEFINITIONS = Object.freeze([
-  { id: 'reaction', title: 'Go/No-Go' },
-  { id: 'stroop', title: 'Stroop' }
+  { id: 'reaction', title: 'Go/No-Go', metric: 'accuracy' },
+  { id: 'simple_reaction', title: '简单反应时', metric: 'simpleReaction' },
+  { id: 'stroop', title: 'Stroop', metric: 'stroop' },
+  { id: 'trail', title: '连线测试', metric: 'trail' },
+  { id: 'flanker', title: 'Flanker', metric: 'accuracy' },
+  { id: 'nback', title: '2-back', metric: 'nback' },
+  { id: 'digit', title: '数字广度', metric: 'digit' }
 ])
 const RISK_LABELS = Object.freeze({
   low: '低风险',
@@ -171,6 +176,64 @@ function emptyCognitive() {
   }
 }
 
+function percentMetric(value, fallback = '已记录结果') {
+  const number = finiteNumber(value)
+  return number === null ? fallback : `正确率 ${Math.round(clamp(number, 0, 100))}%`
+}
+
+function cognitiveMetrics(definition, rawResult) {
+  if (definition.metric === 'simpleReaction') {
+    const median = finiteNumber(rawResult.median_reaction_time_ms)
+    return {
+      primaryMetric: median === null ? '已记录结果' : `中位反应时 ${Math.round(median)} ms`,
+      secondaryMetric: percentMetric(rawResult.accuracy, '暂无有效率')
+    }
+  }
+  if (definition.metric === 'trail') {
+    const elapsed = finiteNumber(rawResult.elapsed_ms)
+    const errors = finiteNumber(rawResult.errors)
+    return {
+      primaryMetric: elapsed === null ? '已记录结果' : `总用时 ${(elapsed / 1000).toFixed(1)} 秒`,
+      secondaryMetric: errors === null ? '暂无错误记录' : `错误 ${Math.round(errors)} 次`
+    }
+  }
+  if (definition.metric === 'stroop') {
+    const median = finiteNumber(rawResult.median_reaction_time_ms)
+    const interference = finiteNumber(rawResult.interference_effect_ms)
+    const average = finiteNumber(rawResult.average_reaction_time_ms)
+    return {
+      primaryMetric: median === null ? percentMetric(rawResult.accuracy) : `中位反应时 ${Math.round(median)} ms`,
+      secondaryMetric: interference === null
+        ? (average === null ? percentMetric(rawResult.accuracy) : `平均反应时 ${Math.round(average)} ms`)
+        : `干扰效应 ${Math.round(interference)} ms`
+    }
+  }
+  if (definition.metric === 'nback') {
+    const dPrime = finiteNumber(rawResult.d_prime)
+    return {
+      primaryMetric: percentMetric(rawResult.accuracy),
+      secondaryMetric: dPrime === null ? '暂无辨别指数' : `辨别指数 ${dPrime}`
+    }
+  }
+  if (definition.metric === 'digit') {
+    const forward = finiteNumber(rawResult.forward_max_span)
+    const backward = finiteNumber(rawResult.backward_max_span)
+    return {
+      primaryMetric: forward === null || backward === null
+        ? '已记录结果'
+        : `顺背 ${Math.round(forward)} · 倒背 ${Math.round(backward)}`,
+      secondaryMetric: percentMetric(rawResult.accuracy)
+    }
+  }
+  const reactionTime = finiteNumber(rawResult.average_reaction_time_ms)
+  return {
+    primaryMetric: percentMetric(rawResult.accuracy),
+    secondaryMetric: reactionTime !== null && reactionTime >= 0
+      ? `平均反应时 ${Math.round(reactionTime)} ms`
+      : '暂无反应时'
+  }
+}
+
 function normalizeLocalCognitive(value) {
   if (!isObject(value)) return emptyCognitive()
 
@@ -181,20 +244,14 @@ function normalizeLocalCognitive(value) {
       ? payload.result_json
       : null
     const rawResult = isObject(resultJson) ? resultJson.raw_result : null
-    const accuracy = isObject(rawResult)
-      ? finiteNumber(rawResult.accuracy)
-      : null
-
-    if (accuracy === null) continue
-
-    const reactionTime = finiteNumber(rawResult.average_reaction_time_ms)
+    if (!isObject(rawResult)) continue
+    const metrics = cognitiveMetrics(definition, rawResult)
+    const quality = isObject(resultJson.quality) ? resultJson.quality : null
     cards.push({
       id: definition.id,
       title: definition.title,
-      primaryMetric: `正确率 ${Math.round(clamp(accuracy, 0, 100))}%`,
-      secondaryMetric: reactionTime !== null && reactionTime >= 0
-        ? `平均反应时 ${Math.round(reactionTime)} ms`
-        : '暂无反应时',
+      ...metrics,
+      qualityLabel: quality && quality.valid === false ? '数据质量需关注' : '数据质量正常',
       finishedAt: cleanText(resultJson.finished_at)
     })
   }
@@ -206,8 +263,8 @@ function normalizeLocalCognitive(value) {
     completedCount: cards.length,
     totalCount: COGNITIVE_DEFINITIONS.length,
     summary: cards.length === COGNITIVE_DEFINITIONS.length
-      ? '两项认知任务均已完成。'
-      : '已完成部分认知任务，可继续补充另一项测试。',
+      ? '七项认知任务均已完成。'
+      : `已完成 ${cards.length}/7 项认知任务，可继续补充测试。`,
     cards
   }
 }
@@ -229,6 +286,7 @@ function normalizeServerCognitive(value) {
       title: cleanText(item.test_name, definition.title),
       primaryMetric: cleanText(item.key_metric),
       secondaryMetric: cleanText(item.status_text, '已记录'),
+      qualityLabel: '服务器已记录',
       finishedAt: cleanText(item.finished_at)
     })
   }
@@ -240,6 +298,28 @@ function normalizeServerCognitive(value) {
     completedCount: cards.length,
     totalCount: COGNITIVE_DEFINITIONS.length,
     summary: cleanText(value.summary, '已生成认知测试摘要。'),
+    cards
+  }
+}
+
+function mergeCognitive(localCognitive, serverCognitive) {
+  const local = isObject(localCognitive) ? localCognitive : emptyCognitive()
+  const server = isObject(serverCognitive) ? serverCognitive : emptyCognitive()
+  if (!local.hasData) return server
+  if (!server.hasData) return local
+  const localById = new Map(local.cards.map((card) => [card.id, card]))
+  const serverById = new Map(server.cards.map((card) => [card.id, card]))
+  const cards = COGNITIVE_DEFINITIONS
+    .map((definition) => serverById.get(definition.id) || localById.get(definition.id))
+    .filter(Boolean)
+  return {
+    hasData: cards.length > 0,
+    source: 'mixed',
+    completedCount: cards.length,
+    totalCount: COGNITIVE_DEFINITIONS.length,
+    summary: server.summary || (cards.length === COGNITIVE_DEFINITIONS.length
+      ? '七项认知任务均已完成。'
+      : `已完成 ${cards.length}/7 项认知任务。`),
     cards
   }
 }
@@ -404,7 +484,8 @@ function mergeReport(localReport, serverPayload) {
   const serverTracking = normalizeServerTracking(server.tracking_summary)
 
   const useServerScale = serverScale.hasData
-  const useServerCognitive = !local.cognitive.hasData && serverCognitive.hasData
+  const cognitive = mergeCognitive(local.cognitive, serverCognitive)
+  const useServerCognitive = serverCognitive.hasData
   const useServerTracking = !local.tracking.hasData && serverTracking.hasData
   const serverUsed = useServerScale || useServerCognitive || useServerTracking
   const localPatientType = normalizePatientType(local.patientType)
@@ -419,7 +500,7 @@ function mergeReport(localReport, serverPayload) {
     source: serverUsed ? 'server' : 'local',
     sourceLabel: serverUsed ? '已同步' : '本地结果',
     scale: useServerScale ? serverScale : local.scale,
-    cognitive: useServerCognitive ? serverCognitive : local.cognitive,
+    cognitive,
     tracking: useServerTracking ? serverTracking : local.tracking
   })
 }

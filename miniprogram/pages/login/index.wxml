@@ -1,15 +1,29 @@
 <!--pages/login/index.wxml-->
-<view class="login-page">
+<view class="login-page ui-page">
+  <view class="ambient-orb ambient-orb--cyan"></view>
+  <view class="ambient-orb ambient-orb--violet"></view>
+
   <view class="login-header">
-    <text class="title">ADHD智慧辅助诊断平台</text>
-    <text class="subtitle">患者登录</text>
+    <view class="brand-icon-shell">
+      <ui-icon name="plan" shape="orbit" label="ADHD智慧辅助计划" decorative="{{false}}" />
+    </view>
+    <text class="brand-kicker">ADHD SMART CARE</text>
+    <text class="title">ADHD智慧辅助</text>
+    <text class="subtitle">回到你的14天认知健康计划</text>
   </view>
 
-  <view class="login-card">
+  <form class="login-card glass-surface" bindsubmit="handleLogin">
+    <view class="card-intro">
+      <text class="card-title">欢迎回来</text>
+      <text class="card-subtitle">登录后继续今日筛查任务</text>
+    </view>
+
     <text class="field-label">账号</text>
     <input
-      class="field-input"
+      class="field-input ui-input"
       type="text"
+      confirm-type="next"
+      disabled="{{submitting}}"
       value="{{identifier}}"
       placeholder="请输入邮箱或账号"
       placeholder-class="input-placeholder"
@@ -18,8 +32,11 @@
 
     <text class="field-label password-label">密码</text>
     <input
-      class="field-input"
+      class="field-input ui-input"
       password
+      confirm-type="done"
+      disabled="{{submitting}}"
+      bindconfirm="handleLogin"
       value="{{password}}"
       placeholder="请输入密码"
       placeholder-class="input-placeholder"
@@ -27,22 +44,33 @@
     />
 
     <button
-      class="login-button"
+      class="login-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
+      hover-class="ui-button--pressed"
+      form-type="submit"
       loading="{{submitting}}"
       disabled="{{submitting}}"
-      bindtap="handleLogin"
     >
       登录
     </button>
 
-    <text class="login-tip" bindtap="goToRegister">
-  首次使用请先注册患者账号
-</text>
+    <view
+      class="login-tip entry-link {{submitting ? 'entry-link--disabled' : ''}}"
+      hover-class="{{submitting ? 'none' : 'entry-link--pressed'}}"
+      aria-role="button"
+      aria-disabled="{{submitting}}"
+      bindtap="goToRegister"
+    >首次使用？创建患者账号</view>
 
-    <view class="server-entry" bindtap="openServerSettings">
-      服务器连接设置
-    </view>
-  </view>
+    <view class="soft-divider"></view>
+
+    <view
+      class="server-entry entry-link {{submitting ? 'entry-link--disabled' : ''}}"
+      hover-class="{{submitting ? 'none' : 'entry-link--pressed'}}"
+      aria-role="button"
+      aria-disabled="{{submitting}}"
+      bindtap="openServerSettings"
+    >服务器连接设置</view>
+  </form>
 
   <text class="disclaimer">
     本平台仅用于辅助筛查，不替代专业医生诊断

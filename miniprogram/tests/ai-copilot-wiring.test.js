@@ -41,11 +41,19 @@ for (const pageKey of pageKeys) {
     '/components/ai-copilot/index',
     `${pageKey} 未声明 ai-copilot`
   )
-  assert.equal(
-    wxml.includes(`<ai-copilot page-key="${pageKey}" />`),
-    true,
-    `${pageKey} 未渲染 ai-copilot`
-  )
+  if (pageKey === 'cognitive' || pageKey === 'stroop') {
+    assert.match(
+      wxml,
+      new RegExp(`<ai-copilot\\s+wx:if="\\{\\{phase === 'intro' \\|\\| phase === 'result'\\}\\}"\\s+page-key="${pageKey}"\\s*/>`),
+      `${pageKey} 必须仅在介绍和结果阶段渲染 ai-copilot`
+    )
+  } else {
+    assert.equal(
+      wxml.includes(`<ai-copilot page-key="${pageKey}" />`),
+      true,
+      `${pageKey} 未渲染 ai-copilot`
+    )
+  }
 }
 
 for (const pageKey of excludedPages) {

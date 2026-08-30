@@ -40,10 +40,10 @@ for (const markup of [listWxml, detailWxml]) {
   assert.equal(markup.includes('<rich-text'), false, '科普正文只允许纯文本')
 }
 
-for (const selector of ['.education-page', '.education-nav', '.offline-badge', '.category-tabs', '.category-tab--active', '.article-list', '.article-card', '.source-note', '.medical-tip']) {
+for (const selector of ['.education-page', '.offline-badge', '.category-tabs', '.category-tab--active', '.article-list', '.article-card', '.source-note', '.medical-tip']) {
   assert.equal(listWxss.includes(selector), true, `列表 WXSS 缺少：${selector}`)
 }
-for (const selector of ['.article-page', '.article-nav', '.article-header', '.article-section', '.article-point', '.source-list', '.source-card', '.source-button', '.article-disclaimer']) {
+for (const selector of ['.article-page', '.article-header', '.article-section', '.article-point', '.source-list', '.source-card', '.source-button', '.article-disclaimer']) {
   assert.equal(detailWxss.includes(selector), true, `详情 WXSS 缺少：${selector}`)
 }
 const sourceButtonRule = detailWxss.match(/\.source-button\s*\{([^}]*)\}/)

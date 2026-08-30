@@ -23,7 +23,7 @@ for (const fragment of requiredWxml) {
 }
 
 const selectors = [
-  '.pathway-page', '.pathway-nav', '.pathway-summary', '.pathway-progress',
+  '.pathway-page', '.pathway-summary', '.pathway-progress',
   '.pathway-progress__value--0', '.pathway-progress__value--1',
   '.pathway-progress__value--2', '.pathway-progress__value--3',
   '.pathway-progress__value--4', '.pathway-progress__value--5',
@@ -36,7 +36,7 @@ for (const selector of selectors) {
 }
 const actionRule = wxss.match(/\.step-action\s*\{([^}]*)\}/)
 assert.ok(actionRule)
-assert.match(actionRule[1], /display:\s*flex/)
+assert.match(actionRule[1], /display:\s*(?:inline-)?flex/)
 assert.match(actionRule[1], /align-items:\s*center/)
 assert.match(actionRule[1], /justify-content:\s*center/)
 

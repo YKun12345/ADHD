@@ -37,7 +37,8 @@ const requiredWxml = [
   '行为量表',
   '{{scale.totalScore}}',
   '{{scale.riskLabel}}',
-  'canvas-id="reportRadarCanvas"',
+  'type="2d"',
+  'id="reportRadarCanvas"',
   'wx:if="{{scale.hasRadar}}"',
   '暂无完整雷达数据',
   '认知测试',
@@ -45,7 +46,7 @@ const requiredWxml = [
   '{{item.primaryMetric}}',
   '14天追踪',
   '{{tracking.averageAttention}}',
-  'canvas-id="reportTrendCanvas"',
+  'id="reportTrendCanvas"',
   'wx:if="{{tracking.hasTrend}}"',
   'bindtap="openTask"',
   'data-task="scale"',
@@ -66,7 +67,6 @@ for (const fragment of requiredWxml) {
 
 const requiredSelectors = [
   '.report-page',
-  '.report-nav',
   '.summary-card',
   '.source-badge',
   '.coverage-bar',

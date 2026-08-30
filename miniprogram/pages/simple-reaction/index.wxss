@@ -1,0 +1,8 @@
+@import "../cognitive-task.wxss";
+.task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
+.reaction-stage { transition: background 120ms ease; }
+.reaction-stage--target { background: #dff3ef; }
+.reaction-target { width: 180rpx; height: 180rpx; border-radius: 50%; background: #b8c9ce; }
+.reaction-stage--target .reaction-target { background: #2f8f83; box-shadow: 0 0 0 24rpx rgba(47,143,131,.13); }
+.reaction-label { margin-top: 36rpx; color: #365866; font-size: 28rpx; font-weight: 650; }
+@media (prefers-reduced-motion: reduce) { .reaction-stage { transition: none; } }

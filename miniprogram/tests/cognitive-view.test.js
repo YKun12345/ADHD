@@ -66,7 +66,7 @@ for (const fragment of requiredWxml) {
 
 const requiredSelectors = [
   '.cognitive-page',
-  '.cognitive-nav',
+  '.cognitive-shell--testing',
   '.instruction-card',
   '.rule-item--go',
   '.rule-item--nogo',
@@ -91,7 +91,7 @@ for (const selector of requiredSelectors) {
   )
 }
 
-const testStageRule = wxss.match(/\.test-stage\s*\{([^}]*)\}/)
+const testStageRule = wxss.match(/(?:^|\n)\.test-stage\s*\{([^}]*)\}/)
 assert.ok(testStageRule, 'WXSS 缺少 .test-stage 规则')
 assert.match(testStageRule[1], /min-height:\s*520rpx/)
 assert.match(testStageRule[1], /user-select:\s*none/)
