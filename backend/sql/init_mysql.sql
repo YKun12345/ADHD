@@ -1,35 +1,20 @@
+-- AB 合并版 MySQL 引导脚本。
+-- 本脚本只创建空数据库，避免在 users/patients 等父表尚不存在时
+-- 提前创建带外键的 uploads 表而导致初始化失败。
+
 CREATE DATABASE IF NOT EXISTS `adhd_demo`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
 USE `adhd_demo`;
 
--- 时间序列文件上传记录表（.1D/.csv）。其余业务表由 SQLAlchemy `Base.metadata.create_all`
--- 在启动时自动创建（backend/app/db/init_db.py）。此段仅在需要为 MySQL 手工预建该新增表时使用。
-CREATE TABLE IF NOT EXISTS `uploads` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `patient_id` INT NULL,
-  `uploader_id` INT NOT NULL,
-  `file_name` VARCHAR(255) NOT NULL,
-  `source_type` VARCHAR(32) NOT NULL DEFAULT 'fMRI_1D',
-  `file_size` INT NOT NULL DEFAULT 0,
-  `file_hash` VARCHAR(64) NULL,
-  `status` VARCHAR(32) NOT NULL DEFAULT 'uploaded',
-  `stored_path` VARCHAR(1024) NOT NULL,
-  `note` TEXT NULL,
-  `created_at` DATETIME NULL,
-  PRIMARY KEY (`id`),
-  KEY `ix_uploads_patient_id` (`patient_id`),
-  KEY `ix_uploads_uploader_id` (`uploader_id`),
-  CONSTRAINT `fk_uploads_patient_id_patients`
-    FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_uploads_uploader_id_users`
-    FOREIGN KEY (`uploader_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Existing deployments must add this nullable link once before restarting the API:
--- ALTER TABLE `model_predictions`
---   ADD COLUMN `upload_id` INT NULL,
---   ADD UNIQUE KEY `ix_model_predictions_upload_id` (`upload_id`),
---   ADD CONSTRAINT `fk_model_predictions_upload_id_uploads`
---     FOREIGN KEY (`upload_id`) REFERENCES `uploads` (`id`) ON DELETE SET NULL;
+-- 配置 backend/.env 的 DATABASE_URL 后，从仓库根目录执行：
+-- python -m backend.create_tables
+--
+-- SQLAlchemy 会按元数据依赖顺序创建 users、patients、uploads、
+-- model_predictions 及其他当前业务表。
+--
+-- 注意：create_all 不会升级已经存在的旧表。旧 MySQL 实例若缺少
+-- uploads 或 model_predictions.upload_id，必须先备份，再由数据库管理员
+-- 按 backend/app/models/ 中的当前模型编写并审核迁移；不要在生产库盲目执行
+-- 来历不明的 ALTER TABLE。

@@ -1,5 +1,7 @@
 # 微信小程序 iOS/Android 真机验收清单
 
+> 历史资料：来自 A 合并前的小程序真机检查表，仅供参考；AB 合并版当前待验收项目见 `docs/evidence/manual-acceptance.md`。
+
 适用阶段：D13 真机预览验收  
 代码准备日期：2026-08-24  
 验收原则：只有在实体设备上亲自完成并看见正确结果后才能勾选。自动测试或开发者工具模拟器不能代替真机证据。
@@ -26,13 +28,13 @@ Android 手机型号 / 系统版本：
 1. 在 PowerShell 中进入源码目录：
 
 ```powershell
-Set-Location -LiteralPath 'C:\Users\Lenovo\Desktop\源码'
+Set-Location -LiteralPath '<AB合并版根目录>'
 ```
 
 2. 使用项目虚拟环境启动后端，并允许局域网设备访问：
 
 ```powershell
-.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 
 3. 保持这个 PowerShell 窗口运行，不要关闭。

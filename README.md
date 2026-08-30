@@ -1,70 +1,114 @@
-# 智绘脑图 (SmartBrainMap)
+# ADHD 智慧辅助诊断平台 — AB 合并版
 
-> 🔬 下一代多模态数字医疗 SaaS 平台 | 专注于全年龄段执行功能（ADHD等）的纵向筛查与图谱评估
+这是独立于 A、B 原目录的新版本：患者端以 A 的原生微信小程序为主，服务端以 B 的 FastAPI 后端为主，B 的医生/研究人员 Web 保留为活动入口。B 的旧患者网页没有删除，已放入只读意义上的历史归档。
 
-## 📖 项目愿景
-本项目不仅是一个简单的前端网页集合，而是一个具备**极高医疗拓展潜力**的“医患双屏互动”解决方案。
-它将传统的量表主观评测，拓展至包含 **JS-Psych 毫秒级认知实验范式**、**14天高频行为模式追踪**，以及在云端（未来计划）利用 **GNN (图神经网络)** 处理 fMRI 时序脑影像，最终输出 **五维核心症状雷达图** 的智能诊疗体系。
+本项目是科研与演示软件，不是独立医疗器械。自动测试通过不代表医学有效性、临床安全性或生产合规性已经验证。
 
-在医疗数据隐私管理维度，本架构预留了基于底层密码学的**数据外包完整性（PDP/PoR）审计拦截器**，以保障极为敏感的大脑认知隐私数据的云端零散篡改防御。
-
----
-
-## 🗂️ 前端工程结构说明
-
-为了支撑在没有 Node.js 环境下最快速度拉起演示和协同开发，当前的工程采用轻量化**纯静态 SPA/MPA 混合模式**架构。核心分包职责明确，支持直接在 GitHub Pages 一键部署：
+## 1. 目录与归属
 
 ```text
-/
-├── css/                     # 全局样式表字典，含 SaaS 医疗级配色方案与动画变量
-│   ├── style.css            # 基础 Layout, Navbar 和通用原子类
-│   └── patient.css          # 各细分业务面域（卡片、仪表盘、可视化区）等深度定制 CSS
-├── js/                      # 业务逻辑大脑与模型调用网关
-│   ├── api.js               # 【中枢】统一的 Server-Client Token/JWT 鉴权拦截器与所有后置路由集合
-│   ├── main.js              # 全局通用逻辑与动效调度
-│   ├── login.js             # 身份识别与分发路由（医生 vs 就诊者）
-│   └── scale.js             # 驱动单页富应用（SPA）式的问卷量表与雷达图 ECharts 渲染
-├── 📄 login.html            # [通用] 落地页，全网进入凭证核验与知情同意签署
-├── 📄 patient_*.html        # [就诊者端] 患者任务追踪流水线（包含了量表、科普、个人档案及 AI 小助手）
-├── 📄 doctor_analysis.html  # [研究专员端] 医生总控台面板，内含 GNN 推理大图上传及报告矩阵
-└── 📄 README.md             # 工程说明与启动指南
+backend/                    B 后端主线（FastAPI、数据库、接口）
+miniprogram/                A 患者端主线（微信小程序，21 个页面）
+doctor-web/                 B 医生/研究人员活动 Web
+findviz/                    影像可视化服务与静态资源
+HGST-main/                  HGST 模型工程
+archive/legacy-patient-web/ B 旧患者网页，仅归档，不参与默认运行
+tests/                      跨端、结构与洁净度测试
+tools/                      审计和交付工具
+docs/evidence/              来源、契约、验证与人工验收证据
+docs/history/               A/B 合并前的历史材料
 ```
 
-> **⚠️ 文件夹组织特别提示（致协同开发的成员）：**  
-> 为了保障在静态页免服务器状态下的**公共 JavaScript（如 `api.js`, `main.js`）能够安全地寻找诸如 `login.html` 的相对回溯路径**，所有的 `.html` 页面目前均平铺存放于根目录。**在您没有为本项目正式挂载 Webpack / Vite 路由打包器之前，请尽量不要手动将页面扔进多级嵌套的子文件夹**，这会导致大量组件引用链立即断裂！
+## 2. 环境要求
 
----
+- Python 3.11
+- Node.js 20 或更高版本（只用于小程序自动测试）
+- 微信开发者工具（用于编译、预览和真机验收）
+- 可选：MySQL 8；不安装时默认使用 SQLite
+- 可选：真实 HGST 推理所需的 PyTorch、DHG、模型权重和数据标签
 
-## 🛠️ 关键技术选型
-本项目前端框架设计遵循“最少依赖，最大化性能与视觉体验”的原则：
-*   **界面的肌肉与皮肤 (HTML5 + CSS3)**：抛弃臃肿的 UI 库，纯手写底层原子类，搭配莫兰迪深空蓝（Morandi Deep Navy）的现代医学审美与玻璃拟态效果 (Glassmorphism)。
-*   **界面的神经元 (Vanilla ES6)**：利用超轻量的原生 Promise 和 `fetch` 进行模块间的变量闭包管理，实现与后台的无缝异步通信。
-*   **诊断可视化屏 (ECharts 5.x)**：承接服务器吐出的 14天超长数组，高性能重绘毫秒级波动的认知折线与核心功能雷达圈。
-*   **流光溢彩的图标 (Ionicons V7)**：引入开源神经元级别的精细线框动效图标体系。
+所有命令均从仓库根目录执行。不要复制 A、B 原目录内已有的 `.venv`。
 
----
+```bash
+python -m venv .venv
+```
 
-## 🚀 快速启动指南
+激活环境后安装依赖：
 
-1. **项目克隆**
-   将本仓库 clone 到本地计算机：
-   ```bash
-   git clone https://github.com/您的名字/SmartBrainMap.git
-   ```
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-2. **本地环境部署 (零配置)**
-   本项目没有任何 npm pre-build 安装包。您可以：
-   *   直接双击文件夹内的 `login.html` 在浏览器中打开运行。
-   *   （更推荐的代码调试方式）在 VS Code 中安装并启动 `Live Server` 插件，可以开启本地端口实现代码的热更新及 API `localhost` 的安全跨域。
+开发测试还需要：
 
-3. **API 本地联调**
-   所有跟 Python FastAPI 或云存储的接口均封装在 `js/api.js` 中。如果要测试本地后端，打开该文件，修改第一行的 `BASE_URL` 指向您后台研发人员电脑的 IP 地址即可。
+```bash
+pip install -r requirements-dev.txt
+```
 
----
+## 3. 配置
 
-## 📅 下一步开发待办 (Team Todo-List)
-- [ ] **前端：** 在 `patient_test.html` 中引入 `jsPsych` 第三方库，挂载真实的 N-back 或 Go/No-go 标准心理学刺激源。
-- [ ] **前端：** 利用 `html2canvas` 编写 `printPdf()` 全局函数，一键生成患者的可视化医学报告单。
-- [ ] **后台通信：** 与 Python 端确立并打通云端审计 TPA 探针的长链接（EventSource/SSE）面板推流。
+唯一环境模板是根目录 `.env.example`。把它复制为 `backend/.env`：
 
->*This project was scaffolded with ❤️ focusing on neurodiversity & precise medical engineering.*
+```powershell
+Copy-Item .env.example backend/.env
+```
+
+Linux/macOS 可使用 `cp .env.example backend/.env`。开发默认值使用 `sqlite:///./backend/app.db`；生产环境必须设置 `APP_ENV=production`、非占位 `SECRET_KEY` 和显式 `DATABASE_URL`。不要提交 `backend/.env`、数据库、上传文件、权重或真实患者资料。
+
+## 4. SQLite 快速启动
+
+```bash
+python -m backend.create_tables
+python -m backend.scripts.seed_demo_data
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+种子脚本可重复执行，不会重复膨胀演示数据，并会在终端显示仅供本地演示的账号。启动后检查：
+
+- API 根：`http://127.0.0.1:8000/`
+- 健康检查：`http://127.0.0.1:8000/api/v1/health`
+- OpenAPI：`http://127.0.0.1:8000/docs`
+- 医生端：`http://127.0.0.1:8000/doctor-web/`
+
+医生端必须通过 HTTP 访问；不要双击 HTML。患者请使用微信小程序，不要把 `archive/legacy-patient-web/` 当成活动入口。
+
+## 5. MySQL 启动
+
+1. 在 `backend/.env` 设置 `DATABASE_URL=mysql+pymysql://用户:密码@主机:3306/adhd_demo?charset=utf8mb4`。
+2. 使用 MySQL 客户端执行 `backend/sql/init_mysql.sql`。
+3. 依次运行 `python -m backend.create_tables`、`python -m backend.scripts.seed_demo_data` 和 Uvicorn 启动命令。
+
+`init_mysql.sql` 建立数据库和上传链路所需结构，其余当前业务表由 SQLAlchemy `create_all` 补齐。正式环境应采用受控迁移工具和备份流程，不应把 `create_all` 当成完整生产迁移方案。
+
+## 6. 微信小程序
+
+1. 微信开发者工具选择“导入项目”，目录选 `miniprogram/`；配置文件为 `miniprogram/project.config.json`。
+2. 先启动后端，在小程序登录页打开“服务器连接设置”。开发者工具可填 `http://127.0.0.1:8000/api/v1`；真机要填电脑局域网地址或已备案的 HTTPS 地址。
+3. 开发阶段按团队规范决定是否临时关闭合法域名校验；正式发布必须配置 HTTPS、request 合法域名、证书和备案。
+4. 使用种子脚本输出的患者演示账号检查登录、量表、七类认知任务、14 天追踪、报告、关怀路径和 AI 页面。
+
+仓库不代填正式 AppID、生产域名、证书、数据库口令或医院配置。
+
+## 7. 模型与演示 Mock 边界
+
+- `POST /api/v1/model/predict_fmri` 是真实推理入口；需要安装 `requirements-hgst.txt` 并配置有效权重/部署包和标签路径。
+- `POST /api/v1/model/predict_mock` 是演示 Mock，响应带有明确的演示来源和免责声明，不得作为真实诊断结果。
+- 真实依赖或权重缺失时，真实推理应返回可理解的错误，不能静默降级成 Mock。
+- `QWEN_API_KEY` 为空时，AI 文本能力会使用明确的模板降级路径；这同样不是临床结论。
+
+## 8. 自动测试
+
+```bash
+node --test miniprogram/tests
+python -m pytest backend/tests -q
+python -m unittest tests.test_web_dependency_audit tests.test_repository_cleanliness -v
+```
+
+还应运行小程序 JSON/页面完整性、全部 JavaScript 语法、后端编译、两次种子、HTTP 和敏感信息检查。最近一次完整结果见 `docs/evidence/verification-report.md`。
+
+## 9. 尚需人工或外部环境验收
+
+必须按 `docs/evidence/manual-acceptance.md` 完成微信开发者工具、Android/iOS 真机、医生浏览器流程、真实模型权重和部署配置验收。没有这些外部条件时，只能标记“待验收”，不能声称可直接用于临床或生产。
+
+来源和合并决策见 `docs/evidence/source-manifest.md` 与 `docs/superpowers/specs/2026-08-30-ab-merge-design.md`。

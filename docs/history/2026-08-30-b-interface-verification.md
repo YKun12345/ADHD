@@ -1,9 +1,11 @@
 # 接口验证报告
 
+> 历史资料：来自 B 在 2026-08-30 合并前的独立接口验证，仅用于追溯；不是 AB 合并版的当前验收报告或运行手册。原机器绝对路径和演示口令已移除。
+
 > 项目：智绘脑图 SmartBrainMap（ADHD 智慧辅助诊断平台）
-> 验证对象：当前项目后端 `E:\学校相关\...\源码\源码\backend\`（FastAPI）
+> 验证对象：B 合并前的 FastAPI 后端
 > 验证方式：启动后端 → 依角色登录取 token → 遍历全部 `/api/v1` 业务接口逐项调用 → 记录状态码与关键响应
-> 验证账号：`adult@demo.com / Demo#2026`（patient）、`doctor@demo.com / Demo#2026`（researcher）、`admin123@qq.com / admin1111`（researcher/DAC）
+> 验证账号：历史演示账号（口令已省略；当前凭据以种子脚本输出为准）
 > 日期：2026-08-30
 
 ---
@@ -27,7 +29,7 @@
 
 ## 二、验证方法
 
-1. 启动后端：`.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000`
+1. 启动后端（历史命令已改写为可移植形式）：`python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000`
 2. 依次用 `patient` / `researcher` / `DAC` 三种角色登录取 `access_token`
 3. 对每个接口以**正确参数**调用，记录 HTTP 状态码与响应关键字段
 4. 对 422/400 先核实是**测试参数问题**还是**接口缺陷**（参考 `/openapi.json` 契约），修正参数后重测

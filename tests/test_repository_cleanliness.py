@@ -65,7 +65,7 @@ SAFE_EXAMPLE_VALUES = {"", "placeholder", "change-me", "example"}
 
 def tracked_files() -> list[Path]:
     result = subprocess.run(
-        ["git", "ls-files", "-z"],
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", "ls-files", "-z"],
         cwd=ROOT,
         check=True,
         capture_output=True,
@@ -115,7 +115,9 @@ class RepositoryCleanlinessTests(unittest.TestCase):
                 continue
 
             relative = path.relative_to(ROOT).as_posix()
-            if "-----BEGIN PRIVATE KEY-----" in text or "-----BEGIN RSA PRIVATE KEY-----" in text:
+            private_key_marker = "-----BEGIN " + "PRIVATE KEY-----"
+            rsa_key_marker = "-----BEGIN RSA " + "PRIVATE KEY-----"
+            if private_key_marker in text or rsa_key_marker in text:
                 violations.append(f"{relative}: private key")
 
             if path.name == ".env.example":
@@ -127,6 +129,50 @@ class RepositoryCleanlinessTests(unittest.TestCase):
                     violations.append(f"{relative}: unsafe default for {name}")
 
         self.assertEqual([], violations, "sensitive defaults: " + ", ".join(violations))
+
+    def test_one_authoritative_env_example_documents_backend_settings(self) -> None:
+        config_text = (ROOT / "backend" / "app" / "core" / "config.py").read_text(encoding="utf-8")
+        expected = set(re.findall(r'os\.getenv\("([A-Z0-9_]+)"', config_text))
+        env_text = (ROOT / ".env.example").read_text(encoding="utf-8")
+        documented = set(re.findall(r"(?m)^([A-Z][A-Z0-9_]*)=", env_text))
+
+        self.assertEqual([], sorted(expected - documented))
+        self.assertFalse((ROOT / "backend" / ".env.example").exists())
+
+    def test_current_guides_use_portable_commands_and_current_web_paths(self) -> None:
+        guide_paths = [
+            ROOT / "README.md",
+            ROOT / "backend" / "README.md",
+            ROOT / "backend" / "docs" / "后端技术实现.md",
+            ROOT / "backend" / "docs" / "内网访问方案.md",
+            ROOT / "doctor-web" / "README.md",
+        ]
+        guide_paths.extend((ROOT / "docs" / "evidence").glob("manual-acceptance.md"))
+        active_text = "\n".join(path.read_text(encoding="utf-8") for path in guide_paths)
+
+        self.assertNotRegex(active_text, r"(?i)[A-Z]:\\Python\\")
+        self.assertNotRegex(active_text, r"\.venv[\\/]Scripts[\\/]python\.exe")
+        self.assertNotRegex(active_text, r"127\.0\.0\.1:8000/(?:login|doctor_|dac_dashboard)")
+        self.assertIn("http://127.0.0.1:8000/doctor-web/", active_text)
+
+        root_readme = guide_paths[0].read_text(encoding="utf-8")
+        for required in (
+            "python -m venv .venv",
+            "pip install -r requirements.txt",
+            "python -m backend.create_tables",
+            "python -m backend.scripts.seed_demo_data",
+            "uvicorn backend.app.main:app",
+            "miniprogram/project.config.json",
+            "演示 Mock",
+            "医学有效性",
+        ):
+            self.assertIn(required, root_readme)
+
+    def test_mysql_bootstrap_defers_foreign_key_tables_to_sqlalchemy(self) -> None:
+        sql = (ROOT / "backend" / "sql" / "init_mysql.sql").read_text(encoding="utf-8")
+        self.assertIn("CREATE DATABASE IF NOT EXISTS", sql)
+        self.assertNotIn("CREATE TABLE IF NOT EXISTS `uploads`", sql)
+        self.assertIn("python -m backend.create_tables", sql)
 
 
 if __name__ == "__main__":
