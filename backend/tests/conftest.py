@@ -19,6 +19,8 @@ def client(monkeypatch: pytest.MonkeyPatch, sqlite_database_path: Path):
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("SECRET_KEY", "test-only-secret")
     monkeypatch.setenv("QWEN_API_KEY", "")
+    monkeypatch.setenv("UPLOAD_ROOT", str(sqlite_database_path.parent / "uploads"))
+    monkeypatch.setenv("UPLOAD_MAX_BYTES", "64")
 
     for module_name in list(sys.modules):
         if module_name.startswith("backend.app"):

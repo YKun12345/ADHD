@@ -218,6 +218,7 @@ def _to_model_prediction_response(record: ModelPrediction | None) -> ModelPredic
 
     return ModelPredictionReportResponse(
         prediction_id=record.id,
+        upload_id=record.upload_id,
         file_name=record.file_name,
         prediction_label=record.prediction_label,
         probability=record.probability,
@@ -228,6 +229,12 @@ def _to_model_prediction_response(record: ModelPrediction | None) -> ModelPredic
         model_name=record.model_name,
         model_version=record.model_version,
         summary_text=summary_text,
+        is_demo=record.source_type == "mock",
+        disclaimer=(
+            "Demonstration output only; not a medical diagnosis."
+            if record.source_type == "mock"
+            else "Screening support only; not a medical diagnosis."
+        ),
         created_at=record.created_at,
     )
 

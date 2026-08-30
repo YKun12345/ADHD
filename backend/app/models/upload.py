@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from backend.app.db.base import Base
 
 if TYPE_CHECKING:
+    from backend.app.models.model_prediction import ModelPrediction
     from backend.app.models.patient import Patient
     from backend.app.models.user import User
 
@@ -48,3 +49,7 @@ class Upload(Base):
 
     patient: Mapped["Patient | None"] = relationship(back_populates="uploads")
     uploader: Mapped["User"] = relationship(back_populates="uploads")
+    prediction: Mapped["ModelPrediction | None"] = relationship(
+        back_populates="upload",
+        uselist=False,
+    )

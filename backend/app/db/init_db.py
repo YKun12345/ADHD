@@ -113,6 +113,7 @@ def _ensure_model_prediction_detail_columns() -> None:
 
     column_names = {column["name"] for column in inspector.get_columns("model_predictions")}
     detail_columns = {
+        "upload_id": "INTEGER",
         "probability_control": "FLOAT",
         "roi_dim_used": "INTEGER",
         "timepoints": "INTEGER",

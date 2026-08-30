@@ -10,6 +10,7 @@ from backend.app.db.base import Base
 
 if TYPE_CHECKING:
     from backend.app.models.patient import Patient
+    from backend.app.models.upload import Upload
 
 
 class ModelPrediction(Base):
@@ -20,6 +21,12 @@ class ModelPrediction(Base):
         ForeignKey("patients.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
+    )
+    upload_id: Mapped[int | None] = mapped_column(
+        ForeignKey("uploads.id", ondelete="SET NULL"),
+        unique=True,
+        index=True,
+        nullable=True,
     )
     file_name: Mapped[str] = mapped_column(String(255), nullable=False)
     prediction_label: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -38,3 +45,4 @@ class ModelPrediction(Base):
     )
 
     patient: Mapped["Patient"] = relationship(back_populates="predictions")
+    upload: Mapped["Upload | None"] = relationship(back_populates="prediction")

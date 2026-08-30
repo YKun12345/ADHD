@@ -55,6 +55,11 @@ class Settings:
     ).strip()
     HGST_DEFAULT_DATA_DIR: str = os.getenv("HGST_DEFAULT_DATA_DIR", "").strip()
     HGST_DEFAULT_LABELS_PATH: str = os.getenv("HGST_DEFAULT_LABELS_PATH", "").strip()
+    UPLOAD_ROOT: str = os.getenv(
+        "UPLOAD_ROOT",
+        str((Path(__file__).resolve().parents[2] / "uploads").resolve()),
+    ).strip()
+    UPLOAD_MAX_BYTES: int = int(os.getenv("UPLOAD_MAX_BYTES", str(10 * 1024 * 1024)))
 
     def __init__(self) -> None:
         if self.APP_ENV == "production":

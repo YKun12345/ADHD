@@ -26,3 +26,10 @@ CREATE TABLE IF NOT EXISTS `uploads` (
   CONSTRAINT `fk_uploads_uploader_id_users`
     FOREIGN KEY (`uploader_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Existing deployments must add this nullable link once before restarting the API:
+-- ALTER TABLE `model_predictions`
+--   ADD COLUMN `upload_id` INT NULL,
+--   ADD UNIQUE KEY `ix_model_predictions_upload_id` (`upload_id`),
+--   ADD CONSTRAINT `fk_model_predictions_upload_id_uploads`
+--     FOREIGN KEY (`upload_id`) REFERENCES `uploads` (`id`) ON DELETE SET NULL;
