@@ -473,12 +473,9 @@ class SmartDashboardService:
         ) or 0
 
         # 获取所有患者ID
-        patient_ids = [
-            p.id
-            for p in self.db.scalars(
-                select(Patient.id).where(Patient.assigned_researcher_id == researcher_id)
-            ).all()
-        ]
+        patient_ids = list(self.db.scalars(
+            select(Patient.id).where(Patient.assigned_researcher_id == researcher_id)
+        ))
 
         if not patient_ids:
             return {

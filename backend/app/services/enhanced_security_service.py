@@ -64,7 +64,7 @@ class AuditLogEntry:
     timestamp: datetime
     actor_user_id: int
     actor_role: str
-    action: AuditAction
+    action: AuditAction | str
     resource_type: str  # "patient", "scale", "cognitive_test", etc.
     resource_id: int | None
     patient_id: int | None
@@ -191,12 +191,17 @@ class EnhancedSecurityService:
             user = self.db.get(User, log.actor_user_id)
             detail_json = log.detail_json or {}
 
+            try:
+                audit_action = AuditAction(log.action)
+            except ValueError:
+                audit_action = log.action  # the raw string（非标准 action 兜底）
+
             result.append(AuditLogEntry(
                 id=log.id,
                 timestamp=log.created_at,
                 actor_user_id=log.actor_user_id,
                 actor_role=detail_json.get("actor_role", "unknown"),
-                action=AuditAction(log.action),
+                action=audit_action,
                 resource_type=detail_json.get("resource_type", "unknown"),
                 resource_id=detail_json.get("resource_id"),
                 patient_id=log.patient_id,
@@ -339,7 +344,7 @@ class EnhancedSecurityService:
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(days=365 * duration_years) if duration_years > 0 else None
 
-        # 创建知情同意记录
+        # 记录知情同意
         record = ConsentRecord(
             patient_id=patient_id,
             consent_type=consent_type,

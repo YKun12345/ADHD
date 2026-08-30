@@ -94,3 +94,7 @@ class Patient(Base):
         back_populates="patient",
         cascade="all, delete-orphan",
     )
+    uploads: Mapped[list["Upload"]] = relationship(
+        back_populates="patient",
+        cascade="all, delete-orphan",
+    )

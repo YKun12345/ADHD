@@ -475,7 +475,6 @@ class PersonalizedAIService:
         """专业风格的消息"""
         streak_alert = next((a for a in alerts if a.alert_type == "streak_miss"), None)
         if streak_alert:
-            days = (datetime.now(timezone.utc) - alerts[0].priority) if alerts else 3
             return f"已有数日未记录，建议尽快补充，连续记录有助于生成更准确的趋势分析。"
 
         if completed == 0:

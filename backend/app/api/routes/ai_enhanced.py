@@ -14,6 +14,8 @@ AI赋能优化 - API路由
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -28,12 +30,15 @@ from backend.app.schemas.adaptive_assessment import (
 from backend.app.schemas.multimodal_analysis import (
     MultimodalInsightsResponse,
     TrendPredictionResponse,
+    TrendPrediction as TrendPredictionOut,
 )
 from backend.app.schemas.smart_dashboard import (
     SmartDashboardResponse,
     PatientAlertResponse,
+    PatientAlert,
 )
 from backend.app.schemas.intervention import (
+    InterventionTask,
     InterventionPlanResponse,
     InterventionEffectResponse,
     PersonalizedMessageRequest,
@@ -190,16 +195,34 @@ def get_trend_predictions(
         service = MultimodalAnalysisService(db)
         predictions = service.predict_mood_focus_trends(patient_id, forecast_days)
 
-        return [
-            TrendPredictionResponse(
-                metric=p.metric,
-                predictions=p.predictions,
-                trend_direction=p.trend_direction,
-                risk_level=p.risk_level,
-                recommendation=p.recommendation,
+        result = []
+        for p in predictions:
+            points = p.predictions or []
+            first = float(points[0]["value"]) if points else 0.0
+            last = float(points[-1]["value"]) if points else 0.0
+            conf = (
+                sum(float(pt.get("confidence", 0.5)) for pt in points) / len(points)
+                if points
+                else 0.5
             )
-            for p in predictions
-        ]
+            result.append(
+                TrendPredictionResponse(
+                    patient_id=patient_id,
+                    predictions=[
+                        TrendPredictionOut(
+                            metric=p.metric,
+                            current_value=first,
+                            predicted_value=last,
+                            trend_direction=p.trend_direction,
+                            confidence=min(1.0, max(0.0, conf)),
+                            prediction_horizon_days=max(len(points), forecast_days),
+                        )
+                    ],
+                    overall_trend=p.trend_direction,
+                    recommendations=[p.recommendation] if p.recommendation else [],
+                )
+            )
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -301,7 +324,36 @@ def get_smart_dashboard(
     """
     try:
         data = get_smart_dashboard_data(db, current_user.id)
-        return SmartDashboardResponse(**data)
+        summary = data.get("summary", {})
+        alerts = data.get("alerts", [])
+
+        return SmartDashboardResponse(
+            total_patients=summary.get("patient_count", 0),
+            active_patients=summary.get("active_tracking_count", 0),
+            alerts_count=len(alerts),
+            high_priority_alerts=sum(
+                1 for a in alerts if a.get("severity") in ("critical", "warning")
+            ),
+            metrics=[
+                {"name": "患者总数", "value": summary.get("patient_count", 0), "description": "负责的患者数量"},
+                {"name": "高风险患者", "value": summary.get("high_risk_count", 0), "description": "存在高风险评分的患者"},
+                {"name": "需关注患者", "value": summary.get("needs_attention_count", 0), "description": "有活跃预警的患者"},
+                {"name": "活跃追踪", "value": summary.get("active_tracking_count", 0), "description": "近7天有记录的患者"},
+                {"name": "已完成追踪", "value": summary.get("completed_tracking_count", 0), "description": "完成14天追踪的患者"},
+                {"name": "本周报告", "value": summary.get("weekly_reports_count", 0), "description": "本周产生评估报告数"},
+            ],
+            recent_alerts=[
+                PatientAlert(
+                    patient_id=a.get("patient_id"),
+                    patient_name=a.get("patient_name", ""),
+                    alert_type=a.get("type", ""),
+                    severity=a.get("severity", "low"),
+                    message=a.get("title", ""),
+                    recommended_action=a.get("suggested_action", ""),
+                )
+                for a in alerts[:5]
+            ],
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -370,22 +422,35 @@ def get_intervention_plans(
         )
 
     try:
+        from datetime import date, timedelta
+
         service = InterventionService(db)
         plans = service.generate_intervention_plan(patient_id, focus_area)
 
-        return [
-            InterventionPlanResponse(
-                intervention_type=plan.intervention_type.value,
-                title=plan.title,
-                description=plan.description,
-                daily_tasks=plan.daily_tasks,
-                duration_days=plan.duration_days,
-                difficulty_level=plan.difficulty_level,
-                expected_outcome=plan.expected_outcome,
-                evidence_level=plan.evidence_level,
+        result = []
+        for plan in plans:
+            start = date.today()
+            result.append(
+                InterventionPlanResponse(
+                    patient_id=patient_id,
+                    intervention_type=plan.intervention_type.value,
+                    title=plan.title,
+                    description=plan.description,
+                    goals=plan.expected_outcome.split("；") if plan.expected_outcome else [],
+                    tasks=[
+                        InterventionTask(
+                            title=t.get("title", ""),
+                            description=t.get("description", ""),
+                            task_type=plan.intervention_type.value,
+                            estimated_minutes=int(t.get("duration_minutes", 15) or 15),
+                        )
+                        for t in (plan.daily_tasks or [])
+                    ],
+                    start_date=start.isoformat(),
+                    end_date=(start + timedelta(days=plan.duration_days or 14)).isoformat(),
+                )
             )
-            for plan in plans
-        ]
+        return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -416,24 +481,35 @@ def get_intervention_effect(
 
     try:
         service = InterventionService(db)
-        effect = service.evaluate_intervention_effect(
-            patient_id,
-            InterventionType(intervention_type),
-        )
+        try:
+            itype = InterventionType(intervention_type)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"无效的干预类型：{intervention_type}",
+            )
+
+        effect = service.evaluate_intervention_effect(patient_id, itype)
 
         return InterventionEffectResponse(
-            intervention_type=effect.intervention_type.value,
-            adherence_rate=effect.adherence_rate,
+            patient_id=patient_id,
+            plan_id=0,
+            task_completion_rate=effect.adherence_rate,
+            adherence_score=effect.adherence_rate,
             mood_change=effect.mood_change,
             focus_change=effect.focus_change,
-            effectiveness_score=effect.effectiveness_score,
-            recommendation=effect.recommendation,
+            effectiveness_rating=(
+                "high"
+                if effect.effectiveness_score >= 0.6
+                else "moderate"
+                if effect.effectiveness_score >= 0.4
+                else "low"
+            ),
+            insights=[],
+            recommendations=[effect.recommendation] if effect.recommendation else [],
         )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"无效的干预类型：{intervention_type}",
-        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -497,10 +573,19 @@ def send_personalized_message(
             researcher_id=current_user.id,
             patient_id=patient_id,
             message_type=request.message_type,
-            custom_content=request.custom_content,
+            custom_content=request.content,
         )
 
-        return PersonalizedMessageResponse(**result)
+        return PersonalizedMessageResponse(
+            message_id=result.get("message_id"),
+            patient_id=patient_id,
+            sender_id=current_user.id,
+            content=result.get("content", ""),
+            message_type=request.message_type,
+            tone=request.tone,
+            sent_at=result.get("created_at") or datetime.now(timezone.utc).isoformat(),
+            is_read=False,
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -649,7 +734,7 @@ def get_audit_logs(
                 {
                     "id": log.id,
                     "timestamp": log.timestamp.isoformat(),
-                    "action": log.action.value,
+                    "action": getattr(log.action, "value", log.action),
                     "resource_type": log.resource_type,
                     "resource_id": log.resource_id,
                     "patient_id": log.patient_id,

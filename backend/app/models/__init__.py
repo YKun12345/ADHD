@@ -16,6 +16,7 @@ from backend.app.models.security import (
     SecurityUserKey,
 )
 from backend.app.models.tracking_log import TrackingLog
+from backend.app.models.upload import Upload
 from backend.app.models.user import User, UserRole, UserSubrole
 
 __all__ = [
@@ -41,4 +42,5 @@ __all__ = [
     "PatientTaskStatus",
     "CareMessage",
     "AIChatLog",
+    "Upload",
 ]

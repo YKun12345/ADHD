@@ -568,8 +568,8 @@ class InterventionService:
             patient_id=patient_id,
             researcher_id=researcher_id,
             task_type="message",
-            title=f"来自研究人员的消息：{message_type}",
-            description=content,
+            task_title=f"来自研究人员的消息：{message_type}",
+            task_description=content,
             status="pending",
         )
 

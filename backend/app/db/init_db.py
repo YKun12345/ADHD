@@ -21,6 +21,7 @@ from backend.app.models import (  # noqa: F401
     SecuritySystemConfig,
     SecurityUserKey,
     TrackingLog,
+    Upload,
     User,
     UserRole,
     UserSubrole,

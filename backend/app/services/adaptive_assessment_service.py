@@ -527,7 +527,7 @@ def check_scale_anomalies(
         "total_anomalies": len(anomalies),
         "anomalies": [
             {
-                "type": a.anomaly_type,
+                "anomaly_type": a.anomaly_type,
                 "confidence": a.confidence,
                 "description": a.description,
                 "affected_questions": a.affected_questions,
@@ -535,6 +535,12 @@ def check_scale_anomalies(
             }
             for a in anomalies
         ],
+        "overall_reliability": (
+            1.0
+            if not anomalies
+            else max(0.0, 1.0 - max(getattr(a, "confidence", 0.0) for a in anomalies if a.has_anomaly))
+        ),
+        "should_flag_for_review": any(a.has_anomaly for a in anomalies),
         "recommendation": _generate_anomaly_recommendation(anomalies),
     }
 

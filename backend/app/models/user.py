@@ -12,6 +12,7 @@ from backend.app.db.base import Base
 if TYPE_CHECKING:
     from backend.app.models.imaging_visualization import ImagingVisualization
     from backend.app.models.patient import Patient
+    from backend.app.models.upload import Upload
 
 
 class UserRole(str, Enum):
@@ -64,4 +65,8 @@ class User(Base):
     saved_imaging_visualizations: Mapped[list["ImagingVisualization"]] = relationship(
         back_populates="researcher",
         foreign_keys="ImagingVisualization.researcher_id",
+    )
+    uploads: Mapped[list["Upload"]] = relationship(
+        back_populates="uploader",
+        foreign_keys="Upload.uploader_id",
     )

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -143,4 +145,56 @@ async def predict_fmri(
         model_version=result.model_version,
         summary_text=result.summary_text,
         created_at=prediction.created_at,
+    )
+
+
+@router.post("/predict_mock", response_model=TimeseriesPredictionResponse)
+def predict_mock(
+    patient_id: int,
+    file_name: str = "demo_fmri.1D",
+    current_user: User = Depends(require_roles(UserRole.RESEARCHER, UserRole.PATIENT)),
+    db: Session = Depends(get_db),
+) -> TimeseriesPredictionResponse:
+    _get_patient_for_researcher_or_self(db, patient_id, current_user)
+
+    seed = hashlib.sha256(f"{patient_id}:{file_name}".encode()).hexdigest()
+    probability = round(0.65 + (int(seed[:8], 16) % 100) / 1000, 3)
+    probability = round(min(max(probability, 0.6), 0.9), 3)
+    probability_control = round(1 - probability, 3)
+    label = "ADHD" if probability >= 0.5 else "Control"
+
+    record = ModelPrediction(
+        patient_id=patient_id,
+        file_name=file_name,
+        prediction_label=label,
+        probability=probability,
+        probability_control=probability_control,
+        source_type="mock",
+        roi_dim_used=90,
+        timepoints=120,
+        model_name="DemoMock",
+        model_version="mock-2026-08",
+        summary_text=(
+            f"演示模式模拟推理：标签 {label}，ADHD 概率约 {probability:.2%}。"
+            "该结果仅用于无 torch/dhg 环境下的演示联调，不代表真实诊断。"
+        ),
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    return TimeseriesPredictionResponse(
+        prediction_id=record.id,
+        patient_id=patient_id,
+        file_name=record.file_name,
+        prediction_label=record.prediction_label,
+        probability=record.probability,
+        probability_control=record.probability_control,
+        source_type=record.source_type,
+        roi_dim_used=record.roi_dim_used,
+        timepoints=record.timepoints,
+        model_name=record.model_name,
+        model_version=record.model_version,
+        summary_text=record.summary_text,
+        created_at=record.created_at,
     )

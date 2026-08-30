@@ -19,6 +19,7 @@ class PatientTaskType(str, Enum):
     COGNITIVE = "cognitive"
     TRACKING = "tracking"
     REPORT_REVIEW = "report_review"
+    MESSAGE = "message"
 
 
 class PatientTaskStatus(str, Enum):
