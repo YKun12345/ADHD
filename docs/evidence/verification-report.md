@@ -1,5 +1,32 @@
 # AB 合并版自动验证报告
 
+## 发布前硬化复验（2026-08-30，提交 `dedbbfd`）
+
+本轮先在存在本地 `backend/.env` 的真实开发环境中复现基线：后端 24 项测试为 9 通过、15 失败。根因是配置模块使用 `load_dotenv(..., override=True)`，把 pytest 临时 SQLite、生产配置边界和旧库升级子进程中的显式环境变量覆盖成开发机配置。修复后，显式 `APP_ENV=test/production` 不再读取开发 `.env`，开发模式的 `.env` 也不会覆盖进程变量。
+
+同时完成以下确定性修复：
+
+- AI 追踪提醒改用专用 `REMINDER_SYSTEM_PROMPT`，避免配置了 Qwen 后仍因未定义名称静默降级。
+- 自然语言患者查询显式导入 `Patient` 与 `ScaleResult`，避免已注册 `/api/v1/ai-enhanced` 路径运行时 `NameError`。
+- FastAPI 启动迁移到 `lifespan`，Pydantic 响应模型迁移到 `ConfigDict`。
+- Ruff 报告的 48 项问题全部清理，包括未定义名称、重复字典键、SQLAlchemy 空值比较、无用导入/变量和无占位 f-string。
+- Web 依赖报告和交付清单生成器在 Windows 上显式写入 LF，避免重生成证据时引入整文件 CRLF 差异。
+
+本轮新鲜验证结果：
+
+- 微信小程序：`node --test miniprogram/tests/*.test.js`，77/77 通过，0 失败、0 跳过。
+- 后端：`.venv\Scripts\python.exe -m pytest backend/tests -q`，27/27 通过。
+- 后端告警：仅剩 1 条 Starlette `WSGIMiddleware` 第三方弃用提示；FastAPI `on_event` 与 Pydantic class Config 告警已消除。
+- Web/仓库：`.venv\Scripts\python.exe -m unittest tests.test_web_dependency_audit tests.test_repository_cleanliness tests.test_delivery_manifest -v`，14/14 通过。
+- 静态检查：`.venv\Scripts\python.exe -m ruff check backend` 输出 `All checks passed!`。
+- Python 编译：`.venv\Scripts\python.exe -m compileall -q backend findviz` 通过。
+- Web 依赖：扫描 95 个文件、86 条引用，缺失 0 条。
+- 差异检查：排除进入本轮前已存在且未被本轮修改的 `miniprogram/project.config.json` 换行差异后，`git diff --check` 通过。
+
+`miniprogram/project.config.json` 的未提交改动属于进入本轮前已经存在的工作区状态，本轮未覆盖、未暂存、未提交。现有 `docs/evidence/delivery-manifest.json` 对应此前交付提交；由于工作区仍有该用户文件改动，本轮不伪造“洁净交付清单”，应在该文件由项目负责人确认处理后再刷新清单。
+
+真实 MySQL、真实 HGST 权重、微信开发者工具编译、Android/iOS 真机、医院网络以及医学/合规验收仍未在本机完成，不能据此宣称临床或生产就绪。
+
 ## 最终独立审查修复复验（2026-08-30）
 
 独立代码审查发现的公开源码暴露、固定 DAC 账号、数字广度字段不一致、旧认知类型遗漏、Mock 标识不醒目、旧库上传关联约束不足和无界上传读取均已修复，并加入回归测试。
