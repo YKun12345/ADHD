@@ -45,3 +45,6 @@ miniprogram/miniprogram_npm/
 .idea/
 Thumbs.db
 .DS_Store
+
+# Claude Code local config
+.claude/
