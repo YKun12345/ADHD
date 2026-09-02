@@ -1,7 +1,7 @@
-<ai-copilot wx:if="{{phase === 'intro' || phase === 'result'}}" page-key="cognitive" />
+<ai-copilot wx:if="{{!submitting && (phase === 'intro' || phase === 'break' || phase === 'result')}}" page-key="cognitive" />
 <view class="cognitive-shell {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-shell--testing' : ''}}">
 <ui-nav title="Go / No-Go" />
-<view class="cognitive-page {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
+<view class="cognitive-page theme-lagoon {{phase === 'intro' || phase === 'break' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
   <view class="cognitive-content">
     <view class="page-heading">
       <view class="assessment-hero-icon">
@@ -46,7 +46,7 @@
       </view>
 
       <view class="notice-box">
-        提前点击也会记录为误触。任务按成人/儿童参数自动配置。
+        精简移动筛查版共 {{totalTrials}} 个试次并分为 {{totalSections}} 小节。提前点击也会记录为误触；结果不可与标准化临床工具直接等同。
       </view>
       <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
@@ -95,6 +95,16 @@
           <text class="feedback-help">准备进入下一轮</text>
         </view>
       </view>
+    </view>
+
+    <view class="section-break-card glass-surface" wx:elif="{{phase === 'break'}}">
+      <view class="section-break-card__mascot" aria-hidden="true">
+        <view class="section-break-card__spark"></view>
+      </view>
+      <text class="section-break-card__eyebrow">专注旅程 · {{nextSection}} / {{totalSections}}</text>
+      <text class="section-break-card__title">{{breakTitle}}</text>
+      <text class="section-break-card__message">{{breakMessage}}</text>
+      <button class="section-break-card__button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="continueSection">继续下一节</button>
     </view>
 
     <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">

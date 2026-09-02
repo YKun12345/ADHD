@@ -59,6 +59,19 @@ assert.equal(typeof reLaunchCalls[0].fail, 'function')
 
 reLaunchCalls.length = 0
 storage = {
+  access_token: 'doctor-token',
+  current_user: {
+    id: 2,
+    role: 'researcher',
+    full_name: '李医生'
+  }
+}
+pageDefinition.onShow()
+assert.equal(reLaunchCalls.length, 1)
+assert.equal(reLaunchCalls[0].url, '/pages/doctor-home/index')
+
+reLaunchCalls.length = 0
+storage = {
   access_token: 'orphan-token'
 }
 pageDefinition.onShow()

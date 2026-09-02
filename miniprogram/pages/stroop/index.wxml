@@ -1,14 +1,14 @@
-<ai-copilot wx:if="{{phase === 'intro' || phase === 'result'}}" page-key="stroop" />
+<ai-copilot wx:if="{{!submitting && (phase === 'intro' || phase === 'break' || phase === 'result')}}" page-key="stroop" />
 <view class="stroop-shell {{phase === 'testing' || phase === 'feedback' ? 'stroop-shell--testing' : ''}}">
-<ui-nav title="Stroop 测试" />
-<view class="stroop-page {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'testing' || phase === 'feedback' ? 'stroop-page--testing' : ''}}">
+<ui-nav title="颜色干扰任务" />
+<view class="stroop-page theme-spectrum {{phase === 'intro' || phase === 'break' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'testing' || phase === 'feedback' ? 'stroop-page--testing' : ''}}">
   <view class="stroop-content">
     <view class="page-heading">
       <view class="assessment-hero-icon">
         <ui-icon name="stroop" shape="lens" decorative="{{true}}" />
       </view>
       <text class="page-kicker">选择性注意与冲突抑制</text>
-      <text class="page-title">Stroop 颜色词测试</text>
+      <text class="page-title">颜色干扰任务</text>
       <text class="page-subtitle">共 {{totalTrials}} 个正式试次，请准确且尽快作答</text>
     </view>
 
@@ -33,7 +33,7 @@
         <text class="example-answer">文字是“红”，实际颜色是蓝，应选择“蓝”</text>
       </view>
       <view class="notice-box">
-        每题只能选择一次。请不要朗读文字，直接判断字体颜色。
+        精简移动筛查版共 {{totalTrials}} 个试次并分为 {{totalSections}} 小节。每题只能选择一次；结果不可与标准化临床工具直接等同。
       </view>
       <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
@@ -81,11 +81,21 @@
       </view>
     </view>
 
+    <view class="section-break-card glass-surface" wx:elif="{{phase === 'break'}}">
+      <view class="section-break-card__mascot" aria-hidden="true">
+        <view class="section-break-card__spark"></view>
+      </view>
+      <text class="section-break-card__eyebrow">色彩旅程 · {{nextSection}} / {{totalSections}}</text>
+      <text class="section-break-card__title">{{breakTitle}}</text>
+      <text class="section-break-card__message">{{breakMessage}}</text>
+      <button class="section-break-card__button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="continueSection">继续下一节</button>
+    </view>
+
     <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">
       <view class="result-heading">
         <view class="result-icon" aria-hidden="true"></view>
         <view class="result-heading-copy">
-          <text class="result-title">Stroop 测试已完成</text>
+          <text class="result-title">颜色干扰任务已完成</text>
           <text class="sync-badge">{{syncStatus}}</text>
         </view>
       </view>

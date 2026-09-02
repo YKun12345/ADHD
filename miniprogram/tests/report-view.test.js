@@ -21,6 +21,14 @@ const appConfig = JSON.parse(fs.readFileSync(
   'utf8'
 ))
 
+assert.match(wxml, /bindtap="toggleProfessional"/)
+assert.match(wxml, /专业评估结果/)
+assert.match(wxml, /不可独立用于诊断/)
+assert.match(wxml, /professionalExpanded/)
+const professionalBlockEnd = wxml.indexOf('</block>', wxml.indexOf('wx:if="{{professionalExpanded}}"'))
+const fixedDisclaimer = wxml.indexOf('本结果来自辅助分析模型，仅供专业人员结合其他资料参考，不可独立用于诊断。')
+assert.ok(fixedDisclaimer > professionalBlockEnd, '专业模型免责声明必须在默认折叠区域外固定显示')
+
 assert.equal(
   appConfig.pages.includes('pages/report/index'),
   true,
@@ -53,7 +61,7 @@ const requiredWxml = [
   'data-task="cognitive"',
   'data-task="tracking"',
   'bindtap="openTrend"',
-  '影像与模型结果尚未接入患者端',
+  '暂无专业评估记录',
   '仅用于辅助筛查，不替代专业医生诊断'
 ]
 

@@ -43,6 +43,23 @@ for (const [pageName, answerHandler] of pageCases) {
   assert.equal(page.data.mode, 'battery')
   page.startTest()
   assert.notEqual(page.data.phase, 'intro')
+
+  if (pageName === 'flanker' || pageName === 'nback') {
+    page.onUnload()
+    page.setData({ running: true, phase: 'testing' })
+    page._index = page._config.blockSize - 1
+    page._records = []
+    page._recordAnswer(
+      pageName === 'flanker' ? page._trials[page._index].target : false,
+      320
+    )
+    assert.equal(page.data.phase, 'break', `${pageName} 完成小节后应进入休息`)
+    assert.equal(page.data.running, false)
+    assert.equal(typeof page.continueSection, 'function')
+    page.continueSection()
+    assert.equal(page.data.running, true)
+    assert.equal(page.data.currentTrial, page._config.blockSize + 1)
+  }
   page.onUnload()
 }
 

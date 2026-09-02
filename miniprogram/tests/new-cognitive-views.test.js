@@ -5,8 +5,8 @@ const path = require('node:path')
 const pages = [
   ['simple-reaction', '简单反应时', 'handleTargetTap'],
   ['trail', '连线测试', 'handleNodeTap'],
-  ['flanker', 'Flanker', 'handleAnswer'],
-  ['nback', '2-back', 'handleAnswer'],
+  ['flanker', '箭头抗干扰任务', 'handleAnswer'],
+  ['nback', '两步位置记忆任务', 'handleAnswer'],
   ['digit-span', '数字广度', 'handleDigitTap']
 ]
 
@@ -22,6 +22,24 @@ for (const [pageName, title, handler] of pages) {
   assert.match(wxml, /ui-nav/)
   assert.match(wxss, /safe-area-inset-bottom/)
   assert.equal(json.usingComponents['ui-nav'], '/components/ui-nav/index')
+
+  if (pageName === 'flanker' || pageName === 'nback') {
+    assert.match(wxml, /phase === 'break'/, `${pageName} 缺少分节休息阶段`)
+    assert.match(wxml, /{{breakTitle}}/)
+    assert.match(wxml, /{{breakMessage}}/)
+    assert.match(wxml, /bindtap="continueSection"/)
+    assert.match(wxss, /\.section-break-card/)
+  }
+
+  if (pageName === 'trail') {
+    assert.match(wxml, /<canvas\b[^>]*canvas-id="trail-lines"/)
+    assert.match(wxml, /节点位置会在每次开始时重新排列/)
+    assert.match(wxss, /\.trail-lines[\s\S]*pointer-events:\s*none/)
+  }
 }
+
+const digitView = fs.readFileSync(path.resolve(__dirname, '../pages/digit-span/index.wxml'), 'utf8')
+assert.match(digitView, /连续两轮未答对后会提前结束该方向/)
+assert.doesNotMatch(digitView, /所有预设长度都会完成/)
 
 console.log('五个新增认知页面视图测试全部通过')

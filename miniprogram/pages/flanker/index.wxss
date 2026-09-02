@@ -1,5 +1,8 @@
 @import "../cognitive-task.wxss";
+page { background: linear-gradient(160deg, #f7fcf8 0%, #edf8f2 56%, #edf7f8 100%); }
+.theme-forest { background: radial-gradient(circle at 90% 10%, rgba(102, 176, 130, .2) 0, rgba(102, 176, 130, 0) 30%), linear-gradient(160deg, rgba(247,252,248,.96), rgba(237,248,242,.94) 56%, rgba(237,247,248,.94)); }
 .task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
 .flanker-stimulus { color: #17324d; font-size: 58rpx; font-weight: 700; letter-spacing: 10rpx; }
 .answer-row { display: flex; gap: 20rpx; margin-top: 22rpx; }
-.answer-row button { min-height: 96rpx; flex: 1; border-radius: 22rpx; color: #fff; background: #236b80; font-size: 28rpx; }
+.answer-row button { min-height: 96rpx; flex: 1; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 22rpx; color: #fff; background: #236b80; font-size: 28rpx; line-height: 1.3; }
+.section-break-card { background: rgba(246, 255, 250, 0.9); }

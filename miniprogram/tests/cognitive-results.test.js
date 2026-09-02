@@ -67,10 +67,18 @@ assert.equal(emptySummary.cards.every((card) => !card.completed), true)
 assert.equal(emptySummary.cards[0].url, '/pages/cognitive/index')
 assert.equal(emptySummary.cards[1].url, '/pages/simple-reaction/index')
 assert.equal(emptySummary.cards[2].url, '/pages/stroop/index')
-assert.equal(emptySummary.cards[3].url, '/pages/trail/index')
-assert.equal(emptySummary.cards[4].url, '/pages/flanker/index')
-assert.equal(emptySummary.cards[5].url, '/pages/nback/index')
+assert.equal(emptySummary.cards[3].url, '/pages/flanker/index')
+assert.equal(emptySummary.cards[4].url, '/pages/nback/index')
+assert.equal(emptySummary.cards[5].url, '/pages/trail/index')
 assert.equal(emptySummary.cards[6].url, '/pages/digit-span/index')
+assert.deepEqual(
+  emptySummary.cards.map((card) => card.estimatedMinutes),
+  [2, 2, 3, 3, 3, 4, 6]
+)
+assert.equal(
+  emptySummary.cards.reduce((total, card) => total + card.estimatedMinutes, 0),
+  23
+)
 
 const partialSummary = buildCognitiveSummary(reactionState)
 assert.equal(partialSummary.completedCount, 1)

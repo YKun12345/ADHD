@@ -1,0 +1,18 @@
+.onboarding-overlay { position: fixed; inset: 0; z-index: 900; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 40rpx; background: rgba(7, 15, 20, 0.72); }
+.onboarding-card { width: 100%; max-width: 640rpx; max-height: calc(100vh - 80rpx); overflow-y: auto; box-sizing: border-box; padding: 34rpx 32rpx 30rpx; border-radius: 32rpx; background: #fffaf2; color: #17324d; box-shadow: 0 24rpx 70rpx rgba(4, 18, 25, 0.22); }
+.onboarding-mascot { width: 124rpx; height: 124rpx; margin: -88rpx auto 8rpx; }
+.onboarding-name, .onboarding-title, .onboarding-intro, .onboarding-disclaimer { display: block; text-align: center; }
+.onboarding-name { color: #27758a; font-size: 24rpx; font-weight: 700; }
+.onboarding-title { margin-top: 12rpx; font-size: 36rpx; line-height: 1.35; font-weight: 800; }
+.onboarding-intro { margin-top: 12rpx; color: #536b79; font-size: 25rpx; line-height: 1.6; }
+.onboarding-list { margin-top: 22rpx; padding: 18rpx 20rpx; border-radius: 22rpx; background: rgba(225, 244, 239, 0.72); }
+.onboarding-item { display: flex; align-items: flex-start; color: #294a59; font-size: 27rpx; line-height: 1.55; }
+.onboarding-item + .onboarding-item { margin-top: 8rpx; }
+.onboarding-dot { flex: none; width: 10rpx; height: 10rpx; margin: 15rpx 14rpx 0 0; border-radius: 50%; background: #54a99a; }
+.onboarding-disclaimer { margin-top: 20rpx; color: #7a5a50; font-size: 23rpx; line-height: 1.55; }
+.onboarding-actions { display: flex; margin-top: 24rpx; }
+.onboarding-button { flex: 1; height: 84rpx; display: flex; align-items: center; justify-content: center; border-radius: 22rpx; font-size: 28rpx; font-weight: 700; }
+.onboarding-button + .onboarding-button { margin-left: 16rpx; }
+.onboarding-button::after { border: 0; }
+.onboarding-button--ghost { color: #456474; background: #edf1f2; }
+.onboarding-button--primary { color: #fff; background: #27758a; }

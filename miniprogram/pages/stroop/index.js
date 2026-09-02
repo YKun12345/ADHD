@@ -20,7 +20,8 @@ const {
   mergeLatestResult
 } = require('../../utils/cognitive-results')
 const { getTaskConfig } = require('../../utils/cognitive-config')
-const { loadCognitiveContext, recordBatteryCompletion, goNextBatteryTask } = require('../../utils/cognitive-page-support')
+const { getSectionState } = require('../../utils/cognitive-experience')
+const { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, goNextBatteryTask } = require('../../utils/cognitive-page-support')
 
 const PENDING_STROOP_KEY = 'pending_stroop_result'
 const FEEDBACK_DURATION_MS = 350
@@ -47,6 +48,10 @@ registerPatientPage({
     currentColorHex: '#17324d',
     feedbackText: '',
     feedbackCorrect: false,
+    breakTitle: '',
+    breakMessage: '',
+    nextSection: 1,
+    totalSections: 1,
     result: null,
     syncStatus: '',
     hasPendingResult: false
@@ -60,11 +65,18 @@ registerPatientPage({
     this._trials = this._useFullProtocol
       ? buildStroopTrials(this._config.formalTrials, this._config.congruentRatio)
       : STROOP_TRIALS.slice()
+    const sectionState = getSectionState(
+      0,
+      this._trials.length,
+      this._config.blockSize
+    )
     this.setData({
       patientName: user.full_name || '患者',
       ageGroup: this._context.ageGroup,
       mode: this._context.mode,
       totalTrials: this._trials.length,
+      nextSection: sectionState.nextSection,
+      totalSections: sectionState.totalSections,
       hasPendingResult: Boolean(wx.getStorageSync(PENDING_STROOP_KEY))
     })
   },
@@ -175,6 +187,23 @@ registerPatientPage({
         return
       }
 
+      const sectionState = getSectionState(
+        completed,
+        this._trials.length,
+        this._config.blockSize
+      )
+      if (this._useFullProtocol && sectionState.shouldBreak) {
+        this.setData({
+          phase: 'break',
+          running: false,
+          breakTitle: sectionState.title,
+          breakMessage: sectionState.message,
+          nextSection: sectionState.nextSection,
+          totalSections: sectionState.totalSections
+        })
+        return
+      }
+
       const nextIndex = this.data.currentTrialIndex + 1
       this.setData({
         currentTrialIndex: nextIndex,
@@ -200,6 +229,7 @@ registerPatientPage({
       this._finishedAt,
       this._useFullProtocol ? this._context : null
     )
+    if (this._useFullProtocol) attachProtocolMetadata(payload, this._config, this._records.length)
     const latestResults = mergeLatestResult(
       wx.getStorageSync(LATEST_RESULTS_KEY),
       payload
@@ -289,6 +319,20 @@ registerPatientPage({
       clearTimeout(this._responseTimer)
       this._responseTimer = null
     }
+  },
+
+  continueSection() {
+    if (this.data.phase !== 'break' || this.data.submitting) return
+    const nextIndex = this._records.length
+    this.setData({
+      phase: 'testing',
+      running: true,
+      currentTrialIndex: nextIndex,
+      currentTrialNumber: nextIndex + 1,
+      feedbackText: '',
+      feedbackCorrect: false
+    })
+    this._showTrial()
   },
 
   onPatientSessionEnded() {

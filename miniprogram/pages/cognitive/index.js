@@ -19,7 +19,8 @@ const {
   mergeLatestResult
 } = require('../../utils/cognitive-results')
 const { getTaskConfig } = require('../../utils/cognitive-config')
-const { loadCognitiveContext, recordBatteryCompletion, goNextBatteryTask } = require('../../utils/cognitive-page-support')
+const { getSectionState } = require('../../utils/cognitive-experience')
+const { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, goNextBatteryTask } = require('../../utils/cognitive-page-support')
 
 const PENDING_RESULT_KEY = 'pending_cognitive_result'
 const WAITING_DELAYS = [800, 1000, 1200, 1400]
@@ -61,6 +62,10 @@ registerPatientPage({
     stimulusLabel: '',
     feedbackText: '',
     feedbackCorrect: false,
+    breakTitle: '',
+    breakMessage: '',
+    nextSection: 1,
+    totalSections: 1,
     result: null,
     syncStatus: '',
     hasPendingResult: false
@@ -75,12 +80,19 @@ registerPatientPage({
     this._trials = this._useFullProtocol
       ? buildGoNoGoTrials(this._config.formalTrials)
       : TRIAL_SEQUENCE.slice()
+    const sectionState = getSectionState(
+      0,
+      this._trials.length,
+      this._config.blockSize
+    )
 
     this.setData({
       patientName: user.full_name || '患者',
       ageGroup: this._context.ageGroup,
       mode: this._context.mode,
       totalTrials: this._trials.length,
+      nextSection: sectionState.nextSection,
+      totalSections: sectionState.totalSections,
       hasPendingResult: Boolean(pendingResult)
     })
   },
@@ -220,8 +232,8 @@ registerPatientPage({
       phase: 'feedback',
       stimulusType: '',
       stimulusLabel: '',
-      feedbackText: feedbackFor(record),
-      feedbackCorrect: record.correct,
+      feedbackText: this._useFullProtocol ? '作答已记录' : feedbackFor(record),
+      feedbackCorrect: this._useFullProtocol ? false : record.correct,
       progressPercent: Math.round(
         (completed / this._trials.length) * 100
       )
@@ -233,6 +245,23 @@ registerPatientPage({
       if (!isPatientSessionLeaseCurrent(lease)) return
       if (completed >= this._trials.length) {
         this._completeTest()
+        return
+      }
+
+      const sectionState = getSectionState(
+        completed,
+        this._trials.length,
+        this._config.blockSize
+      )
+      if (this._useFullProtocol && sectionState.shouldBreak) {
+        this.setData({
+          phase: 'break',
+          running: false,
+          breakTitle: sectionState.title,
+          breakMessage: sectionState.message,
+          nextSection: sectionState.nextSection,
+          totalSections: sectionState.totalSections
+        })
         return
       }
 
@@ -261,6 +290,7 @@ registerPatientPage({
       this._finishedAt,
       this._useFullProtocol ? this._context : null
     )
+    if (this._useFullProtocol) attachProtocolMetadata(payload, this._config, this._records.length)
     const latestResults = mergeLatestResult(
       wx.getStorageSync(LATEST_RESULTS_KEY),
       payload
@@ -363,6 +393,20 @@ registerPatientPage({
       running: false,
       submitting: false
     })
+  },
+
+  continueSection() {
+    if (this.data.phase !== 'break' || this.data.submitting) return
+    const nextIndex = this._records.length
+    this.setData({
+      phase: 'waiting',
+      running: true,
+      currentTrialIndex: nextIndex,
+      currentTrialNumber: nextIndex + 1,
+      feedbackText: '保持专注，等待图形出现',
+      feedbackCorrect: false
+    })
+    this._scheduleTrial()
   },
 
   onHide() {

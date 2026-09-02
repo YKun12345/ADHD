@@ -2,40 +2,40 @@ const TASK_ORDER = Object.freeze([
   'reaction',
   'simple_reaction',
   'stroop',
-  'trail',
   'flanker',
   'nback',
+  'trail',
   'digit'
 ])
 
 const BASE_CONFIG = Object.freeze({
-  reaction: Object.freeze({ practiceTrials: 10, responseWindowMs: 1200, goRatio: 0.8 }),
-  simple_reaction: Object.freeze({ practiceTrials: 8, minDelayMs: 1000, maxDelayMs: 2500, responseWindowMs: 1200 }),
-  stroop: Object.freeze({ practiceTrials: 12, responseWindowMs: 2500 }),
-  trail: Object.freeze({ practiceNodes: 6 }),
-  flanker: Object.freeze({ practiceTrials: 12, responseWindowMs: 1800 }),
-  nback: Object.freeze({ practiceTrials: 10, responseWindowMs: 2000, targetRatio: 1 / 3 }),
+  reaction: Object.freeze({ practiceTrials: 5, responseWindowMs: 1200, goRatio: 0.8 }),
+  simple_reaction: Object.freeze({ practiceTrials: 4, minDelayMs: 1000, maxDelayMs: 2500, responseWindowMs: 1200 }),
+  stroop: Object.freeze({ practiceTrials: 8, responseWindowMs: 2500 }),
+  trail: Object.freeze({ practiceNodes: 4 }),
+  flanker: Object.freeze({ practiceTrials: 8, responseWindowMs: 1800 }),
+  nback: Object.freeze({ practiceTrials: 6, responseWindowMs: 2000, targetRatio: 1 / 3 }),
   digit: Object.freeze({ minSpan: 3, trialsPerSpan: 2, digitDurationMs: 800, gapMs: 250 })
 })
 
 const AGE_CONFIG = Object.freeze({
   child: Object.freeze({
-    reaction: Object.freeze({ formalTrials: 80, blockSize: 40 }),
-    simple_reaction: Object.freeze({ formalTrials: 24, blockSize: 12 }),
-    stroop: Object.freeze({ formalTrials: 60, blockSize: 30, congruentRatio: 2 / 3 }),
-    trail: Object.freeze({ partANodes: 15, partBPairs: 8 }),
-    flanker: Object.freeze({ formalTrials: 48, blockSize: 24 }),
-    nback: Object.freeze({ formalTrials: 45, blockSize: 45 }),
-    digit: Object.freeze({ maxSpan: 8 })
+    reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
+    simple_reaction: Object.freeze({ formalTrials: 20, blockSize: 20 }),
+    stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 2 / 3 }),
+    trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
+    flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    nback: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    digit: Object.freeze({ maxSpan: 7 })
   }),
   adult: Object.freeze({
-    reaction: Object.freeze({ formalTrials: 120, blockSize: 40 }),
-    simple_reaction: Object.freeze({ formalTrials: 30, blockSize: 15 }),
-    stroop: Object.freeze({ formalTrials: 96, blockSize: 32, congruentRatio: 0.75 }),
-    trail: Object.freeze({ partANodes: 25, partBPairs: 13 }),
-    flanker: Object.freeze({ formalTrials: 96, blockSize: 48 }),
-    nback: Object.freeze({ formalTrials: 90, blockSize: 45 }),
-    digit: Object.freeze({ maxSpan: 9 })
+    reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
+    simple_reaction: Object.freeze({ formalTrials: 20, blockSize: 20 }),
+    stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 0.75 }),
+    trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
+    flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    nback: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    digit: Object.freeze({ maxSpan: 8 })
   })
 })
 
@@ -55,7 +55,9 @@ function getTaskConfig(taskId, ageGroup) {
     ...AGE_CONFIG[group][taskId],
     taskId,
     ageGroup: group,
-    schemaVersion: 2,
+    schemaVersion: 5,
+    protocolId: 'ultra-brief-mobile-v3',
+    protocolLabel: '轻量移动筛查版',
     practicePassPercent: 75,
     maxPracticeAttempts: 3
   })

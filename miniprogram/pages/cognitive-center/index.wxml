@@ -33,16 +33,18 @@
     <view class="battery-card glass-surface">
       <view class="battery-copy">
         <text class="battery-title">完整认知评估</text>
-        <text class="battery-description">按推荐顺序完成七项，项目之间可退出后继续</text>
+        <text class="battery-description">轻量移动筛查版按推荐顺序完成七项，短任务单节完成，长任务会分节休息</text>
         <text class="battery-time">预计剩余 {{remainingMinutes}} 分钟</text>
       </view>
       <button class="battery-button ui-button ui-button--primary" bindtap="startOrResumeBattery">{{batteryActionText}}</button>
     </view>
 
-    <view class="test-list">
+    <view class="test-list" wx:for="{{groups}}" wx:for-item="group" wx:key="id">
+      <view class="group-heading"><view><text class="group-title">{{group.title}}</text><text class="group-description">{{group.description}}</text></view><text class="group-count">{{group.cards.length}} 项</text></view>
       <view
         class="test-card {{item.completed ? 'test-card--completed' : ''}}"
-        wx:for="{{cards}}"
+        wx:for="{{group.cards}}"
+        wx:for-item="item"
         wx:key="id"
         data-id="{{item.id}}"
         hover-class="ui-clickable--pressed"

@@ -10,8 +10,9 @@ const chatJson = readJson('pages', 'ai-chat', 'index.json')
 const chatWxml = read('pages', 'ai-chat', 'index.wxml')
 const chatWxss = read('pages', 'ai-chat', 'index.wxss')
 
-assert.equal(chatJson.usingComponents['ui-icon'], '/components/ui-icon/index', 'AI 对话页必须注册 ui-icon')
-assert.match(chatWxml, /class="message-avatar message-avatar--assistant"[\s\S]*?<ui-icon\s+name="ai"\s+shape="orb"/)
+assert.equal(chatJson.usingComponents['ai-mascot'], '/components/ai-mascot/index', 'AI 对话页必须注册 ai-mascot')
+assert.match(chatWxml, /class="message-avatar message-avatar--assistant"[\s\S]*?<ai-mascot\s+state=/)
+assert.match(chatWxml, /<ai-mascot\s+state="thinking"/)
 assert.match(chatWxml, /class="message-avatar message-avatar--user"[^>]*>\s*你\s*<\/view>/)
 assert.doesNotMatch(chatWxml, /\.slice\s*\(/, '头像不得在 WXML 中调用 slice')
 assert.equal((chatWxml.match(/class="thinking-dot"/g) || []).length, 3, '思考状态必须恰好有三个圆点')
@@ -73,10 +74,13 @@ const copilotJson = readJson('components', 'ai-copilot', 'index.json')
 const copilotWxml = read('components', 'ai-copilot', 'index.wxml')
 const copilotWxss = read('components', 'ai-copilot', 'index.wxss')
 
-assert.equal(copilotJson.usingComponents['ui-icon'], '/components/ui-icon/index', 'AI Copilot 必须注册 ui-icon')
+assert.equal(copilotJson.usingComponents['ai-mascot'], '/components/ai-mascot/index', 'AI Copilot 必须注册 ai-mascot')
 assert.equal(copilotJson.styleIsolation, 'isolated', 'AI Copilot 必须显式隔离样式')
-assert.match(copilotWxml, /class="ai-copilot__trigger"[^>]*bindtap="togglePanel"[\s\S]*?<ui-icon\s+name="ai"\s+shape="orb"/)
+assert.match(copilotWxml, /class="ai-copilot__trigger"[^>]*bindtap="togglePanel"[\s\S]*?<ai-mascot\s+state="\{\{navigating \? 'thinking' : expanded \? 'happy' : 'idle'\}\}"/)
+assert.match(copilotWxml, /星仔 · AI健康小助手/)
+assert.match(copilotWxml, /我会陪你一步一步完成/)
 assert.doesNotMatch(copilotWxml, /<text>\s*AI\s*<\/text>/, '悬浮入口不得继续使用文字假图标')
+assert.doesNotMatch(copilotWxml, /ai-copilot__halo/, 'AI 宠物周围不得保留圆形光环')
 assert.doesNotMatch(copilotWxml, /[\u{1F300}-\u{1FAFF}]/u, 'AI Copilot 不得使用 emoji')
 
 const copilotRootRule = copilotWxss.match(/\.ai-copilot\s*\{([^}]*)\}/)
@@ -88,15 +92,24 @@ for (const fragment of [
 ]) {
   assert.equal(copilotRootRule[1].includes(fragment), true, `AI Copilot 缺少 ${fragment}`)
 }
-assert.match(copilotWxss, /animation:\s*copilotPulse\s+(?:1[6-9]\d{2}|[2-9]\d{3,})ms/)
+const triggerRule = copilotWxss.match(/\.ai-copilot__trigger\s*\{([^}]*)\}/)
+assert.ok(triggerRule, 'AI Copilot 缺少悬浮触控入口')
+for (const fragment of [
+  'width: 104rpx',
+  'height: 104rpx',
+  'border: 0',
+  'border-radius: 0',
+  'background: transparent',
+  'box-shadow: none'
+]) {
+  assert.equal(triggerRule[1].includes(fragment), true, `无外圈入口缺少 ${fragment}`)
+}
 assert.match(copilotWxml, /aria-expanded="\{\{expanded\}\}"/)
 assert.match(copilotWxml, /expanded \? '收起AI健康助手' : '打开AI健康助手'/)
 assert.match(copilotWxss, /\.ai-copilot__panel\s*\{[^}]*max-height:\s*calc\(100vh - 240rpx\)[^}]*overflow-y:\s*auto/s)
 assert.match(copilotWxss, /\.ai-copilot__close\s*\{[^}]*width:\s*88rpx[^}]*height:\s*88rpx/s)
 assert.match(copilotWxss, /@media\s*\(prefers-reduced-motion:\s*reduce\)/)
-const pulseFrames = copilotWxss.match(/@keyframes\s+copilotPulse\s*\{([\s\S]*?)\n\}/)
-assert.ok(pulseFrames, 'AI Copilot 缺少克制呼吸动画')
-assert.doesNotMatch(pulseFrames[1], /filter:|background:|box-shadow:/, '呼吸动画只能改变 opacity/transform')
+assert.doesNotMatch(copilotWxss, /ai-copilot__halo|@keyframes\s+copilotPulse/, '无外圈设计不得残留光环样式或动画')
 for (const forbidden of [':active', '[disabled]', 'backdrop-filter', 'filter:', 'display: grid']) {
   assert.equal(copilotWxss.includes(forbidden), false, `AI Copilot 不得使用 ${forbidden}`)
 }

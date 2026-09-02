@@ -1,7 +1,7 @@
 const {
-  hasValidPatientSession,
   endPatientSession
 } = require('./utils/session-privacy')
+const { hasValidAnySession } = require('./utils/role-session')
 
 App({
   onLaunch() {
@@ -16,7 +16,7 @@ App({
       return sessionValues[key]
     }
 
-    if (hasValidPatientSession(readStorage)) {
+    if (hasValidAnySession(readStorage)) {
       this.globalData.isLoggedIn = true
       this.globalData.userInfo = readStorage('current_user')
       return

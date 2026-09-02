@@ -166,6 +166,38 @@ async function run() {
   assert.equal(page.data.currentColorHex, '#3976b8')
 
   reset()
+  storage.current_user.patient_profile = { patient_type: 'adult' }
+  const sectionPage = createPage()
+  sectionPage.onLoad()
+  assert.equal(sectionPage.data.totalTrials, 24)
+  sectionPage.startTest()
+  sectionPage._clearFeedbackTimer()
+  sectionPage._records = sectionPage._trials.slice(0, 11).map((trial) => (
+    evaluateStroopChoice(trial, trial.colorKey, 300)
+  ))
+  sectionPage.setData({
+    currentTrialIndex: 11,
+    currentTrialNumber: 12,
+    phase: 'testing'
+  })
+  const sectionTrial = sectionPage._trials[11]
+  sectionPage._recordTrial(
+    evaluateStroopChoice(sectionTrial, sectionTrial.colorKey, 310),
+    sectionTrial
+  )
+  assert.equal(sectionPage.data.feedbackText, '作答已记录')
+  runTimer(sectionPage._feedbackTimer)
+  assert.equal(sectionPage.data.phase, 'break')
+  assert.equal(sectionPage.data.running, false)
+  assert.equal(sectionPage.data.breakTitle, '第 1 小节完成')
+  assert.equal(typeof sectionPage.continueSection, 'function')
+  sectionPage.continueSection()
+  assert.equal(sectionPage.data.phase, 'testing')
+  assert.equal(sectionPage.data.running, true)
+  assert.equal(sectionPage.data.currentTrialNumber, 13)
+  sectionPage.onUnload()
+
+  reset()
   const completePage = createPage()
   completePage.startTest()
   completePage._records = STROOP_TRIALS.slice(0, 7).map(

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, Text
+from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
@@ -22,6 +22,13 @@ class CareMessageType(str, Enum):
 
 class CareMessage(Base):
     __tablename__ = "care_messages"
+    __table_args__ = (
+        UniqueConstraint(
+            "sender_user_id",
+            "client_message_id",
+            name="uq_care_messages_sender_client_message",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     patient_id: Mapped[int] = mapped_column(
@@ -41,6 +48,7 @@ class CareMessage(Base):
         default=CareMessageType.TEXT,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    client_message_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     related_task_id: Mapped[int | None] = mapped_column(
         ForeignKey("patient_tasks.id", ondelete="SET NULL"),
         nullable=True,

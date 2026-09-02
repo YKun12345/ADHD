@@ -1,0 +1,19 @@
+<ai-copilot wx:if="{{!inputFocused && !sending}}" page-key="patient-messages" />
+<ui-nav title="医患消息" />
+<view class="care-page ai-copilot-safe-space">
+  <view class="safety-tip">非紧急沟通可在这里留言；紧急情况请直接就医或联系急救。</view>
+  <view wx:if="{{loading}}" class="state-card">正在加载消息…</view>
+  <view wx:elif="{{errorText}}" class="state-card state-card--error"><text>{{errorText}}</text><button bindtap="retryLoad">重新加载</button></view>
+  <view wx:elif="{{messages.length === 0}}" class="state-card">暂无医患消息</view>
+  <view wx:else class="message-list">
+    <view wx:for="{{messages}}" wx:key="id" class="message-row {{item.isMine ? 'message-row--mine' : ''}}">
+      <view class="message-bubble">
+        <text class="message-sender">{{item.senderName}} · {{item.createdAt}}</text>
+        <text class="message-content">{{item.content}}</text>
+        <view wx:if="{{item.status === 'failed'}}" class="message-failed" data-id="{{item.id}}" bindtap="retryMessage">发送失败，点击重试</view>
+      </view>
+    </view>
+  </view>
+  <view class="composer"><textarea value="{{input}}" maxlength="2000" placeholder="回复医生" bindinput="onInput" bindfocus="onInputFocus" bindblur="onInputBlur" /><button loading="{{sending}}" disabled="{{sending}}" bindtap="sendMessage">发送</button></view>
+  <text class="medical-tip">本平台用于辅助筛查与随访，不替代医生诊断或用药建议。</text>
+</view>

@@ -1,5 +1,7 @@
+<onboarding-guide id="account-onboarding" role="patient" bind:visibilitychange="onOnboardingVisibilityChange" />
+<ai-copilot wx:if="{{!onboardingVisible}}" page-key="privacy-settings" />
 <ui-nav title="账号与隐私" />
-<view class="privacy-page">
+<view class="privacy-page ai-copilot-safe-space">
   <view class="privacy-header">
     <view class="privacy-header__mark"><ui-icon name="report" shape="sheet" decorative="true" /></view>
     <view class="privacy-header__copy">
@@ -42,6 +44,19 @@
     <text class="card-description">
       清除本地数据不会删除服务器已保存数据。服务器端数据仍按平台规则保存和管理。
     </text>
+  </view>
+
+  <view class="privacy-card setting-sheet glass-surface">
+    <text class="card-title">页面介绍</text>
+    <view class="guide-setting-row">
+      <view class="guide-setting-copy">
+        <text class="guide-setting-title">自动显示一句话介绍</text>
+        <text class="card-description">关闭后仍可点击星仔查看帮助</text>
+      </view>
+      <switch checked="{{autoGuideEnabled}}" color="#27758a" bindchange="toggleAutoGuide" />
+    </view>
+    <button class="guide-button ui-button" bindtap="restorePageGuides">恢复页面自动介绍</button>
+    <button class="guide-button ui-button" bindtap="reopenOnboarding">重新查看功能总介绍</button>
   </view>
 
   <view class="danger-card setting-sheet glass-surface">

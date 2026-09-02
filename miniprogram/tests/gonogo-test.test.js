@@ -119,9 +119,9 @@ assert.deepEqual(
   {
     test_type: 'reaction',
     result_json: {
-      test_name: 'Go/No-Go 测试',
+      test_name: '反应抑制任务',
       status_text: '已完成测试',
-      summary: 'Go/No-Go 测试已完成。本次结果记录反应速度、注意保持和抑制控制的客观表现。',
+      summary: '反应抑制任务已完成。本次结果记录反应速度、注意保持和抑制控制的客观表现。',
       metrics: [
         { label: '正确率', value: '70%' },
         { label: '平均反应时', value: '300 ms' },

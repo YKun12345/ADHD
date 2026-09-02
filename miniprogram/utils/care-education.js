@@ -321,7 +321,7 @@ function buildCarePathway(report, hasAccount = false) {
     createStep({
       id: 'cognitive',
       title: '认知测试',
-      description: '完成 Go/No-Go 与 Stroop 两项任务',
+      description: '完成反应抑制与颜色干扰两项任务',
       status: cognitiveDone ? 'done' : cognitiveCount > 0 ? 'partial' : 'pending',
       detail: `已完成 ${cognitiveCount} / 2 项`,
       actionLabel: cognitiveDone ? '查看结果' : '继续测试',

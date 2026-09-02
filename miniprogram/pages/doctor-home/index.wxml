@@ -1,0 +1,106 @@
+<onboarding-guide role="researcher" bind:visibilitychange="onOnboardingVisibilityChange" />
+<ai-copilot wx:if="{{!onboardingVisible}}" page-key="doctor-home" />
+<view class="doctor-page ai-copilot-safe-space">
+  <ui-nav title="医生工作台" showBack="{{false}}" rightText="退出" bind:righttap="logout" />
+
+  <view class="doctor-content">
+    <view class="hero-card">
+      <text class="hero-kicker">CLINICAL FOLLOW-UP</text>
+      <text class="hero-title">{{doctorName}}，今天好</text>
+      <text class="hero-copy">在移动端快速查看随访状态、患者报告和沟通记录。</text>
+    </view>
+
+    <view class="stats-row">
+      <view class="stat-card stat-card--blue">
+        <text class="stat-value">{{stats.patientCount}}</text>
+        <text class="stat-label">已绑定患者</text>
+      </view>
+      <view class="stat-card stat-card--orange">
+        <text class="stat-value">{{stats.weeklyReportCount}}</text>
+        <text class="stat-label">本周新报告</text>
+      </view>
+      <view class="stat-card stat-card--violet">
+        <text class="stat-value">{{stats.pendingImagingCount}}</text>
+        <text class="stat-label">待完善影像</text>
+      </view>
+      <view class="stat-card stat-card--message"><text class="stat-value">{{careTotals.unread}}</text><text class="stat-label">未读患者消息</text></view>
+      <view class="stat-card stat-card--task"><text class="stat-value">{{careTotals.pending}}</text><text class="stat-label">待办患者任务</text></view>
+    </view>
+
+    <form class="bind-card" bindsubmit="bindPatient">
+      <view class="section-heading">
+        <text class="section-title">绑定患者</text>
+        <text class="section-note">仅可绑定已注册患者账号</text>
+      </view>
+      <view class="bind-row">
+        <input
+          class="bind-input"
+          type="text"
+          value="{{bindEmail}}"
+          disabled="{{binding}}"
+          placeholder="患者邮箱"
+          bindinput="onBindEmailInput"
+        />
+        <button class="bind-button" form-type="submit" loading="{{binding}}" disabled="{{binding}}">绑定</button>
+      </view>
+    </form>
+
+    <view class="list-heading">
+      <text class="section-title">我的患者</text>
+      <text class="list-total">{{total}} 人</text>
+    </view>
+
+    <view class="filter-card">
+      <input class="search-input" value="{{searchQuery}}" placeholder="搜索患者姓名或邮箱" bindinput="onSearchInput" />
+      <view class="filter-row">
+        <view wx:for="{{riskFilters}}" wx:key="value" class="filter-chip {{riskFilter === item.value ? 'filter-chip--active' : ''}}" data-value="{{item.value}}" bindtap="selectRiskFilter">{{item.label}}</view>
+      </view>
+      <view class="filter-row">
+        <view wx:for="{{completionFilters}}" wx:key="value" class="filter-chip {{completionFilter === item.value ? 'filter-chip--active' : ''}}" data-value="{{item.value}}" bindtap="selectCompletionFilter">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="state-card">正在同步患者数据…</view>
+    <view wx:elif="{{errorText}}" class="state-card state-card--error">
+      <text>{{errorText}}</text>
+      <button class="retry-button" bindtap="retryLoad">重新加载</button>
+    </view>
+    <view wx:elif="{{patients.length === 0}}" class="state-card">
+      <text>{{allPatients.length ? '没有符合筛选条件的患者' : '还没有绑定患者'}}</text>
+      <text class="state-note">{{allPatients.length ? '调整搜索或筛选条件后再试。' : '输入患者注册邮箱即可建立随访关系。'}}</text>
+    </view>
+
+    <view wx:else class="patient-list">
+      <view
+        wx:for="{{patients}}"
+        wx:key="patientId"
+        class="patient-card"
+        data-id="{{item.patientId}}"
+        bindtap="openPatient"
+        aria-role="button"
+        aria-label="查看 {{item.patientName}} 的报告"
+      >
+        <view class="patient-main">
+          <view class="patient-avatar">{{item.avatarText}}</view>
+          <view class="patient-info">
+            <text class="patient-name">{{item.patientName}}</text>
+            <text class="patient-email">{{item.patientEmail}}</text>
+          </view>
+          <text class="risk-tag risk-tag--{{item.riskLevel}}">{{item.riskText}}</text>
+        </view>
+        <view class="patient-meta">
+          <text>{{item.progressText}}</text>
+          <text class="patient-next">{{item.nextStepText}}</text>
+          <view class="care-summary-tags"><text wx:if="{{item.unread}}">未读消息 {{item.unread}}</text><text wx:if="{{item.pending}}">待办任务 {{item.pending}}</text></view>
+        </view>
+      </view>
+    </view>
+
+    <view
+      class="doctor-settings-entry"
+      hover-class="doctor-settings-entry--pressed"
+      aria-role="button"
+      bindtap="openPrivacySettings"
+    >账号与隐私</view>
+  </view>
+</view>

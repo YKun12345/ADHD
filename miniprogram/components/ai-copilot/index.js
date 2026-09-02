@@ -2,6 +2,16 @@ const {
   getCopilotConfig,
   buildAiChatUrl
 } = require('../../utils/ai-copilot')
+const { shouldShowPageGuide, markPageGuideSeen } = require('../../utils/guide-state')
+
+function currentUser() {
+  try { return wx.getStorageSync('current_user') || {} } catch (error) { return {} }
+}
+
+function releaseTimer(timer) {
+  if (timer && typeof timer.unref === 'function') timer.unref()
+  return timer
+}
 
 Component({
   properties: {
@@ -14,21 +24,38 @@ Component({
   data: {
     expanded: false,
     navigating: false,
+    guideBubbleVisible: false,
     config: getCopilotConfig('')
   },
 
   lifetimes: {
     attached() {
-      this.setData({
-        config: getCopilotConfig(this.data.pageKey)
-      })
+      const config = getCopilotConfig(this.data.pageKey)
+      this.setData({ config })
+      if (!shouldShowPageGuide(currentUser(), this.data.pageKey, undefined, config.version)) return
+      this._showTimer = releaseTimer(setTimeout(() => {
+        markPageGuideSeen(currentUser(), this.data.pageKey, undefined, config.version)
+        this.setData({ guideBubbleVisible: true })
+        this._hideTimer = releaseTimer(setTimeout(() => {
+          this.setData({ guideBubbleVisible: false })
+        }, 6000))
+      }, 300))
+    },
+    detached() {
+      clearTimeout(this._showTimer)
+      clearTimeout(this._hideTimer)
     }
   },
 
   methods: {
+    closeGuideBubble() {
+      clearTimeout(this._hideTimer)
+      this.setData({ guideBubbleVisible: false })
+    },
     togglePanel() {
       this.setData({
-        expanded: !this.data.expanded
+        expanded: !this.data.expanded,
+        guideBubbleVisible: false
       })
     },
 

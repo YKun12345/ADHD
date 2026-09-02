@@ -118,9 +118,9 @@ async function run() {
   })
   assert.equal(
     prefilledPage.data.inputValue,
-    '请介绍患者首页的任务、进度和快捷入口应该怎样使用。'
+    '介绍首页任务、进度和快捷入口。'
   )
-  assert.equal(prefilledPage.data.inputLength, 25)
+  assert.equal(prefilledPage.data.inputLength, 15)
   assert.equal(calls.requests.length, 0)
 
   reset()
@@ -131,7 +131,7 @@ async function run() {
   })
   assert.equal(
     decodedPrefilledPage.data.inputValue,
-    '请介绍患者首页的任务、进度和快捷入口应该怎样使用。'
+    '介绍首页任务、进度和快捷入口。'
   )
   assert.equal(calls.requests.length, 0)
 

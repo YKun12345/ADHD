@@ -117,9 +117,9 @@ assert.deepEqual(
   {
     test_type: 'stroop',
     result_json: {
-      test_name: 'Stroop 测试',
+      test_name: '颜色干扰任务',
       status_text: '已完成测试',
-      summary: 'Stroop 测试已完成。本次结果记录冲突信息下的颜色选择正确率和反应速度。',
+      summary: '颜色干扰任务已完成。本次结果记录冲突信息下的颜色选择正确率和反应速度。',
       metrics: [
         { label: '正确率', value: '75%' },
         { label: '平均反应时', value: '450 ms' },

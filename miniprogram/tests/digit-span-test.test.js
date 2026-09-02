@@ -4,7 +4,8 @@ const {
   expectedDigitAnswer,
   evaluateDigitTrial,
   summarizeDigitTrials,
-  buildDigitSpanPayload
+  buildDigitSpanPayload,
+  shouldStopDigitDirection
 } = require('../utils/digit-span-test')
 
 const trials = buildDigitTrials(3, 5, 2, () => 0.25)
@@ -27,5 +28,13 @@ assert.equal(summary.backward_max_span, 4)
 assert.equal(summary.correct_trials, 3)
 assert.equal(summary.accuracy, 75)
 assert.equal(buildDigitSpanPayload(summary, [], { ageGroup: 'adult' }).test_type, 'digit')
+assert.equal(shouldStopDigitDirection([
+  { direction: 'forward', span: 4, correct: false },
+  { direction: 'forward', span: 4, correct: false }
+], 'forward', 2), true)
+assert.equal(shouldStopDigitDirection([
+  { direction: 'forward', span: 4, correct: true },
+  { direction: 'forward', span: 4, correct: false }
+], 'forward', 2), false)
 
 console.log('数字广度测试数据测试全部通过')

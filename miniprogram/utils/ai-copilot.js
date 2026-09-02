@@ -2,19 +2,32 @@ const MAX_PROMPT_LENGTH = 4000
 const {
   encodeInitialPrompt
 } = require('./ai-chat')
+const { getPageGuide } = require('./page-guide-content')
 
 const COPILOT_PAGE_KEYS = Object.freeze([
   'home',
   'scale',
   'cognitive-center',
   'cognitive',
+  'simple-reaction',
   'stroop',
+  'trail',
+  'flanker',
+  'nback',
+  'digit-span',
   'tracking',
   'tracking-trend',
   'report',
   'care-pathway',
   'education',
-  'education-detail'
+  'education-detail',
+  'patient-tasks',
+  'patient-messages',
+  'privacy-settings',
+  'doctor-home',
+  'doctor-patient',
+  'doctor-guide-settings',
+  'ai-chat'
 ])
 
 const GENERAL_CONFIG = Object.freeze({
@@ -45,15 +58,15 @@ const PAGE_CONFIGS = Object.freeze({
   },
   cognitive: {
     pageKey: 'cognitive',
-    title: 'Go/No-Go 测试',
+    title: '反应抑制任务',
     advice: '保持注意，按页面规则完成测试。',
-    helpPrompt: '请用简单步骤说明 Go/No-Go 测试怎样操作。'
+    helpPrompt: '请用简单步骤说明反应抑制任务怎样操作。'
   },
   stroop: {
     pageKey: 'stroop',
-    title: 'Stroop 测试',
+    title: '颜色干扰任务',
     advice: '根据当前规则作答，尽量兼顾准确和稳定。',
-    helpPrompt: '请用简单步骤说明 Stroop 测试怎样操作。'
+    helpPrompt: '请用简单步骤说明颜色干扰任务怎样操作。'
   },
   tracking: {
     pageKey: 'tracking',
@@ -90,12 +103,24 @@ const PAGE_CONFIGS = Object.freeze({
     title: '科普详情',
     advice: '阅读后可返回列表继续选择其他主题。',
     helpPrompt: '请介绍科普详情页内容应该怎样阅读和使用。'
+  },
+  'doctor-guide-settings': {
+    pageKey: 'doctor-guide-settings',
+    title: '账号与隐私',
+    advice: '可以在这里管理医生端页面介绍并重新查看功能总览。',
+    helpPrompt: '请说明医生端引导设置和账号隐私边界。'
   }
 })
 
 function getCopilotConfig(pageKey) {
   const config = PAGE_CONFIGS[pageKey] || GENERAL_CONFIG
-  return { ...config }
+  const guide = getPageGuide(pageKey)
+  return {
+    ...config,
+    ...(guide.pageKey === pageKey
+      ? { pageKey: guide.pageKey, intro: guide.intro, version: guide.version, helpPrompt: guide.helpPrompt }
+      : { intro: config.advice, version: 1 })
+  }
 }
 
 function buildAiChatUrl(pageKey, mode = 'free') {

@@ -103,7 +103,7 @@
     <view class="report-card__header">
       <view>
         <text class="report-card__title">认知测试</text>
-        <text class="report-card__subtitle">Go/No-Go 与 Stroop 任务结果</text>
+        <text class="report-card__subtitle">反应抑制与颜色干扰任务结果</text>
       </view>
       <text wx:if="{{cognitive.hasData}}" class="report-card__tag">
         {{cognitive.completedCount}} / {{cognitive.totalCount}} 项
@@ -194,11 +194,28 @@
   </view>
 
   <view class="report-card professional-card glass-surface">
-    <text class="report-card__title">专业检查</text>
-    <view class="empty-panel empty-panel--plain">
-      <text>{{professionalData}}</text>
-      <text>影像与模型结果尚未接入患者端</text>
+    <view class="professional-header" aria-role="button" aria-expanded="{{professionalExpanded}}" bindtap="toggleProfessional">
+      <view><text class="report-card__title">专业评估结果</text><text class="report-card__subtitle">默认折叠，按需查看影像和辅助模型摘要</text></view>
+      <text class="professional-toggle">{{professionalExpanded ? '收起' : '展开'}}</text>
     </view>
+    <block wx:if="{{professionalExpanded}}">
+      <view wx:if="{{professional.hasData}}" class="professional-content">
+        <image wx:if="{{professional.screenshotData}}" class="professional-image" mode="widthFix" src="{{professional.screenshotData}}" />
+        <view class="professional-row"><text>影像记录</text><text>{{professional.hasImaging ? '已有记录 · ' + professional.imagingType : '暂无影像记录'}}</text></view>
+        <text wx:if="{{professional.imagingSummary}}" class="professional-copy">{{professional.imagingSummary}}</text>
+        <text wx:if="{{professional.doctorInterpretation}}" class="professional-copy">医生影像解释：{{professional.doctorInterpretation}}</text>
+        <view wx:if="{{professional.predictionLabel}}" class="professional-probability">
+          <text>模型输出：{{professional.predictionLabel}} · {{professional.confidenceLabel}}</text>
+          <text>ADHD 概率 {{professional.adhdProbabilityText}} · 对照概率 {{professional.controlProbabilityText}}</text>
+          <text>{{professional.modelLabel}}</text>
+          <text>生成时间：{{professional.generatedAt}}</text>
+          <text>数据来源：{{professional.dataSource}}</text>
+        </view>
+        <text wx:if="{{professional.doctorNotes}}" class="professional-copy">医生补充说明：{{professional.doctorNotes}}</text>
+      </view>
+      <view wx:else class="empty-panel empty-panel--plain"><text>暂无专业评估记录</text></view>
+    </block>
+    <text class="professional-disclaimer">本结果来自辅助分析模型，仅供专业人员结合其他资料参考，不可独立用于诊断。</text>
   </view>
 
   <view class="medical-tip">

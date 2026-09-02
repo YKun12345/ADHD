@@ -66,7 +66,7 @@ function buildFlankerPayload(summary, trials, context = {}, finishedAt = new Dat
   return {
     test_type: 'flanker',
     result_json: {
-      schema_version: 2, test_name: 'Flanker 任务', status_text: flags.length ? '已完成（需关注数据质量）' : '已完成',
+      schema_version: 2, test_name: '箭头抗干扰任务', status_text: flags.length ? '已完成（需关注数据质量）' : '已完成',
       age_group: context.ageGroup === 'adult' ? 'adult' : 'child', mode: context.mode === 'battery' ? 'battery' : 'single',
       summary: `正确率 ${summary.accuracy}%`,
       metrics: [{ label: '正确率', value: `${summary.accuracy}%` }, { label: '冲突效应', value: `${summary.conflict_effect_ms} ms` }],

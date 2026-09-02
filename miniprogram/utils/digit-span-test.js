@@ -31,6 +31,14 @@ function evaluateDigitTrial(trial, answer) {
   return { ...trial, answer: safeAnswer, expected, correctDigits, correct: safeAnswer.length === expected.length && correctDigits === expected.length }
 }
 
+function shouldStopDigitDirection(records, direction, trialsPerSpan = 2) {
+  const relevant = (Array.isArray(records) ? records : []).filter((record) => record && record.direction === direction)
+  if (relevant.length < trialsPerSpan) return false
+  const latestSpan = relevant[relevant.length - 1].span
+  const latest = relevant.filter((record) => record.span === latestSpan)
+  return latest.length >= trialsPerSpan && latest.slice(-trialsPerSpan).every((record) => record.correct === false)
+}
+
 function summarizeDigitTrials(trials) {
   const safeTrials = Array.isArray(trials) ? trials : []
   const correct = safeTrials.filter((trial) => trial.correct)
@@ -59,4 +67,4 @@ function buildDigitSpanPayload(summary, trials, context = {}, finishedAt = new D
   }
 }
 
-module.exports = { buildDigitTrials, expectedDigitAnswer, evaluateDigitTrial, summarizeDigitTrials, buildDigitSpanPayload }
+module.exports = { buildDigitTrials, expectedDigitAnswer, evaluateDigitTrial, shouldStopDigitDirection, summarizeDigitTrials, buildDigitSpanPayload }

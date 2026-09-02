@@ -536,3 +536,46 @@ page {
   line-height: 1.6;
   text-align: center;
 }
+
+.theme-lagoon {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(115, 199, 182, 0.2) 0, rgba(115, 199, 182, 0) 30%),
+    radial-gradient(circle at 92% 26%, rgba(80, 190, 224, 0.15) 0, rgba(80, 190, 224, 0) 28%),
+    linear-gradient(160deg, #f7fdfb 0%, #eef8f7 56%, #edf6fa 100%);
+}
+
+.section-break-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 34rpx;
+  padding: 42rpx 32rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.86);
+  text-align: center;
+}
+
+.section-break-card__mascot {
+  position: relative;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 38rpx 38rpx 46rpx 46rpx;
+  background: linear-gradient(145deg, #8ad7c7, #3f8b7f);
+  box-shadow: 0 16rpx 34rpx rgba(63, 139, 127, 0.2);
+}
+
+.section-break-card__spark {
+  position: absolute;
+  top: 32rpx;
+  left: 38rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border: 6rpx solid #ffffff;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.section-break-card__eyebrow { margin-top: 24rpx; color: #3f7c78; font-size: 22rpx; font-weight: 650; letter-spacing: 2rpx; }
+.section-break-card__title { margin-top: 14rpx; font-size: 36rpx; font-weight: 750; }
+.section-break-card__message { max-width: 520rpx; margin-top: 14rpx; color: #506b75; font-size: 24rpx; line-height: 1.7; }
+.section-break-card__button { width: 100%; margin-top: 30rpx; }

@@ -1,5 +1,5 @@
 page { min-height: 100%; color: #17324d; background: #f2f7f8; }
-.privacy-page { min-height: 0; box-sizing: border-box; padding: 36rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 8% 0%, rgba(135,205,211,.18), transparent 32%), linear-gradient(180deg, #f8fbfc, #eef4f6); }
+.privacy-page { min-height: 0; box-sizing: border-box; padding: 36rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 8% 0%, rgba(143,164,184,.16), transparent 32%), linear-gradient(160deg, #fbfcfd, #eef2f6 54%, #f5f7fa); }
 .privacy-header { display: flex; align-items: center; margin: 2rpx 4rpx 26rpx; }
 .privacy-header__mark { width: 88rpx; height: 88rpx; flex: none; overflow: hidden; border-radius: 26rpx 26rpx 12rpx 26rpx; }
 .privacy-header__copy { min-width: 0; margin-left: 20rpx; }
@@ -22,3 +22,7 @@ page { min-height: 100%; color: #17324d; background: #f2f7f8; }
 .privacy-control--pressed { opacity: .72; background: #fff1f1; }
 .medical-disclaimer { margin-top: 26rpx; color: #506b75; font-size: 21rpx; line-height: 1.65; text-align: center; }
 .back-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 14rpx; border-radius: 20rpx; color: #245f68; font-size: 23rpx; font-weight: 600; }
+.guide-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.guide-setting-copy { flex: 1; min-width: 0; }
+.guide-setting-title { display: block; color: #17324d; font-size: 28rpx; font-weight: 700; }
+.guide-button { width: 100%; margin-top: 18rpx; display: flex; align-items: center; justify-content: center; color: #27758a; background: rgba(224, 242, 239, 0.84); }

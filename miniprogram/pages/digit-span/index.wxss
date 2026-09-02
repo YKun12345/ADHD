@@ -1,9 +1,11 @@
 @import "../cognitive-task.wxss";
+page { background: linear-gradient(160deg, #fffaf1 0%, #fbf1dd 56%, #f3f6ef 100%); }
+.theme-amber { background: radial-gradient(circle at 88% 10%, rgba(224, 164, 91, .22) 0, rgba(224, 164, 91, 0) 31%), linear-gradient(160deg, rgba(255,250,241,.96), rgba(251,241,221,.94) 56%, rgba(243,246,239,.94)); }
 .task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
 .shown-digit { color: #17324d; font-size: 112rpx; font-weight: 750; }
 .answer-display { min-height: 64rpx; color: #17324d; font-size: 38rpx; font-weight: 650; letter-spacing: 12rpx; }
 .digit-keypad { width: 520rpx; display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 34rpx; }
-.digit-keypad button { width: 92rpx; min-height: 82rpx; margin: 0; border-radius: 18rpx; color: #17324d; background: #eef4f5; font-size: 28rpx; }
+.digit-keypad button { width: 92rpx; min-height: 82rpx; margin: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 18rpx; color: #17324d; background: #fff7e8; font-size: 28rpx; line-height: 1.3; }
 .keypad-actions { width: 520rpx; display: flex; gap: 16rpx; margin-top: 18rpx; }
-.keypad-actions button { min-height: 82rpx; flex: 1; border-radius: 18rpx; color: #365866; background: #e5edef; }
+.keypad-actions button { min-height: 82rpx; flex: 1; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 18rpx; color: #365866; background: #f4ead8; line-height: 1.3; }
 .keypad-actions .submit-key { color: #fff; background: #236b80; }

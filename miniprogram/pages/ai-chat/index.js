@@ -40,6 +40,7 @@ registerPatientPage({
     suggestions: buildSuggestions(''),
     inputValue: '',
     inputLength: 0,
+    inputFocused: false,
     maxMessageLength: MAX_MESSAGE_LENGTH,
     sending: false,
     statusMessage: '',
@@ -104,6 +105,9 @@ registerPatientPage({
       inputLength: value.length
     })
   },
+
+  handleInputFocus() { this.setData({ inputFocused: true }) },
+  handleInputBlur() { this.setData({ inputFocused: false }) },
 
   selectScope(event) {
     const scope = event && event.currentTarget

@@ -1,0 +1,203 @@
+:host {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ai-mascot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 82%;
+  animation: mascotBreathe 2600ms ease-in-out infinite;
+}
+
+.ai-mascot__ear {
+  position: absolute;
+  top: 5%;
+  width: 34%;
+  height: 38%;
+  border: 3rpx solid rgba(255, 255, 255, 0.9);
+  border-radius: 68% 32% 58% 42%;
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #efb078, #d87559);
+}
+
+.ai-mascot__ear--left {
+  left: 7%;
+  transform: rotate(-19deg);
+}
+
+.ai-mascot__ear--right {
+  right: 7%;
+  transform: scaleX(-1) rotate(-19deg);
+}
+
+.ai-mascot__face {
+  position: absolute;
+  right: 5%;
+  bottom: 3%;
+  left: 5%;
+  height: 79%;
+  overflow: hidden;
+  border: 3rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 46% 46% 42% 42%;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.54) 0, rgba(255, 255, 255, 0) 24%),
+    linear-gradient(145deg, #fff1d8 0%, #efbd87 56%, #df8f67 100%);
+  box-shadow: inset 0 -8rpx 16rpx rgba(23, 79, 93, 0.12);
+}
+
+.ai-mascot__eye {
+  position: absolute;
+  top: 43%;
+  width: 10%;
+  height: 13%;
+  border-radius: 50%;
+  background: #173f50;
+  transition: height 160ms ease, transform 160ms ease;
+}
+
+.ai-mascot__eye--left { left: 27%; }
+.ai-mascot__eye--right { right: 27%; }
+
+.ai-mascot__cheek {
+  position: absolute;
+  top: 60%;
+  width: 15%;
+  height: 9%;
+  border-radius: 50%;
+  background: rgba(255, 199, 187, 0.66);
+}
+
+.ai-mascot__cheek--left { left: 15%; }
+.ai-mascot__cheek--right { right: 15%; }
+
+.ai-mascot__nose {
+  position: absolute;
+  top: 57%;
+  left: 47%;
+  width: 6%;
+  height: 5%;
+  border-radius: 50%;
+  background: #24586a;
+}
+
+.ai-mascot__mouth {
+  position: absolute;
+  top: 66%;
+  left: 42%;
+  width: 16%;
+  height: 9%;
+  box-sizing: border-box;
+  border-bottom: 3rpx solid #24586a;
+  border-radius: 0 0 999rpx 999rpx;
+}
+
+.ai-mascot__spark {
+  position: absolute;
+  top: 13%;
+  left: 43%;
+  width: 15%;
+  height: 15%;
+  animation: mascotSpark 2200ms ease-in-out infinite;
+}
+
+.ai-mascot__coat {
+  position: absolute;
+  right: 14%;
+  bottom: 0;
+  left: 14%;
+  height: 31%;
+  overflow: hidden;
+  border-radius: 46% 46% 24% 24%;
+  background: #fffaf0;
+  box-shadow: inset 0 -4rpx 8rpx rgba(122, 90, 80, 0.08);
+}
+
+.ai-mascot__stethoscope {
+  position: absolute;
+  top: -8%;
+  width: 34%;
+  height: 62%;
+  border-bottom: 4rpx solid #54a99a;
+}
+.ai-mascot__stethoscope--left { left: 15%; border-left: 4rpx solid #54a99a; border-radius: 0 0 0 60%; }
+.ai-mascot__stethoscope--right { right: 15%; border-right: 4rpx solid #54a99a; border-radius: 0 0 60% 0; }
+.ai-mascot__badge { position: absolute; top: 25%; left: 43%; width: 18%; height: 42%; border-radius: 30% 30% 44% 44%; background: #ffd88c; transform: rotate(45deg); }
+.ai-mascot__badge-wave { position: absolute; top: 46%; left: 15%; width: 70%; height: 3rpx; background: #27758a; transform: rotate(-45deg); }
+.ai-mascot__arm { position: absolute; bottom: 3%; width: 20%; height: 28%; border-radius: 999rpx; background: #fffaf0; transform-origin: 50% 90%; }
+.ai-mascot__arm--left { left: 4%; transform: rotate(22deg); }
+.ai-mascot__arm--right { right: 4%; transform: rotate(-22deg); }
+
+.ai-mascot__spark-line {
+  position: absolute;
+  top: 45%;
+  left: 0;
+  width: 100%;
+  height: 10%;
+  border-radius: 999rpx;
+  background: #fff5bf;
+}
+
+.ai-mascot__spark-line--vertical { transform: rotate(90deg); }
+.ai-mascot__spark-line--horizontal { transform: rotate(0); }
+
+.ai-mascot--idle .ai-mascot__face { background-color: #efbd87; }
+
+.ai-mascot--happy .ai-mascot__eye {
+  height: 8%;
+  border-radius: 999rpx 999rpx 40% 40%;
+  transform: translateY(3rpx) rotate(2deg);
+}
+
+.ai-mascot--happy .ai-mascot__mouth {
+  height: 12%;
+  border-bottom-width: 5rpx;
+}
+
+.ai-mascot--thinking .ai-mascot__spark {
+  animation-duration: 900ms;
+}
+
+.ai-mascot--thinking .ai-mascot__eye--right {
+  height: 4%;
+  border-radius: 999rpx;
+  transform: translateY(4rpx);
+}
+
+.ai-mascot--wave .ai-mascot__arm--right { animation: mascotWave 900ms ease-in-out 2; }
+.ai-mascot--wave .ai-mascot__mouth,
+.ai-mascot--guide .ai-mascot__mouth { height: 12%; border-bottom-width: 5rpx; }
+.ai-mascot--listening .ai-mascot__ear--left { transform: rotate(-27deg); }
+.ai-mascot--listening .ai-mascot__ear--right { transform: scaleX(-1) rotate(-27deg); }
+.ai-mascot--guide .ai-mascot__badge { background: #ffca70; }
+.ai-mascot--care .ai-mascot__eye { height: 9%; transform: translateY(2rpx); }
+.ai-mascot--care .ai-mascot__cheek { opacity: 0.82; }
+
+@keyframes mascotWave {
+  0%, 100% { transform: rotate(-22deg); }
+  50% { transform: translateY(-18%) rotate(-58deg); }
+}
+
+@keyframes mascotBreathe {
+  0%, 100% { transform: translateY(0) scale(0.98); }
+  50% { transform: translateY(-3%) scale(1.02); }
+}
+
+@keyframes mascotSpark {
+  0%, 100% { opacity: 0.52; transform: rotate(0deg) scale(0.84); }
+  50% { opacity: 1; transform: rotate(45deg) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-mascot,
+  .ai-mascot__spark {
+    animation: none;
+  }
+
+  .ai-mascot__eye {
+    transition: none;
+  }
+}

@@ -7,7 +7,7 @@ page {
   min-height: 100%;
   background:
     radial-gradient(circle at 92% 2%, rgba(112, 193, 199, 0.18), transparent 34%),
-    linear-gradient(180deg, #f8fbfc 0%, #edf4f6 100%);
+    linear-gradient(160deg, #f8fcf8 0%, #e9f7ee 52%, #f3f0ff 100%);
 }
 
 .trend-content {

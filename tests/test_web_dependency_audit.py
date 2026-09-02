@@ -110,6 +110,8 @@ class WebDependencyAuditTests(unittest.TestCase):
         self.assertIn("'/pages/cognitive-center/index'", task_script)
         self.assertIn("'/pages/tracking/index'", task_script)
         self.assertIn("'/pages/report/index'", task_script)
+        self.assertIn("client_message_id: clientMessageId", task_script)
+        self.assertIn("if (!taskDescription)", task_script)
 
     def test_doctor_report_renders_explicit_mock_disclaimer(self) -> None:
         html = (ROOT / "doctor-web" / "doctor_report.html").read_text(encoding="utf-8")

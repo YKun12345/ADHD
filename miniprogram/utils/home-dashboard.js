@@ -140,6 +140,13 @@ function getEducationAvailability(patientType) {
   return { available: false, statusLabel: '按计划开发' }
 }
 
+function getCareAvailability(patientType, page) {
+  if (patientType === 'adult' || patientType === 'child') {
+    return { available: true, statusLabel: '查看', url: page }
+  }
+  return { available: false, statusLabel: '按计划开发' }
+}
+
 function buildHomeTasks(patientType = '') {
   const scaleAvailability = getScaleAvailability(patientType)
   const cognitiveAvailability = getCognitiveAvailability(patientType)
@@ -178,6 +185,8 @@ function buildQuickEntries(patientType = '') {
   const aiAvailability = getAiAvailability(patientType)
   const pathwayAvailability = getPathwayAvailability(patientType)
   const educationAvailability = getEducationAvailability(patientType)
+  const messageAvailability = getCareAvailability(patientType, '/pages/patient-messages/index')
+  const taskAvailability = getCareAvailability(patientType, '/pages/patient-tasks/index')
 
   return [
     {
@@ -221,6 +230,18 @@ function buildQuickEntries(patientType = '') {
       icon: '知',
       title: '科普中心',
       ...educationAvailability
+    },
+    {
+      id: 'doctor-tasks',
+      icon: '任',
+      title: '我的任务',
+      ...taskAvailability
+    },
+    {
+      id: 'messages',
+      icon: '信',
+      title: '医患消息',
+      ...messageAvailability
     }
   ]
 }

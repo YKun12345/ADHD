@@ -8,7 +8,7 @@ page {
   background:
     radial-gradient(circle at 4% 0%, rgba(132, 209, 214, 0.2), transparent 34%),
     radial-gradient(circle at 96% 20%, rgba(112, 93, 182, 0.07), transparent 30%),
-    linear-gradient(180deg, #f8fbfc 0%, #edf4f6 100%);
+    linear-gradient(160deg, #f8fdf9 0%, #eaf8f1 52%, #eef8ff 100%);
 }
 
 .tracking-content { padding: 34rpx 28rpx 72rpx; }
@@ -135,3 +135,10 @@ page {
 .demo-button { margin-top: 20rpx; border: 1rpx solid #c5d7dc; border-radius: 22rpx; background: #eef6f7; color: #245e6c; }
 .medical-tip { margin-top: 24rpx; color: #506b75; font-size: 21rpx; line-height: 1.65; text-align: center; }
 .tracking-control--pressed { opacity: 0.78; transform: scale(0.985); }
+.detail-toggle { min-height: 80rpx; margin-top: 24rpx; padding: 0 20rpx; display: flex; align-items: center; justify-content: space-between; border-radius: 18rpx; color: #27758a; background: #e7f2f0; font-size: 25rpx; font-weight: 700; }
+.detail-section { margin-top: 16rpx; padding: 4rpx 20rpx 22rpx; border-radius: 22rpx; background: rgba(237,246,244,.78); }
+.tag-row { display: flex; flex-wrap: wrap; }
+.activity-tag { margin: 8rpx 10rpx 0 0; padding: 10rpx 17rpx; border-radius: 999rpx; color: #607984; background: #fff; font-size: 22rpx; }
+.activity-tag--active { color: #fff; background: #4b9488; }
+.detail-flag { min-height: 72rpx; display: flex; align-items: center; margin-top: 14rpx; color: #3f5963; font-size: 24rpx; }
+.detail-flag .check-box { margin-right: 14rpx; }

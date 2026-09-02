@@ -1,7 +1,19 @@
 <view class="ai-copilot">
+  <view class="ai-copilot__guide-bubble" wx:if="{{guideBubbleVisible}}">
+    <text class="ai-copilot__guide-text">{{config.intro}}</text>
+    <view class="ai-copilot__guide-close" aria-role="button" aria-label="关闭页面介绍" bindtap="closeGuideBubble">×</view>
+  </view>
   <view class="ai-copilot__panel" wx:if="{{expanded}}">
     <view class="ai-copilot__header">
-      <text class="ai-copilot__title">{{config.title}}</text>
+      <view class="ai-copilot__partner">
+        <view class="ai-copilot__partner-avatar">
+          <ai-mascot state="happy" decorative="{{true}}" />
+        </view>
+        <view class="ai-copilot__partner-copy">
+          <text class="ai-copilot__companion-name">星仔 · AI健康小助手</text>
+          <text class="ai-copilot__title">{{config.title}}</text>
+        </view>
+      </view>
       <view
         class="ai-copilot__close"
         hover-class="ai-copilot__control--pressed"
@@ -16,6 +28,7 @@
     </view>
 
     <text class="ai-copilot__advice">{{config.advice}}</text>
+    <text class="ai-copilot__companion-line">我会陪你一步一步完成，不着急。</text>
 
     <view class="ai-copilot__actions">
       <view
@@ -48,9 +61,12 @@
     aria-disabled="{{navigating}}"
     bindtap="togglePanel"
   >
-    <view class="ai-copilot__halo"></view>
     <view class="ai-copilot__icon">
-      <ui-icon name="ai" shape="orb" label="AI健康助手" decorative="{{false}}" />
+      <ai-mascot
+        state="{{navigating ? 'thinking' : expanded ? 'happy' : 'idle'}}"
+        label="星仔 · AI健康小助手"
+        decorative="{{false}}"
+      />
     </view>
   </view>
 </view>

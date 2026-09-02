@@ -14,13 +14,25 @@ const expectedKeys = [
   'scale',
   'cognitive-center',
   'cognitive',
+  'simple-reaction',
   'stroop',
+  'trail',
+  'flanker',
+  'nback',
+  'digit-span',
   'tracking',
   'tracking-trend',
   'report',
   'care-pathway',
   'education',
-  'education-detail'
+  'education-detail',
+  'patient-tasks',
+  'patient-messages',
+  'privacy-settings',
+  'doctor-home',
+  'doctor-patient',
+  'doctor-guide-settings',
+  'ai-chat'
 ]
 
 assert.deepEqual(COPILOT_PAGE_KEYS, expectedKeys)

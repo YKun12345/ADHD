@@ -1,5 +1,5 @@
-page { min-height: 100%; color: #17324d; background: #f5f7f7; }
-.education-page { min-height: 0; box-sizing: border-box; padding: 34rpx 28rpx 60rpx; padding-bottom: calc(60rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(60rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 92% 0%, rgba(244,190,126,.22), transparent 34%), linear-gradient(180deg, #fbfaf7, #eef5f6); }
+page { min-height: 100%; color: #17324d; background: #fff6df; }
+.education-page { min-height: 0; box-sizing: border-box; padding: 34rpx 28rpx 60rpx; padding-bottom: calc(60rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(60rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 92% 0%, rgba(244,190,126,.24), transparent 34%), linear-gradient(160deg, #fffdf7, #fff6df 54%, #fff0dc); }
 .education-header { display: flex; align-items: center; margin: 4rpx 4rpx 28rpx; padding: 28rpx; border: 1rpx solid #fff4e5; border-radius: 34rpx; background: linear-gradient(135deg, #fff9f1, #eef8f8); box-shadow: 0 16rpx 42rpx rgba(85,76,58,.08); }
 .education-header__mark { width: 88rpx; height: 88rpx; flex: none; overflow: hidden; border-radius: 20rpx 30rpx 30rpx 20rpx; }
 .education-header__copy { min-width: 0; margin-left: 20rpx; }

@@ -1,4 +1,4 @@
-<ai-copilot page-key="tracking" />
+<ai-copilot wx:if="{{!noteFocused && !submitting}}" page-key="tracking" />
 <ui-nav title="健康追踪" />
 <view class="tracking-page ai-copilot-safe-space">
   <view class="tracking-content">
@@ -46,7 +46,23 @@
         <input class="field-input ui-input" value="{{medicationDosage}}" placeholder="请按实际医嘱填写" data-field="medicationDosage" bindinput="onFieldInput" />
       </view>
       <text class="field-label">今日备注（选填）</text>
-      <textarea class="note-input" maxlength="500" value="{{note}}" placeholder="记录特殊事件、学习或工作状态" data-field="note" bindinput="onFieldInput"></textarea>
+      <textarea class="note-input" maxlength="500" value="{{note}}" placeholder="记录特殊事件、学习或工作状态" data-field="note" bindinput="onFieldInput" bindfocus="onNoteFocus" bindblur="onNoteBlur"></textarea>
+      <view class="detail-toggle" aria-role="button" aria-expanded="{{detailedExpanded}}" bindtap="toggleDetailed"><text>详细记录（选填）</text><text>{{detailedExpanded ? '收起' : '展开'}}</text></view>
+      <view wx:if="{{detailedExpanded}}" class="detail-section">
+        <text class="field-label">多动（1低—5高）</text><view class="rating-row"><view wx:for="{{ratings}}" wx:key="*this" class="rating-button {{hyperactivityRating === item ? 'choice-button--active' : ''}}" data-field="hyperactivityRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view></view>
+        <text class="field-label">冲动（1低—5高）</text><view class="rating-row"><view wx:for="{{ratings}}" wx:key="*this" class="rating-button {{impulsivityRating === item ? 'choice-button--active' : ''}}" data-field="impulsivityRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view></view>
+        <text class="field-label">情绪稳定（1低—5高）</text><view class="rating-row"><view wx:for="{{ratings}}" wx:key="*this" class="rating-button {{emotionStabilityRating === item ? 'choice-button--active' : ''}}" data-field="emotionStabilityRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view></view>
+        <text class="field-label">任务完成度（1低—5高）</text><view class="rating-row"><view wx:for="{{ratings}}" wx:key="*this" class="rating-button {{taskCompletionRating === item ? 'choice-button--active' : ''}}" data-field="taskCompletionRating" data-value="{{item}}" bindtap="selectRating">{{item}}</view></view>
+        <text class="field-label">食欲</text>
+        <view class="sleep-row"><view wx:for="{{appetiteOptions}}" wx:key="value" class="sleep-button {{appetiteQuality === item.value ? 'choice-button--active' : ''}}" data-value="{{item.value}}" bindtap="selectAppetite">{{item.label}}</view></view>
+        <text class="field-label">活动标签</text>
+        <view class="tag-row"><view wx:for="{{activityOptions}}" wx:key="*this" class="activity-tag {{activityTags.indexOf(item) >= 0 ? 'activity-tag--active' : ''}}" data-value="{{item}}" bindtap="toggleActivity">{{item}}</view></view>
+        <view class="detail-flag" data-field="hasConflict" bindtap="toggleDetailFlag"><view class="check-box {{hasConflict ? 'check-box--active' : ''}}"><view class="check-box__mark"></view></view><text>今天发生冲突</text></view>
+        <view class="detail-flag" data-field="wasCriticized" bindtap="toggleDetailFlag"><view class="check-box {{wasCriticized ? 'check-box--active' : ''}}"><view class="check-box__mark"></view></view><text>今天受到批评</text></view>
+        <text class="field-label">副作用（选填）</text><input class="field-input ui-input" maxlength="200" value="{{sideEffects}}" data-field="sideEffects" bindinput="onFieldInput" />
+        <text class="field-label">特殊事件（选填）</text><textarea class="note-input" maxlength="1000" value="{{specialEvents}}" data-field="specialEvents" bindinput="onFieldInput" bindfocus="onNoteFocus" bindblur="onNoteBlur"></textarea>
+        <text class="field-label">今日亮点（选填）</text><textarea class="note-input" maxlength="1000" value="{{highlights}}" data-field="highlights" bindinput="onFieldInput" bindfocus="onNoteFocus" bindblur="onNoteBlur"></textarea>
+      </view>
       <button class="save-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}" hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}" loading="{{submitting}}" disabled="{{submitting}}" bindtap="submitTracking">保存今日记录</button>
       <text class="save-status" wx:if="{{saveStatus}}">{{saveStatus}}</text>
     </view>

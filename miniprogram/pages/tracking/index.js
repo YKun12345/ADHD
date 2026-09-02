@@ -28,6 +28,10 @@ const SLEEP_OPTIONS = [
   { value: 'fair', label: '一般' },
   { value: 'good', label: '良好' }
 ]
+const APPETITE_OPTIONS = [
+  { value: 'poor', label: '较差' }, { value: 'normal', label: '正常' }, { value: 'good', label: '良好' }
+]
+const ACTIVITY_OPTIONS = ['学习', '工作', '运动', '社交', '户外', '放松']
 
 function formFromLog(log, fallbackDay) {
   if (!log) return createTrackingForm(fallbackDay)
@@ -39,7 +43,22 @@ function formFromLog(log, fallbackDay) {
     sleepQuality: log.sleep_quality || '',
     isMedication: log.is_medication === true,
     medicationDosage: log.medication_dosage || '',
-    note: log.note || ''
+    note: log.note || '',
+    detailedExpanded: false,
+    hyperactivityRating: Number(log.hyperactivity_rating) || 0,
+    impulsivityRating: Number(log.impulsivity_rating) || 0,
+    emotionStabilityRating: Number(log.emotion_rating) || 0,
+    taskCompletionRating: Number(log.task_completion_rating) || 0,
+    appetiteQuality: log.appetite_quality || '',
+    sideEffects: log.side_effects || '',
+    activityTags: Array.isArray(log.activities)
+      ? log.activities.map(String).map((item) => item.trim()).filter(Boolean)
+      : typeof log.activities === 'string' ? log.activities.split(',').filter(Boolean) : [],
+    hasConflict: log.has_conflict === true,
+    wasCriticized: log.was_criticized === true,
+    specialEvents: log.special_events || '',
+    highlights: log.highlights || '',
+    noteFocused: false
   }
 }
 
@@ -49,6 +68,8 @@ registerPatientPage({
     moods: MOODS,
     ratings: RATINGS,
     sleepOptions: SLEEP_OPTIONS,
+    appetiteOptions: APPETITE_OPTIONS,
+    activityOptions: ACTIVITY_OPTIONS,
     days: Array.from({ length: 14 }, (_, index) => index + 1),
     ...createTrackingForm(),
     completedDays: [],
@@ -57,7 +78,8 @@ registerPatientPage({
     progressPercent: 0,
     submitting: false,
     saveStatus: '',
-    demoMode: false
+    demoMode: false,
+    noteFocused: false
   },
 
   onLoad() {
@@ -89,7 +111,7 @@ registerPatientPage({
 
   selectRating(event) {
     const { field, value } = event.currentTarget.dataset
-    if (!['moodTag', 'attentionRating'].includes(field)) return
+    if (!['moodTag', 'attentionRating', 'hyperactivityRating', 'impulsivityRating', 'emotionStabilityRating', 'taskCompletionRating'].includes(field)) return
     this.setData({ [field]: Number(value), saveStatus: '' })
   },
 
@@ -97,9 +119,26 @@ registerPatientPage({
     this.setData({ sleepQuality: event.currentTarget.dataset.value, saveStatus: '' })
   },
 
+  selectAppetite(event) { this.setData({ appetiteQuality: event.currentTarget.dataset.value, saveStatus: '' }) },
+  toggleDetailed() { this.setData({ detailedExpanded: !this.data.detailedExpanded }) },
+  toggleActivity(event) {
+    const value = event.currentTarget.dataset.value
+    if (!this.data.activityOptions.includes(value)) return
+    const selected = this.data.activityTags.includes(value)
+      ? this.data.activityTags.filter((item) => item !== value)
+      : this.data.activityTags.concat(value)
+    this.setData({ activityTags: selected, saveStatus: '' })
+  },
+  toggleDetailFlag(event) {
+    const field = event.currentTarget.dataset.field
+    if (['hasConflict', 'wasCriticized'].includes(field)) this.setData({ [field]: !this.data[field], saveStatus: '' })
+  },
+  onNoteFocus() { this.setData({ noteFocused: true }) },
+  onNoteBlur() { this.setData({ noteFocused: false }) },
+
   onFieldInput(event) {
     const field = event.currentTarget.dataset.field
-    if (!['focusMinutes', 'medicationDosage', 'note'].includes(field)) return
+    if (!['focusMinutes', 'medicationDosage', 'note', 'sideEffects', 'specialEvents', 'highlights'].includes(field)) return
     this.setData({ [field]: event.detail.value, saveStatus: '' })
   },
 
@@ -195,4 +234,4 @@ registerPatientPage({
   }
 })
 
-module.exports = { MOODS, RATINGS, SLEEP_OPTIONS, formFromLog }
+module.exports = { MOODS, RATINGS, SLEEP_OPTIONS, APPETITE_OPTIONS, ACTIVITY_OPTIONS, formFromLog }

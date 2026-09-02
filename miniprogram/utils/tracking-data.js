@@ -20,7 +20,19 @@ function createTrackingForm(dayIndex = 1) {
     sleepQuality: '',
     isMedication: false,
     medicationDosage: '',
-    note: ''
+    note: '',
+    detailedExpanded: false,
+    hyperactivityRating: 0,
+    impulsivityRating: 0,
+    emotionStabilityRating: 0,
+    taskCompletionRating: 0,
+    appetiteQuality: '',
+    sideEffects: '',
+    activityTags: [],
+    hasConflict: false,
+    wasCriticized: false,
+    specialEvents: '',
+    highlights: ''
   }
 }
 
@@ -51,6 +63,13 @@ function validateTrackingForm(form = {}) {
   if (String(form.note || '').trim().length > 500) {
     return '备注不能超过500字'
   }
+  for (const field of ['hyperactivityRating', 'impulsivityRating', 'emotionStabilityRating', 'taskCompletionRating']) {
+    const value = form[field]
+    if (value !== undefined && value !== null && String(value).trim() !== '' && Number(value) !== 0 && !isRating(value)) return '详细评分应为1至5分'
+  }
+  if (String(form.sideEffects || '').trim().length > 200) return '副作用记录不能超过200字'
+  if (String(form.specialEvents || '').trim().length > 1000) return '特殊事件不能超过1000字'
+  if (String(form.highlights || '').trim().length > 1000) return '今日亮点不能超过1000字'
   return ''
 }
 
@@ -70,7 +89,18 @@ function buildTrackingPayload(form) {
       : null,
     attention_rating: Number(form.attentionRating),
     emotion_rating: Number(form.moodTag),
-    sleep_quality: form.sleepQuality
+    sleep_quality: form.sleepQuality,
+    hyperactivity_rating: Number(form.hyperactivityRating) || null,
+    impulsivity_rating: Number(form.impulsivityRating) || null,
+    emotion_rating: Number(form.emotionStabilityRating) || Number(form.moodTag),
+    task_completion_rating: Number(form.taskCompletionRating) || null,
+    appetite_quality: String(form.appetiteQuality || '').trim() || null,
+    side_effects: String(form.sideEffects || '').trim() || null,
+    activities: (Array.isArray(form.activityTags) ? form.activityTags : []).map(String).map((item) => item.trim()).filter(Boolean),
+    has_conflict: form.hasConflict === true,
+    was_criticized: form.wasCriticized === true,
+    special_events: String(form.specialEvents || '').trim() || null,
+    highlights: String(form.highlights || '').trim() || null
   }
 }
 

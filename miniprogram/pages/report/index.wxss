@@ -9,9 +9,9 @@ page {
   box-sizing: border-box;
   padding: 32rpx 28rpx 72rpx;
   background:
-    radial-gradient(circle at 8% 0%, rgba(155, 218, 226, 0.22), transparent 34%),
-    radial-gradient(circle at 96% 18%, rgba(126, 111, 201, 0.09), transparent 30%),
-    linear-gradient(180deg, #f8fbfc 0%, #edf4f6 100%);
+    radial-gradient(circle at 8% 0%, rgba(156, 139, 220, 0.2), transparent 34%),
+    radial-gradient(circle at 96% 18%, rgba(119, 173, 226, 0.14), transparent 30%),
+    linear-gradient(160deg, #fbfaff 0%, #f0edff 52%, #edf5ff 100%);
 }
 
 .report-header {
@@ -396,3 +396,12 @@ page {
   color: #34445e;
   font-weight: 700;
 }
+
+.professional-header { display: flex; align-items: center; justify-content: space-between; }
+.professional-toggle { margin-left: 18rpx; color: #27758a; font-size: 24rpx; font-weight: 700; }
+.professional-content { margin-top: 22rpx; }
+.professional-image { width: 100%; border-radius: 20rpx; background: #eaf0f1; }
+.professional-row { display: flex; justify-content: space-between; margin-top: 16rpx; padding: 16rpx 18rpx; border-radius: 16rpx; color: #4d6874; background: #eef5f4; font-size: 23rpx; }
+.professional-copy { display: block; margin-top: 14rpx; color: #566e78; font-size: 23rpx; line-height: 1.65; }
+.professional-probability { display: flex; flex-direction: column; margin-top: 16rpx; padding: 18rpx; border-radius: 18rpx; color: #375965; background: #e8f2f0; font-size: 23rpx; line-height: 1.7; }
+.professional-disclaimer { display: block; margin-top: 18rpx; padding: 16rpx; border-left: 5rpx solid #c78a52; color: #725d50; background: #fff8ec; font-size: 22rpx; line-height: 1.6; }

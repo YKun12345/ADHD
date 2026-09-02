@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
         drawerOpen: false,
         activeTab: 'messages',
         careCache: {},
+        pendingCareMessageId: '',
+        pendingCareMessageContent: '',
         readState: loadReadState()
     };
 
@@ -64,6 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function setCareFeedback(message = '', type = '') {
         doctorCareFeedback.textContent = message;
         doctorCareFeedback.className = `doctor-care-feedback ${type}`.trim();
+    }
+
+    function createClientMessageId() {
+        if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+            return `web-${globalThis.crypto.randomUUID()}`;
+        }
+        return `web-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e12).toString(36)}`;
     }
 
     function formatPatientType(type) {
@@ -288,8 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="tracking">14天追踪</option>
                             <option value="report_review">报告复核</option>
                         </select>
-                        <input name="taskTitle" type="text" placeholder="例如：补做 Stroop 认知测试">
-                        <textarea name="taskDescription" placeholder="告诉就诊者为什么推荐这个任务，以及建议什么时候完成。"></textarea>
+                        <input name="taskTitle" type="text" required placeholder="例如：补做 Stroop 认知测试">
+                        <textarea name="taskDescription" required placeholder="告诉就诊者为什么推荐这个任务，以及建议什么时候完成。"></textarea>
                         <div id="taskFeedback-${item.patient_id}" class="inline-feedback"></div>
                         <div class="inline-task-actions">
                             <button class="inline-task-btn" type="submit">推送任务</button>
@@ -353,6 +362,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!taskTitle) {
                     if (feedback) {
                         feedback.textContent = '请填写任务标题。';
+                        feedback.className = 'inline-feedback error';
+                    }
+                    return;
+                }
+
+                if (!taskDescription) {
+                    if (feedback) {
+                        feedback.textContent = '请填写任务说明。';
                         feedback.className = 'inline-feedback error';
                     }
                     return;
@@ -780,9 +797,20 @@ document.addEventListener('DOMContentLoaded', () => {
         doctorCareSendBtn.disabled = true;
         setCareFeedback('正在发送通知...', '');
 
+        const clientMessageId = state.pendingCareMessageContent === content
+            ? state.pendingCareMessageId
+            : createClientMessageId();
+        state.pendingCareMessageId = clientMessageId;
+        state.pendingCareMessageContent = content;
+
         try {
-            await window.API.Care.sendDoctorMessage(patient.patient_id, { content });
+            await window.API.Care.sendDoctorMessage(patient.patient_id, {
+                content,
+                client_message_id: clientMessageId
+            });
             doctorCareMessageInput.value = '';
+            state.pendingCareMessageId = '';
+            state.pendingCareMessageContent = '';
             setCareFeedback('通知已发送给就诊者。', 'success');
             await refreshCareDrawerContent();
         } catch (error) {

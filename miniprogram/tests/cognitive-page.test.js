@@ -167,6 +167,39 @@ async function run() {
   assert.equal(page.data.phase, 'feedback')
 
   reset()
+  storage.current_user.patient_profile = { patient_type: 'adult' }
+  const sectionPage = createPage()
+  sectionPage.onLoad()
+  assert.equal(sectionPage.data.totalTrials, 25)
+  sectionPage.startTest()
+  sectionPage._clearTimers()
+  sectionPage._records = sectionPage._trials.slice(0, 19).map((type) => (
+    evaluateTrial({
+      type,
+      action: type === 'go' ? 'tap' : 'timeout',
+      reactionTimeMs: 260
+    })
+  ))
+  sectionPage.setData({
+    currentTrialIndex: 19,
+    currentTrialNumber: 20,
+    phase: 'stimulus'
+  })
+  const sectionType = sectionPage._trials[19]
+  sectionPage._finishTrial(evaluateTrial({
+    type: sectionType,
+    action: sectionType === 'go' ? 'tap' : 'timeout',
+    reactionTimeMs: 280
+  }))
+  assert.equal(sectionPage.data.feedbackText, '作答已记录')
+  runTimer(sectionPage._feedbackTimer)
+  assert.equal(sectionPage.data.phase, 'waiting')
+  assert.equal(sectionPage.data.running, true)
+  assert.equal(sectionPage.data.currentTrialNumber, 21)
+  assert.equal(timers.size, 1)
+  sectionPage.onUnload()
+
+  reset()
   const timeoutPage = createPage()
   timeoutPage.startTest()
   timeoutPage._records = TRIAL_SEQUENCE.slice(0, 9).map((type) => (

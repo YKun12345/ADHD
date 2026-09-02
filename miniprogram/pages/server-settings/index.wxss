@@ -1,5 +1,5 @@
 page { min-height: 100%; color: #17324d; background: #f2f7f8; }
-.settings-page { min-height: 0; box-sizing: border-box; padding: 36rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 92% 0%, rgba(132,204,211,.18), transparent 32%), linear-gradient(180deg, #f8fbfc, #eef4f6); }
+.settings-page { min-height: 0; box-sizing: border-box; padding: 36rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 92% 0%, rgba(151,169,188,.16), transparent 32%), linear-gradient(160deg, #fbfcfd, #edf2f7 54%, #f7f4ed); }
 .settings-header { display: flex; align-items: center; margin: 2rpx 4rpx 26rpx; }
 .settings-header__mark { width: 88rpx; height: 88rpx; flex: none; overflow: hidden; border-radius: 50%; }
 .settings-header__copy { min-width: 0; margin-left: 20rpx; }

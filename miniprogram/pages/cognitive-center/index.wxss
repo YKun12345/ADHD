@@ -1,6 +1,9 @@
 page {
   min-height: 100%;
-  background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa 58%, #edf5f7 100%);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(132, 115, 214, 0.2), transparent 31%),
+    radial-gradient(circle at 96% 26%, rgba(100, 166, 221, 0.15), transparent 30%),
+    linear-gradient(160deg, #fbfaff 0%, #f0edff 54%, #eaf4ff 100%);
 }
 
 .cognitive-center-page {
@@ -295,3 +298,8 @@ page {
   line-height: 1.6;
   text-align: center;
 }
+.group-heading { display: flex; align-items: center; justify-content: space-between; margin: 24rpx 6rpx 12rpx; }
+.group-title, .group-description { display: block; }
+.group-title { color: #173f50; font-size: 29rpx; font-weight: 750; }
+.group-description { margin-top: 5rpx; color: #647b85; font-size: 21rpx; }
+.group-count { padding: 7rpx 13rpx; border-radius: 999rpx; color: #27758a; background: #e2f1ee; font-size: 21rpx; }

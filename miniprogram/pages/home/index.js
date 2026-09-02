@@ -19,7 +19,9 @@ const MODULE_PRESENTATION = Object.freeze({
   report: { iconName: 'report', iconShape: 'sheet' },
   ai: { iconName: 'ai', iconShape: 'orb' },
   pathway: { iconName: 'pathway', iconShape: 'orbit' },
-  education: { iconName: 'education', iconShape: 'book' }
+  education: { iconName: 'education', iconShape: 'book' },
+  'doctor-tasks': { iconName: 'plan', iconShape: 'sheet' },
+  messages: { iconName: 'ai', iconShape: 'orb' }
 })
 
 function decorateHomeItems(items = []) {
@@ -31,6 +33,7 @@ function decorateHomeItems(items = []) {
 
 registerPatientPage({
   data: {
+    onboardingVisible: true,
     userName: '患者',
     currentDay: 1,
     totalDays: 14,
@@ -41,8 +44,14 @@ registerPatientPage({
     sourceLabel: '本地计划',
     statusMessage: '',
     loadingDashboard: false,
+    unreadMessageCount: 0,
+    pendingTaskCount: 0,
     tasks: decorateHomeItems(buildHomeTasks()),
     quickEntries: decorateHomeItems(buildQuickEntries())
+  },
+
+  onOnboardingVisibilityChange(event) {
+    this.setData({ onboardingVisible: Boolean(event && event.detail && event.detail.visible) })
   },
 
   onLoad() {
@@ -67,7 +76,22 @@ registerPatientPage({
   },
 
   onShow() {
-    return this.refreshDashboard()
+    return Promise.all([this.refreshDashboard(), this.refreshCareSummary()])
+  },
+
+  async refreshCareSummary() {
+    const lease = capturePatientSessionLease()
+    try {
+      const response = await request({ url: '/care/patient/summary', method: 'GET' })
+      if (!isPatientSessionLeaseCurrent(lease)) return
+      this.setData({
+        unreadMessageCount: Math.max(0, Number(response && response.unread_message_count) || 0),
+        pendingTaskCount: Math.max(0, Number(response && response.pending_task_count) || 0)
+      })
+    } catch (error) {
+      if (!isPatientSessionLeaseCurrent(lease)) return
+      this.setData({ unreadMessageCount: 0, pendingTaskCount: 0 })
+    }
   },
 
   async refreshDashboard() {

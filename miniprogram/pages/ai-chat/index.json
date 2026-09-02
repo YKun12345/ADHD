@@ -2,6 +2,7 @@
   "navigationBarTitleText": "AI助手",
   "usingComponents": {
     "ui-nav": "/components/ui-nav/index",
-    "ui-icon": "/components/ui-icon/index"
+    "ai-mascot": "/components/ai-mascot/index",
+    "ai-copilot": "/components/ai-copilot/index"
   }
 }

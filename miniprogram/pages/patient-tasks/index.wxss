@@ -1,0 +1,16 @@
+page { min-height: 100%; color: #17324d; background: #f5f3ed; }
+.care-page { min-height: 100%; box-sizing: border-box; padding: 28rpx 28rpx 80rpx; }
+.source-note, .state-card, .task-card { padding: 24rpx; border-radius: 24rpx; background: rgba(255,255,255,.9); }
+.source-note { display: flex; align-items: center; color: #526c77; font-size: 23rpx; }
+.source-tag { margin-right: 14rpx; padding: 6rpx 12rpx; border-radius: 999rpx; color: #fff; background: #27758a; }
+.state-card, .task-card { margin-top: 20rpx; }
+.task-head { display: flex; align-items: center; justify-content: space-between; }
+.task-title { flex: 1; font-size: 30rpx; font-weight: 700; }
+.status { margin-left: 14rpx; padding: 6rpx 12rpx; border-radius: 999rpx; color: #6d542e; background: #fff0ca; font-size: 21rpx; }
+.status--completed { color: #276b5f; background: #dff1ed; }
+.status--expired { color: #974b4b; background: #fde6e1; }
+.task-doctor, .task-description, .task-due { display: block; margin-top: 12rpx; color: #607984; font-size: 23rpx; line-height: 1.55; }
+.task-actions { display: flex; margin-top: 20rpx; }
+.task-actions button { flex: 1; display: flex; align-items: center; justify-content: center; color: #27758a; background: #edf6f4; }
+.task-actions button + button { margin-left: 12rpx; color: #fff; background: #27758a; }
+.medical-tip { display: block; margin-top: 26rpx; color: #607984; font-size: 21rpx; text-align: center; }

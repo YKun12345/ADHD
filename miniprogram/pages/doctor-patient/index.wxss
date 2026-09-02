@@ -1,0 +1,79 @@
+page {
+  min-height: 100%;
+  background: #f7f3ed;
+  background-image: radial-gradient(circle at 8% 10%, rgba(210, 158, 106, 0.17), transparent 25%), linear-gradient(160deg, #fffaf3 0%, #f5f0ea 48%, #edf2f3 100%);
+}
+
+.patient-content { box-sizing: border-box; min-height: 100%; padding: 30rpx 30rpx calc(60rpx + constant(safe-area-inset-bottom)); padding: 30rpx 30rpx calc(60rpx + env(safe-area-inset-bottom)); }
+.patient-hero { display: flex; flex-direction: column; padding: 38rpx; border-radius: 34rpx; color: #fffaf3; background: linear-gradient(135deg, #775744 0%, #9a7152 55%, #6f7779 100%); box-shadow: 0 20rpx 52rpx rgba(87, 63, 48, 0.15); }
+.hero-kicker { font-size: 21rpx; letter-spacing: 4rpx; opacity: 0.72; }
+.hero-name { margin-top: 13rpx; font-size: 40rpx; font-weight: 760; }
+.hero-email { margin-top: 7rpx; font-size: 22rpx; opacity: 0.78; }
+.privacy-note { align-self: flex-start; margin-top: 22rpx; padding: 9rpx 15rpx; border-radius: 999rpx; font-size: 21rpx; background: rgba(255, 255, 255, 0.14); }
+
+.report-grid { display: flex; flex-direction: column; gap: 20rpx; margin-top: 24rpx; }
+.report-card, .message-card, .task-card, .state-card { border: 1rpx solid rgba(255, 255, 255, 0.94); border-radius: 28rpx; background: rgba(255, 255, 255, 0.86); box-shadow: 0 16rpx 44rpx rgba(83, 71, 61, 0.075); }
+.report-card { padding: 30rpx; border-left: 8rpx solid #8294a3; }
+.report-card--scale { border-left-color: #c78a52; }
+.report-card--cognitive { border-left-color: #657b9b; }
+.report-card--tracking { border-left-color: #669183; }
+.report-card--care { border-left-color: #806e99; }
+.report-card--desktop { border-left-color: #687d83; }
+.card-label { display: block; color: #7c6c61; font-size: 21rpx; font-weight: 700; letter-spacing: 2rpx; }
+.card-title-row, .message-heading, .test-main, .message-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-title { color: #3e4650; font-size: 30rpx; font-weight: 730; }
+.card-title-row { margin-top: 17rpx; }
+.risk-pill { padding: 8rpx 14rpx; border-radius: 999rpx; color: #65717d; font-size: 21rpx; background: #edf0f2; }
+.risk-pill--high { color: #9d4141; background: #fbe2df; }
+.risk-pill--medium { color: #8d5a22; background: #f7e8cf; }
+.risk-pill--low { color: #34715e; background: #dcefe7; }
+.score-text { display: block; margin-top: 15rpx; color: #945e33; font-size: 25rpx; font-weight: 650; }
+.card-copy, .empty-copy { display: block; margin-top: 15rpx; color: #67727a; font-size: 23rpx; line-height: 1.7; }
+.card-copy--strong { color: #465b72; }
+.test-row { margin-top: 18rpx; padding: 20rpx; border-radius: 18rpx; background: #f1f5f8; }
+.test-name { color: #40566d; font-size: 24rpx; font-weight: 650; }
+.test-status { color: #758596; font-size: 21rpx; }
+.test-metric { display: block; margin-top: 8rpx; color: #60758a; font-size: 21rpx; }
+.tracking-progress { display: block; margin-top: 17rpx; color: #3f7063; font-size: 28rpx; font-weight: 700; }
+.tracking-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; color: #557269; font-size: 21rpx; }
+.tracking-tags text { padding: 10rpx 14rpx; border-radius: 14rpx; background: #e5f0ec; }
+.bullet-list { margin-top: 15rpx; }
+.bullet-item { display: flex; gap: 13rpx; margin-top: 12rpx; color: #626b74; font-size: 23rpx; line-height: 1.65; }
+.bullet-dot { flex: 0 0 auto; width: 10rpx; height: 10rpx; margin-top: 14rpx; border-radius: 50%; background: #806e99; }
+.action-label { display: block; margin-top: 28rpx; padding-top: 24rpx; border-top: 1rpx solid #ebe8ed; color: #675979; font-size: 22rpx; font-weight: 700; }
+.bullet-item--action .bullet-dot { background: #c78a52; }
+.desktop-status-row { display: flex; align-items: center; justify-content: space-between; margin-top: 17rpx; padding: 17rpx 19rpx; border-radius: 17rpx; color: #58666a; font-size: 23rpx; background: #eef3f2; }
+.desktop-status-value { color: #3f6e70; font-weight: 650; }
+.desktop-note { display: block; margin-top: 17rpx; color: #788489; font-size: 21rpx; line-height: 1.65; }
+.professional-thumb { width: 100%; margin-top: 16rpx; border-radius: 18rpx; background: #e8eeee; }
+
+.message-card { margin-top: 24rpx; padding: 30rpx; }
+.task-card { margin-top: 24rpx; padding: 30rpx; }
+.doctor-task-item { margin-top: 16rpx; padding: 18rpx 20rpx; border-radius: 18rpx; background: #f3f6f7; }
+.task-form { margin-top: 24rpx; padding-top: 4rpx; }
+.task-type-row { display: flex; flex-wrap: wrap; margin-top: 14rpx; }
+.task-type-chip { margin: 8rpx 10rpx 0 0; padding: 10rpx 15rpx; border-radius: 999rpx; color: #6c7580; background: #eceff1; font-size: 21rpx; }
+.task-type-chip--active { color: #fff; background: #6e667f; }
+.task-input, .date-picker { min-height: 82rpx; box-sizing: border-box; margin-top: 16rpx; padding: 0 20rpx; display: flex; align-items: center; border: 1rpx solid #d9d4ce; border-radius: 18rpx; background: #fbfaf8; font-size: 24rpx; }
+.task-form .message-input { margin-top: 16rpx; }
+.task-submit { width: 100%; margin-top: 16rpx; }
+.ai-log-item { margin-top: 14rpx; padding: 18rpx; border-radius: 18rpx; background: #f1f5f6; }
+.message-count { color: #8a7d72; font-size: 21rpx; }
+.message-list { display: flex; flex-direction: column; gap: 16rpx; margin-top: 22rpx; }
+.message-item { display: flex; flex-direction: column; max-width: 86%; padding: 20rpx 22rpx; border-radius: 20rpx; }
+.message-item--doctor { align-self: flex-end; background: #e4ebf4; }
+.message-item--patient { align-self: flex-start; background: #f4e9dd; }
+.message-role { color: #6c7580; font-size: 21rpx; font-weight: 650; }
+.message-content { margin-top: 8rpx; color: #3e4650; font-size: 24rpx; line-height: 1.6; }
+.message-time { margin-top: 8rpx; color: #89919a; font-size: 21rpx; }
+.message-form { margin-top: 28rpx; padding-top: 25rpx; border-top: 1rpx solid #ebe7e1; }
+.message-input { width: 100%; min-height: 170rpx; box-sizing: border-box; padding: 22rpx; border: 1rpx solid #d9d4ce; border-radius: 20rpx; color: #3e4650; font-size: 24rpx; background: #fbfaf8; }
+.message-footer { margin-top: 14rpx; }
+.length-note { color: #989087; font-size: 21rpx; }
+.send-button, .retry-button { display: flex; align-items: center; justify-content: center; margin: 0; border: 0; }
+.send-button { min-width: 190rpx; min-height: 88rpx; border-radius: 19rpx; color: white; font-size: 24rpx; background: #6e667f; }
+.send-button::after, .retry-button::after { border: 0; }
+.state-card { display: flex; flex-direction: column; align-items: center; padding: 55rpx 30rpx; color: #766d66; }
+.state-card--error { color: #9b4e4e; }
+.retry-button { min-width: 180rpx; min-height: 88rpx; margin-top: 22rpx; border-radius: 18rpx; color: #735b49; font-size: 24rpx; background: #efe4d9; }
+.medical-disclaimer { display: block; margin: 30rpx 18rpx 0; color: #766f69; font-size: 21rpx; line-height: 1.7; text-align: center; }

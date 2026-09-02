@@ -1,6 +1,9 @@
 page {
   min-height: 100%;
-  background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa 58%, #edf5f7 100%);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(238, 160, 142, 0.2), transparent 31%),
+    radial-gradient(circle at 100% 28%, rgba(173, 145, 220, 0.16), transparent 30%),
+    linear-gradient(160deg, #fffaf8 0%, #fff0eb 54%, #f6efff 100%);
 }
 
 .scale-page {

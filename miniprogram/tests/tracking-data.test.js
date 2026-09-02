@@ -21,7 +21,19 @@ assert.deepEqual(createTrackingForm(20), {
   sleepQuality: '',
   isMedication: false,
   medicationDosage: '',
-  note: ''
+  note: '',
+  detailedExpanded: false,
+  hyperactivityRating: 0,
+  impulsivityRating: 0,
+  emotionStabilityRating: 0,
+  taskCompletionRating: 0,
+  appetiteQuality: '',
+  sideEffects: '',
+  activityTags: [],
+  hasConflict: false,
+  wasCriticized: false,
+  specialEvents: '',
+  highlights: ''
 })
 
 const validForm = {
@@ -33,6 +45,18 @@ const validForm = {
   isMedication: true,
   medicationDosage: '遵医嘱 1 次',
   note: ' 下午完成作业 '
+  , detailedExpanded: true,
+  hyperactivityRating: 2,
+  impulsivityRating: 1,
+  emotionStabilityRating: 4,
+  taskCompletionRating: 3,
+  appetiteQuality: 'normal',
+  sideEffects: '无',
+  activityTags: ['学习', '运动'],
+  hasConflict: false,
+  wasCriticized: true,
+  specialEvents: '阶段测验',
+  highlights: '主动完成作业'
 }
 
 assert.equal(validateTrackingForm(validForm), '')
@@ -52,6 +76,17 @@ assert.deepEqual(payload, {
   attention_rating: 3,
   emotion_rating: 4,
   sleep_quality: 'good'
+  , hyperactivity_rating: 2,
+  impulsivity_rating: 1,
+  emotion_rating: 4,
+  task_completion_rating: 3,
+  appetite_quality: 'normal',
+  side_effects: '无',
+  activities: ['学习', '运动'],
+  has_conflict: false,
+  was_criticized: true,
+  special_events: '阶段测验',
+  highlights: '主动完成作业'
 })
 assert.equal(buildTrackingPayload({ ...validForm, dayIndex: 0 }), null)
 

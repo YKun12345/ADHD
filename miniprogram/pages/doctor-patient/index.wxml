@@ -1,0 +1,168 @@
+<ai-copilot wx:if="{{!inputFocused && !sending && !creatingTask}}" page-key="doctor-patient" />
+<view class="patient-page ai-copilot-safe-space">
+  <ui-nav title="患者随访" showBack="{{true}}" fallbackUrl="/pages/doctor-home/index" />
+
+  <view class="patient-content">
+    <view wx:if="{{loading}}" class="state-card">正在汇总患者报告与沟通记录…</view>
+    <view wx:elif="{{errorText}}" class="state-card state-card--error">
+      <text>{{errorText}}</text>
+      <button class="retry-button" bindtap="retryLoad">重新加载</button>
+    </view>
+
+    <block wx:elif="{{report}}">
+      <view class="patient-hero">
+        <text class="hero-kicker">PATIENT OVERVIEW</text>
+        <text class="hero-name">{{report.patientName}}</text>
+        <text class="hero-email">{{report.patientEmail}}</text>
+        <view class="privacy-note">报告只在本页临时展示，不写入本地缓存</view>
+      </view>
+
+      <view class="report-grid">
+        <view class="report-card report-card--scale">
+          <text class="card-label">最近量表</text>
+          <block wx:if="{{report.scale}}">
+            <view class="card-title-row">
+              <text class="card-title">{{report.scale.type}}</text>
+              <text class="risk-pill risk-pill--{{report.scale.riskLevel}}">{{report.scale.riskText}}</text>
+            </view>
+            <text class="score-text">总分 {{report.scale.totalScore}}</text>
+            <text class="card-copy">{{report.scale.summary}}</text>
+          </block>
+          <text wx:else class="empty-copy">暂无量表结果</text>
+        </view>
+
+        <view class="report-card report-card--cognitive">
+          <text class="card-label">认知画像</text>
+          <block wx:if="{{report.cognitive}}">
+            <text class="card-copy card-copy--strong">{{report.cognitive.summary}}</text>
+            <view wx:for="{{report.cognitive.tests}}" wx:key="index" class="test-row">
+              <view class="test-main">
+                <text class="test-name">{{item.name}}</text>
+                <text class="test-status">{{item.status}}</text>
+              </view>
+              <text class="test-metric">{{item.metric}}</text>
+            </view>
+          </block>
+          <text wx:else class="empty-copy">暂无认知测评结果</text>
+        </view>
+
+        <view class="report-card report-card--tracking">
+          <text class="card-label">14 天跟踪</text>
+          <block wx:if="{{report.tracking}}">
+            <text class="tracking-progress">{{report.tracking.progressText}}</text>
+            <view class="tracking-tags">
+              <text>{{report.tracking.moodText}}</text>
+              <text>{{report.tracking.focusText}}</text>
+            </view>
+          </block>
+          <text wx:else class="empty-copy">暂无日常跟踪记录</text>
+        </view>
+
+        <view class="report-card report-card--care">
+          <text class="card-label">综合提醒</text>
+          <view wx:if="{{report.careSummary.length}}" class="bullet-list">
+            <view wx:for="{{report.careSummary}}" wx:key="index" class="bullet-item">
+              <text class="bullet-dot"></text><text>{{item}}</text>
+            </view>
+          </view>
+          <text wx:else class="empty-copy">暂无综合提醒</text>
+          <text class="action-label">建议下一步</text>
+          <view wx:if="{{report.suggestedActions.length}}" class="bullet-list">
+            <view wx:for="{{report.suggestedActions}}" wx:key="index" class="bullet-item bullet-item--action">
+              <text class="bullet-dot"></text><text>{{item}}</text>
+            </view>
+          </view>
+          <text wx:else class="empty-copy">暂无待办建议</text>
+        </view>
+
+        <view class="report-card report-card--desktop">
+          <text class="card-label">专业评估只读摘要</text>
+          <view class="desktop-status-row">
+            <text>影像状态</text>
+            <text class="desktop-status-value">{{report.hasImaging ? '已有记录' : '尚未录入'}}</text>
+          </view>
+          <view class="desktop-status-row">
+            <text>模型结果</text>
+            <text class="desktop-status-value">{{report.hasModelPrediction ? '已有记录' : '尚未生成'}}</text>
+          </view>
+          <block wx:if="{{report.professional.hasData}}">
+            <image wx:if="{{report.professional.screenshotData}}" class="professional-thumb" mode="widthFix" src="{{report.professional.screenshotData}}" />
+            <text wx:if="{{report.professional.predictionLabel}}" class="desktop-note">模型输出：{{report.professional.predictionLabel}} · ADHD {{report.professional.adhdProbabilityText}} · 对照 {{report.professional.controlProbabilityText}}</text>
+            <text class="desktop-note">{{report.professional.modelLabel}} · {{report.professional.confidenceLabel}}</text>
+            <text wx:if="{{report.professional.doctorInterpretation}}" class="desktop-note">影像解释：{{report.professional.doctorInterpretation}}</text>
+          </block>
+          <text class="desktop-note">影像上传、可视化和模型操作请在电脑医生端完成。</text>
+          <text class="desktop-note">本结果来自辅助分析模型，不可独立用于诊断。</text>
+        </view>
+      </view>
+
+      <view class="task-card">
+        <view class="message-heading">
+          <text class="card-title">医生任务</text>
+          <text class="message-count">{{tasks.length}} 项</text>
+        </view>
+        <view wx:if="{{tasks.length}}" class="doctor-task-list">
+          <view wx:for="{{tasks}}" wx:key="id" class="doctor-task-item">
+            <view class="card-title-row"><text class="test-name">{{item.title}}</text><text class="risk-pill">{{item.statusLabel}}</text></view>
+            <text wx:if="{{item.description}}" class="card-copy">{{item.description}}</text>
+            <text wx:if="{{item.dueAt}}" class="test-status">截止：{{item.dueAt}}</text>
+          </view>
+        </view>
+        <text wx:else class="empty-copy">还没有下发任务。</text>
+        <form class="task-form" bindsubmit="createTask">
+          <text class="action-label">创建新任务</text>
+          <view class="task-type-row">
+            <view wx:for="{{taskTypes}}" wx:key="value" class="task-type-chip {{taskType === item.value ? 'task-type-chip--active' : ''}}" data-value="{{item.value}}" bindtap="selectTaskType">{{item.label}}</view>
+          </view>
+          <input class="task-input" value="{{taskTitle}}" data-field="taskTitle" maxlength="120" placeholder="任务标题" bindinput="onTaskFieldInput" bindfocus="onInputFocus" bindblur="onInputBlur" />
+          <textarea class="message-input" value="{{taskDescription}}" data-field="taskDescription" maxlength="1000" placeholder="任务说明（必填）" bindinput="onTaskFieldInput" bindfocus="onInputFocus" bindblur="onInputBlur" />
+          <picker mode="date" value="{{taskDueDate}}" bindchange="onTaskDueDateChange"><view class="date-picker">{{taskDueDate || '选择截止日期（选填）'}}</view></picker>
+          <button class="send-button task-submit" form-type="submit" loading="{{creatingTask}}" disabled="{{creatingTask}}">下发任务</button>
+        </form>
+      </view>
+
+      <view class="task-card">
+        <view class="message-heading"><text class="card-title">患者 AI 对话摘要</text><text class="message-count">最近 {{aiLogs.length}} 条</text></view>
+        <view wx:if="{{aiLogs.length}}" class="ai-log-list">
+          <view wx:for="{{aiLogs}}" wx:key="id" class="ai-log-item"><text class="test-status">{{item.role === 'user' ? report.patientName : 'AI助手'}} · {{item.scope}} · {{item.createdAt}}</text><text class="card-copy">{{item.content}}</text></view>
+        </view>
+        <text wx:else class="empty-copy">暂无可供随访参考的 AI 对话记录。</text>
+        <text class="desktop-note">仅作为沟通线索，不作为诊断或用药依据。</text>
+      </view>
+
+      <view class="message-card">
+        <view class="message-heading">
+          <text class="card-title">随访消息</text>
+          <text class="message-count">{{messages.length}} 条</text>
+        </view>
+        <view wx:if="{{messages.length}}" class="message-list">
+          <view wx:for="{{messages}}" wx:key="id" class="message-item {{item.isDoctor ? 'message-item--doctor' : 'message-item--patient'}}">
+            <text class="message-role">{{item.isDoctor ? '我' : report.patientName}}</text>
+            <text class="message-content">{{item.content}}</text>
+            <text class="message-time">{{item.createdAt}}</text>
+          </view>
+        </view>
+        <text wx:else class="empty-copy">还没有消息，可以发送第一条随访提醒。</text>
+
+        <form class="message-form" bindsubmit="sendMessage">
+          <textarea
+            class="message-input"
+            value="{{messageInput}}"
+            maxlength="2000"
+            disabled="{{sending}}"
+            placeholder="给患者发送简短、清晰的随访消息"
+            bindinput="onMessageInput"
+            bindfocus="onInputFocus"
+            bindblur="onInputBlur"
+          />
+          <view class="message-footer">
+            <text class="length-note">{{messageInput.length}} / 2000</text>
+            <button class="send-button" form-type="submit" loading="{{sending}}" disabled="{{sending}}">发送消息</button>
+          </view>
+        </form>
+      </view>
+
+      <text class="medical-disclaimer">本页信息用于辅助筛查与随访，不替代医生诊断、面诊或处方判断。</text>
+    </block>
+  </view>
+</view>

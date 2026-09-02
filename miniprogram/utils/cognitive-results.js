@@ -1,13 +1,14 @@
 const LATEST_RESULTS_KEY = 'cognitive_latest_results'
+const { TASK_ORDER } = require('./cognitive-config')
 const TEST_DEFINITIONS = Object.freeze([
   {
     id: 'reaction',
-    title: 'Go/No-Go',
+    title: '反应抑制任务',
     description: '反应速度与抑制控制',
     icon: '反',
     iconName: 'gonogo',
     iconShape: 'pill',
-    estimatedMinutes: 5,
+    estimatedMinutes: 2,
     url: '/pages/cognitive/index'
   },
   {
@@ -17,17 +18,17 @@ const TEST_DEFINITIONS = Object.freeze([
     icon: '速',
     iconName: 'speed',
     iconShape: 'target',
-    estimatedMinutes: 4,
+    estimatedMinutes: 2,
     url: '/pages/simple-reaction/index'
   },
   {
     id: 'stroop',
-    title: 'Stroop',
+    title: '颜色干扰任务',
     description: '颜色选择与冲突抑制',
     icon: '色',
     iconName: 'stroop',
     iconShape: 'lens',
-    estimatedMinutes: 6,
+    estimatedMinutes: 3,
     url: '/pages/stroop/index'
   },
   {
@@ -37,27 +38,27 @@ const TEST_DEFINITIONS = Object.freeze([
     icon: '线',
     iconName: 'trail',
     iconShape: 'path',
-    estimatedMinutes: 5,
+    estimatedMinutes: 4,
     url: '/pages/trail/index'
   },
   {
     id: 'flanker',
-    title: 'Flanker',
+    title: '箭头抗干扰任务',
     description: '目标聚焦与干扰抑制',
     icon: '向',
     iconName: 'flanker',
     iconShape: 'arrows',
-    estimatedMinutes: 6,
+    estimatedMinutes: 3,
     url: '/pages/flanker/index'
   },
   {
     id: 'nback',
-    title: '2-back',
+    title: '两步位置记忆任务',
     description: '空间工作记忆更新',
     icon: '忆',
     iconName: 'nback',
     iconShape: 'grid',
-    estimatedMinutes: 8,
+    estimatedMinutes: 3,
     url: '/pages/nback/index'
   },
   {
@@ -67,7 +68,7 @@ const TEST_DEFINITIONS = Object.freeze([
     icon: '数',
     iconName: 'digit',
     iconShape: 'digits',
-    estimatedMinutes: 10,
+    estimatedMinutes: 6,
     url: '/pages/digit-span/index'
   }
 ])
@@ -138,7 +139,7 @@ function buildCognitiveSummary(value) {
         ? payload.result_json.finished_at
         : ''
     }
-  })
+  }).sort((left, right) => TASK_ORDER.indexOf(left.id) - TASK_ORDER.indexOf(right.id))
   const completedCount = cards.filter((card) => card.completed).length
   const totalCount = cards.length
   const allCompleted = completedCount === totalCount

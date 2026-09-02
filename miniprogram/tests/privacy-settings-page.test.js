@@ -7,6 +7,7 @@ const {
   SESSION_KEYS,
   advancePatientDataRevision
 } = require('../utils/session-privacy')
+const { buildGuideStorageKey } = require('../utils/guide-state')
 
 const pagePath = path.join(
   __dirname,
@@ -51,6 +52,9 @@ global.getCurrentPages = () => currentPages
 global.wx = {
   getStorageSync(key) {
     return storage[key]
+  },
+  setStorageSync(key, value) {
+    storage[key] = value
   },
   removeStorageSync(key) {
     calls.removals.push(key)
@@ -130,7 +134,8 @@ function createPage() {
         ...this.data,
         ...patch
       }
-    }
+    },
+    selectComponent() { return { show: () => { this.onboardingOpened = true } } }
   }
 }
 
@@ -180,7 +185,9 @@ async function run() {
     Object.keys(summaryPage.data).sort(),
     [
       'acting',
+      'autoGuideEnabled',
       'draftCount',
+      'onboardingVisible',
       'patientName',
       'pendingCount',
       'resultCount',
@@ -188,6 +195,15 @@ async function run() {
       'trackingDayCount'
     ]
   )
+  assert.equal(summaryPage.data.autoGuideEnabled, true)
+  summaryPage.onOnboardingVisibilityChange({ detail: { visible: false } })
+  assert.equal(summaryPage.data.onboardingVisible, false)
+  summaryPage.toggleAutoGuide()
+  assert.equal(summaryPage.data.autoGuideEnabled, false)
+  summaryPage.restorePageGuides()
+  assert.match(calls.toasts.at(-1).title, /已恢复/)
+  summaryPage.reopenOnboarding()
+  assert.equal(summaryPage.onboardingOpened, true)
 
   reset({
     current_user: { id: 7, role: 'patient', full_name: '   ' }
@@ -270,7 +286,10 @@ async function run() {
   const confirmedClearPage = createPage()
   confirmedClearPage.onLoad()
   assert.equal(await confirmedClearPage.clearLocalData(), true)
-  assert.deepEqual(calls.removals, PATIENT_DATA_KEYS)
+  assert.deepEqual(calls.removals, [
+    ...PATIENT_DATA_KEYS,
+    buildGuideStorageKey(storage.current_user)
+  ])
   assert.equal(storage.access_token, 'patient-token')
   assert.deepEqual(storage.current_user, {
     id: 7,

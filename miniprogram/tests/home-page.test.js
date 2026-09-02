@@ -87,6 +87,9 @@ async function run() {
 
   requestImplementation = async (options) => {
     calls.request.push(options)
+    if (options.url === '/care/patient/summary') {
+      return { unread_message_count: 2, pending_task_count: 1 }
+    }
     return {
       current_day: 5,
       completed_days: [1, 2, 3, 4],
@@ -104,8 +107,14 @@ async function run() {
     {
       url: '/patient/dashboard_status',
       method: 'GET'
+    },
+    {
+      url: '/care/patient/summary',
+      method: 'GET'
     }
   ])
+  assert.equal(successPage.data.unreadMessageCount, 2)
+  assert.equal(successPage.data.pendingTaskCount, 1)
   assert.equal(successPage.data.currentDay, 5)
   assert.equal(successPage.data.completedCount, 4)
   assert.equal(successPage.data.progressPercent, 29)
@@ -232,6 +241,10 @@ async function run() {
   })
   adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'tracking' } } })
   assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/tracking/index' })
+  adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'messages' } } })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/patient-messages/index' })
+  adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'doctor-tasks' } } })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/patient-tasks/index' })
 
   reset()
   storage.current_user.patient_profile = {

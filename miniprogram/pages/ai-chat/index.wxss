@@ -2,11 +2,11 @@ page {
   height: 100%;
   min-height: 100%;
   color: #173f50;
-  background-color: #f2f8fa;
+  background-color: #f5efff;
   background-image:
-    radial-gradient(circle at 6% 0%, rgba(80, 190, 224, 0.15) 0, rgba(80, 190, 224, 0) 30%),
-    radial-gradient(circle at 100% 40%, rgba(115, 103, 217, 0.06) 0, rgba(115, 103, 217, 0) 28%),
-    linear-gradient(160deg, #f9fcfd 0%, #f1f8fa 60%, #edf5f7 100%);
+    radial-gradient(circle at 6% 0%, rgba(151, 126, 216, 0.18) 0, rgba(151, 126, 216, 0) 30%),
+    radial-gradient(circle at 100% 40%, rgba(103, 176, 221, 0.13) 0, rgba(103, 176, 221, 0) 28%),
+    linear-gradient(160deg, #fcfaff 0%, #f5efff 56%, #eef7ff 100%);
 }
 
 .chat-shell {
@@ -172,14 +172,13 @@ page {
 
 .message-avatar--assistant {
   margin-right: 14rpx;
-  background: #236b80;
+  background: linear-gradient(145deg, #effaf7, #dff2ed);
 }
 
-.message-avatar__icon-scale {
-  width: 84rpx;
-  height: 84rpx;
-  flex: 0 0 84rpx;
-  transform: scale(0.72);
+.message-avatar__mascot {
+  width: 58rpx;
+  height: 58rpx;
+  flex: 0 0 58rpx;
 }
 
 .message-avatar--user {
@@ -308,6 +307,13 @@ page {
   color: #506b75;
   background: rgba(249, 253, 254, 0.9);
   font-size: 21rpx;
+}
+
+.assistant-thinking__mascot {
+  width: 48rpx;
+  height: 48rpx;
+  flex: 0 0 48rpx;
+  margin-right: 12rpx;
 }
 
 .thinking-dot {

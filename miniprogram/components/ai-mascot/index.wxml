@@ -1,0 +1,28 @@
+<view
+  class="ai-mascot ai-mascot--{{state}}"
+  aria-role="img"
+  aria-label="{{decorative ? '' : label}}"
+  aria-hidden="{{decorative}}"
+>
+  <view class="ai-mascot__ear ai-mascot__ear--left"></view>
+  <view class="ai-mascot__ear ai-mascot__ear--right"></view>
+  <view class="ai-mascot__face">
+    <view class="ai-mascot__spark">
+      <view class="ai-mascot__spark-line ai-mascot__spark-line--vertical"></view>
+      <view class="ai-mascot__spark-line ai-mascot__spark-line--horizontal"></view>
+    </view>
+    <view class="ai-mascot__eye ai-mascot__eye--left"></view>
+    <view class="ai-mascot__eye ai-mascot__eye--right"></view>
+    <view class="ai-mascot__cheek ai-mascot__cheek--left"></view>
+    <view class="ai-mascot__cheek ai-mascot__cheek--right"></view>
+    <view class="ai-mascot__nose"></view>
+    <view class="ai-mascot__mouth"></view>
+  </view>
+  <view class="ai-mascot__coat">
+    <view class="ai-mascot__stethoscope ai-mascot__stethoscope--left"></view>
+    <view class="ai-mascot__stethoscope ai-mascot__stethoscope--right"></view>
+    <view class="ai-mascot__badge"><view class="ai-mascot__badge-wave"></view></view>
+  </view>
+  <view class="ai-mascot__arm ai-mascot__arm--left"></view>
+  <view class="ai-mascot__arm ai-mascot__arm--right"></view>
+</view>

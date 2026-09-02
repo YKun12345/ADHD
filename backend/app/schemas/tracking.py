@@ -1,38 +1,65 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def normalize_activities(value: object) -> list[str] | None:
+    if value is None:
+        return None
+    values = value.split(",") if isinstance(value, str) else value
+    if not isinstance(values, list):
+        raise ValueError("活动标签必须是字符串数组")
+    normalized: list[str] = []
+    for item in values:
+        if not isinstance(item, str):
+            raise ValueError("活动标签必须是字符串")
+        tag = item.strip()
+        if not tag:
+            continue
+        if "," in tag or len(tag) > 32:
+            raise ValueError("单个活动标签不能含逗号且最多 32 个字符")
+        if tag not in normalized:
+            normalized.append(tag)
+    if len(normalized) > 20 or len(",".join(normalized)) > 500:
+        raise ValueError("活动标签数量或总长度超过限制")
+    return normalized or None
 
 
 class TrackingLogBase(BaseModel):
-    day_index: int
-    mood_tag: Optional[str] = None
-    focus_minutes: Optional[int] = None
-    note: Optional[str] = None
+    day_index: int = Field(ge=1, le=14)
+    mood_tag: Optional[str] = Field(default=None, max_length=32)
+    focus_minutes: Optional[int] = Field(default=None, ge=0, le=1440)
+    note: Optional[str] = Field(default=None, max_length=500)
     test_score: Optional[float] = None
-    activities: Optional[str] = None
+    activities: Optional[list[str]] = None
+
+    @field_validator("activities", mode="before")
+    @classmethod
+    def validate_activities(cls, value: object) -> list[str] | None:
+        return normalize_activities(value)
 
     # Medication tracking
     is_medication: Optional[bool] = False
     medication_dosage: Optional[str] = None
 
     # 5 core ratings (1-5 scale)
-    attention_rating: Optional[int] = None
-    hyperactivity_rating: Optional[int] = None
-    impulsivity_rating: Optional[int] = None
-    emotion_rating: Optional[int] = None
-    task_completion_rating: Optional[int] = None
+    attention_rating: Optional[int] = Field(default=None, ge=1, le=5)
+    hyperactivity_rating: Optional[int] = Field(default=None, ge=1, le=5)
+    impulsivity_rating: Optional[int] = Field(default=None, ge=1, le=5)
+    emotion_rating: Optional[int] = Field(default=None, ge=1, le=5)
+    task_completion_rating: Optional[int] = Field(default=None, ge=1, le=5)
 
     # Life items
     sleep_quality: Optional[str] = None
     appetite_quality: Optional[str] = None
     has_conflict: Optional[bool] = False
     was_criticized: Optional[bool] = False
-    side_effects: Optional[str] = None
+    side_effects: Optional[str] = Field(default=None, max_length=200)
 
     # Extended notes
-    special_events: Optional[str] = None
-    highlights: Optional[str] = None
+    special_events: Optional[str] = Field(default=None, max_length=1000)
+    highlights: Optional[str] = Field(default=None, max_length=1000)
 
 
 class TrackingLogCreate(TrackingLogBase):
@@ -44,7 +71,12 @@ class TrackingLogUpdate(BaseModel):
     focus_minutes: Optional[int] = None
     note: Optional[str] = None
     test_score: Optional[float] = None
-    activities: Optional[str] = None
+    activities: Optional[list[str]] = None
+
+    @field_validator("activities", mode="before")
+    @classmethod
+    def validate_activities(cls, value: object) -> list[str] | None:
+        return normalize_activities(value)
 
     is_medication: Optional[bool] = None
     medication_dosage: Optional[str] = None

@@ -1,10 +1,10 @@
 page {
   min-height: 100%;
-  background-color: #f2f8fa;
+  background-color: #eaf6ff;
   background-image:
-    radial-gradient(circle at 6% 4%, rgba(80, 190, 224, 0.2) 0, rgba(80, 190, 224, 0) 34%),
-    radial-gradient(circle at 100% 32%, rgba(115, 103, 217, 0.09) 0, rgba(115, 103, 217, 0) 30%),
-    linear-gradient(158deg, #fbfdfe 0%, #f0f7f9 58%, #edf5f7 100%);
+    radial-gradient(circle at 6% 4%, rgba(79, 177, 224, 0.2) 0, rgba(79, 177, 224, 0) 34%),
+    radial-gradient(circle at 100% 32%, rgba(235, 170, 129, 0.15) 0, rgba(235, 170, 129, 0) 30%),
+    linear-gradient(158deg, #fbfdff 0%, #eaf6ff 58%, #fff3ea 100%);
 }
 
 .login-page {
@@ -56,20 +56,8 @@ page {
   align-items: center;
 }
 
-.brand-icon-shell {
-  width: 112rpx;
-  height: 112rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1rpx solid rgba(255, 255, 255, 0.94);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.52);
-  box-shadow: 0 18rpx 52rpx rgba(49, 140, 166, 0.13);
-}
-
 .brand-kicker {
-  margin-top: 24rpx;
+  margin-top: 0;
   color: #236b80;
   font-size: 21rpx;
   font-weight: 700;
@@ -120,6 +108,46 @@ page {
   color: #5d747d;
   font-size: 23rpx;
   line-height: 1.5;
+}
+
+.role-selector {
+  display: flex;
+  gap: 16rpx;
+  margin: 0 0 32rpx;
+  padding: 8rpx;
+  border: 1rpx solid rgba(199, 221, 227, 0.82);
+  border-radius: 24rpx;
+  background: rgba(239, 247, 249, 0.72);
+}
+
+.role-option {
+  flex: 1;
+  min-height: 96rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid transparent;
+  border-radius: 18rpx;
+  color: #5d747d;
+}
+
+.role-option--active {
+  border-color: rgba(55, 116, 158, 0.26);
+  color: #174d6a;
+  background: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(35, 107, 128, 0.1);
+}
+
+.role-title {
+  font-size: 27rpx;
+  font-weight: 700;
+}
+
+.role-note {
+  margin-top: 5rpx;
+  font-size: 21rpx;
 }
 
 .field-label {

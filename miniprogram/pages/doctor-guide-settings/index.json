@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "onboarding-guide": "/components/onboarding-guide/index",
+    "ai-copilot": "/components/ai-copilot/index",
+    "ui-nav": "/components/ui-nav/index"
+  }
+}

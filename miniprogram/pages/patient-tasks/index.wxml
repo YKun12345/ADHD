@@ -1,0 +1,18 @@
+<ai-copilot page-key="patient-tasks" />
+<ui-nav title="我的任务" />
+<view class="care-page ai-copilot-safe-space">
+  <view class="source-note"><text class="source-tag">医生安排</text><text>这里不同于关怀路径中的系统建议。</text></view>
+  <view wx:if="{{loading}}" class="state-card">正在加载任务…</view>
+  <view wx:elif="{{errorText}}" class="state-card"><text>{{errorText}}</text><button bindtap="retryLoad">重新加载</button></view>
+  <view wx:elif="{{tasks.length === 0}}" class="state-card">医生暂未安排任务</view>
+  <view wx:else class="task-list">
+    <view wx:for="{{tasks}}" wx:key="id" class="task-card">
+      <view class="task-head"><text class="task-title">{{item.title}}</text><text class="status status--{{item.status}}">{{item.statusLabel}}</text></view>
+      <text class="task-doctor">{{item.doctorName}} · {{item.sourceLabel}}</text>
+      <text wx:if="{{item.description}}" class="task-description">{{item.description}}</text>
+      <text wx:if="{{item.dueAt}}" class="task-due">截止：{{item.dueAt}}</text>
+      <view class="task-actions"><button data-id="{{item.id}}" bindtap="openTask">前往任务</button><button wx:if="{{item.canComplete}}" data-id="{{item.id}}" loading="{{completingId === item.id}}" bindtap="completeTask">标记完成</button></view>
+    </view>
+  </view>
+  <text class="medical-tip">任务用于随访协作和辅助筛查，不替代正式诊断。</text>
+</view>

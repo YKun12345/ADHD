@@ -1,0 +1,16 @@
+<view wx:if="{{visible}}" class="onboarding-overlay" catchtouchmove="stopTouch" aria-role="dialog" aria-label="功能总介绍">
+  <view class="onboarding-card">
+    <view class="onboarding-mascot"><ai-mascot state="wave" label="星仔 · AI健康小助手" decorative="false" /></view>
+    <text class="onboarding-name">星仔 · AI健康小助手</text>
+    <text class="onboarding-title">{{content.title}}</text>
+    <text class="onboarding-intro">我可以介绍页面、解释结果和提示下一步，但不能代替医生诊断。</text>
+    <view class="onboarding-list">
+      <view class="onboarding-item" wx:for="{{content.items}}" wx:key="*this"><view class="onboarding-dot"></view><text>{{item}}</text></view>
+    </view>
+    <text class="onboarding-disclaimer">{{content.disclaimer}}</text>
+    <view class="onboarding-actions">
+      <button class="onboarding-button onboarding-button--ghost" bindtap="skip">跳过</button>
+      <button class="onboarding-button onboarding-button--primary" bindtap="startUsing">开始使用</button>
+    </view>
+  </view>
+</view>

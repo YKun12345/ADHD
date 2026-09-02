@@ -1,0 +1,17 @@
+page { min-height: 100%; color: #263e5d; background: #edf3f8; }
+.doctor-settings-page { min-height: 0; box-sizing: border-box; padding: 38rpx 30rpx 64rpx; padding-bottom: calc(64rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(64rpx + env(safe-area-inset-bottom)); background: radial-gradient(circle at 90% 2%, rgba(133, 179, 193, .2), transparent 31%), linear-gradient(160deg, #f9fcfd, #edf3f8 58%, #f6f8fb); }
+.settings-header { margin: 4rpx 6rpx 28rpx; }
+.settings-title, .settings-subtitle, .account-email, .card-title, .card-description, .guide-setting-title, .medical-disclaimer { display: block; }
+.settings-title { font-size: 40rpx; font-weight: 720; }
+.settings-subtitle { margin-top: 10rpx; color: #62748a; font-size: 23rpx; line-height: 1.65; }
+.account-email { margin-top: 8rpx; color: #7b8899; font-size: 21rpx; }
+.settings-card { margin-top: 20rpx; padding: 28rpx; border: 1rpx solid rgba(255, 255, 255, .94); border-radius: 30rpx; background: rgba(255, 255, 255, .82); box-shadow: 0 15rpx 38rpx rgba(42, 73, 105, .08); }
+.card-title, .guide-setting-title { font-size: 28rpx; font-weight: 700; }
+.card-description { margin-top: 12rpx; color: #62748a; font-size: 23rpx; line-height: 1.7; }
+.guide-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.guide-setting-copy { flex: 1; min-width: 0; }
+.settings-button { width: 100%; min-height: 88rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; margin-top: 18rpx; border: 0; border-radius: 20rpx; color: #315f91; font-size: 24rpx; background: #e5eef7; }
+.settings-button::after { border: 0; }
+.medical-disclaimer { margin-top: 28rpx; color: #62748a; font-size: 21rpx; line-height: 1.65; text-align: center; }
+.back-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 14rpx; border-radius: 20rpx; color: #315f91; font-size: 23rpx; font-weight: 600; }
+.settings-control--pressed { opacity: .72; }

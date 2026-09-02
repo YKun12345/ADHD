@@ -82,7 +82,7 @@ function buildNBackPayload(summary, trials, context = {}, finishedAt = new Date(
   if (summary.omissions > Math.max(2, summary.total_trials * 0.15)) flags.push('high_omissions')
   return {
     test_type: 'nback', result_json: {
-      schema_version: 2, test_name: '空间 2-back 测试', status_text: flags.length ? '已完成（需关注数据质量）' : '已完成',
+      schema_version: 2, test_name: '两步位置记忆任务', status_text: flags.length ? '已完成（需关注数据质量）' : '已完成',
       age_group: context.ageGroup === 'adult' ? 'adult' : 'child', mode: context.mode === 'battery' ? 'battery' : 'single', summary: `正确率 ${summary.accuracy}%`,
       metrics: [{ label: '正确率', value: `${summary.accuracy}%` }, { label: '辨别指数', value: String(summary.d_prime) }], raw_result: summary,
       quality: { valid: !flags.length, flags, interrupted_count: Number(context.interruptedCount) || 0, practice_attempts: Number(context.practiceAttempts) || 1 },

@@ -6,12 +6,22 @@ const calls = {
   navigation: [],
   toasts: []
 }
+const nativeSetTimeout = global.setTimeout
+global.setTimeout = (callback, delay) => {
+  if (delay === 300) callback()
+  return { unref() {} }
+}
 let componentDefinition
 let navigationShouldFail = false
 let navigationShouldWait = false
 let pendingNavigation
 
 global.wx = {
+  getStorageSync(key) {
+    if (key === 'current_user') return { id: 7, role: 'patient' }
+    return undefined
+  },
+  setStorageSync() {},
   navigateTo(options) {
     calls.navigation.push(options.url)
     if (navigationShouldWait) {
@@ -53,6 +63,11 @@ const component = createComponent()
 componentDefinition.lifetimes.attached.call(component)
 assert.equal(component.data.expanded, false)
 assert.equal(component.data.config.pageKey, 'scale')
+assert.equal(component.data.guideBubbleVisible, true)
+assert.equal(component.data.config.intro.length > 0, true)
+
+component.closeGuideBubble()
+assert.equal(component.data.guideBubbleVisible, false)
 
 component.togglePanel()
 assert.equal(component.data.expanded, true)
@@ -175,3 +190,4 @@ assert.ok(actionFallbackRule, 'WXSS 缺少按钮间距回退规则')
 assert.match(actionFallbackRule[1], /margin-left:\s*12rpx/)
 
 console.log('AI Copilot 组件测试全部通过')
+global.setTimeout = nativeSetTimeout

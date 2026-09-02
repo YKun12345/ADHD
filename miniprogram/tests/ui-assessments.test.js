@@ -53,7 +53,7 @@ assert.equal(read('pages', 'cognitive-center', 'index.wxss').includes('.center-n
 
 const cognitiveWxml = read('pages', 'cognitive', 'index.wxml')
 const cognitiveWxss = read('pages', 'cognitive', 'index.wxss')
-assert.match(cognitiveWxml, /<ai-copilot\s+wx:if="\{\{phase === 'intro' \|\| phase === 'result'\}\}"\s+page-key="cognitive"\s*\/>/)
+assert.match(cognitiveWxml, /<ai-copilot\s+wx:if="\{\{!submitting && \(phase === 'intro' \|\| phase === 'break' \|\| phase === 'result'\)\}\}"\s+page-key="cognitive"\s*\/>/)
 assert.match(cognitiveWxml, /class="cognitive-page [^"]*\{\{[^}]*cognitive-page--testing/)
 assert.match(cognitiveWxml, /<ui-icon\s+name="gonogo"\s+shape="pill"/)
 assert.match(cognitiveWxml, /<ui-icon\s+name="gonogo"\s+shape="pill"[^>]*decorative="\{\{true\}\}"/)
@@ -69,7 +69,7 @@ assert.equal(cognitiveWxss.includes('.cognitive-nav'), false, 'Go/No-Go 必须�
 
 const stroopWxml = read('pages', 'stroop', 'index.wxml')
 const stroopWxss = read('pages', 'stroop', 'index.wxss')
-assert.match(stroopWxml, /<ai-copilot\s+wx:if="\{\{phase === 'intro' \|\| phase === 'result'\}\}"\s+page-key="stroop"\s*\/>/)
+assert.match(stroopWxml, /<ai-copilot\s+wx:if="\{\{!submitting && \(phase === 'intro' \|\| phase === 'break' \|\| phase === 'result'\)\}\}"\s+page-key="stroop"\s*\/>/)
 assert.match(stroopWxml, /class="stroop-page [^"]*\{\{[^}]*stroop-page--testing/)
 assert.match(stroopWxml, /<ui-icon\s+name="stroop"\s+shape="lens"/)
 assert.match(stroopWxml, /<ui-icon\s+name="stroop"\s+shape="lens"[^>]*decorative="\{\{true\}\}"/)

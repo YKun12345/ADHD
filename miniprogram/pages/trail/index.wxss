@@ -1,5 +1,8 @@
 @import "../cognitive-task.wxss";
+page { background: linear-gradient(160deg, #fbf9ff 0%, #f2effb 56%, #edf6fb 100%); }
+.theme-lavender { background: radial-gradient(circle at 10% 12%, rgba(177, 158, 226, .2) 0, rgba(177, 158, 226, 0) 30%), linear-gradient(160deg, rgba(251,249,255,.96), rgba(242,239,251,.94) 56%, rgba(237,246,251,.94)); }
 .task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
 .trail-board { position: relative; height: 760rpx; margin-top: 24rpx; border-radius: 28rpx; background: #f7fafb; overflow: hidden; }
-.trail-node { position: absolute; width: 72rpx; height: 72rpx; margin: -36rpx 0 0 -36rpx; display: flex; align-items: center; justify-content: center; border: 3rpx solid #236b80; border-radius: 50%; color: #17324d; background: #fff; font-size: 25rpx; font-weight: 700; }
+.trail-lines { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
+.trail-node { position: absolute; z-index: 2; width: 72rpx; height: 72rpx; margin: -36rpx 0 0 -36rpx; display: flex; align-items: center; justify-content: center; border: 3rpx solid #236b80; border-radius: 50%; color: #17324d; background: #fff; font-size: 25rpx; font-weight: 700; }
 .trail-node--done { color: #fff; border-color: #3f8b7f; background: #3f8b7f; }

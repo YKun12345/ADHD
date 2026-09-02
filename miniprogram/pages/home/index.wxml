@@ -1,4 +1,5 @@
-<ai-copilot page-key="home" />
+<onboarding-guide role="patient" bind:visibilitychange="onOnboardingVisibilityChange" />
+<ai-copilot wx:if="{{!onboardingVisible}}" page-key="home" />
   <ui-nav title="ADHD智慧辅助" showBack="{{false}}" />
 <view class="home-page ui-page ai-copilot-safe-space">
   <view class="welcome-section">
@@ -6,9 +7,6 @@
       <text class="welcome-eyebrow">TODAY · DAY {{currentDay}}</text>
       <text class="welcome-text">你好，{{userName}}</text>
       <text class="welcome-subtitle">今天也按照自己的节奏，完成一小步</text>
-    </view>
-    <view class="welcome-mark">
-      <ui-icon name="plan" shape="orbit" label="14天筛查计划" decorative="{{false}}" />
     </view>
   </view>
 
@@ -96,6 +94,8 @@
         <text class="quick-title">{{item.title}}</text>
         <text class="entry-status">{{item.statusLabel}}</text>
       </view>
+      <text wx:if="{{item.id === 'messages' && unreadMessageCount > 0}}" class="care-badge">{{unreadMessageCount}}</text>
+      <text wx:if="{{item.id === 'doctor-tasks' && pendingTaskCount > 0}}" class="care-badge">{{pendingTaskCount}}</text>
     </view>
   </view>
 

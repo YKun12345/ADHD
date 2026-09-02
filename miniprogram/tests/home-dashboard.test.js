@@ -73,7 +73,7 @@ assert.equal(tasks.some((item) => Object.hasOwn(item, 'url')), false)
 const entries = buildQuickEntries()
 assert.deepEqual(
   entries.map((item) => item.id),
-  ['scale', 'cognitive', 'tracking', 'report', 'ai', 'pathway', 'education']
+  ['scale', 'cognitive', 'tracking', 'report', 'ai', 'pathway', 'education', 'doctor-tasks', 'messages']
 )
 assert.equal(entries.every((item) => item.available === false), true)
 assert.equal(entries.every((item) => item.statusLabel === '按计划开发'), true)

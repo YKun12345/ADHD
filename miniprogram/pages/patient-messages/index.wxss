@@ -1,0 +1,17 @@
+page { min-height: 100%; background: #eef6f5; color: #17324d; }
+.care-page { min-height: 100%; box-sizing: border-box; padding: 28rpx 28rpx 220rpx; }
+.safety-tip, .state-card { padding: 24rpx; border-radius: 22rpx; background: #fffaf2; color: #6c5548; font-size: 24rpx; line-height: 1.6; }
+.state-card { margin-top: 20rpx; text-align: center; }
+.message-list { margin-top: 22rpx; }
+.message-row { display: flex; margin-top: 18rpx; justify-content: flex-start; }
+.message-row--mine { justify-content: flex-end; }
+.message-bubble { max-width: 78%; padding: 20rpx 22rpx; border-radius: 8rpx 24rpx 24rpx; background: #fff; box-shadow: 0 10rpx 26rpx rgba(34,77,87,.08); }
+.message-row--mine .message-bubble { border-radius: 24rpx 8rpx 24rpx 24rpx; background: #dff1ed; }
+.message-sender, .message-content { display: block; }
+.message-sender { color: #6b7f88; font-size: 21rpx; }
+.message-content { margin-top: 8rpx; font-size: 27rpx; line-height: 1.55; }
+.message-failed { margin-top: 10rpx; color: #b54747; font-size: 21rpx; }
+.composer { position: fixed; right: 24rpx; bottom: 24rpx; left: 24rpx; z-index: 20; display: flex; align-items: flex-end; padding: 14rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 14rpx 42rpx rgba(23,50,77,.16); }
+.composer textarea { flex: 1; min-height: 70rpx; max-height: 180rpx; padding: 12rpx; font-size: 26rpx; }
+.composer button { width: 128rpx; margin-left: 12rpx; display: flex; align-items: center; justify-content: center; color: #fff; background: #27758a; }
+.medical-tip { display: block; margin-top: 26rpx; color: #607984; font-size: 21rpx; text-align: center; }

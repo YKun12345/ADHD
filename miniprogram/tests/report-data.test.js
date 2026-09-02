@@ -5,8 +5,29 @@ const {
   isReportableScaleResult,
   buildLocalReport,
   mergeReport,
-  createRadarGeometry
+  createRadarGeometry,
+  normalizeProfessionalData
 } = require('../utils/report-data')
+
+const professional = normalizeProfessionalData({
+  latest_imaging_visualization: {
+    visualization_type: 'nifti',
+    slice_screenshot_data: 'data:image/png;base64,abc',
+    slice_interpretation: '医生影像解释',
+    notes: '医生补充说明',
+    created_at: '2026-09-01T08:00:00Z'
+  },
+  latest_model_prediction: {
+    prediction_label: 'ADHD', probability: 0.82, probability_control: 0.18,
+    model_name: 'HGST', model_version: 'v2', source_type: 'fmri_hgst',
+    created_at: '2026-09-01T09:00:00Z'
+  }
+})
+assert.equal(professional.hasData, true)
+assert.equal(professional.adhdProbabilityText, '82.0%')
+assert.equal(professional.controlProbabilityText, '18.0%')
+assert.equal(professional.confidenceLabel, '中等置信')
+assert.match(professional.disclaimer, /不可独立用于诊断/)
 
 function scaleResult(scaleType = 'ASRS') {
   const adultRadar = {

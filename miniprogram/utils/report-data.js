@@ -19,12 +19,12 @@ const RADAR_SCHEMAS = Object.freeze({
   ]
 })
 const COGNITIVE_DEFINITIONS = Object.freeze([
-  { id: 'reaction', title: 'Go/No-Go', metric: 'accuracy' },
+  { id: 'reaction', title: '反应抑制任务', metric: 'accuracy' },
   { id: 'simple_reaction', title: '简单反应时', metric: 'simpleReaction' },
-  { id: 'stroop', title: 'Stroop', metric: 'stroop' },
+  { id: 'stroop', title: '颜色干扰任务', metric: 'stroop' },
   { id: 'trail', title: '连线测试', metric: 'trail' },
-  { id: 'flanker', title: 'Flanker', metric: 'accuracy' },
-  { id: 'nback', title: '2-back', metric: 'nback' },
+  { id: 'flanker', title: '箭头抗干扰任务', metric: 'accuracy' },
+  { id: 'nback', title: '两步位置记忆任务', metric: 'nback' },
   { id: 'digit', title: '数字广度', metric: 'digit' }
 ])
 const RISK_LABELS = Object.freeze({
@@ -39,6 +39,7 @@ const RESPONDENT_LABELS = Object.freeze({
   teacher: '教师填写'
 })
 const PROFESSIONAL_DATA_MESSAGE = '影像与模型结果尚未接入患者端'
+const PROFESSIONAL_DISCLAIMER = '本结果来自辅助分析模型，仅供专业人员结合其他资料参考，不可独立用于诊断。'
 
 function isObject(value) {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value))
@@ -341,6 +342,45 @@ function emptyTracking() {
   }
 }
 
+function probabilityText(value) {
+  const number = finiteNumber(value)
+  return number === null ? '--' : `${(clamp(number, 0, 1) * 100).toFixed(1)}%`
+}
+
+function normalizeProfessionalData(payload) {
+  const source = isObject(payload) ? payload : {}
+  const imaging = isObject(source.latest_imaging_visualization)
+    ? source.latest_imaging_visualization
+    : null
+  const prediction = isObject(source.latest_model_prediction)
+    ? source.latest_model_prediction
+    : null
+  const probability = prediction ? finiteNumber(prediction.probability) : null
+  const control = prediction
+    ? (finiteNumber(prediction.probability_control) ?? (probability === null ? null : 1 - probability))
+    : null
+  const confidence = probability === null ? null : Math.max(probability, control === null ? 0 : control)
+  return {
+    hasData: Boolean(imaging || prediction),
+    hasImaging: Boolean(imaging),
+    screenshotData: cleanText(imaging && (imaging.slice_screenshot_data || imaging.surface_screenshot_data)),
+    imagingType: cleanText(imaging && imaging.visualization_type).toUpperCase(),
+    imagingSummary: cleanText(imaging && imaging.summary_text),
+    doctorInterpretation: cleanText(imaging && (imaging.slice_interpretation || imaging.surface_interpretation)),
+    doctorNotes: cleanText(imaging && imaging.notes),
+    predictionLabel: cleanText(prediction && prediction.prediction_label),
+    adhdProbabilityText: probabilityText(probability),
+    controlProbabilityText: probabilityText(control),
+    confidenceLabel: confidence === null ? '暂无置信信息' : confidence >= 0.85 ? '较高置信' : confidence >= 0.7 ? '中等置信' : '有限置信',
+    modelLabel: prediction
+      ? [cleanText(prediction.model_name, '辅助分析模型'), cleanText(prediction.model_version)].filter(Boolean).join(' · ')
+      : '',
+    generatedAt: cleanText(prediction && prediction.created_at, cleanText(imaging && imaging.created_at)),
+    dataSource: prediction ? (prediction.is_demo === true ? '演示数据' : cleanText(prediction.source_type, '专业分析')) : '影像记录',
+    disclaimer: PROFESSIONAL_DISCLAIMER
+  }
+}
+
 function normalizeLocalTracking(logs) {
   const model = buildTrackingTrendModel(logs)
   if (!model.hasData) return emptyTracking()
@@ -430,7 +470,8 @@ function assembleReport({
   statusMessage = '',
   scale,
   cognitive,
-  tracking
+  tracking,
+  professional = normalizeProfessionalData()
 }) {
   const coverage = buildCoverage(scale, cognitive, tracking)
   return {
@@ -445,7 +486,8 @@ function assembleReport({
     cognitive,
     tracking,
     coverage,
-    professionalData: PROFESSIONAL_DATA_MESSAGE
+    professional,
+    professionalData: professional.hasData ? '已有专业评估记录' : PROFESSIONAL_DATA_MESSAGE
   }
 }
 
@@ -468,7 +510,8 @@ function buildLocalReport({
     sourceLabel: '本地结果',
     scale: normalizeScaleResult(scaleResult, 'local'),
     cognitive: normalizeLocalCognitive(cognitiveResults),
-    tracking: normalizeLocalTracking(trackingLogs)
+    tracking: normalizeLocalTracking(trackingLogs),
+    professional: normalizeProfessionalData()
   })
 }
 
@@ -482,12 +525,13 @@ function mergeReport(localReport, serverPayload) {
     : emptyScale()
   const serverCognitive = normalizeServerCognitive(server.cognitive_profile)
   const serverTracking = normalizeServerTracking(server.tracking_summary)
+  const professional = normalizeProfessionalData(server)
 
   const useServerScale = serverScale.hasData
   const cognitive = mergeCognitive(local.cognitive, serverCognitive)
   const useServerCognitive = serverCognitive.hasData
   const useServerTracking = !local.tracking.hasData && serverTracking.hasData
-  const serverUsed = useServerScale || useServerCognitive || useServerTracking
+  const serverUsed = useServerScale || useServerCognitive || useServerTracking || professional.hasData
   const localPatientType = normalizePatientType(local.patientType)
   const serverPatientType = normalizePatientType(server.patient_type)
   const localPatientName = cleanText(local.patientName)
@@ -501,7 +545,8 @@ function mergeReport(localReport, serverPayload) {
     sourceLabel: serverUsed ? '已同步' : '本地结果',
     scale: useServerScale ? serverScale : local.scale,
     cognitive,
-    tracking: useServerTracking ? serverTracking : local.tracking
+    tracking: useServerTracking ? serverTracking : local.tracking,
+    professional
   })
 }
 
@@ -573,5 +618,6 @@ module.exports = {
   isReportableScaleResult,
   buildLocalReport,
   mergeReport,
-  createRadarGeometry
+  createRadarGeometry,
+  normalizeProfessionalData
 }

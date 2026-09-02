@@ -30,7 +30,7 @@ function shuffled(values, random) {
 
 function buildStroopTrials(count, congruentRatio = 0.75, random = Math.random) {
   const size = Math.max(0, Math.floor(count / COLOR_KEYS.length) * COLOR_KEYS.length)
-  const congruentCount = Math.round((size * congruentRatio) / COLOR_KEYS.length) * COLOR_KEYS.length
+  const congruentCount = Math.max(0, Math.min(size, Math.round(size * congruentRatio)))
   const trials = Array.from({ length: size }, (_, index) => {
     const colorKey = COLOR_KEYS[index % COLOR_KEYS.length]
     const congruent = index < congruentCount
@@ -172,9 +172,9 @@ function buildStroopPayload(records, finishedAt = new Date().toISOString(), cont
   const payload = {
     test_type: 'stroop',
     result_json: {
-      test_name: 'Stroop 测试',
+      test_name: '颜色干扰任务',
       status_text: '已完成测试',
-      summary: 'Stroop 测试已完成。本次结果记录冲突信息下的颜色选择正确率和反应速度。',
+      summary: '颜色干扰任务已完成。本次结果记录冲突信息下的颜色选择正确率和反应速度。',
       metrics: [
         { label: '正确率', value: `${rawResult.accuracy}%` },
         {

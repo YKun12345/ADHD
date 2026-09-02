@@ -4,6 +4,8 @@ const path = require('node:path')
 
 const PROTECTED_PAGES = [
   'home',
+  'patient-messages',
+  'patient-tasks',
   'privacy-settings',
   'scale',
   'cognitive-center',

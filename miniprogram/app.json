@@ -2,7 +2,12 @@
   "pages": [
     "pages/login/index",
     "pages/server-settings/index",
+    "pages/doctor-home/index",
+    "pages/doctor-patient/index",
+    "pages/doctor-guide-settings/index",
     "pages/home/index",
+    "pages/patient-messages/index",
+    "pages/patient-tasks/index",
     "pages/privacy-settings/index",
     "pages/register/index",
     "pages/scale/index",

@@ -7,6 +7,12 @@ const {
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent
 } = require('../../utils/session-privacy')
+const {
+  isAutoGuideEnabled,
+  setAutoGuideEnabled,
+  resetPageGuides,
+  clearGuideState
+} = require('../../utils/guide-state')
 
 registerPatientPage({
   data: {
@@ -16,11 +22,17 @@ registerPatientPage({
     trackingDayCount: 0,
     pendingCount: 0,
     totalLocalItems: 0,
+    autoGuideEnabled: true,
+    onboardingVisible: true,
     acting: false
   },
 
   onLoad() {
     this.refreshSummary()
+  },
+
+  onOnboardingVisibilityChange(event) {
+    this.setData({ onboardingVisible: Boolean(event && event.detail && event.detail.visible) })
   },
 
   refreshSummary() {
@@ -31,8 +43,27 @@ registerPatientPage({
 
     this.setData({
       patientName: fullName || '患者',
+      autoGuideEnabled: isAutoGuideEnabled(currentUser),
       ...summarizePatientData()
     })
+  },
+
+  toggleAutoGuide() {
+    const currentUser = wx.getStorageSync('current_user') || {}
+    const enabled = !this.data.autoGuideEnabled
+    setAutoGuideEnabled(currentUser, enabled)
+    this.setData({ autoGuideEnabled: enabled })
+  },
+
+  restorePageGuides() {
+    const currentUser = wx.getStorageSync('current_user') || {}
+    resetPageGuides(currentUser)
+    wx.showToast({ title: '页面自动介绍已恢复', icon: 'none' })
+  },
+
+  reopenOnboarding() {
+    const component = this.selectComponent('#account-onboarding')
+    if (component && typeof component.show === 'function') component.show()
   },
 
   _confirm(options) {
@@ -82,7 +113,15 @@ registerPatientPage({
 
       if (!confirmed) return false
 
+      const currentUser = wx.getStorageSync('current_user') || {}
       const clearResult = clearPatientData()
+      if (clearResult.ok) {
+        try {
+          clearGuideState(currentUser)
+        } catch (error) {
+          clearResult.ok = false
+        }
+      }
       this.refreshSummary()
       if (!clearResult.ok) {
         wx.showToast({

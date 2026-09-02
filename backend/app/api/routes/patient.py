@@ -574,7 +574,7 @@ def get_dashboard_status(
         current_day=current_day,
         completed_days=completed_days,
         total_days=14,
-        logs=[TrackingLogResponse.from_orm(log) for log in logs],
+        logs=[TrackingLogResponse.model_validate(log) for log in logs],
     )
 
 
@@ -594,12 +594,14 @@ def submit_daily_log(
         )
     )
 
+    stored_activities = ",".join(payload.activities) if payload.activities else None
+
     if existing:
         existing.mood_tag = payload.mood_tag
         existing.focus_minutes = payload.focus_minutes
         existing.note = payload.note
         existing.test_score = payload.test_score
-        existing.activities = payload.activities
+        existing.activities = stored_activities
         existing.is_medication = payload.is_medication
         existing.medication_dosage = payload.medication_dosage
         existing.attention_rating = payload.attention_rating
@@ -618,7 +620,7 @@ def submit_daily_log(
         db.refresh(existing)
         capture_tracking_log_cipher(db, patient, existing)
         db.commit()
-        return TrackingLogResponse.from_orm(existing)
+        return TrackingLogResponse.model_validate(existing)
 
     new_log = TrackingLog(
         patient_id=patient.id,
@@ -627,7 +629,7 @@ def submit_daily_log(
         focus_minutes=payload.focus_minutes,
         note=payload.note,
         test_score=payload.test_score,
-        activities=payload.activities,
+        activities=stored_activities,
         is_medication=payload.is_medication,
         medication_dosage=payload.medication_dosage,
         attention_rating=payload.attention_rating,
@@ -648,7 +650,7 @@ def submit_daily_log(
     db.refresh(new_log)
     capture_tracking_log_cipher(db, patient, new_log)
     db.commit()
-    return TrackingLogResponse.from_orm(new_log)
+    return TrackingLogResponse.model_validate(new_log)
 
 @router.get("/comprehensive_report", response_model=PatientReportResponse)
 def get_comprehensive_report(

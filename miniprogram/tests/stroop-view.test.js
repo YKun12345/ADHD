@@ -16,7 +16,7 @@ assert.equal(
 )
 
 const requiredWxml = [
-  'Stroop 颜色词测试',
+  '颜色干扰任务',
   '判断文字的实际颜色，而不是文字本身的含义',
   'bindtap="startTest"',
   '{{currentTrialNumber}} / {{totalTrials}}',
@@ -28,6 +28,10 @@ const requiredWxml = [
   'bindtap="handleAnswer"',
   '{{item.label}}',
   '{{feedbackText}}',
+  "phase === 'break'",
+  '{{breakTitle}}',
+  '{{breakMessage}}',
+  'bindtap="continueSection"',
   '{{result.accuracy}}%',
   '{{result.median_reaction_time_ms}}',
   '{{result.interference_effect_ms}}',
@@ -54,6 +58,7 @@ const requiredSelectors = [
   '.color-grid',
   '.color-button',
   '.feedback-panel',
+  '.section-break-card',
   '.result-card',
   '.result-grid',
   '.sync-badge',

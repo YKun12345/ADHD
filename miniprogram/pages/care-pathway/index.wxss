@@ -7,8 +7,9 @@ page { min-height: 100%; color: #17324d; background: #f2f7f8; }
   padding-bottom: calc(64rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(64rpx + env(safe-area-inset-bottom));
   background:
-    radial-gradient(circle at 8% 0%, rgba(130, 207, 214, .2), transparent 34%),
-    linear-gradient(180deg, #f8fbfc, #edf4f6);
+    radial-gradient(circle at 8% 0%, rgba(142, 205, 139, .2), transparent 34%),
+    radial-gradient(circle at 96% 24%, rgba(235, 186, 116, .14), transparent 30%),
+    linear-gradient(160deg, #f9fcf7, #eef8e9 54%, #fff4e5);
 }
 
 .pathway-header { display: flex; align-items: center; margin: 4rpx 4rpx 28rpx; }

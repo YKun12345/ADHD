@@ -17,6 +17,9 @@ const wxss = fs.readFileSync(
   'utf8'
 )
 
+assert.match(wxml, /<onboarding-guide[^>]*bind:visibilitychange="onOnboardingVisibilityChange"/)
+assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!onboardingVisible\}\}"\s+page-key="home"/)
+
 const requiredWxml = [
   "style=\"{{'width: ' + progressPercent + '%;'}}\"",
   '{{sourceLabel}}',

@@ -1,6 +1,6 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { getTaskConfig } = require('../../utils/cognitive-config')
-const { buildDigitTrials, evaluateDigitTrial, summarizeDigitTrials, buildDigitSpanPayload } = require('../../utils/digit-span-test')
+const { buildDigitTrials, evaluateDigitTrial, shouldStopDigitDirection, summarizeDigitTrials, buildDigitSpanPayload } = require('../../utils/digit-span-test')
 const { loadCognitiveContext, finishPage, retryPageSync, goNextBatteryTask, clearTimers, schedule } = require('../../utils/cognitive-page-support')
 
 const PENDING_KEY = 'pending_digit_result'
@@ -12,8 +12,8 @@ registerPatientPage({
   _presentTrial() { const trial = this._trials[this._index]; this._shownIndex = 0; this.setData({ phase: 'presenting', directionText: trial.direction === 'forward' ? '顺背' : '倒背', currentTrial: this._index + 1, answer: [], answerText: '', shownDigit: '' }); const showNext = () => { if (this._shownIndex >= trial.sequence.length) { this.setData({ phase: 'recall', shownDigit: '' }); return } this.setData({ shownDigit: String(trial.sequence[this._shownIndex]) }); this._shownIndex += 1; schedule(this, () => { this.setData({ shownDigit: '' }); schedule(this, showNext, this._config.gapMs) }, this._config.digitDurationMs) }; showNext() },
   handleDigitTap(event) { if (!this.data.running || this.data.phase !== 'recall') return; const answer = [...this.data.answer, Number(event.currentTarget.dataset.digit)]; this.setData({ answer, answerText: answer.join(' ') }) },
   handleDelete() { if (this.data.phase !== 'recall') return; const answer = this.data.answer.slice(0, -1); this.setData({ answer, answerText: answer.join(' ') }) },
-  submitAnswer() { if (!this.data.running || this.data.phase !== 'recall') return; this._records.push(evaluateDigitTrial(this._trials[this._index], this.data.answer)); this._index += 1; this.setData({ progressPercent: Math.round((this._index / this._trials.length) * 100) }); if (this._index >= this._trials.length) return this._completeTest(); this.setData({ phase: 'feedback' }); schedule(this, () => this._presentTrial(), 450) },
-  _completeTest() { clearTimers(this); const summary = summarizeDigitTrials(this._records); return finishPage(this, 'digit', buildDigitSpanPayload(summary, this._records, this._context), PENDING_KEY) },
+  submitAnswer() { if (!this.data.running || this.data.phase !== 'recall') return; const direction = this._trials[this._index].direction; this._records.push(evaluateDigitTrial(this._trials[this._index], this.data.answer)); this._index += 1; if (shouldStopDigitDirection(this._records, direction, this._config.trialsPerSpan)) { while (this._index < this._trials.length && this._trials[this._index].direction === direction) this._index += 1 } this.setData({ progressPercent: Math.round((this._index / this._trials.length) * 100) }); if (this._index >= this._trials.length) return this._completeTest(); this.setData({ phase: 'feedback' }); schedule(this, () => this._presentTrial(), 450) },
+  _completeTest() { clearTimers(this); this.setData({ progressPercent: 100 }); const summary = summarizeDigitTrials(this._records); return finishPage(this, 'digit', buildDigitSpanPayload(summary, this._records, this._context), PENDING_KEY) },
   retrySync() { return retryPageSync(this, PENDING_KEY) }, goNext() { goNextBatteryTask(this) }, goBack() { wx.navigateBack({ delta: 1 }) },
   onHide() {
     if (this.data.running) {

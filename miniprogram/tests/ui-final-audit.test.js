@@ -10,6 +10,9 @@ const appWxss = read('app.wxss')
 const expectedRoutes = [
   'pages/login/index',
   'pages/server-settings/index',
+  'pages/doctor-home/index',
+  'pages/doctor-patient/index',
+  'pages/doctor-guide-settings/index',
   'pages/home/index',
   'pages/privacy-settings/index',
   'pages/register/index',
@@ -21,6 +24,8 @@ const expectedRoutes = [
   'pages/trail/index',
   'pages/flanker/index',
   'pages/nback/index',
+  'pages/patient-messages/index',
+  'pages/patient-tasks/index',
   'pages/digit-span/index',
   'pages/tracking/index',
   'pages/tracking-trend/index',
@@ -30,7 +35,7 @@ const expectedRoutes = [
   'pages/education/index',
   'pages/education-detail/index'
 ]
-const expectedComponents = ['ai-copilot', 'ui-icon', 'ui-nav']
+const expectedComponents = ['ai-copilot', 'ai-mascot', 'onboarding-guide', 'ui-icon', 'ui-nav']
 
 assert.deepEqual(
   collectRoutes({

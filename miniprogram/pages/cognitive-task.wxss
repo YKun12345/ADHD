@@ -9,9 +9,10 @@ page { min-height: 100%; background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa
 .section-title { display: block; font-size: 29rpx; font-weight: 700; }
 .instruction { display: block; margin-top: 16rpx; color: #506b75; font-size: 24rpx; line-height: 1.75; }
 .notice { margin-top: 22rpx; padding: 18rpx 20rpx; border-radius: 18rpx; color: #5b6f78; background: #eff6f7; font-size: 22rpx; line-height: 1.6; }
-.primary-button,.secondary-button { min-height: 88rpx; margin-top: 26rpx; border-radius: 22rpx; font-size: 26rpx; font-weight: 650; }
+.primary-button,.secondary-button { min-height: 88rpx; margin-top: 26rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 22rpx; font-size: 26rpx; font-weight: 650; line-height: 1.3; }
 .primary-button { color: #fff; background: #236b80; }
 .secondary-button { color: #236b80; background: #e9f3f5; }
+.primary-button::after,.secondary-button::after { border: 0; }
 .progress-row { display: flex; justify-content: space-between; color: #5d747d; font-size: 22rpx; }
 .progress-track { height: 10rpx; margin-top: 16rpx; overflow: hidden; border-radius: 999rpx; background: #dfeaed; }
 .progress-value { height: 100%; border-radius: inherit; background: #3f8b7f; }
@@ -23,4 +24,10 @@ page { min-height: 100%; background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa
 .sync-status { display: block; margin-top: 18rpx; color: #3f7c78; font-size: 22rpx; text-align: center; }
 .medical-tip { display: block; margin-top: 32rpx; color: #5d747d; font-size: 21rpx; line-height: 1.65; text-align: center; }
 .paused-text { display: block; color: #9b5a36; font-size: 26rpx; text-align: center; }
+.protocol-note { border-left: 6rpx solid currentColor; }
+.section-break-card { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.section-break-card__eyebrow { color: #667085; font-size: 22rpx; font-weight: 650; letter-spacing: 2rpx; }
+.section-break-card__title { display: block; margin-top: 16rpx; color: #17324d; font-size: 36rpx; font-weight: 750; }
+.section-break-card__message { display: block; max-width: 520rpx; margin-top: 14rpx; color: #506b75; font-size: 24rpx; line-height: 1.7; }
+.section-break-card__button { width: 100%; }
 @media (prefers-reduced-motion: reduce) { .progress-value { transition: none; } }

@@ -1,12 +1,16 @@
 const { request } = require('../../utils/request')
 const {
-  hasValidPatientSession,
   clearPatientData,
   replacePatientSession,
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent,
   reLaunchSafely
 } = require('../../utils/session-privacy')
+const {
+  hasValidRoleSession,
+  hasValidAnySession,
+  getRoleDestination
+} = require('../../utils/role-session')
 const {
   beginAuthAttempt,
   isAuthAttemptActive,
@@ -22,8 +26,8 @@ function readStorageSafely(key) {
   }
 }
 
-function isValidAuthResult(result) {
-  return Boolean(result) && hasValidPatientSession((key) => (
+function isValidAuthResult(result, expectedRole) {
+  return Boolean(result) && hasValidRoleSession(expectedRole, (key) => (
     key === 'access_token' ? result.access_token : result.user
   ))
 }
@@ -36,18 +40,26 @@ function isSamePatient(currentUser, nextUser) {
     currentUser.id === nextUser.id
 }
 
+function roleNavigationFailureTitle(role) {
+  return role === 'researcher'
+    ? '进入医生工作台失败，请重试'
+    : '进入患者首页失败，请重试'
+}
+
 Page({
   data: {
     identifier: '',
     password: '',
+    role: 'patient',
     submitting: false
   },
 
   onShow() {
-    if (hasValidPatientSession((key) => wx.getStorageSync(key))) {
+    if (hasValidAnySession((key) => wx.getStorageSync(key))) {
+      const currentUser = readStorageSafely('current_user')
       reLaunchSafely(
-        '/pages/home/index',
-        '进入患者首页失败，请重试'
+        getRoleDestination(currentUser),
+        roleNavigationFailureTitle(currentUser && currentUser.role)
       )
     }
   },
@@ -76,6 +88,15 @@ Page({
     })
   },
 
+  selectRole(event) {
+    if (this.data.submitting) return
+    const role = event.currentTarget && event.currentTarget.dataset
+      ? event.currentTarget.dataset.role
+      : ''
+    if (role !== 'patient' && role !== 'researcher') return
+    this.setData({ role })
+  },
+
   goToRegister() {
     invalidateAuthAttempt(this)
     wx.navigateTo({
@@ -95,6 +116,7 @@ Page({
 
     const identifier = this.data.identifier.trim()
     const password = this.data.password
+    const role = this.data.role === 'researcher' ? 'researcher' : 'patient'
 
     if (!identifier) {
       wx.showToast({
@@ -142,19 +164,19 @@ Page({
         data: {
           identifier,
           password,
-          role: 'patient'
+          role
         }
       })
 
       if (!isAuthAttemptCurrent(this, authAttempt)) return
       responseAccepted = true
 
-      if (!isValidAuthResult(result)) {
-        throw new Error('服务器未返回登录凭证')
+      if (!isValidAuthResult(result, role)) {
+        throw new Error('服务器返回的账号身份不匹配')
       }
 
       const currentUser = readStorageSafely('current_user')
-      if (!isSamePatient(currentUser, result.user)) {
+      if (role !== 'patient' || !isSamePatient(currentUser, result.user)) {
         const clearResult = clearPatientData()
         if (!clearResult.ok) {
           throw new Error('本地患者数据清理失败，请重试')
@@ -177,8 +199,8 @@ Page({
           return
         }
         reLaunchSafely(
-          '/pages/home/index',
-          '进入患者首页失败，请重试'
+          getRoleDestination(result.user),
+          roleNavigationFailureTitle(result.user.role)
         )
       }, 600)
     } catch (error) {

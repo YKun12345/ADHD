@@ -41,6 +41,23 @@ function recordBatteryCompletion(context, taskId) {
   return nextBatteryTask(completed)
 }
 
+function attachProtocolMetadata(payload, config, actualTrials) {
+  if (!payload || !payload.result_json || !config) return payload
+  const trials = Array.isArray(payload.result_json.trials) ? payload.result_json.trials : []
+  const rawTotal = Number(payload.result_json.raw_result && payload.result_json.raw_result.total_trials)
+  const explicitTotal = Number(actualTrials)
+  const resolvedTotal = Number.isInteger(explicitTotal) && explicitTotal >= 0
+    ? explicitTotal
+    : Number.isInteger(rawTotal) && rawTotal >= 0
+      ? rawTotal
+      : trials.length
+  payload.result_json.protocol_id = config.protocolId
+  payload.result_json.protocol_label = config.protocolLabel
+  payload.result_json.protocol_schema_version = config.schemaVersion
+  payload.result_json.actual_trials = resolvedTotal
+  return payload
+}
+
 async function syncPayload(page, payload, pendingKey) {
   if (!payload || page.data.submitting) return false
   page.setData({ submitting: true, syncStatus: '同步中' })
@@ -59,7 +76,8 @@ async function syncPayload(page, payload, pendingKey) {
   }
 }
 
-function finishPage(page, taskId, payload, pendingKey) {
+function finishPage(page, taskId, payload, pendingKey, actualTrials) {
+  attachProtocolMetadata(payload, page._config, actualTrials)
   saveLatestPayload(payload)
   const nextTaskId = recordBatteryCompletion(page._context, taskId)
   page._lastPayload = payload
@@ -93,4 +111,4 @@ function schedule(page, callback, delay) {
   return timer
 }
 
-module.exports = { loadCognitiveContext, recordBatteryCompletion, finishPage, retryPageSync, goNextBatteryTask, clearTimers, schedule }
+module.exports = { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, finishPage, retryPageSync, goNextBatteryTask, clearTimers, schedule }

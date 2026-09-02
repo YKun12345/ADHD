@@ -1,4 +1,6 @@
 @import "../cognitive-task.wxss";
+page { background: linear-gradient(160deg, #f6fbff 0%, #edf7fb 54%, #fff4e8 100%); }
+.theme-sunrise { background: radial-gradient(circle at 88% 8%, rgba(244, 183, 113, .2) 0, rgba(244, 183, 113, 0) 30%), linear-gradient(160deg, rgba(246,251,255,.96), rgba(237,247,251,.94) 54%, rgba(255,244,232,.94)); }
 .task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
 .reaction-stage { transition: background 120ms ease; }
 .reaction-stage--target { background: #dff3ef; }

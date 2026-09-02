@@ -4,9 +4,6 @@
   <view class="ambient-orb ambient-orb--violet"></view>
 
   <view class="login-header">
-    <view class="brand-icon-shell">
-      <ui-icon name="plan" shape="orbit" label="ADHD智慧辅助计划" decorative="{{false}}" />
-    </view>
     <text class="brand-kicker">ADHD SMART CARE</text>
     <text class="title">ADHD智慧辅助</text>
     <text class="subtitle">回到你的14天认知健康计划</text>
@@ -15,7 +12,30 @@
   <form class="login-card glass-surface" bindsubmit="handleLogin">
     <view class="card-intro">
       <text class="card-title">欢迎回来</text>
-      <text class="card-subtitle">登录后继续今日筛查任务</text>
+      <text class="card-subtitle">选择身份，进入对应的安全工作台</text>
+    </view>
+
+    <view class="role-selector" aria-role="radiogroup" aria-label="选择登录身份">
+      <view
+        class="role-option {{role === 'patient' ? 'role-option--active' : ''}}"
+        data-role="patient"
+        aria-role="radio"
+        aria-checked="{{role === 'patient'}}"
+        bindtap="selectRole"
+      >
+        <text class="role-title">患者端</text>
+        <text class="role-note">测评与日常管理</text>
+      </view>
+      <view
+        class="role-option {{role === 'researcher' ? 'role-option--active' : ''}}"
+        data-role="researcher"
+        aria-role="radio"
+        aria-checked="{{role === 'researcher'}}"
+        bindtap="selectRole"
+      >
+        <text class="role-title">医生端</text>
+        <text class="role-note">患者随访与报告</text>
+      </view>
     </view>
 
     <text class="field-label">账号</text>
@@ -54,6 +74,7 @@
     </button>
 
     <view
+      wx:if="{{role === 'patient'}}"
       class="login-tip entry-link {{submitting ? 'entry-link--disabled' : ''}}"
       hover-class="{{submitting ? 'none' : 'entry-link--pressed'}}"
       aria-role="button"

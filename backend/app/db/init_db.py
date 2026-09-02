@@ -70,6 +70,41 @@ def _ensure_tracking_log_activities_column() -> None:
             conn.exec_driver_sql("ALTER TABLE tracking_logs ADD COLUMN activities VARCHAR(500)")
 
 
+def _ensure_care_message_client_id_column() -> None:
+    inspector = inspect(engine)
+    if "care_messages" not in inspector.get_table_names():
+        return
+
+    column_names = {column["name"] for column in inspector.get_columns("care_messages")}
+    with engine.begin() as conn:
+        if "client_message_id" not in column_names:
+            if engine.dialect.name == "mysql":
+                conn.exec_driver_sql(
+                    "ALTER TABLE care_messages ADD COLUMN client_message_id VARCHAR(64) NULL"
+                )
+            elif engine.dialect.name == "sqlite":
+                conn.exec_driver_sql(
+                    "ALTER TABLE care_messages ADD COLUMN client_message_id VARCHAR(64)"
+                )
+
+    inspector = inspect(engine)
+    has_unique_index = any(
+        index.get("unique")
+        and index.get("column_names") == ["sender_user_id", "client_message_id"]
+        for index in inspector.get_indexes("care_messages")
+    )
+    has_unique_constraint = any(
+        constraint.get("column_names") == ["sender_user_id", "client_message_id"]
+        for constraint in inspector.get_unique_constraints("care_messages")
+    )
+    if not has_unique_index and not has_unique_constraint:
+        with engine.begin() as conn:
+            conn.exec_driver_sql(
+                "CREATE UNIQUE INDEX uq_care_messages_sender_client_message "
+                "ON care_messages (sender_user_id, client_message_id)"
+            )
+
+
 def _ensure_imaging_visualization_screenshot_columns() -> None:
     inspector = inspect(engine)
     if "imaging_visualizations" not in inspector.get_table_names():
@@ -314,6 +349,7 @@ def init_db() -> None:
     _ensure_user_security_columns()
     _ensure_patient_assignment_column()
     _ensure_tracking_log_activities_column()
+    _ensure_care_message_client_id_column()
     _ensure_imaging_visualization_screenshot_columns()
     _ensure_model_prediction_detail_columns()
     _ensure_security_runtime_columns()

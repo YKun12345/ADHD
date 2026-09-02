@@ -1,0 +1,32 @@
+<onboarding-guide id="doctor-account-onboarding" role="researcher" bind:visibilitychange="onOnboardingVisibilityChange" />
+<ai-copilot wx:if="{{!onboardingVisible}}" page-key="doctor-guide-settings" />
+<ui-nav title="账号与隐私" />
+
+<view class="doctor-settings-page ai-copilot-safe-space">
+  <view class="settings-header">
+    <text class="settings-title">账号与隐私</text>
+    <text class="settings-subtitle">{{doctorName}}，这里仅管理当前医生账号在本机上的页面引导偏好。</text>
+    <text wx:if="{{doctorEmail}}" class="account-email">{{doctorEmail}}</text>
+  </view>
+
+  <view class="settings-card glass-surface">
+    <text class="card-title">页面介绍</text>
+    <view class="guide-setting-row">
+      <view class="guide-setting-copy">
+        <text class="guide-setting-title">自动显示一句话介绍</text>
+        <text class="card-description">关闭后仍可点击星仔查看帮助。</text>
+      </view>
+      <switch checked="{{autoGuideEnabled}}" color="#315f91" bindchange="toggleAutoGuide" />
+    </view>
+    <button class="settings-button ui-button" bindtap="restorePageGuides">恢复页面自动介绍</button>
+    <button class="settings-button ui-button" bindtap="reopenOnboarding">重新查看功能总介绍</button>
+  </view>
+
+  <view class="settings-card glass-surface">
+    <text class="card-title">移动端数据边界</text>
+    <text class="card-description">手机端仅查看患者摘要、任务、消息及专业结果摘要。影像上传、模型推理、DAC 安全审计、密钥和节点管理仍在电脑网页端操作。</text>
+  </view>
+
+  <text class="medical-disclaimer">本平台用于辅助筛查与随访，不替代医生诊断或用药建议。</text>
+  <view class="back-link" hover-class="settings-control--pressed" aria-role="button" bindtap="goBack">返回上一页</view>
+</view>

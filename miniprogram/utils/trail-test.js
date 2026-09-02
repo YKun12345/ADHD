@@ -41,6 +41,26 @@ function createTrailLayout(sequence, seed = 1) {
   })
 }
 
+function createRandomTrailLayout(sequence, random = Math.random) {
+  const sample = Number(random())
+  const normalized = Number.isFinite(sample)
+    ? Math.max(0, Math.min(0.999999999, sample))
+    : 0
+  const seed = Math.floor(normalized * 4294967295) + 1
+  return createTrailLayout(sequence, seed)
+}
+
+function buildTrailPath(layout, completedCount) {
+  const nodes = Array.isArray(layout)
+    ? layout.slice().sort((left, right) => left.order - right.order)
+    : []
+  const count = Math.max(0, Math.min(nodes.length, Math.floor(Number(completedCount) || 0)))
+  return nodes.slice(0, count).reduce((segments, node, index, completedNodes) => {
+    if (index > 0) segments.push({ from: completedNodes[index - 1], to: node })
+    return segments
+  }, [])
+}
+
 function evaluateTrailTap(sequence, currentIndex, label) {
   const correct = sequence[currentIndex] === String(label)
   return {
@@ -86,4 +106,12 @@ function buildTrailPayload(summary, trials, context = {}, finishedAt = new Date(
   }
 }
 
-module.exports = { buildTrailSequence, createTrailLayout, evaluateTrailTap, summarizeTrailStages, buildTrailPayload }
+module.exports = {
+  buildTrailSequence,
+  createTrailLayout,
+  createRandomTrailLayout,
+  buildTrailPath,
+  evaluateTrailTap,
+  summarizeTrailStages,
+  buildTrailPayload
+}

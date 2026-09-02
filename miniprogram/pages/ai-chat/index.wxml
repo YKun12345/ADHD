@@ -1,4 +1,5 @@
-<view class="chat-shell">
+<ai-copilot wx:if="{{!inputFocused && !sending}}" page-key="ai-chat" />
+<view class="chat-shell ai-copilot-safe-space">
   <ui-nav title="AI 健康助手" rightText="清空" bind:righttap="clearConversation" />
   <view class="chat-page">
   <view class="safety-banner">
@@ -43,8 +44,8 @@
       class="message-row message-row--{{item.role}}"
     >
       <view wx:if="{{item.role !== 'user'}}" class="message-avatar message-avatar--assistant">
-        <view class="message-avatar__icon-scale">
-          <ui-icon name="ai" shape="orb" label="AI助手" decorative="{{false}}" />
+        <view class="message-avatar__mascot">
+          <ai-mascot state="{{item.role === 'assistant' ? 'happy' : 'idle'}}" label="AI助手星仔" decorative="{{false}}" />
         </view>
       </view>
 
@@ -76,6 +77,9 @@
     </view>
 
     <view wx:if="{{sending}}" class="assistant-thinking" aria-role="status" aria-live="polite">
+      <view class="assistant-thinking__mascot">
+        <ai-mascot state="thinking" decorative="{{true}}" />
+      </view>
       <view class="thinking-dot"></view>
       <view class="thinking-dot"></view>
       <view class="thinking-dot"></view>
@@ -114,6 +118,8 @@
       cursor-spacing="24"
       confirm-type="send"
       bindinput="handleInput"
+      bindfocus="handleInputFocus"
+      bindblur="handleInputBlur"
       bindconfirm="handleSend"
     ></textarea>
     <view class="composer__footer">

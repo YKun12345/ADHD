@@ -22,6 +22,9 @@ for (const filePath of [wxmlPath, wxssPath]) {
 const wxml = fs.readFileSync(wxmlPath, 'utf8')
 const wxss = fs.readFileSync(wxssPath, 'utf8')
 
+assert.match(wxml, /<onboarding-guide[^>]*bind:visibilitychange="onOnboardingVisibilityChange"/)
+assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!onboardingVisible\}\}"/)
+
 for (const fragment of [
   '{{patientName}}',
   '{{draftCount}}',

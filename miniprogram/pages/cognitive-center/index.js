@@ -12,6 +12,18 @@ const {
 } = require('../../utils/cognitive-battery')
 
 const initialSummary = buildCognitiveSummary({})
+const COGNITIVE_GROUPS = Object.freeze([
+  { id: 'response', title: '抑制与反应', description: '建议用时约 4 分钟', taskIds: ['reaction', 'simple_reaction'] },
+  { id: 'attention', title: '注意与冲突', description: '建议用时约 6 分钟', taskIds: ['stroop', 'flanker'] },
+  { id: 'memory', title: '工作记忆与执行', description: '建议用时约 12 分钟', taskIds: ['nback', 'trail', 'digit'] }
+])
+
+function buildGroups(cards) {
+  return COGNITIVE_GROUPS.map((group) => ({
+    ...group,
+    cards: group.taskIds.map((id) => cards.find((card) => card.id === id)).filter(Boolean)
+  }))
+}
 
 registerPatientPage({
   data: {
@@ -19,7 +31,8 @@ registerPatientPage({
     patientKey: '',
     ageGroup: 'child',
     batteryActionText: '开始完整评估',
-    remainingMinutes: 44,
+    remainingMinutes: 23,
+    groups: buildGroups(initialSummary.cards),
     ...initialSummary
   },
 
@@ -44,6 +57,7 @@ registerPatientPage({
       .reduce((sum, card) => sum + (card.estimatedMinutes || 0), 0)
     this.setData({
       ...summary,
+      groups: buildGroups(summary.cards),
       batteryActionText: battery && completedIds.length
         ? (battery.completed ? '重新开始完整评估' : '继续完整评估')
         : '开始完整评估',

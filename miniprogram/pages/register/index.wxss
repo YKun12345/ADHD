@@ -1,10 +1,10 @@
 page {
   min-height: 100%;
-  background-color: #f2f8fa;
+  background-color: #f4efff;
   background-image:
-    radial-gradient(circle at 4% 2%, rgba(80, 190, 224, 0.18) 0, rgba(80, 190, 224, 0) 28%),
-    radial-gradient(circle at 100% 20%, rgba(115, 103, 217, 0.08) 0, rgba(115, 103, 217, 0) 25%),
-    linear-gradient(160deg, #fbfdfe 0%, #f1f8fa 52%, #edf5f7 100%);
+    radial-gradient(circle at 4% 2%, rgba(151, 127, 213, 0.18) 0, rgba(151, 127, 213, 0) 28%),
+    radial-gradient(circle at 100% 20%, rgba(236, 157, 141, 0.14) 0, rgba(236, 157, 141, 0) 25%),
+    linear-gradient(160deg, #fcfaff 0%, #f4efff 52%, #fff0ec 100%);
 }
 
 .register-page {

@@ -24,10 +24,10 @@ assert.match(
   /<text class="brand-kicker">ADHD SMART CARE<\/text>/,
   '登录页英文副标题必须与 ADHD 智慧辅助品牌统一'
 )
-assert.match(
+assert.doesNotMatch(
   loginWxml,
-  /label="ADHD智慧辅助计划"/,
-  '登录页品牌图形的无障碍名称必须同步更新'
+  /brand-icon-shell|label="ADHD智慧辅助计划"/,
+  '登录页不应继续渲染右上角圆形品牌图形'
 )
 assert.match(
   homeWxml,

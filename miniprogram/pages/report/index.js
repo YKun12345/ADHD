@@ -95,6 +95,7 @@ registerPatientPage({
   data: {
     ...initialReport,
     loading: false,
+    professionalExpanded: false,
     radarStatusMessage: '',
     trendStatusMessage: ''
   },
@@ -398,6 +399,10 @@ registerPatientPage({
     const route = TASK_ROUTES[event.currentTarget.dataset.task]
     if (!route) return
     wx.navigateTo({ url: route })
+  },
+
+  toggleProfessional() {
+    this.setData({ professionalExpanded: !this.data.professionalExpanded })
   },
 
   openTrend() {
