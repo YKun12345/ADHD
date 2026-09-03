@@ -109,7 +109,7 @@ def test_valid_upload_is_persisted_and_linked_to_real_prediction(client, monkeyp
     headers, patient_id = patient_identity(client)
     monkeypatch.setattr(
         model_inference,
-        "predict_timeseries_file",
+        "predict_with_mode",
         lambda file_bytes, file_name: HGSTPredictionResult(
             prediction_label="Control",
             probability=0.2,
@@ -164,7 +164,7 @@ def test_real_inference_failure_does_not_fall_back_to_mock(client, monkeypatch) 
     def unavailable(file_bytes: bytes, file_name: str):
         raise HGSTUnavailableError("real model unavailable")
 
-    monkeypatch.setattr(model_inference, "predict_timeseries_file", unavailable)
+    monkeypatch.setattr(model_inference, "predict_with_mode", unavailable)
 
     response = client.post(
         f"/api/v1/model/predict_fmri?patient_id={patient_id}",

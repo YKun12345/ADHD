@@ -9,6 +9,21 @@ from dotenv import load_dotenv
 if os.getenv("APP_ENV", "development").strip().lower() == "development":
     load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
 
+# HGST 相关默认路径（放在类外，便于 .env 空值时回退默认）。
+_DEFAULT_HGST_PRETRAINED = str(
+    (
+        Path(__file__).resolve().parents[3]
+        / "HGST-main"
+        / "logs"
+        / "ADHD"
+        / "sparse_2026-04-01-11-41-03"
+        / "pretrained_model_2020.pth"
+    ).resolve()
+)
+_DEFAULT_HGST_BUNDLE = str(
+    (Path(__file__).resolve().parents[2] / "models" / "hgst_adhd_bundle.pt").resolve()
+)
+
 
 class Settings:
     APP_ENV: str = os.getenv("APP_ENV", "development").strip().lower()
@@ -37,25 +52,19 @@ class Settings:
     QWEN_CHAT_MODEL: str = os.getenv("QWEN_CHAT_MODEL", "qwen-plus-latest").strip()
     QWEN_REMINDER_MODEL: str = os.getenv("QWEN_REMINDER_MODEL", "qwen-flash").strip()
     QWEN_TIMEOUT_SECONDS: int = int(os.getenv("QWEN_TIMEOUT_SECONDS", "120"))
-    HGST_PRETRAINED_WEIGHTS_PATH: str = os.getenv(
-        "HGST_PRETRAINED_WEIGHTS_PATH",
-        str(
-            (
-                Path(__file__).resolve().parents[3]
-                / "HGST-main"
-                / "logs"
-                / "ADHD"
-                / "sparse_2026-04-01-11-41-03"
-                / "pretrained_model_2020.pth"
-            ).resolve()
-        ),
+    HGST_PRETRAINED_WEIGHTS_PATH: str = (
+        os.getenv("HGST_PRETRAINED_WEIGHTS_PATH", "") or _DEFAULT_HGST_PRETRAINED
     ).strip()
-    HGST_DEPLOYMENT_BUNDLE_PATH: str = os.getenv(
-        "HGST_DEPLOYMENT_BUNDLE_PATH",
-        str((Path(__file__).resolve().parents[2] / "artifacts" / "hgst_adhd_bundle.pt").resolve()),
+    HGST_DEPLOYMENT_BUNDLE_PATH: str = (
+        os.getenv("HGST_DEPLOYMENT_BUNDLE_PATH", "") or _DEFAULT_HGST_BUNDLE
     ).strip()
     HGST_DEFAULT_DATA_DIR: str = os.getenv("HGST_DEFAULT_DATA_DIR", "").strip()
     HGST_DEFAULT_LABELS_PATH: str = os.getenv("HGST_DEFAULT_LABELS_PATH", "").strip()
+    # 模型推理模式（见 backend/app/services/hgst_runtime/service.py 的 resolve_inference_mode）：
+    #   留空 / false / strict -> 真实推理；缺失依赖或权重时返回 503（默认，安全护栏，绝不静默降级）
+    #   true -> 恒走演示 Mock（真上传假结果，is_demo=true，供答辩/联调用）
+    #   auto -> 真实优先；真实 HGST 不可用时自动降级为带标识的 Mock 并打告警日志
+    USE_MOCK_MODEL: str = os.getenv("USE_MOCK_MODEL", "").strip().lower()
     UPLOAD_ROOT: str = os.getenv(
         "UPLOAD_ROOT",
         str((Path(__file__).resolve().parents[2] / "uploads").resolve()),

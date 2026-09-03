@@ -1,0 +1,27 @@
+# Build context = 仓库根目录。尽量排除不需要进镜像的内容以减小体积。
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.claude
+deploy
+docs
+tests
+HGST-main
+archive
+miniprogram
+node_modules
+logs
+tmp
+*.db
+*.sqlite
+*.pt
+*.pth
+*.ckpt
+.env
+backend/.env
+backend/artifacts

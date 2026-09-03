@@ -1,0 +1,87 @@
+# ADHD FastAPI 云端部署编排（答辩演示用 MySQL；Redis 为可选预留，应用当前未使用）
+#
+# 用法（在 deploy/ 目录内执行）：
+#   cp .env.production.example .env        # 然后编辑 .env 里的口令
+#   docker compose -p adhd up -d --build
+#   curl http://127.0.0.1:8000/api/v1/health
+#
+# 说明：
+#   - 默认 APP_ENV=development，使 seed_demo_data 能播种演示账号（production 下该脚本会拒绝执行）。
+#   - api 启动顺序：先 create_tables（create_all 建表，幂等），再播种演示数据，再起 uvicorn。
+#   - 正式生产：把 APP_ENV 改 production 并把下方 api.command 里的 seed 段去掉，另配强 SECRET_KEY/DATABASE_URL。
+#   - 数据库口令请避开 URL 保留字符：@ : / ? # [ ] 等。
+#   - Redis 服务当前用不上，仅按需开启（docker compose --profile cache up -d）。
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+      MYSQL_DATABASE: ${MYSQL_DB:-adhd_demo}
+      MYSQL_USER: ${MYSQL_USER:-adhd}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-demo}
+      TZ: ${TZ:-Asia/Shanghai}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles: ["cache"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-change-me-demo-2026}
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER:-adhd}:${MYSQL_PASSWORD:-change-me-demo}@db:3306/${MYSQL_DB:-adhd_demo}?charset=utf8mb4
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-adhd}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-demo}
+      MYSQL_DB: ${MYSQL_DB:-adhd_demo}
+      TZ: ${TZ:-Asia/Shanghai}
+      # 浏览器跨域：doctor-web 与 API 同源时无需填；仅当前端单独部署到别的域名时按需填写
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-}
+      # AI 能力（可选，留空走模板降级）
+      QWEN_API_KEY: ${QWEN_API_KEY:-}
+      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
+      QWEN_CHAT_MODEL: ${QWEN_CHAT_MODEL:-qwen-plus-latest}
+      QWEN_REMINDER_MODEL: ${QWEN_REMINDER_MODEL:-qwen-flash}
+      QWEN_TIMEOUT_SECONDS: ${QWEN_TIMEOUT_SECONDS:-120}
+      # 上传目录与上限
+      UPLOAD_ROOT: ${UPLOAD_ROOT:-backend/uploads}
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
+    command:
+      - sh
+      - -c
+      - python -m backend.create_tables && python -m backend.scripts.seed_demo_data && exec uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    # 只绑定本机回环更安全：公网由宿主 nginx(80/443) 反代。不用 nginx 时改成 "0.0.0.0:8000:8000"。
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - api_uploads:/app/backend/uploads
+
+volumes:
+  mysql_data:
+  redis_data:
+  api_uploads:

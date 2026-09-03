@@ -76,7 +76,12 @@
 | POST | `/model/predict_fmri` | 患者/研究者 | 上传 `.1D`/`.csv` 并执行真实 HGST 推理 |
 | POST | `/model/predict_mock` | 患者/研究者 | 明确的演示推理，不代表诊断 |
 
-模型接口在后续任务中增加 `upload_id`、`is_demo` 和 `disclaimer`，并保证真实推理失败时不会静默回退到 Mock。
+模型接口由 `USE_MOCK_MODEL` 决定推理模式（详见 `docs/hgst-model-integration.md`）：
+- `real`（默认，留空/false/strict）：`/model/predict_fmri` 执行真实 HGST；依赖或权重缺失返回 503，**绝不静默回退到 Mock**。
+- `auto`：真实优先；真实 HGST 不可用时降级为带 `is_demo=true` 的演示 Mock 并打告警日志。
+- `true`（mock）：恒走演示 Mock（真上传假结果，`is_demo=true`）。
+
+响应中的 `is_demo` 表示演示来源；真实与 Mock 均携带 `upload_id` 与免责 `disclaimer`。
 
 ## 扩展接口
 

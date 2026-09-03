@@ -100,10 +100,15 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 
 ## 7. 模型与演示 Mock 边界
 
-- `POST /api/v1/model/predict_fmri` 是真实推理入口；需要安装 `requirements-hgst.txt` 并配置有效权重/部署包和标签路径。
-- `POST /api/v1/model/predict_mock` 是演示 Mock，响应带有明确的演示来源和免责声明，不得作为真实诊断结果。
-- 真实依赖或权重缺失时，真实推理应返回可理解的错误，不能静默降级成 Mock。
-- `QWEN_API_KEY` 为空时，AI 文本能力会使用明确的模板降级路径；这同样不是临床结论。
+推理模式由环境变量 `USE_MOCK_MODEL` 决定（见 `backend/app/core/config.py` 与 `docs/hgst-model-integration.md`）：
+
+- 留空 / `false` / `strict`：真实 HGST 推理（默认）。`POST /api/v1/model/predict_fmri` 需要安装 `requirements-hgst.txt` 并配置有效权重/部署包；依赖或权重缺失时返回 503，**绝不静默降级成 Mock**。
+- `true`：恒走演示 Mock（“真上传、假结果”，`is_demo=true`，响应带明确演示来源与免责声明），供答辩/联调，不构成真实诊断。
+- `auto`：真实优先；真实 HGST 不可用（缺依赖/权重）时自动降级为带 `is_demo=true` 标识的 Mock 并打告警日志。
+- `POST /api/v1/model/predict_mock`：无需真实上传的显式演示端点（确定性假结果，`is_demo=true`），联调用。响应含演示免责，不得作为医学诊断。
+
+模型加载校验与自检见 `backend/scripts/verify_model.py`（快捷命令 `python scripts/verify_model.py`）。真实权重放 `backend/models/`，说明见 `backend/models/README.md`。
+`QWEN_API_KEY` 为空时，AI 文本能力会使用明确的模板降级路径；这同样不是临床结论。
 
 ## 8. 自动测试
 
