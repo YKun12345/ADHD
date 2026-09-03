@@ -17,7 +17,8 @@ from backend.app.services.hgst_runtime.service import (
     HGSTBundleMissingError,
     HGSTInferenceError,
     HGSTUnavailableError,
-    predict_timeseries_file,
+    MOCK_SOURCE_TYPE,
+    predict_with_mode,
 )
 from backend.app.services.upload_storage import (
     UploadTooLargeError,
@@ -99,7 +100,13 @@ async def predict_fmri(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER, UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> TimeseriesPredictionResponse:
-    """Persist and run a real HGST-compatible time-series inference request."""
+    """Persist and run a mode-aware time-series inference request.
+
+    模式由 USE_MOCK_MODEL 决定（real / auto / mock，见 hgst_runtime.service）：
+    - real（默认）      ：真实 HGST，缺失依赖/权重时 503，绝不静默降级；
+    - auto              ：真实优先，不可用时降级为带标识的演示 Mock（200，is_demo=true）；
+    - mock（true）      ：恒为演示 Mock（真上传、假结果，is_demo=true）。
+    """
 
     _get_patient_for_researcher_or_self(db, patient_id, current_user)
     try:
@@ -144,7 +151,7 @@ async def predict_fmri(
         db.commit()
 
     try:
-        result = predict_timeseries_file(file_bytes, stored.original_name)
+        result = predict_with_mode(file_bytes, stored.original_name)
     except (HGSTUnavailableError, HGSTBundleMissingError) as exc:
         mark_failed(str(exc))
         raise HTTPException(
@@ -164,6 +171,11 @@ async def predict_fmri(
             detail=f"fMRI inference failed: {exc}",
         ) from exc
 
+    # source_type == 'mock' 的记录即演示（is_demo=true），DB 中保留该标识以便报告页展示免责；
+    # 真实推理统一按既有口径存 fmri_hgst。
+    is_demo = result.source_type == MOCK_SOURCE_TYPE
+    db_source_type = MOCK_SOURCE_TYPE if is_demo else "fmri_hgst"
+
     prediction = ModelPrediction(
         patient_id=patient_id,
         upload_id=upload.id,
@@ -171,7 +183,7 @@ async def predict_fmri(
         prediction_label=result.prediction_label,
         probability=result.probability,
         probability_control=result.probability_control,
-        source_type="fmri_hgst",
+        source_type=db_source_type,
         roi_dim_used=result.roi_dim_used,
         timepoints=result.timepoints,
         model_name=result.model_name,
@@ -187,8 +199,8 @@ async def predict_fmri(
     return _prediction_response(
         prediction,
         patient_id,
-        is_demo=False,
-        disclaimer=MODEL_DISCLAIMER,
+        is_demo=is_demo,
+        disclaimer=MOCK_DISCLAIMER if is_demo else MODEL_DISCLAIMER,
     )
 
 

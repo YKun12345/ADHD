@@ -31,8 +31,11 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 
 ## 模型接口
 
-- `/api/v1/model/predict_fmri`：真实 HGST 推理，依赖和权重不完整时返回错误
-- `/api/v1/model/predict_mock`：显式演示 Mock，不能作为医学诊断
+推理模式由 `USE_MOCK_MODEL` 决定（`real` 默认 / `auto` / `mock`，语义与日志见 `docs/hgst-model-integration.md`）：
+
+- `/api/v1/model/predict_fmri`：模式感知推理入口。`real`（默认）为真实 HGST，依赖/权重缺失时返回 503，不静默降级；`auto` 会降级为带标识 Mock；`true` 恒走演示 Mock（真上传假结果）。
+- `/api/v1/model/predict_mock`：无需上传的显式演示端点，响应带 `is_demo=true`，不能作为医学诊断。
+- 模型自检：`python scripts/verify_model.py`（真实权重契约见 `backend/models/README.md`）。
 
 模型扩展依赖见 `requirements-hgst.txt`，上传文件默认写到 `backend/uploads/`。不要把真实影像、患者信息、密钥或模型权重提交到仓库。
 

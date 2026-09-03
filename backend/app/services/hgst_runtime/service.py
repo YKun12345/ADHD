@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -12,12 +14,18 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 from backend.app.core.config import settings
 from backend.app.services.hgst_runtime.preprocessing import (
+    HGSTPreprocessError,
     construct_hyperedges_from_time_series,
     load_adhd_dataset,
     normalize_timeseries_shape,
     parse_timeseries_bytes,
     subject_connectivity,
 )
+
+logger = logging.getLogger("backend.hgst_runtime")
+
+# 模型/演示标识口径：source_type == "mock" 的记录即为演示（is_demo=true）。
+MOCK_SOURCE_TYPE = "mock"
 
 
 class HGSTUnavailableError(RuntimeError):
@@ -44,6 +52,100 @@ class HGSTPredictionResult:
     model_version: str
     source_type: str
     summary_text: str
+
+
+def resolve_inference_mode() -> str:
+    """解析推理模式，返回 'mock' | 'real' | 'auto'。
+
+    - ``mock``（USE_MOCK_MODEL=true/1/yes/on/mock）  ：恒走演示 Mock（真上传假结果）。
+    - ``real``（未设置，或 false/0/no/off/real/strict）：真实 HGST；缺依赖/权重时抛错（默认，安全护栏）。
+    - ``auto``（USE_MOCK_MODEL=auto）                 ：真实优先，HGST 不可用时降级为带标识 Mock。
+    """
+    raw = (settings.USE_MOCK_MODEL or "").strip().lower()
+    if raw in {"true", "1", "yes", "on", "mock"}:
+        return "mock"
+    if raw == "auto":
+        return "auto"
+    if raw and raw not in {"false", "0", "no", "off", "real", "strict"}:
+        logger.warning("无法识别的 USE_MOCK_MODEL=%r，按默认真实模式处理（缺失依赖/权重时返回错误，不静默降级）。", settings.USE_MOCK_MODEL)
+    return "real"
+
+
+def describe_model_mode() -> str:
+    """返回便于写入日志/页面的当前模式描述。"""
+    raw = settings.USE_MOCK_MODEL or "(未设置)"
+    return f"USE_MOCK_MODEL={raw!r} -> {resolve_inference_mode()}"
+
+
+def _demo_result_for_timeseries(file_bytes: bytes, file_name: str) -> HGSTPredictionResult:
+    """生成确定性演示结果（真上传、假结果）：沿用真实 .1D 的 ROI/时间点数，概率由文件内容哈希决定。
+
+    - 先按真实推理同样的规则校验/解析输入（ROI 90/116、>=10 时间点），解析失败抛 HGSTInferenceError（路由返回 422），
+      避免把无效文件伪装成"成功推理"。
+    - source_type 恒为 'mock'，供上层写入 DB/响应时标记 is_demo=true 与演示免责声明。
+    """
+    try:
+        timeseries = normalize_timeseries_shape(parse_timeseries_bytes(file_bytes, file_name))
+    except HGSTPreprocessError as exc:
+        raise HGSTInferenceError(str(exc)) from exc
+
+    roi_dim_used = int(timeseries.shape[1])
+    timepoints = int(timeseries.shape[0])
+
+    digest = hashlib.sha256(file_bytes).hexdigest()
+    probability = round(0.65 + (int(digest[:8], 16) % 100) / 1000, 3)
+    probability = round(min(max(probability, 0.6), 0.9), 3)
+    probability_control = round(1 - probability, 3)
+    label = "ADHD" if probability >= 0.5 else "Control"
+
+    return HGSTPredictionResult(
+        prediction_label=label,
+        probability=probability,
+        probability_control=probability_control,
+        roi_dim_used=roi_dim_used,
+        timepoints=timepoints,
+        file_name=file_name,
+        model_name="DemoMock",
+        model_version="mock-2026-08",
+        source_type=MOCK_SOURCE_TYPE,
+        summary_text=(
+            f"演示/模拟预测（真上传、假结果）：label {label}，ADHD 概率 {probability:.2%}。"
+            "该结果由上传文件内容确定性生成，仅供集成演示与界面联调，不构成医学诊断。"
+        ),
+    )
+
+
+def predict_with_mode(file_bytes: bytes, file_name: str) -> HGSTPredictionResult:
+    """模式感知的推理入口（真实 / 自动降级 / 演示 Mock）。
+
+    路由层调用本函数；真实结果 source_type 非 mock，演示结果 source_type == 'mock'，
+    上层据此写入 DB 并返回 is_demo 与相应免责声明。模式转换全部写日志。
+    """
+    mode = resolve_inference_mode()
+    logger.info("fMRI 推理模式：%s", describe_model_mode())
+
+    if mode == "mock":
+        logger.info("USE_MOCK_MODEL=true：predict_fmri 走演示 Mock（真上传假结果），结果 is_demo=true，不调用真实 HGST。")
+        return _demo_result_for_timeseries(file_bytes, file_name)
+
+    try:
+        result = predict_timeseries_file(file_bytes, file_name)
+    except HGSTPreprocessError as exc:
+        # 真实路径里解析/形状校验失败统一映射为 422（原实现可能冒泡成 500）。
+        raise HGSTInferenceError(str(exc)) from exc
+    except (HGSTUnavailableError, HGSTBundleMissingError) as exc:
+        if mode == "auto":
+            logger.warning(
+                "真实 HGST 不可用（%s）：%s。已按 USE_MOCK_MODEL=auto 自动降级为演示 Mock（is_demo=true，不构成诊断）。",
+                exc.__class__.__name__,
+                exc,
+            )
+            return _demo_result_for_timeseries(file_bytes, file_name)
+        logger.info("推理模式 real：HGST 不可用且未开启降级（USE_MOCK_MODEL=%r），不静默降级，向上抛错。", settings.USE_MOCK_MODEL)
+        raise
+
+    logger.info("推理模式 real：HGST 真实推理完成（%s/%s）。", result.model_name, result.model_version)
+    return result
 
 
 def _import_runtime_dependencies():
