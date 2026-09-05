@@ -33,7 +33,7 @@ page {
 .hero-copy { margin-top: 14rpx; font-size: 24rpx; line-height: 1.65; opacity: 0.86; }
 
 .stats-row { display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 22rpx; }
-.stat-card { flex: 1 0 28%; min-width: 0; padding: 25rpx 10rpx; border-radius: 24rpx; text-align: center; }
+.stat-card { flex: 0 0 calc(33.333% - 10rpx); min-width: 0; padding: 25rpx 10rpx; border-radius: 24rpx; text-align: center; box-sizing: border-box; }
 .stat-card--blue { color: #1c5278; background: #dfeefa; }
 .stat-card--orange { color: #8b4b20; background: #fae9d9; }
 .stat-card--violet { color: #5c507e; background: #ebe6f5; }
@@ -41,14 +41,14 @@ page {
 .stat-value { font-size: 38rpx; font-weight: 760; }
 .stat-label { margin-top: 7rpx; font-size: 21rpx; }
 
-.bind-card { margin-top: 26rpx; padding: 30rpx; border-radius: 28rpx; background: rgba(255, 255, 255, 0.86); }
+.bind-card { width: 100%; box-sizing: border-box; overflow: hidden; margin-top: 26rpx; padding: 30rpx; border-radius: 28rpx; background: rgba(255, 255, 255, 0.86); }
 .section-heading, .list-heading { display: flex; align-items: center; justify-content: space-between; }
 .section-title { color: #263e5d; font-size: 30rpx; font-weight: 720; }
 .section-note, .list-total { color: #748297; font-size: 21rpx; }
-.bind-row { display: flex; gap: 14rpx; margin-top: 22rpx; }
-.bind-input { flex: 1; height: 88rpx; box-sizing: border-box; padding: 0 24rpx; border: 1rpx solid #ced9e7; border-radius: 20rpx; color: #263e5d; background: #f7f9fc; }
+.bind-row { display: flex; width: 100%; min-width: 0; gap: 14rpx; margin-top: 22rpx; }
+.bind-input { flex: 1; width: 0; min-width: 0; height: 88rpx; box-sizing: border-box; padding: 0 24rpx; border: 1rpx solid #ced9e7; border-radius: 20rpx; color: #263e5d; background: #f7f9fc; }
 .bind-button, .retry-button { display: flex; align-items: center; justify-content: center; margin: 0; border: 0; }
-.bind-button { width: 142rpx; min-height: 88rpx; border-radius: 20rpx; color: white; font-size: 26rpx; background: #315f91; }
+.bind-button { flex: 0 0 142rpx; width: 142rpx; min-height: 88rpx; border-radius: 20rpx; color: white; font-size: 26rpx; background: #315f91; }
 .bind-button::after, .retry-button::after { border: 0; }
 
 .list-heading { margin: 38rpx 6rpx 18rpx; }
@@ -81,3 +81,17 @@ page {
 .care-summary-tags text { margin: 6rpx 10rpx 0 0; padding: 6rpx 11rpx; border-radius: 999rpx; color: #6a5260; background: #f4e8ef; font-size: 21rpx; }
 .doctor-settings-entry { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin: 28rpx 0 12rpx; border-radius: 22rpx; color: #3f6388; font-size: 25rpx; background: rgba(255, 255, 255, 0.72); }
 .doctor-settings-entry--pressed { opacity: 0.72; }
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88rpx;
+  margin: 12rpx 0 20rpx;
+  border-radius: 22rpx;
+  color: #b04545;
+  font-size: 26rpx;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.72);
+}
+.logout-button--pressed { opacity: 0.72; }

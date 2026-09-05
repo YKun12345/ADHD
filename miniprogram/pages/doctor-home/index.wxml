@@ -1,7 +1,7 @@
 <onboarding-guide role="researcher" bind:visibilitychange="onOnboardingVisibilityChange" />
 <ai-copilot wx:if="{{!onboardingVisible}}" page-key="doctor-home" />
 <view class="doctor-page ai-copilot-safe-space">
-  <ui-nav title="医生工作台" showBack="{{false}}" rightText="退出" bind:righttap="logout" />
+  <ui-nav title="医生工作台" showBack="{{false}}" />
 
   <view class="doctor-content">
     <view class="hero-card">
@@ -102,5 +102,12 @@
       aria-role="button"
       bindtap="openPrivacySettings"
     >账号与隐私</view>
+
+    <view
+      class="logout-button"
+      hover-class="logout-button--pressed"
+      aria-role="button"
+      bindtap="logout"
+    >退出登录</view>
   </view>
 </view>
