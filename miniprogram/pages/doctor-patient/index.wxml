@@ -117,7 +117,7 @@
           <input class="task-input" value="{{taskTitle}}" data-field="taskTitle" maxlength="120" placeholder="任务标题" bindinput="onTaskFieldInput" bindfocus="onInputFocus" bindblur="onInputBlur" />
           <textarea class="message-input" value="{{taskDescription}}" data-field="taskDescription" maxlength="1000" placeholder="任务说明（必填）" bindinput="onTaskFieldInput" bindfocus="onInputFocus" bindblur="onInputBlur" />
           <picker mode="date" value="{{taskDueDate}}" bindchange="onTaskDueDateChange"><view class="date-picker">{{taskDueDate || '选择截止日期（选填）'}}</view></picker>
-          <button class="send-button task-submit" form-type="submit" loading="{{creatingTask}}" disabled="{{creatingTask}}">下发任务</button>
+          <button class="send-button doctor-action-button task-submit" form-type="submit" loading="{{creatingTask}}" disabled="{{creatingTask}}">下发任务</button>
         </form>
       </view>
 
@@ -157,7 +157,7 @@
           />
           <view class="message-footer">
             <text class="length-note">{{messageInput.length}} / 2000</text>
-            <button class="send-button" form-type="submit" loading="{{sending}}" disabled="{{sending}}">发送消息</button>
+            <button class="send-button doctor-action-button" form-type="submit" loading="{{sending}}" disabled="{{sending}}">发送消息</button>
           </view>
         </form>
       </view>

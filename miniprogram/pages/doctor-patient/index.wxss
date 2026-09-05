@@ -73,6 +73,9 @@ page {
 .send-button, .retry-button { display: flex; align-items: center; justify-content: center; margin: 0; border: 0; }
 .send-button { min-width: 190rpx; min-height: 88rpx; border-radius: 19rpx; color: white; font-size: 24rpx; background: #6e667f; }
 .send-button::after, .retry-button::after { border: 0; }
+.doctor-action-button { width: 360rpx; min-width: 0; margin-left: auto; margin-right: auto; }
+.message-footer { position: relative; justify-content: center; }
+.message-footer .length-note { position: absolute; left: 0; }
 .state-card { display: flex; flex-direction: column; align-items: center; padding: 55rpx 30rpx; color: #766d66; }
 .state-card--error { color: #9b4e4e; }
 .retry-button { min-width: 180rpx; min-height: 88rpx; margin-top: 22rpx; border-radius: 18rpx; color: #735b49; font-size: 24rpx; background: #efe4d9; }
