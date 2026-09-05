@@ -41,7 +41,7 @@ page {
 .stat-value { font-size: 38rpx; font-weight: 760; }
 .stat-label { margin-top: 7rpx; font-size: 21rpx; }
 
-.bind-card { width: 100%; box-sizing: border-box; overflow: hidden; margin-top: 26rpx; padding: 30rpx; border-radius: 28rpx; background: rgba(255, 255, 255, 0.86); }
+.bind-card { display: block; width: 100%; box-sizing: border-box; overflow: hidden; margin-top: 26rpx; padding: 30rpx; border-radius: 28rpx; background: rgba(255, 255, 255, 0.86); }
 .section-heading, .list-heading { display: flex; align-items: center; justify-content: space-between; }
 .section-title { color: #263e5d; font-size: 30rpx; font-weight: 720; }
 .section-note, .list-total { color: #748297; font-size: 21rpx; }
