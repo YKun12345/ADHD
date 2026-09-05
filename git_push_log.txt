@@ -1,0 +1,18 @@
+======================================== 
+  ADHD-AB Git Auto Script 
+  Time: 2026/09/05 ÖÜÁù 17:10:59.28 
+======================================== 
+ 
+[1/6] Current branch: 
+main
+ 
+[2/6] Working tree status (uncommitted changes): 
+?? git_auto_push.bat
+?? git_push_log.txt
+ 
+[3/6] Untracked files: 
+git_auto_push.bat
+git_push_log.txt
+ 
+[4/6] Creating branch feature/ab-collab-2026-09-05 and committing... 
+fatal: a branch named 'feature/ab-collab-2026-09-05' already exists
