@@ -67,6 +67,10 @@
   font-weight: 600;
 }
 
+.ui-nav__action--placeholder {
+  visibility: hidden;
+}
+
 .ui-nav__action--pressed {
   opacity: 0.56;
   transform: scale(0.97);

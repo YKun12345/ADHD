@@ -14,7 +14,7 @@
     >
       <ui-icon name="back" shape="orbit" decorative="{{true}}" />
     </view>
-    <view wx:else class="ui-nav__action" aria-hidden="{{true}}"></view>
+    <view wx:else class="ui-nav__action ui-nav__action--placeholder" aria-hidden="{{true}}"></view>
 
     <text class="ui-nav__title">{{title}}</text>
 
@@ -27,6 +27,6 @@
       aria-role="button"
       aria-label="{{rightText}}"
     >{{rightText}}</view>
-    <view wx:else class="ui-nav__action" aria-hidden="{{true}}"></view>
+    <view wx:else class="ui-nav__action ui-nav__action--placeholder" aria-hidden="{{true}}"></view>
   </view>
 </view>
