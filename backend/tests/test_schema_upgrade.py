@@ -35,7 +35,7 @@ def test_legacy_sqlite_model_prediction_upload_link_is_constrained(tmp_path: Pat
             "APP_ENV": "test",
             "DATABASE_URL": f"sqlite:///{database_path.as_posix()}",
             "SECRET_KEY": "schema-upgrade-test-secret",
-            "QWEN_API_KEY": "",
+            "DEEPSEEK_API_KEY": "",
         }
     )
     result = subprocess.run(

@@ -18,8 +18,8 @@ def test_provider_reminder_uses_dedicated_system_prompt(monkeypatch) -> None:
             model="test-reminder-model",
         )
 
-    monkeypatch.setattr(ai_service.settings, "QWEN_API_KEY", "test-only-key")
-    monkeypatch.setattr(ai_service.qwen_client, "chat", fake_chat)
+    monkeypatch.setattr(ai_service.settings, "DEEPSEEK_API_KEY", "test-only-key")
+    monkeypatch.setattr(ai_service.deepseek_client, "chat", fake_chat)
 
     response, model, is_fallback = ai_service._provider_or_fallback_reminder(
         {

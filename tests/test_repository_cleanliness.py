@@ -57,7 +57,7 @@ TEXT_SUFFIXES = {
     ".yml",
 }
 SECRET_ASSIGNMENT = re.compile(
-    r"(?im)^\s*(SECRET_KEY|QWEN_API_KEY|MYSQL_PASSWORD)\s*(?::\s*str\s*)?=\s*"
+    r"(?im)^\s*(SECRET_KEY|DEEPSEEK_API_KEY|MYSQL_PASSWORD)\s*(?::\s*str\s*)?=\s*"
     r"(?:os\.getenv\([^,\n]+,\s*)?[\"']([^\"']*)[\"']"
 )
 SAFE_EXAMPLE_VALUES = {"", "placeholder", "change-me", "example"}

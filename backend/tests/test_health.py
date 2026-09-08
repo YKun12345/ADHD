@@ -134,7 +134,7 @@ def test_backend_import_avoids_owned_deprecations(tmp_path: Path) -> None:
             "APP_ENV": "test",
             "DATABASE_URL": f"sqlite:///{(tmp_path / 'warnings.db').as_posix()}",
             "SECRET_KEY": "warning-test-secret",
-            "QWEN_API_KEY": "",
+            "DEEPSEEK_API_KEY": "",
         }
     )
 

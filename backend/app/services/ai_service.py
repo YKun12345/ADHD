@@ -143,7 +143,7 @@ title, message, action_label
 class AIProviderResult:
     content: str
     model: str
-    provider: str = "qwen"
+    provider: str = "deepseek"
 
 
 class AIProviderError(RuntimeError):
@@ -226,10 +226,10 @@ def _high_risk_reply() -> str:
     )
 
 
-class QwenChatClient:
+class DeepSeekClient:
     @property
     def configured(self) -> bool:
-        return bool(settings.QWEN_API_KEY and settings.QWEN_BASE_URL)
+        return bool(settings.DEEPSEEK_API_KEY and settings.DEEPSEEK_BASE_URL)
 
     def chat(
         self,
@@ -240,7 +240,7 @@ class QwenChatClient:
         max_tokens: int = 800,
     ) -> AIProviderResult:
         if not self.configured:
-            raise AIProviderError("Qwen API key is not configured.")
+            raise AIProviderError("DeepSeek API key is not configured.")
 
         payload = {
             "model": model,
@@ -248,40 +248,41 @@ class QwenChatClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
+            "thinking": {"type": "disabled"},
         }
         request_body = json.dumps(payload).encode("utf-8")
         request = Request(
-            settings.QWEN_BASE_URL,
+            settings.DEEPSEEK_BASE_URL,
             data=request_body,
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.QWEN_API_KEY}",
+                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
             },
             method="POST",
         )
 
         try:
-            with urlopen(request, timeout=settings.QWEN_TIMEOUT_SECONDS) as response:
+            with urlopen(request, timeout=settings.DEEPSEEK_TIMEOUT_SECONDS) as response:
                 body = response.read().decode("utf-8")
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
-            raise AIProviderError(f"Qwen request failed with {exc.code}: {detail}") from exc
+            raise AIProviderError(f"DeepSeek request failed with {exc.code}: {detail}") from exc
         except URLError as exc:
-            raise AIProviderError(f"Qwen service is unreachable: {exc.reason}") from exc
+            raise AIProviderError(f"DeepSeek service is unreachable: {exc.reason}") from exc
 
         try:
             parsed = json.loads(body)
         except json.JSONDecodeError as exc:
-            raise AIProviderError("Qwen returned an invalid JSON payload.") from exc
+            raise AIProviderError("DeepSeek returned an invalid JSON payload.") from exc
 
         choices = parsed.get("choices") or []
         if not choices:
-            raise AIProviderError("Qwen returned no completion choices.")
+            raise AIProviderError("DeepSeek returned no completion choices.")
 
         message = choices[0].get("message") or {}
         content = _normalize_content(message.get("content"))
         if not content:
-            raise AIProviderError("Qwen returned an empty message.")
+            raise AIProviderError("DeepSeek returned an empty message.")
 
         return AIProviderResult(
             content=_normalize_display_text(content),
@@ -289,7 +290,7 @@ class QwenChatClient:
         )
 
 
-qwen_client = QwenChatClient()
+deepseek_client = DeepSeekClient()
 
 
 def _split_activities(raw: str | None) -> list[str]:
@@ -760,7 +761,7 @@ def heuristic_tracking_reminder(snapshot: dict, tone: str = "gentle") -> dict:
 
 def _provider_or_fallback_report(snapshot: dict, focus: str | None) -> tuple[dict, str, bool]:
     fallback = heuristic_report_explanation(snapshot)
-    if not qwen_client.configured:
+    if not deepseek_client.configured:
         return fallback, "fallback-template", True
 
     prompt = {
@@ -782,8 +783,8 @@ def _provider_or_fallback_report(snapshot: dict, focus: str | None) -> tuple[dic
         ],
     }
 
-    result = qwen_client.chat(
-        model=settings.QWEN_CHAT_MODEL,
+    result = deepseek_client.chat(
+        model=settings.DEEPSEEK_CHAT_MODEL,
         messages=[
             {"role": "system", "content": AI_BASE_IDENTITY_PROMPT},
             {"role": "system", "content": AI_SAFETY_PROMPT},
@@ -828,7 +829,7 @@ def generate_report_explanation(snapshot: dict, focus: str | None) -> tuple[dict
 
 def _provider_or_fallback_reminder(snapshot: dict, tone: str) -> tuple[dict, str, bool]:
     fallback = heuristic_tracking_reminder(snapshot, tone=tone)
-    if not qwen_client.configured:
+    if not deepseek_client.configured:
         return fallback, "fallback-template", True
 
     prompt = {
@@ -842,8 +843,8 @@ def _provider_or_fallback_reminder(snapshot: dict, tone: str) -> tuple[dict, str
         "tracking": snapshot.get("tracking"),
     }
 
-    result = qwen_client.chat(
-        model=settings.QWEN_REMINDER_MODEL,
+    result = deepseek_client.chat(
+        model=settings.DEEPSEEK_REMINDER_MODEL,
         messages=[
             {"role": "system", "content": REMINDER_SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
@@ -883,7 +884,7 @@ def generate_chat_reply(
     if _is_high_risk_message(message):
         return _high_risk_reply(), "safety-guard", True
 
-    if not qwen_client.configured:
+    if not deepseek_client.configured:
         return (
             build_fallback_chat_reply(
                 message,
@@ -902,8 +903,8 @@ def generate_chat_reply(
             context_scope=context_scope,
             snapshot=snapshot,
         )
-        result = qwen_client.chat(
-            model=settings.QWEN_CHAT_MODEL,
+        result = deepseek_client.chat(
+            model=settings.DEEPSEEK_CHAT_MODEL,
             messages=messages,
             temperature=0.45,
             max_tokens=800,
@@ -923,8 +924,8 @@ def generate_chat_reply(
 
 
 def ai_status_message() -> str:
-    if qwen_client.configured:
-        return "千问模型已配置，AI 助手可以直接调用大模型。"
+    if deepseek_client.configured:
+        return "DeepSeek 模型已配置，AI 助手可以直接调用大模型。"
     return "AI 网关已接入，当前先使用本地辅助模式。"
 
 

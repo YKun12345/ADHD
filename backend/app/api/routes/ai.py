@@ -64,9 +64,9 @@ def get_ai_status(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
 ) -> AIStatusResponse:
     return AIStatusResponse(
-        configured=bool(settings.QWEN_API_KEY),
-        chat_model=settings.QWEN_CHAT_MODEL,
-        reminder_model=settings.QWEN_REMINDER_MODEL,
+        configured=bool(settings.DEEPSEEK_API_KEY),
+        chat_model=settings.DEEPSEEK_CHAT_MODEL,
+        reminder_model=settings.DEEPSEEK_REMINDER_MODEL,
         message=ai_status_message(),
     )
 

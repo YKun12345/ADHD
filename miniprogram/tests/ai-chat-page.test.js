@@ -92,7 +92,7 @@ function reset(patientType = 'adult') {
   requestImplementation = async () => ({
     reply: '已收到你的问题。',
     model: 'qwen-plus-latest',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '服务端安全提示',
     used_context: [],
     degraded: false
@@ -146,7 +146,7 @@ async function run() {
   requestImplementation = async () => ({
     reply: '  当前结果需要结合完整记录理解。  ',
     model: 'fallback-rule',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '服务端安全提示',
     used_context: ['量表', '追踪'],
     degraded: true
@@ -183,7 +183,7 @@ async function run() {
   assert.equal(page.data.messages[2].role, 'assistant')
   assert.equal(page.data.messages[2].content, '当前结果需要结合完整记录理解。')
   assert.equal(page.data.messages[2].degraded, true)
-  assert.equal(page.data.messages[2].providerLabel, '千问服务')
+  assert.equal(page.data.messages[2].providerLabel, 'DeepSeek')
   assert.deepEqual(page.data.messages[2].usedContext, ['量表', '追踪'])
   assert.equal(page.data.lastDisclaimer, '服务端安全提示')
   assert.equal(page.data.scrollIntoView, 'chat-bottom')
@@ -230,7 +230,7 @@ async function run() {
   assert.equal(guardedPage.data.sending, true)
   releaseRequest({
     reply: '一次回答',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '安全提示'
   })
   await Promise.all([firstSend, secondSend])
@@ -258,7 +258,7 @@ async function run() {
 
   requestImplementation = async () => ({
     reply: '重试成功',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '安全提示',
     used_context: []
   })
@@ -320,7 +320,7 @@ async function run() {
   unloadedPage.onUnload()
   releaseAfterUnload({
     reply: '页面离开后的回答',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '安全提示'
   })
   await pending
@@ -337,7 +337,7 @@ async function run() {
   const staleReply = staleReplyPage.handleSend()
   releaseStaleReply({
     reply: 'old session answer',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: 'old disclaimer'
   })
   advancePatientDataRevision()

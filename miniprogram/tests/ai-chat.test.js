@@ -147,7 +147,7 @@ assert.deepEqual(
   normalizeChatResponse({
     reply: '  建议先查看已完成的追踪记录。  ',
     model: 'qwen-plus-latest',
-    provider: 'qwen',
+    provider: 'deepseek',
     disclaimer: '  服务端安全提示  ',
     used_context: ['量表', '', '追踪', '量表', 123],
     degraded: true
@@ -155,7 +155,7 @@ assert.deepEqual(
   {
     content: '建议先查看已完成的追踪记录。',
     model: 'qwen-plus-latest',
-    providerLabel: '千问服务',
+    providerLabel: 'DeepSeek',
     disclaimer: '服务端安全提示',
     usedContext: ['量表', '追踪'],
     degraded: true

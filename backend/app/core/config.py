@@ -44,14 +44,14 @@ class Settings:
         "BACKEND_CORS_ORIGINS",
         "http://127.0.0.1:5500,http://localhost:5500",
     )
-    QWEN_API_KEY: str = os.getenv("QWEN_API_KEY", "").strip()
-    QWEN_BASE_URL: str = os.getenv(
-        "QWEN_BASE_URL",
-        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+    DEEPSEEK_API_KEY: str = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    DEEPSEEK_BASE_URL: str = os.getenv(
+        "DEEPSEEK_BASE_URL",
+        "https://api.deepseek.com/chat/completions",
     ).strip()
-    QWEN_CHAT_MODEL: str = os.getenv("QWEN_CHAT_MODEL", "qwen-plus-latest").strip()
-    QWEN_REMINDER_MODEL: str = os.getenv("QWEN_REMINDER_MODEL", "qwen-flash").strip()
-    QWEN_TIMEOUT_SECONDS: int = int(os.getenv("QWEN_TIMEOUT_SECONDS", "120"))
+    DEEPSEEK_CHAT_MODEL: str = os.getenv("DEEPSEEK_CHAT_MODEL", "deepseek-v4-flash").strip()
+    DEEPSEEK_REMINDER_MODEL: str = os.getenv("DEEPSEEK_REMINDER_MODEL", "deepseek-v4-flash").strip()
+    DEEPSEEK_TIMEOUT_SECONDS: int = int(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", "300"))
     HGST_PRETRAINED_WEIGHTS_PATH: str = (
         os.getenv("HGST_PRETRAINED_WEIGHTS_PATH", "") or _DEFAULT_HGST_PRETRAINED
     ).strip()
