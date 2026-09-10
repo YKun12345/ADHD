@@ -651,7 +651,7 @@
                         <button class="btn-primary-orange" type="button" onclick="window.location.href='doctor_patients.html'">进入患者工作台</button>
                         <button class="btn-secondary" id="openBindModalBtn" type="button">添加患者档案</button>
                         <button class="btn-outline" type="button" onclick="window.location.href='doctor_patients.html'">查看患者主线</button>
-                        <button class="btn-outline" type="button" onclick="window.location.href='dac_dashboard.html'">DAC 审计台</button>
+                        <button class="btn-outline" type="button" onclick="openDacAudit()">DAC 审计台</button>
                     </div>
                 </div>
 
@@ -768,6 +768,16 @@
             <div class="bind-modal-actions">
                 <button id="closeBindModalBtn" class="btn-outline" type="button">取消</button>
                 <button id="confirmBindPatientBtn" class="btn-primary-orange" type="button">立即添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dacPermissionModal" class="modal-overlay">
+        <div class="bind-modal">
+            <h3>权限不足</h3>
+            <p>「DAC 审计台」为 DAC 审计员专属工作台。当前账号为普通研究者，暂无访问权限；如需使用，请使用 DAC 审计员账号登录后重试。</p>
+            <div class="bind-modal-actions">
+                <button id="closeDacPermissionBtn" class="btn-outline" type="button">知道了</button>
             </div>
         </div>
     </div>

@@ -243,6 +243,15 @@ body.theme-researcher .logo-large ion-icon {
     margin-bottom: 1rem;
 }
 
+.login-method-hint {
+    display: block;
+    font-size: 0.78em;
+    color: #9CA3AF;
+    font-weight: 400;
+    margin-top: 0.25rem;
+    line-height: 1.4;
+}
+
 .input-group-top {
     display: flex;
     justify-content: space-between;

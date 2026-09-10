@@ -159,12 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function createInlineTaskRow(task) {
         const row = document.createElement('div');
         row.className = 'inline-mini-row';
         row.innerHTML = `
-            <strong>${task.task_title}</strong><br>
-            ${task.task_description || '已为就诊者安排下一步任务。'}<br>
+            <strong>${escapeHtml(task.task_title)}</strong><br>
+            ${escapeHtml(task.task_description || '已为就诊者安排下一步任务。')}<br>
             <span style="color:#64748B;">${formatTaskType(task.task_type)} · ${formatTaskStatus(task.status)}</span>
         `;
         return row;
@@ -233,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="patient-stat">
                         <span class="patient-stat-label">认知测试</span>
-                        <span class="patient-stat-value">${item.cognitive_test_count} 项${item.cognitive_test_count ? '已补充' : '待补充'}</span>
+                        <span class="patient-stat-value">${Number(item.cognitive_test_count || 0)} 项${item.cognitive_test_count ? '已补充' : '待补充'}</span>
                     </div>
                     <div class="patient-stat">
                         <span class="patient-stat-label">量表结果</span>
@@ -508,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
         row.innerHTML = `
             <div class="doctor-care-bubble">
                 <div class="doctor-care-bubble-role">${roleText}</div>
-                <div>${content}</div>
+                <div>${escapeHtml(content)}</div>
             </div>
         `;
         return row;

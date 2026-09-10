@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             let emptyBaseUrl = '';
             let authParams1 = '';
             if (window.location.protocol === 'file:') {
-                emptyBaseUrl = 'http://127.0.0.1:8000/';
+                emptyBaseUrl = 'http://127.0.0.1:8000/doctor-web/';
                 authParams1 = `?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
             }
             focusPatientVizBtn.href = `${emptyBaseUrl}doctor_visualization.html${authParams1}`;
@@ -167,6 +167,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     bindModalOverlay?.addEventListener('click', (event) => {
         if (event.target === bindModalOverlay) {
             closeModal();
+        }
+    });
+
+    function openDacAudit() {
+        const user = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
+        if (user?.subrole === 'dac') {
+            window.location.href = 'dac_dashboard.html';
+            return;
+        }
+        const modal = document.getElementById('dacPermissionModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+    window.openDacAudit = openDacAudit;
+
+    const dacPermissionModal = document.getElementById('dacPermissionModal');
+    const closeDacPermissionBtn = document.getElementById('closeDacPermissionBtn');
+
+    closeDacPermissionBtn?.addEventListener('click', () => {
+        dacPermissionModal?.classList.remove('active');
+    });
+
+    dacPermissionModal?.addEventListener('click', (event) => {
+        if (event.target === dacPermissionModal) {
+            dacPermissionModal.classList.remove('active');
         }
     });
 
