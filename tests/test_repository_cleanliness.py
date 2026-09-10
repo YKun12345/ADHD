@@ -190,7 +190,7 @@ class RepositoryCleanlinessTests(unittest.TestCase):
 
     def test_absolute_windows_paths_only_appear_in_provenance_documents(self) -> None:
         violations: list[str] = []
-        allowed_prefixes = ("docs/evidence/", "docs/superpowers/")
+        allowed_prefixes = ("docs/evidence/",)
         windows_path = re.compile(r"[A-Z]:\\")
         for path in tracked_files():
             relative = path.relative_to(ROOT).as_posix()

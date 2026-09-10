@@ -24,7 +24,6 @@ archive/legacy-patient-web/ B 旧患者网页，仅归档，不参与默认运�
 tests/                      跨端、结构与洁净度测试
 tools/                      审计和交付工具
 docs/evidence/              来源、契约、验证与人工验收证据
-docs/history/               A/B 合并前的历史材料
 ```
 
 ## 2. 环境要求
@@ -124,4 +123,4 @@ python -m unittest tests.test_web_dependency_audit tests.test_repository_cleanli
 
 必须按 `docs/evidence/manual-acceptance.md` 完成微信开发者工具、Android/iOS 真机、医生浏览器流程、真实模型权重和部署配置验收。没有这些外部条件时，只能标记“待验收”，不能声称可直接用于临床或生产。
 
-来源和合并决策见 `docs/evidence/source-manifest.md` 与 `docs/superpowers/specs/2026-08-30-ab-merge-design.md`。
+来源和合并记录见 `docs/evidence/source-manifest.md`。

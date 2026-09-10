@@ -254,7 +254,7 @@ PY
 
 ## 3. 验收报告模板
 
-> 复制下方到独立回执文件（如 `docs/history/YYYY-MM-DD-doctor-web-acceptance-report.md`）后填写。
+> 复制下方到独立回执文件（如 `docs/evidence/YYYY-MM-DD-doctor-web-acceptance-report.md`）后填写。
 
 ```markdown
 # 医生端 Web 验收报告
