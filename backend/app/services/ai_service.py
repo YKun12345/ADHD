@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from statistics import mean
@@ -23,6 +24,9 @@ from backend.app.models.patient import Patient
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User
+
+
+logger = logging.getLogger(__name__)
 
 
 AI_DISCLAIMER = "AI内容仅用于健康教育和追踪辅助，不能替代医生诊断或处方建议。"
@@ -92,11 +96,12 @@ AI_GROUNDING_PROMPT = """
 
 AI_STYLE_PROMPT = """
 表达风格：
-1. 默认使用简洁、温和、具体的中文。
-2. 先解释“看到了什么”，再说“这意味着什么”，最后给“下一步建议”。
-3. 正常回答尽量控制在 3 段内，建议不超过 3 条。
-4. 少用术语；必须用术语时，要顺手解释成人话。
-5. 不要输出 Markdown 语法，不要使用标题符号、星号、反引号或列表标记。
+1. 像耐心、可靠的陪伴者一样自然交流，先直接回应用户此刻最在意的内容，不固定套用三段式。
+2. 短问题可以短回答；复杂问题再分段说明，不要为了显得完整而重复问题或免责声明。
+3. 只有确实有帮助时才给行动建议，最多 3 条；信息不足时最多追问一个关键问题。
+4. 可以承接最近对话中的情绪和目标，但不要假装拥有系统未提供的记忆或经历。
+5. 少用术语；必须用术语时，要顺手解释成人话。
+6. 不要输出 Markdown 语法，不要使用标题符号、星号或反引号。
 """.strip()
 
 CHAT_SCOPE_PROMPTS = {
@@ -238,6 +243,8 @@ class DeepSeekClient:
         messages: list[dict[str, str]],
         temperature: float = 0.4,
         max_tokens: int = 800,
+        thinking: bool = False,
+        reasoning_effort: str | None = None,
     ) -> AIProviderResult:
         if not self.configured:
             raise AIProviderError("DeepSeek API key is not configured.")
@@ -245,11 +252,15 @@ class DeepSeekClient:
         payload = {
             "model": model,
             "messages": messages,
-            "temperature": temperature,
             "max_tokens": max_tokens,
             "stream": False,
-            "thinking": {"type": "disabled"},
+            "thinking": {"type": "enabled" if thinking else "disabled"},
         }
+        if thinking:
+            if reasoning_effort in {"low", "high", "max"}:
+                payload["reasoning_effort"] = reasoning_effort
+        else:
+            payload["temperature"] = temperature
         request_body = json.dumps(payload).encode("utf-8")
         request = Request(
             settings.DEEPSEEK_BASE_URL,
@@ -523,7 +534,7 @@ def _scope_labels(scope: str, snapshot: dict) -> list[str]:
     return labels
 
 
-def _trim_conversation(conversation: list[dict[str, str]], max_turns: int = 6) -> list[dict[str, str]]:
+def _trim_conversation(conversation: list[dict[str, str]], max_turns: int = 12) -> list[dict[str, str]]:
     filtered = []
     for turn in conversation[-max_turns:]:
         role = turn.get("role")
@@ -534,13 +545,8 @@ def _trim_conversation(conversation: list[dict[str, str]], max_turns: int = 6) -
     return filtered
 
 
-def _chat_task_prompt(context_scope: str, user_message: str) -> str:
-    scope_prompt = CHAT_SCOPE_PROMPTS.get(context_scope, CHAT_SCOPE_PROMPTS["general"])
-    return (
-        f"{scope_prompt}\n"
-        "当前用户这轮最在意的问题如下，请优先回应这个问题本身："
-        f"\n{user_message.strip()}"
-    )
+def _chat_task_prompt(context_scope: str) -> str:
+    return CHAT_SCOPE_PROMPTS.get(context_scope, CHAT_SCOPE_PROMPTS["general"])
 
 
 def _build_chat_messages(
@@ -562,7 +568,7 @@ def _build_chat_messages(
         {"role": "system", "content": AI_GROUNDING_PROMPT},
         {"role": "system", "content": AI_STYLE_PROMPT},
         {"role": "system", "content": _patient_audience_prompt(snapshot)},
-        {"role": "system", "content": _chat_task_prompt(context_scope, user_message)},
+        {"role": "system", "content": _chat_task_prompt(context_scope)},
         {
             "role": "system",
             "content": (
@@ -903,14 +909,34 @@ def generate_chat_reply(
             context_scope=context_scope,
             snapshot=snapshot,
         )
-        result = deepseek_client.chat(
-            model=settings.DEEPSEEK_CHAT_MODEL,
-            messages=messages,
-            temperature=0.45,
-            max_tokens=800,
-        )
+        chat_options: dict[str, object] = {
+            "model": settings.DEEPSEEK_CHAT_MODEL,
+            "messages": messages,
+            "max_tokens": 800,
+        }
+        if context_scope in {"report", "tracking"}:
+            chat_options.update(thinking=True, reasoning_effort="low")
+        else:
+            chat_options.update(thinking=False, temperature=0.7)
+        result = deepseek_client.chat(**chat_options)
         return result.content, result.model, False
+    except AIProviderError as exc:
+        logger.warning(
+            "DeepSeek chat unavailable; using local fallback (%s)",
+            type(exc).__name__,
+        )
+        return (
+            build_fallback_chat_reply(
+                message,
+                context_scope,
+                snapshot,
+                reason="当前先使用本地辅助模式。",
+            ),
+            "fallback-template",
+            True,
+        )
     except Exception:
+        logger.exception("Unexpected DeepSeek chat error; using local fallback")
         return (
             build_fallback_chat_reply(
                 message,

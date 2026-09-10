@@ -1,20 +1,19 @@
 .ai-copilot {
   position: fixed;
-  right: 28rpx;
-  bottom: 32rpx;
-  bottom: calc(32rpx + constant(safe-area-inset-bottom));
-  bottom: calc(32rpx + env(safe-area-inset-bottom));
   z-index: 1200;
-  display: flex;
-  align-items: flex-end;
-  flex-direction: column;
+  width: 104rpx;
+  height: 104rpx;
 }
 
 .ai-copilot__panel {
-  width: 440rpx;
+  position: fixed;
+  right: 24rpx;
+  bottom: 32rpx;
+  bottom: calc(32rpx + constant(safe-area-inset-bottom));
+  bottom: calc(32rpx + env(safe-area-inset-bottom));
+  left: 24rpx;
   max-height: calc(100vh - 240rpx);
   overflow-y: auto;
-  margin-bottom: 20rpx;
   padding: 28rpx;
   box-sizing: border-box;
   border: 1rpx solid rgba(255, 255, 255, 0.96);
@@ -36,8 +35,6 @@
 
 .ai-copilot__guide-bubble {
   position: absolute;
-  right: 0;
-  bottom: 126rpx;
   width: 480rpx;
   box-sizing: border-box;
   padding: 22rpx 52rpx 22rpx 24rpx;
@@ -46,6 +43,22 @@
   background: #fffaf2;
   color: #294a59;
   box-shadow: 0 14rpx 38rpx rgba(19, 58, 70, 0.16);
+}
+
+.ai-copilot--left .ai-copilot__guide-bubble {
+  left: 0;
+}
+
+.ai-copilot--right .ai-copilot__guide-bubble {
+  right: 0;
+}
+
+.ai-copilot--above .ai-copilot__guide-bubble {
+  bottom: 116rpx;
+}
+
+.ai-copilot--below .ai-copilot__guide-bubble {
+  top: 116rpx;
 }
 
 .ai-copilot__guide-text { font-size: 26rpx; line-height: 1.55; }
@@ -181,7 +194,11 @@
 }
 
 .ai-copilot__trigger {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 104rpx;
   height: 104rpx;
   display: flex;

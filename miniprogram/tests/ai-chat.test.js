@@ -146,16 +146,16 @@ assert.throws(
 assert.deepEqual(
   normalizeChatResponse({
     reply: '  建议先查看已完成的追踪记录。  ',
-    model: 'qwen-plus-latest',
-    provider: 'deepseek',
+    model: 'fallback-template',
+    provider: 'local',
     disclaimer: '  服务端安全提示  ',
     used_context: ['量表', '', '追踪', '量表', 123],
     degraded: true
   }),
   {
     content: '建议先查看已完成的追踪记录。',
-    model: 'qwen-plus-latest',
-    providerLabel: 'DeepSeek',
+    model: 'fallback-template',
+    providerLabel: '本地辅助',
     disclaimer: '服务端安全提示',
     usedContext: ['量表', '追踪'],
     degraded: true

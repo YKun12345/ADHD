@@ -153,7 +153,7 @@ assertExactRoutes(routedRoutes)
 
 assert.equal(app.window.navigationStyle, 'custom')
 assert.equal(app.window.navigationBarTitleText, 'ADHD智慧辅助')
-assert.match(appWxss, /\.ai-copilot-safe-space\.ai-copilot-safe-space\s*\{[^}]*padding-bottom\s*:\s*196rpx[^}]*constant\(safe-area-inset-bottom\)[^}]*env\(safe-area-inset-bottom\)/s)
+assert.match(appWxss, /\.ai-copilot-safe-space\.ai-copilot-safe-space\s*\{[^}]*padding-bottom\s*:\s*28rpx[^}]*constant\(safe-area-inset-bottom\)[^}]*env\(safe-area-inset-bottom\)/s)
 
 for (const route of routedRoutes) {
   const page = route.replace(/\/index$/, '').split('/').pop()
@@ -206,9 +206,9 @@ assert.match(read('pages', 'register', 'index.wxss'), /\.gender-option\s*\{[^}]*
 assert.match(read('pages', 'register', 'index.wxss'), /\.back-login\s*\{[^}]*min-height\s*:\s*88rpx/s)
 
 const aiWxml = read('pages', 'ai-chat', 'index.wxml')
-assert.match(aiWxml, /class="context-tab[^>]*hover-class="chat-control--pressed"/s)
+assert.match(aiWxml, /class="context-pill[^>]*hover-class="chat-control--pressed"/s)
 assert.match(aiWxml, /class="retry-button"[^>]*hover-class="chat-control--pressed"/s)
-assert.match(aiWxml, /class="suggestion-item"[^>]*hover-class="chat-control--pressed"/s)
+assert.match(aiWxml, /class="quick-prompt"[^>]*hover-class="chat-control--pressed"/s)
 
 for (const page of ['scale', 'cognitive', 'stroop']) {
   const wxml = read('pages', page, 'index.wxml')

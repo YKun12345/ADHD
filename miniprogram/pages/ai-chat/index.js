@@ -17,6 +17,8 @@ const {
   buildSuggestions
 } = require('../../utils/ai-chat')
 
+const INPUT_COUNT_THRESHOLD = Math.floor(MAX_MESSAGE_LENGTH * 0.9)
+
 function patientTypeFromUser(user) {
   const profile = user && typeof user === 'object'
     ? user.patient_profile
@@ -40,6 +42,7 @@ registerPatientPage({
     suggestions: buildSuggestions(''),
     inputValue: '',
     inputLength: 0,
+    showInputCount: false,
     inputFocused: false,
     maxMessageLength: MAX_MESSAGE_LENGTH,
     sending: false,
@@ -67,6 +70,7 @@ registerPatientPage({
       suggestions: buildSuggestions(patientType),
       inputValue,
       inputLength: inputValue.length,
+      showInputCount: inputValue.length >= INPUT_COUNT_THRESHOLD,
       sending: false,
       statusMessage: '',
       scrollIntoView: '',
@@ -102,7 +106,8 @@ registerPatientPage({
       : ''
     this.setData({
       inputValue: value,
-      inputLength: value.length
+      inputLength: value.length,
+      showInputCount: value.length >= INPUT_COUNT_THRESHOLD
     })
   },
 
@@ -129,6 +134,7 @@ registerPatientPage({
     this.setData({
       inputValue: suggestion.text,
       inputLength: suggestion.text.length,
+      showInputCount: suggestion.text.length >= INPUT_COUNT_THRESHOLD,
       contextScope: suggestion.scope
     })
   },
@@ -195,6 +201,7 @@ registerPatientPage({
       messages,
       inputValue: '',
       inputLength: 0,
+      showInputCount: false,
       sending: true,
       statusMessage: ''
     })
@@ -271,6 +278,7 @@ registerPatientPage({
           messages: [createGuideMessage(this.data.patientType)],
           inputValue: '',
           inputLength: 0,
+          showInputCount: false,
           statusMessage: '',
           scrollIntoView: '',
           lastDisclaimer: DEFAULT_DISCLAIMER

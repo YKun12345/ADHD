@@ -140,13 +140,14 @@ async function run() {
   freeQuestionPage.onLoad({ scope: 'general' })
   assert.equal(freeQuestionPage.data.inputValue, '')
   assert.equal(freeQuestionPage.data.inputLength, 0)
+  assert.equal(freeQuestionPage.data.showInputCount, false)
   assert.equal(calls.requests.length, 0)
 
   reset()
   requestImplementation = async () => ({
     reply: '  当前结果需要结合完整记录理解。  ',
     model: 'fallback-rule',
-    provider: 'deepseek',
+    provider: 'local',
     disclaimer: '服务端安全提示',
     used_context: ['量表', '追踪'],
     degraded: true
@@ -164,6 +165,10 @@ async function run() {
   page.handleInput(inputEvent('  请解释量表结果  '))
   assert.equal(page.data.inputValue, '  请解释量表结果  ')
   assert.equal(page.data.inputLength, 11)
+  assert.equal(page.data.showInputCount, false)
+  page.handleInput(inputEvent('问'.repeat(3600)))
+  assert.equal(page.data.showInputCount, true)
+  page.handleInput(inputEvent('  请解释量表结果  '))
   await page.handleSend()
 
   assert.deepEqual(calls.requests, [{
@@ -177,13 +182,14 @@ async function run() {
   }])
   assert.equal(page.data.sending, false)
   assert.equal(page.data.inputValue, '')
+  assert.equal(page.data.showInputCount, false)
   assert.equal(page.data.messages.length, 3)
   assert.equal(page.data.messages[1].role, 'user')
   assert.equal(page.data.messages[1].status, 'sent')
   assert.equal(page.data.messages[2].role, 'assistant')
   assert.equal(page.data.messages[2].content, '当前结果需要结合完整记录理解。')
   assert.equal(page.data.messages[2].degraded, true)
-  assert.equal(page.data.messages[2].providerLabel, 'DeepSeek')
+  assert.equal(page.data.messages[2].providerLabel, '本地辅助')
   assert.deepEqual(page.data.messages[2].usedContext, ['量表', '追踪'])
   assert.equal(page.data.lastDisclaimer, '服务端安全提示')
   assert.equal(page.data.scrollIntoView, 'chat-bottom')
@@ -191,6 +197,7 @@ async function run() {
 
   page.applySuggestion(datasetEvent({ id: 'tracking-help' }))
   assert.match(page.data.inputValue, /追踪记录/)
+  assert.equal(page.data.showInputCount, false)
   assert.equal(page.data.contextScope, 'tracking')
   await page.handleSend()
   assert.equal(calls.requests.length, 2)
@@ -302,6 +309,7 @@ async function run() {
   assert.equal(childPage.data.messages.length, 1)
   assert.equal(childPage.data.messages[0].role, 'guide')
   assert.equal(childPage.data.inputValue, '')
+  assert.equal(childPage.data.showInputCount, false)
   assert.equal(childPage.data.statusMessage, '')
 
   childPage.goBack()

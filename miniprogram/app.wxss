@@ -119,9 +119,9 @@ page {
 }
 
 .ai-copilot-safe-space.ai-copilot-safe-space {
-  padding-bottom: 196rpx;
-  padding-bottom: calc(196rpx + constant(safe-area-inset-bottom));
-  padding-bottom: calc(196rpx + env(safe-area-inset-bottom));
+  padding-bottom: 28rpx;
+  padding-bottom: calc(28rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(28rpx + env(safe-area-inset-bottom));
 }
 
 @media (prefers-reduced-motion: reduce) {

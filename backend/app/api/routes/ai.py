@@ -30,6 +30,10 @@ from backend.app.services.ai_service import (
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
+def _provider_name(model: str, degraded: bool) -> str:
+    return "local" if degraded or model in {"fallback-template", "safety-guard"} else "deepseek"
+
+
 def _store_ai_chat_turns(
     db: Session,
     current_user: User,
@@ -88,6 +92,7 @@ def chat_with_ai(
     return AIChatResponse(
         reply=reply,
         model=model,
+        provider=_provider_name(model, degraded),
         disclaimer=AI_DISCLAIMER,
         degraded=degraded,
         used_context=used_context_for_scope(payload.context_scope, snapshot),
@@ -109,6 +114,7 @@ def explain_report(
         next_actions=explanation["next_actions"],
         disclaimer=explanation["disclaimer"],
         model=model,
+        provider=_provider_name(model, degraded),
         degraded=degraded,
     )
 
@@ -130,5 +136,6 @@ def generate_reminder(
         completion_status=reminder["completion_status"],
         disclaimer=reminder["disclaimer"],
         model=model,
+        provider=_provider_name(model, degraded),
         degraded=degraded,
     )

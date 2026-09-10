@@ -24,14 +24,14 @@ const pageKeys = [
   'privacy-settings',
   'doctor-home',
   'doctor-patient',
-  'doctor-guide-settings',
-  'ai-chat'
+  'doctor-guide-settings'
 ]
 
 const excludedPages = [
   'login',
   'register',
-  'server-settings'
+  'server-settings',
+  'ai-chat'
 ]
 
 const pagesRoot = path.join(__dirname, '..', 'pages')
@@ -61,8 +61,6 @@ for (const pageKey of pageKeys) {
     assert.match(wxml, new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!submitting && \\(phase === 'intro' \\|\\| phase === 'result'\\)\\}\\}"\\s+page-key="${pageKey}"\\s*/>`))
   } else if (pageKey === 'trail') {
     assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!submitting && \(phase === 'intro' \|\| phase === 'rest' \|\| phase === 'result'\)\}\}"\s+page-key="trail"\s*\/>/)
-  } else if (pageKey === 'ai-chat') {
-    assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!inputFocused && !sending\}\}"\s+page-key="ai-chat"\s*\/>/)
   } else if (pageKey === 'tracking') {
     assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!noteFocused && !submitting\}\}"\s+page-key="tracking"\s*\/>/)
   } else if (pageKey === 'home' || pageKey === 'doctor-home' || pageKey === 'doctor-guide-settings' || pageKey === 'privacy-settings') {

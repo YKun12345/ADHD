@@ -150,7 +150,9 @@ function normalizeChatResponse(payload) {
     model: cleanText(payload.model),
     providerLabel: cleanText(payload.provider).toLowerCase() === 'deepseek'
       ? 'DeepSeek'
-      : 'AI服务',
+      : cleanText(payload.provider).toLowerCase() === 'local'
+        ? '本地辅助'
+        : 'AI服务',
     disclaimer: cleanText(payload.disclaimer) || DEFAULT_DISCLAIMER,
     usedContext: normalizeUsedContext(payload.used_context),
     degraded: payload.degraded === true

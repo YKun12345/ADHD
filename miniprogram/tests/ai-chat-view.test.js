@@ -18,11 +18,13 @@ assert.equal(
 
 const requiredWxml = [
   '<ui-nav title="AI 健康助手" rightText="清空" bind:righttap="clearConversation" />',
-  'AI内容仅用于健康教育和追踪辅助',
+  'class="chat-notice"',
+  '{{lastDisclaimer}}',
   'wx:if="{{childNotice}}"',
   '建议由监护人陪同',
+  'class="chat-workspace"',
   'wx:for="{{contexts}}"',
-  'context-tab--{{contextScope === item.id ? \'active\' : \'idle\'}}',
+  'context-pill--{{contextScope === item.id ? \'active\' : \'idle\'}}',
   'bindtap="selectScope"',
   'data-scope="{{item.id}}"',
   '<scroll-view',
@@ -32,22 +34,24 @@ const requiredWxml = [
   'message-row--{{item.role}}',
   '{{item.content}}',
   'wx:if="{{item.degraded}}"',
-  '安全降级回答',
+  '本地辅助回答',
   'wx:if="{{item.usedContext.length}}"',
   'bindtap="retryMessage"',
   'data-id="{{item.id}}"',
   'wx:for="{{suggestions}}"',
+  'class="quick-prompts"',
   'bindtap="applySuggestion"',
+  'class="composer__main"',
   'bindinput="handleInput"',
   'bindconfirm="handleSend"',
   '可以询问健康问题或小程序使用方法',
   'maxlength="{{maxMessageLength}}"',
   'value="{{inputValue}}"',
-  '{{inputLength}} / {{maxMessageLength}}',
+  'wx:if="{{showInputCount}}"',
+  '{{inputLength}}/{{maxMessageLength}}',
   'bindtap="handleSend"',
   '正在生成回答',
-  'id="chat-bottom"',
-  '{{lastDisclaimer}}'
+  'id="chat-bottom"'
 ]
 
 for (const fragment of requiredWxml) {
@@ -60,12 +64,25 @@ for (const fragment of requiredWxml) {
 
 assert.equal(wxml.includes('<rich-text'), false, 'AI 回答不得使用 rich-text 渲染')
 
+for (const removedFragment of [
+  'class="safety-banner"',
+  'class="context-section"',
+  'class="suggestion-section"',
+  'class="medical-disclaimer"',
+  'class="composer__disclaimer"',
+  'message-avatar--user'
+]) {
+  assert.equal(wxml.includes(removedFragment), false, `WXML 不应保留旧结构：${removedFragment}`)
+}
+
+assert.equal((wxml.match(/\{\{lastDisclaimer\}\}/g) || []).length, 1, '安全说明只应显示一次')
+
 const requiredSelectors = [
   '.chat-page',
-  '.safety-banner',
-  '.child-notice',
-  '.context-tabs',
-  '.context-tab--active',
+  '.chat-notice',
+  '.chat-workspace',
+  '.context-tools',
+  '.context-pill--active',
   '.message-list',
   '.message-row--guide',
   '.message-row--user',
@@ -74,12 +91,12 @@ const requiredSelectors = [
   '.degraded-badge',
   '.used-context',
   '.retry-button',
-  '.suggestion-list',
-  '.suggestion-item',
+  '.quick-prompts',
+  '.quick-prompt',
   '.composer',
+  '.composer__main',
   '.message-input',
-  '.send-button',
-  '.medical-disclaimer'
+  '.send-button'
 ]
 
 for (const selector of requiredSelectors) {
@@ -95,6 +112,12 @@ assert.ok(sendButtonRule, 'WXSS 缺少 .send-button 样式规则')
 assert.match(sendButtonRule[1], /display:\s*flex/)
 assert.match(sendButtonRule[1], /align-items:\s*center/)
 assert.match(sendButtonRule[1], /justify-content:\s*center/)
+
+const messageListRule = wxss.match(/\.message-list\s*\{([^}]*)\}/)
+assert.ok(messageListRule, 'WXSS 缺少 .message-list 样式规则')
+assert.match(messageListRule[1], /background:\s*transparent/)
+assert.doesNotMatch(messageListRule[1], /border:/)
+assert.doesNotMatch(messageListRule[1], /box-shadow:/)
 
 const retryButtonRule = wxss.match(/\.retry-button\s*\{([^}]*)\}/)
 assert.ok(retryButtonRule, 'WXSS 缺少 .retry-button 样式规则')

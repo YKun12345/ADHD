@@ -13,7 +13,7 @@ const chatWxss = read('pages', 'ai-chat', 'index.wxss')
 assert.equal(chatJson.usingComponents['ai-mascot'], '/components/ai-mascot/index', 'AI 对话页必须注册 ai-mascot')
 assert.match(chatWxml, /class="message-avatar message-avatar--assistant"[\s\S]*?<ai-mascot\s+state=/)
 assert.match(chatWxml, /<ai-mascot\s+state="thinking"/)
-assert.match(chatWxml, /class="message-avatar message-avatar--user"[^>]*>\s*你\s*<\/view>/)
+assert.doesNotMatch(chatWxml, /message-avatar--user/, '用户消息依靠右对齐和气泡配色区分，不再重复显示文字头像')
 assert.doesNotMatch(chatWxml, /\.slice\s*\(/, '头像不得在 WXML 中调用 slice')
 assert.equal((chatWxml.match(/class="thinking-dot"/g) || []).length, 3, '思考状态必须恰好有三个圆点')
 
@@ -51,14 +51,13 @@ assert.match(chatWxss, /\.retry-button\s*\{[^}]*min-height:\s*88rpx/s)
 assert.match(chatWxss, /@media\s*\(prefers-reduced-motion:\s*reduce\)/)
 assert.doesNotMatch(chatWxss, /height:\s*620rpx/, '消息区不得使用僵硬固定高度')
 
-const composerRule = chatWxss.match(/\.composer\s*\{([^}]*)\}/)
-assert.ok(composerRule, '缺少 composer 样式')
+const workspaceRule = chatWxss.match(/\.chat-workspace\s*\{([^}]*)\}/)
+assert.ok(workspaceRule, '缺少底部 chat-workspace 样式')
 for (const fragment of [
-  'bottom: 0',
   'constant(safe-area-inset-bottom)',
   'env(safe-area-inset-bottom)'
 ]) {
-  assert.equal(composerRule[1].includes(fragment), true, `composer 缺少 ${fragment}`)
+  assert.equal(workspaceRule[1].includes(fragment), true, `chat-workspace 缺少 ${fragment}`)
 }
 const inputRule = chatWxss.match(/\.message-input\s*\{([^}]*)\}/)
 const sendRule = chatWxss.match(/\.send-button\s*\{([^}]*)\}/)
@@ -86,12 +85,13 @@ assert.doesNotMatch(copilotWxml, /[\u{1F300}-\u{1FAFF}]/u, 'AI Copilot 不得使
 const copilotRootRule = copilotWxss.match(/\.ai-copilot\s*\{([^}]*)\}/)
 assert.ok(copilotRootRule, 'AI Copilot 缺少根样式')
 for (const fragment of [
-  'bottom: 32rpx',
-  'constant(safe-area-inset-bottom)',
-  'env(safe-area-inset-bottom)'
+  'position: fixed',
+  'width: 104rpx',
+  'height: 104rpx'
 ]) {
   assert.equal(copilotRootRule[1].includes(fragment), true, `AI Copilot 缺少 ${fragment}`)
 }
+assert.doesNotMatch(copilotRootRule[1], /right:|bottom:/, '可拖动入口不得继续固定在右下角')
 const triggerRule = copilotWxss.match(/\.ai-copilot__trigger\s*\{([^}]*)\}/)
 assert.ok(triggerRule, 'AI Copilot 缺少悬浮触控入口')
 for (const fragment of [
@@ -105,8 +105,11 @@ for (const fragment of [
   assert.equal(triggerRule[1].includes(fragment), true, `无外圈入口缺少 ${fragment}`)
 }
 assert.match(copilotWxml, /aria-expanded="\{\{expanded\}\}"/)
+assert.match(copilotWxml, /catchtouchstart="handleDragStart"/)
+assert.match(copilotWxml, /catchtouchmove="handleDragMove"/)
+assert.match(copilotWxml, /catchtouchend="handleDragEnd"/)
 assert.match(copilotWxml, /expanded \? '收起AI健康助手' : '打开AI健康助手'/)
-assert.match(copilotWxss, /\.ai-copilot__panel\s*\{[^}]*max-height:\s*calc\(100vh - 240rpx\)[^}]*overflow-y:\s*auto/s)
+assert.match(copilotWxss, /\.ai-copilot__panel\s*\{[^}]*position:\s*fixed[^}]*max-height:\s*calc\(100vh - 240rpx\)[^}]*overflow-y:\s*auto/s)
 assert.match(copilotWxss, /\.ai-copilot__close\s*\{[^}]*width:\s*88rpx[^}]*height:\s*88rpx/s)
 assert.match(copilotWxss, /@media\s*\(prefers-reduced-motion:\s*reduce\)/)
 assert.doesNotMatch(copilotWxss, /ai-copilot__halo|@keyframes\s+copilotPulse/, '无外圈设计不得残留光环样式或动画')

@@ -1,4 +1,7 @@
-<view class="ai-copilot">
+<view
+  class="ai-copilot ai-copilot--{{dockSide}} ai-copilot--{{guidePlacement}}"
+  style="left: {{positionX}}px; top: {{positionY}}px"
+>
   <view class="ai-copilot__guide-bubble" wx:if="{{guideBubbleVisible}}">
     <text class="ai-copilot__guide-text">{{config.intro}}</text>
     <view class="ai-copilot__guide-close" aria-role="button" aria-label="关闭页面介绍" bindtap="closeGuideBubble">×</view>
@@ -54,11 +57,17 @@
 
   <view
     class="ai-copilot__trigger"
+    wx:if="{{!expanded}}"
     hover-class="ai-copilot__trigger--pressed"
     aria-role="button"
     aria-label="{{expanded ? '收起AI健康助手' : '打开AI健康助手'}}"
+    aria-description="可按住拖动到屏幕其他位置"
     aria-expanded="{{expanded}}"
     aria-disabled="{{navigating}}"
+    catchtouchstart="handleDragStart"
+    catchtouchmove="handleDragMove"
+    catchtouchend="handleDragEnd"
+    catchtouchcancel="handleDragEnd"
     bindtap="togglePanel"
   >
     <view class="ai-copilot__icon">

@@ -17,7 +17,7 @@ class AIChatRequest(BaseModel):
 class AIChatResponse(BaseModel):
     reply: str
     model: str
-    provider: str = "deepseek"
+    provider: Literal["deepseek", "local"] = "deepseek"
     disclaimer: str
     used_context: list[str] = Field(default_factory=list)
     degraded: bool = False
@@ -34,7 +34,7 @@ class AIExplainReportResponse(BaseModel):
     next_actions: list[str] = Field(default_factory=list)
     disclaimer: str
     model: str
-    provider: str = "deepseek"
+    provider: Literal["deepseek", "local"] = "deepseek"
     degraded: bool = False
 
 
@@ -50,13 +50,13 @@ class AIReminderResponse(BaseModel):
     completion_status: str
     disclaimer: str
     model: str
-    provider: str = "deepseek"
+    provider: Literal["deepseek", "local"] = "deepseek"
     degraded: bool = False
 
 
 class AIStatusResponse(BaseModel):
     configured: bool
-    provider: str = "deepseek"
+    provider: Literal["deepseek", "local"] = "deepseek"
     chat_model: str
     reminder_model: str
     fallback_available: bool = True
