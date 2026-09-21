@@ -84,7 +84,7 @@ git commit -m "test: specify active patient web boundary"
 
 - [ ] **Step 1: Copy the 26 archived patient assets mechanically**
 
-Copy every file under `archive/legacy-patient-web/` except its archival `README.md` to the same relative path under `patient-web/`. Do not edit these copied files. Copy the original patient-capable `login.html`, `css/login.css`, and `js/login.js` from `C:\Users\Lenovo\Desktop\源码 - 副本`.
+Copy every file under `archive/legacy-patient-web/` except its archival `README.md` to the same relative path under `patient-web/`. Do not edit these copied files. Copy the original patient-capable `login.html`, `css/login.css`, and `js/login.js` from the adjacent original-source workspace (`../源码 - 副本`).
 
 - [ ] **Step 2: Add an invisible entry redirect and active-site README**
 

@@ -2,13 +2,13 @@
 
 ## 发布安全边界（2026-08-30 审查后）
 
-- 后端只公开 `/doctor-web` 和 `/findviz` 所需资源，不再把仓库根目录作为静态站点；`.env`、数据库、上传文件、小程序源码和历史归档不能通过 HTTP 读取。
+- 后端只公开 `/patient-web`、`/doctor-web` 和 `/findviz` 所需资源，不把仓库根目录作为静态站点；`.env`、数据库、上传文件、小程序源码和历史归档不能通过 HTTP 读取。
 - 服务启动不会创建固定 DAC 管理账号，也会禁用旧库中的公开遗留账号 `admin123`。演示 DAC 只由 `python -m backend.scripts.seed_demo_data` 显式创建，且该脚本拒绝在 `APP_ENV=production` 下运行。
 - 旧 SQLite 库启动升级时会为 `model_predictions.upload_id` 增加唯一索引及关联完整性触发器。旧 MySQL 库请先备份，再执行 `backend/sql/migrations/20260830_model_prediction_upload_link_mysql.sql`；全新数据库由 SQLAlchemy 模型创建等价的唯一外键。
 - 影像 Mock 结果在医生报告中显示红色“演示 Mock”提示和后端免责声明；真实推理失败不会静默降级成 Mock。
 - 上传接口分块读取并执行服务器端硬上限，不会在检查大小前读取整个任意大文件。
 
-这是独立于 A、B 原目录的新版本：患者端以 A 的原生微信小程序为主，服务端以 B 的 FastAPI 后端为主，B 的医生/研究人员 Web 保留为活动入口。B 的旧患者网页没有删除，已放入只读意义上的历史归档。
+这是独立于 A、B 原目录的合并版：患者可使用 A 的原生微信小程序，也可使用保留原外观与功能的患者 Web；医生/研究人员使用小程序工作台或 `doctor-web/`。这些客户端共用同一个 FastAPI `/api/v1`、账号体系和数据库。原患者页面同时保留了归档副本作为来源证据。
 
 本项目是科研与演示软件，不是独立医疗器械。自动测试通过不代表医学有效性、临床安全性或生产合规性已经验证。
 
@@ -16,11 +16,12 @@
 
 ```text
 backend/                    B 后端主线（FastAPI、数据库、接口）
-miniprogram/                A 患者端主线（微信小程序，21 个页面）
+miniprogram/                A 微信小程序（患者端和医生移动工作台，25 个页面）
+patient-web/                患者活动 Web（保留原页面外观与功能）
 doctor-web/                 B 医生/研究人员活动 Web
 findviz/                    影像可视化服务与静态资源
 HGST-main/                  HGST 模型工程
-archive/legacy-patient-web/ B 旧患者网页，仅归档，不参与默认运行
+archive/legacy-patient-web/ 原患者页面归档副本，不直接对外服务
 tests/                      跨端、结构与洁净度测试
 tools/                      审计和交付工具
 docs/evidence/              来源、契约、验证与人工验收证据
@@ -76,9 +77,10 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 - API 根：`http://127.0.0.1:8000/`
 - 健康检查：`http://127.0.0.1:8000/api/v1/health`
 - OpenAPI：`http://127.0.0.1:8000/docs`
+- 患者网页端：`http://127.0.0.1:8000/patient-web/`
 - 医生端：`http://127.0.0.1:8000/doctor-web/`
 
-医生端必须通过 HTTP 访问；不要双击 HTML。患者请使用微信小程序，不要把 `archive/legacy-patient-web/` 当成活动入口。
+网页端必须通过 HTTP 访问，不要双击 HTML。患者可以在 `/patient-web/` 或微信小程序使用同一账号；不要把 `archive/legacy-patient-web/` 当成活动入口。
 
 ## 5. MySQL 启动
 
@@ -93,7 +95,7 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 1. 微信开发者工具选择“导入项目”，目录选 `miniprogram/`；配置文件为 `miniprogram/project.config.json`。
 2. 先启动后端，在小程序登录页打开“服务器连接设置”。开发者工具可填 `http://127.0.0.1:8000/api/v1`；真机要填电脑局域网地址或已备案的 HTTPS 地址。
 3. 开发阶段按团队规范决定是否临时关闭合法域名校验；正式发布必须配置 HTTPS、request 合法域名、证书和备案。
-4. 使用种子脚本输出的患者演示账号检查登录、量表、七类认知任务、14 天追踪、报告、关怀路径和 AI 页面。
+4. 使用种子脚本输出的患者演示账号检查登录、量表、六类认知任务、14 天追踪、报告、关怀路径和 AI 页面。小程序不再提供“简单反应时”，后端仍保留历史 `simple_reaction` 记录的识别与报告兼容。
 
 仓库不代填正式 AppID、生产域名、证书、数据库口令或医院配置。
 
