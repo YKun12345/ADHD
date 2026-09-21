@@ -168,6 +168,7 @@ Component({
       this._dragMoved = false
       if (!moved) {
         this._applyPosition(startPosition)
+        this.togglePanel()
         return
       }
 
@@ -180,14 +181,15 @@ Component({
         this._positionStorageKey,
         serializePosition(position, this._positionBounds)
       )
-      this._suppressNextTap = true
+    },
+
+    handleDragCancel() {
+      this._dragTouchStart = null
+      this._dragPositionStart = null
+      this._dragMoved = false
     },
 
     togglePanel() {
-      if (this._suppressNextTap) {
-        this._suppressNextTap = false
-        return
-      }
       this.setData({
         expanded: !this.data.expanded,
         guideBubbleVisible: false

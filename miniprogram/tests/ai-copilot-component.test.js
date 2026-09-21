@@ -103,10 +103,10 @@ assert.deepEqual(calls.storageWrites.at(-1), {
   key: 'ai_copilot_position_v1:patient:7',
   value: { version: 1, side: 'left', yRatio: 0.3811 }
 })
-component.togglePanel()
-assert.equal(component.data.expanded, false, '拖动结束后的合成点击不得打开面板')
-component.togglePanel()
-assert.equal(component.data.expanded, true)
+assert.equal(component.data.expanded, false, '拖动结束不得打开面板')
+component.handleDragStart({ touches: [{ clientX: 20, clientY: 410 }] })
+component.handleDragEnd()
+assert.equal(component.data.expanded, true, '拖动后的第一次真实轻触必须立即打开')
 component.closePanel()
 
 componentDefinition.pageLifetimes.resize.call(component, {
@@ -125,9 +125,12 @@ component.handleDragMove({ touches: [{ clientX: 23, clientY: 413 }] })
 component.handleDragEnd()
 assert.equal(component.data.positionX, 12, '轻微手抖应恢复拖动前位置')
 assert.equal(component.data.positionY, 402, '轻微手抖应恢复拖动前位置')
-component.togglePanel()
 assert.equal(component.data.expanded, true, '轻触仍应正常打开面板')
 component.closePanel()
+
+component.handleDragStart({ touches: [{ clientX: 20, clientY: 410 }] })
+component.handleDragCancel()
+assert.equal(component.data.expanded, false, '触摸取消不得打开面板')
 
 component.openPageHelp()
 assert.match(calls.navigation[0], /scope=general&prompt=/)
@@ -186,11 +189,11 @@ const wxss = fs.readFileSync(
 assert.equal(json.component, true)
 
 for (const fragment of [
-  'bindtap="togglePanel"',
   'wx:if="{{!expanded}}"',
   'catchtouchstart="handleDragStart"',
   'catchtouchmove="handleDragMove"',
   'catchtouchend="handleDragEnd"',
+  'catchtouchcancel="handleDragCancel"',
   'left: {{positionX}}px',
   'top: {{positionY}}px',
   'ai-copilot--{{dockSide}}',
@@ -209,6 +212,8 @@ for (const fragment of [
     `WXML 缺少：${fragment}`
   )
 }
+
+assert.equal(wxml.includes('bindtap="togglePanel"'), false)
 
 for (const fragment of [
   '.ai-copilot',
