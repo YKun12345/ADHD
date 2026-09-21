@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-04-07 14:42 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>14天追踪 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="bg-page" data-copilot-page="tracking">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html">首页</a></li>
+                <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_test.html">认知测试</a></li>
+                <li><a href="patient_tracking.html" class="active">14天追踪</a></li>
+                <li><a href="patient_report.html">我的报告</a></li>
+                <li><a href="clinical_pathway.html">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="info-block" style="padding-top: 100px; padding-bottom: 60px; min-height: 100vh; background-color: #F8FAFC;">
+        <div class="daylio-app-container tracking-board">
+            <section class="tracking-feed-column">
+                <div class="tracking-section-card tracking-feed-shell">
+                    <div class="tracking-section-header">
+                        <div>
+                            <h2>记录</h2>
+                            <p>按时间顺序查看每日打卡、活动标签和 AI 提醒，形成连续的追踪流水。</p>
+                        </div>
+                        <span class="tracking-section-badge">瀑布流日志</span>
+                    </div>
+
+                    <div id="trackingAiReminder" class="tracking-ai-card hidden">
+                        <div class="tracking-ai-card-top">
+                            <div>
+                                <div id="trackingAiMeta" class="tracking-ai-meta">AI 提醒</div>
+                                <h3 id="trackingAiTitle">正在生成你的追踪提醒...</h3>
+                            </div>
+                            <span class="tracking-ai-pill">14天追踪</span>
+                        </div>
+                        <p id="trackingAiMessage">系统会根据最近完成情况生成一条更像“陪跑提醒”的提示。</p>
+                        <div class="tracking-ai-actions">
+                            <button id="trackingAiActionBtn" class="btn-primary-orange" type="button" style="padding:0.82rem 1.25rem;">去处理</button>
+                            <a id="trackingAiAskLink" class="btn-outline" href="patient_ai.html" style="text-decoration:none; padding:0.82rem 1.25rem;">去 AI 助手聊聊</a>
+                        </div>
+                    </div>
+
+                    <div id="logsFeedList" class="logs-feed-list tracking-waterfall">
+                        <!-- Javascript will inject list cards here -->
+                    </div>
+                    <div id="emptyLogsMsg" class="empty-state tracking-empty-state">
+                         <ion-icon name="book-outline"></ion-icon>
+                         <p id="emptyLogsText">加载数据中...</p>
+                         <a href="login.html" id="loginRedirectBtn" class="btn-primary-cyan" style="display: none; padding: 0.5rem 1.5rem; text-decoration: none; border-radius: 999px; margin-top: 1rem;">前往登录</a>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="tracking-side-column">
+                <div class="tracking-section-card calendar-card tracking-calendar-shell">
+                    <div class="tracking-section-header">
+                        <div>
+                            <h2>日历</h2>
+                            <p>查看 14 天心情打卡和整体完成度，快速定位还未记录的日期。</p>
+                        </div>
+                        <span class="tracking-section-badge">14天追踪</span>
+                    </div>
+                    <div class="calendar-grid-header">
+                        <h3>14天追踪网格</h3>
+                        <span id="calendarProgress">进度: 0/14</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Javascript will inject 1-14 grid cells -->
+                    </div>
+                </div>
+
+                <div id="trackingChartsSection" class="tracking-chart-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>心情走势图</h3>
+                        </div>
+                        <div id="lineChart" style="width: 100%; height: 260px;"></div>
+                    </div>
+                    <div class="chart-card donut-card">
+                        <div class="chart-header">
+                            <h3>心情分布统计</h3>
+                        </div>
+                        <div id="donutChart" style="width: 100%; height: 260px;"></div>
+                    </div>
+                </div>
+                <button id="magicFillBtn" class="btn-demo-mini tracking-magic-btn" type="button" style="width: 100%; padding: 1rem;">✨ 一键补齐 14 天演示数据</button>
+            </aside>
+
+            <button id="fabAddLog" class="fab-button" type="button" title="记录今天">
+                <ion-icon name="add"></ion-icon>
+            </button>
+        </div>
+
+        <!-- Wizard Modal for Logging -->
+        <div id="wizardOverlay" class="wizard-overlay" style="display: none;">
+            <div class="wizard-modal-shell">
+            <!-- Step 1: Mood -->
+            <div class="wizard-step active" id="wizardStep1">
+                <div class="wizard-header">
+                    <button class="wizard-close icon-btn" id="closeWizardBtn" type="button"><ion-icon name="close"></ion-icon></button>
+                    <div class="wizard-date" id="wizardDateObj">今天打卡</div>
+                    <div style="width: 40px;"></div> <!-- spacer -->
+                </div>
+                <h2 class="wizard-title" style="text-align: center; margin-top: 0.35rem; margin-bottom: 1.35rem;">你感觉怎么样？</h2>
+                
+                <div class="huge-mood-selector" id="hugeMoodSelector">
+                    <button class="huge-mood-btn" type="button" data-mood="5" data-color="#10B981" data-label="狂喜"><div class="emoji-wrapper">🤩</div><span>狂喜</span></button>
+                    <button class="huge-mood-btn" type="button" data-mood="4" data-color="#84CC16" data-label="开心"><div class="emoji-wrapper">😊</div><span>开心</span></button>
+                    <button class="huge-mood-btn" type="button" data-mood="3" data-color="#FBBF24" data-label="还行"><div class="emoji-wrapper">😐</div><span>还行</span></button>
+                    <button class="huge-mood-btn" type="button" data-mood="2" data-color="#F97316" data-label="不良"><div class="emoji-wrapper">😕</div><span>不良</span></button>
+                    <button class="huge-mood-btn" type="button" data-mood="1" data-color="#EF4444" data-label="超烂"><div class="emoji-wrapper">😫</div><span>超烂</span></button>
+                </div>
+            </div>
+
+            <!-- Step 2: Activities -->
+            <div class="wizard-step" id="wizardStep2" style="transform: translateX(100%);">
+                <div class="wizard-header split">
+                    <button class="wizard-back icon-btn" type="button"><ion-icon name="chevron-back"></ion-icon></button>
+                    <div class="wizard-date">选择活动</div>
+                    <button class="wizard-next-btn btn-text active" type="button">下一步</button>
+                </div>
+                <h2 class="wizard-title" style="margin-top: 0.25rem; margin-bottom: 1.2rem;">你这一阵子都在忙什么？</h2>
+                
+                <div class="activities-scrollable" id="activityPillsPool">
+                    <div class="activity-group">
+                        <h4>饮食 & 睡眠</h4>
+                        <div class="pills-container">
+                            <button class="activity-pill" type="button"><ion-icon name="bed"></ion-icon> 良好睡眠</button>
+                            <button class="activity-pill" type="button"><ion-icon name="moon"></ion-icon> 睡眠不足</button>
+                            <button class="activity-pill" type="button"><ion-icon name="alarm"></ion-icon> 早起</button>
+                            <button class="activity-pill" type="button"><ion-icon name="pizza"></ion-icon> 垃圾食品</button>
+                            <button class="activity-pill" type="button"><ion-icon name="nutrition"></ion-icon> 健康饮食</button>
+                        </div>
+                    </div>
+                    <div class="activity-group">
+                        <h4>社交 & 生活</h4>
+                        <div class="pills-container">
+                            <button class="activity-pill" type="button"><ion-icon name="people"></ion-icon> 见朋友</button>
+                            <button class="activity-pill" type="button"><ion-icon name="heart"></ion-icon> 家庭时间</button>
+                            <button class="activity-pill" type="button"><ion-icon name="chatbubbles"></ion-icon> 派对</button>
+                            <button class="activity-pill" type="button"><ion-icon name="game-controller"></ion-icon> 打游戏</button>
+                            <button class="activity-pill" type="button"><ion-icon name="tv"></ion-icon> 追剧</button>
+                        </div>
+                    </div>
+                    <div class="activity-group">
+                        <h4>任务 & 习惯</h4>
+                        <div class="pills-container">
+                            <button class="activity-pill" type="button"><ion-icon name="laptop"></ion-icon> 深度办公</button>
+                            <button class="activity-pill" type="button"><ion-icon name="book"></ion-icon> 阅读</button>
+                            <button class="activity-pill" type="button"><ion-icon name="barbell"></ion-icon> 锻炼</button>
+                            <button class="activity-pill" type="button"><ion-icon name="bulb"></ion-icon> 冥想</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Note & Focus Details -->
+            <div class="wizard-step" id="wizardStep3" style="transform: translateX(100%);">
+                <div class="wizard-header split">
+                    <button class="wizard-back icon-btn" type="button"><ion-icon name="chevron-back"></ion-icon></button>
+                    <div class="wizard-date">备注</div>
+                    <button class="wizard-next-btn btn-text primary" id="saveLogBtnFinal" type="button">保存 <ion-icon name="checkmark-circle"></ion-icon></button>
+                </div>
+                
+                <div class="summary-preview" style="margin-top: 1.5rem;">
+                    <div id="previewMoodEmoji" class="preview-emoji">🤩</div>
+                    <div id="previewActivities" class="preview-activities"></div>
+                </div>
+                
+                <h4 style="color: #64748B; font-size: 0.9rem; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-left: 0.5rem;">写点什么吧</h4>
+                <textarea id="wizardNoteInput" class="wizard-textarea" placeholder="记录一下你现在的想法、特殊状态，或者发生的一些小事..."></textarea>
+                
+                <div class="focus-wrap" style="margin-top: 2rem; background: #F8FAFC; padding: 1.5rem; border-radius: 16px;">
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B;">今日累计专注时间评估</label>
+                    <div class="focus-slider-wrapper" style="padding: 10px 0; background: transparent; border: none; margin-top: 0.5rem;">
+                        <input type="range" id="focusSlider" min="0" max="180" value="60" class="focus-slider" step="5">
+                        <div class="focus-value-display" style="font-size: 2rem;"><span id="focusValue">60</span><small>min</small></div>
+                    </div>
+                </div>
+
+                <!-- Medication Tracking -->
+                <div style="margin-top: 1.5rem; background: #F8FAFC; padding: 1.5rem; border-radius: 16px;">
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B; display: block; margin-bottom: 0.75rem;">用药情况</label>
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem;">
+                        <input type="checkbox" id="medication" style="width: 18px; height: 18px;">
+                        <label for="medication" style="font-size: 0.9rem; color: #475569;">今日是否用药</label>
+                    </div>
+                    <input type="text" id="medicationDosage" style="width: 100%; padding: 0.5rem; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 0.9rem;" placeholder="用药剂量（可选）">
+                </div>
+
+                <!-- 5 Core Ratings -->
+                <div style="margin-top: 1.5rem; background: #F8FAFC; padding: 1.5rem; border-radius: 16px;">
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B; display: block; margin-bottom: 0.75rem;">核心表现评分（1-5分）</label>
+                    <div id="coreRatingsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                </div>
+
+                <!-- Life Items -->
+                <div style="margin-top: 1.5rem; background: #F8FAFC; padding: 1.5rem; border-radius: 16px;">
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B; display: block; margin-bottom: 0.75rem;">生活关键项</label>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        <label style="font-size: 0.85rem; color: #64748B; display: block; margin-bottom: 0.35rem;">睡眠质量</label>
+                        <div class="life-item-group" data-field="sleep_quality">
+                            <button type="button" class="life-item-btn" data-value="很好">很好</button>
+                            <button type="button" class="life-item-btn" data-value="一般">一般</button>
+                            <button type="button" class="life-item-btn" data-value="较差">较差</button>
+                            <button type="button" class="life-item-btn" data-value="很差">很差</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        <label style="font-size: 0.85rem; color: #64748B; display: block; margin-bottom: 0.35rem;">食欲状况</label>
+                        <div class="life-item-group" data-field="appetite_quality">
+                            <button type="button" class="life-item-btn" data-value="很好">很好</button>
+                            <button type="button" class="life-item-btn" data-value="一般">一般</button>
+                            <button type="button" class="life-item-btn" data-value="较差">较差</button>
+                            <button type="button" class="life-item-btn" data-value="很差">很差</button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label style="font-size: 0.85rem; color: #64748B; display: block; margin-bottom: 0.35rem;">与他人发生冲突</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: #475569;"><input type="checkbox" id="conflict" style="width: 16px; height: 16px;"> 是</label>
+                                <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: #475569;"><input type="checkbox" id="no-conflict" style="width: 16px; height: 16px;"> 否</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; color: #64748B; display: block; margin-bottom: 0.35rem;">受到批评</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: #475569;"><input type="checkbox" id="criticism" style="width: 16px; height: 16px;"> 是</label>
+                                <label style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: #475569;"><input type="checkbox" id="no-criticism" style="width: 16px; height: 16px;"> 否</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.85rem; color: #64748B; display: block; margin-bottom: 0.35rem;">药物副作用</label>
+                        <div class="life-item-group" data-field="side_effects" style="flex-wrap: wrap;">
+                            <button type="button" class="life-item-btn multi" data-value="头痛">头痛</button>
+                            <button type="button" class="life-item-btn multi" data-value="恶心">恶心</button>
+                            <button type="button" class="life-item-btn multi" data-value="失眠">失眠</button>
+                            <button type="button" class="life-item-btn multi" data-value="食欲下降">食欲下降</button>
+                            <button type="button" class="life-item-btn multi" data-value="心跳加速">心跳加速</button>
+                            <button type="button" class="life-item-btn multi" data-value="无">无</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Special Events & Highlights -->
+                <div style="margin-top: 1.5rem; background: #F8FAFC; padding: 1.5rem; border-radius: 16px;">
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B; display: block; margin-bottom: 0.5rem;">特殊事件</label>
+                    <textarea id="specialEvents" style="width: 100%; padding: 0.75rem; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 0.9rem; min-height: 60px; resize: vertical;" placeholder="今天发生了什么特别的事情？（可选）"></textarea>
+
+                    <label style="font-size: 0.95rem; font-weight: 600; color: #1E293B; display: block; margin-top: 1rem; margin-bottom: 0.5rem;">今日亮点</label>
+                    <textarea id="highlights" style="width: 100%; padding: 0.75rem; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 0.9rem; min-height: 60px; resize: vertical;" placeholder="今天有什么值得记录的亮点或进步？（可选）"></textarea>
+                </div>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <span>专注每刻 © 2026 · ADHD 多模态辅助诊断平台</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/tracking.js"></script>
+    <script src="js/tracking_ai.js"></script>
+    <script src="js/patient_copilot.js"></script>
+    <script>
+        (function () {
+            const storedUser = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
+            const userName = document.getElementById('userName');
+            if (userName && storedUser?.full_name) {
+                userName.textContent = storedUser.full_name;
+            }
+        })();
+
+        // Core ratings UI builder
+        (function() {
+            const categories = [
+                { id: 'attention', label: '注意力情况' },
+                { id: 'hyperactivity', label: '多动情况' },
+                { id: 'impulsivity', label: '冲动行为' },
+                { id: 'emotion', label: '情绪状态' },
+                { id: 'taskCompletion', label: '完成任务情况' }
+            ];
+            const emojis = ['😫', '😕', '😐', '😊', '🤩'];
+            const container = document.getElementById('coreRatingsContainer');
+            if (!container) return;
+
+            categories.forEach(cat => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display: flex; align-items: center; gap: 0.5rem;';
+                row.innerHTML = `<span style="font-size: 0.85rem; color: #475569; min-width: 80px;">${cat.label}</span>`;
+                for (let i = 1; i <= 5; i++) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'core-rating-btn';
+                    btn.dataset.field = cat.id;
+                    btn.dataset.score = i;
+                    btn.textContent = emojis[i-1];
+                    btn.style.cssText = 'width: 36px; height: 36px; border-radius: 8px; border: 2px solid #E2E8F0; background: white; font-size: 1.1rem; cursor: pointer; transition: all 0.2s;';
+                    row.appendChild(btn);
+                }
+                container.appendChild(row);
+            });
+
+            container.addEventListener('click', function(e) {
+                const btn = e.target.closest('.core-rating-btn');
+                if (!btn) return;
+                const field = btn.dataset.field;
+                container.querySelectorAll(`.core-rating-btn[data-field="${field}"]`).forEach(b => {
+                    b.style.borderColor = '#E2E8F0';
+                    b.style.background = 'white';
+                });
+                btn.style.borderColor = '#3B82F6';
+                btn.style.background = '#EFF6FF';
+            });
+        })();
+
+        // Life item buttons
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.life-item-btn');
+            if (!btn) return;
+            const group = btn.closest('.life-item-group');
+            if (btn.classList.contains('multi')) {
+                btn.classList.toggle('selected');
+                if (btn.classList.contains('selected')) {
+                    btn.style.borderColor = '#3B82F6';
+                    btn.style.background = '#EFF6FF';
+                } else {
+                    btn.style.borderColor = '#E2E8F0';
+                    btn.style.background = 'white';
+                }
+            } else {
+                group.querySelectorAll('.life-item-btn').forEach(b => {
+                    b.style.borderColor = '#E2E8F0';
+                    b.style.background = 'white';
+                });
+                btn.style.borderColor = '#3B82F6';
+                btn.style.background = '#EFF6FF';
+            }
+        });
+
+        // Conflict/Criticism checkbox mutual exclusion
+        ['conflict', 'criticism'].forEach(id => {
+            const yesBox = document.getElementById(id);
+            const noBox = document.getElementById('no-' + id);
+            if (yesBox && noBox) {
+                yesBox.addEventListener('click', () => { if (yesBox.checked) noBox.checked = false; });
+                noBox.addEventListener('click', () => { if (noBox.checked) yesBox.checked = false; });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -71,10 +71,17 @@ app.mount(
     StaticFiles(directory=str(BASE_DIR / "doctor-web"), html=True),
     name="doctor_web",
 )
+app.mount(
+    "/patient-web",
+    StaticFiles(directory=str(BASE_DIR / "patient-web"), html=True),
+    name="patient_web",
+)
 
 @app.get("/", tags=["root"])
 def read_root() -> dict[str, str]:
     return {
         "message": "ADHD Assist Platform API is running.",
         "docs": "/docs",
+        "patient_web": "/patient-web/",
+        "doctor_web": "/doctor-web/",
     }
