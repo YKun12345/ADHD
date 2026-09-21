@@ -4,7 +4,7 @@
   <view class="center-content">
     <view class="page-heading">
       <text class="page-kicker">你好，{{patientName}}</text>
-      <text class="page-title">完成七项认知任务</text>
+      <text class="page-title">完成六项认知任务</text>
       <text class="page-subtitle">
         成人与儿童参数自动适配，可完整评估或单项完成
       </text>
@@ -26,14 +26,14 @@
       </view>
       <view class="completion-banner" wx:if="{{allCompleted}}">
         <view class="completion-banner__mark" aria-hidden="true"></view>
-        <text>七项任务已完成，最近结果已保存在本机</text>
+        <text>六项任务已完成，最近结果已保存在本机</text>
       </view>
     </view>
 
     <view class="battery-card glass-surface">
       <view class="battery-copy">
         <text class="battery-title">完整认知评估</text>
-        <text class="battery-description">轻量移动筛查版按推荐顺序完成七项，短任务单节完成，长任务会分节休息</text>
+        <text class="battery-description">轻量移动筛查版按推荐顺序完成六项，短任务单节完成，长任务会分节休息</text>
         <text class="battery-time">预计剩余 {{remainingMinutes}} 分钟</text>
       </view>
       <button class="battery-button ui-button ui-button--primary" bindtap="startOrResumeBattery">{{batteryActionText}}</button>

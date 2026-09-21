@@ -23,4 +23,4 @@ for (const pageName of ['cognitive', 'stroop']) {
 assert.match(fs.readFileSync(path.resolve(__dirname, '../pages/nback/index.js'), 'utf8'), /finishPage\([^\n]+this\._trials\.length/)
 assert.match(fs.readFileSync(path.resolve(__dirname, '../pages/trail/index.js'), 'utf8'), /finishPage\([^\n]+actualNodes/)
 
-console.log('七项认知协议元数据一致性测试全部通过')
+console.log('六项认知协议元数据一致性测试全部通过')

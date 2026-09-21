@@ -9,7 +9,6 @@ const COPILOT_PAGE_KEYS = Object.freeze([
   'scale',
   'cognitive-center',
   'cognitive',
-  'simple-reaction',
   'stroop',
   'trail',
   'flanker',

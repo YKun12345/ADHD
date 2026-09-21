@@ -19,14 +19,14 @@ assert.equal(nextBatteryTask(initial), 'reaction')
 
 const afterReaction = completeBatteryTask(initial, 'reaction', '2026-08-29T01:05:00.000Z')
 assert.deepEqual(afterReaction.completedTaskIds, ['reaction'])
-assert.equal(nextBatteryTask(afterReaction), 'simple_reaction')
+assert.equal(nextBatteryTask(afterReaction), 'stroop')
 assert.deepEqual(
   completeBatteryTask(afterReaction, 'reaction').completedTaskIds,
   ['reaction']
 )
 
 let completed = initial
-for (const taskId of ['reaction', 'simple_reaction', 'stroop', 'trail', 'flanker', 'nback', 'digit']) {
+for (const taskId of ['reaction', 'stroop', 'flanker', 'nback', 'trail', 'digit']) {
   completed = completeBatteryTask(completed, taskId)
 }
 assert.equal(nextBatteryTask(completed), '')

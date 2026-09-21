@@ -1,7 +1,6 @@
 const assert = require('node:assert/strict')
 
 const { buildGoNoGoTrials } = require('../utils/gonogo-test')
-const { buildDelaySequence } = require('../utils/simple-reaction-test')
 const { buildStroopTrials } = require('../utils/stroop-test')
 const { buildFlankerTrials } = require('../utils/flanker-test')
 const { buildNBackTrials } = require('../utils/nback-test')
@@ -25,11 +24,6 @@ const goB = buildGoNoGoTrials(25, highRandom())
 assert.notDeepEqual(goA, goB)
 assert.equal(goA.filter((type) => type === 'go').length, 20)
 assert.equal(goA.filter((type) => type === 'nogo').length, 5)
-
-const delaysA = buildDelaySequence(20, 1000, 2500, lowRandom())
-const delaysB = buildDelaySequence(20, 1000, 2500, highRandom())
-assert.notDeepEqual(delaysA, delaysB)
-assert.deepEqual(delaysA.slice().sort((a, b) => a - b), delaysB.slice().sort((a, b) => a - b))
 
 const stroopA = buildStroopTrials(24, 0.75, lowRandom())
 const stroopB = buildStroopTrials(24, 0.75, highRandom())
@@ -63,4 +57,4 @@ assert.notDeepEqual(trailA, trailB)
 assert.deepEqual(trailA.map((node) => node.label), trailSequence)
 assert.deepEqual(trailB.map((node) => node.label), trailSequence)
 
-console.log('七类认知任务受约束随机化测试全部通过')
+console.log('六类认知任务受约束随机化测试全部通过')

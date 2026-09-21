@@ -36,7 +36,6 @@ assert.match(
 
 const expectedCognitiveTypes = [
   ['utils/gonogo-test.js', 'reaction'],
-  ['utils/simple-reaction-test.js', 'simple_reaction'],
   ['utils/stroop-test.js', 'stroop'],
   ['utils/trail-test.js', 'trail'],
   ['utils/flanker-test.js', 'flanker'],

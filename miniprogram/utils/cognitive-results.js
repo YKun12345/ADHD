@@ -12,16 +12,6 @@ const TEST_DEFINITIONS = Object.freeze([
     url: '/pages/cognitive/index'
   },
   {
-    id: 'simple_reaction',
-    title: '简单反应时',
-    description: '基础反应速度与稳定性',
-    icon: '速',
-    iconName: 'speed',
-    iconShape: 'target',
-    estimatedMinutes: 2,
-    url: '/pages/simple-reaction/index'
-  },
-  {
     id: 'stroop',
     title: '颜色干扰任务',
     description: '颜色选择与冲突抑制',
@@ -143,12 +133,12 @@ function buildCognitiveSummary(value) {
   const completedCount = cards.filter((card) => card.completed).length
   const totalCount = cards.length
   const allCompleted = completedCount === totalCount
-  let summaryText = '完成七项认知任务，补充客观注意、抑制与工作记忆表现。'
+  let summaryText = '完成六项认知任务，补充客观注意、抑制与工作记忆表现。'
 
   if (allCompleted) {
-    summaryText = '七项认知任务均已完成，可继续进入每日追踪。'
+    summaryText = '六项认知任务均已完成，可继续进入每日追踪。'
   } else if (completedCount > 0) {
-    summaryText = `已完成 ${completedCount}/7 项，可继续完成剩余认知任务。`
+    summaryText = `已完成 ${completedCount}/${totalCount} 项，可继续完成剩余认知任务。`
   }
 
   return {

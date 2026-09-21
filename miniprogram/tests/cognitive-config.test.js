@@ -8,7 +8,6 @@ const {
 
 assert.deepEqual(TASK_ORDER, [
   'reaction',
-  'simple_reaction',
   'stroop',
   'flanker',
   'nback',
@@ -25,10 +24,6 @@ assert.equal(getTaskConfig('reaction', 'child').formalTrials, 25)
 assert.equal(getTaskConfig('reaction', 'adult').formalTrials, 25)
 assert.equal(getTaskConfig('reaction', 'adult').blockSize, 25)
 assert.equal(getTaskConfig('reaction', 'adult').practiceTrials, 5)
-assert.equal(getTaskConfig('simple_reaction', 'child').formalTrials, 20)
-assert.equal(getTaskConfig('simple_reaction', 'adult').formalTrials, 20)
-assert.equal(getTaskConfig('simple_reaction', 'adult').blockSize, 20)
-assert.equal(getTaskConfig('simple_reaction', 'adult').practiceTrials, 4)
 assert.equal(getTaskConfig('stroop', 'child').formalTrials, 24)
 assert.equal(getTaskConfig('stroop', 'adult').formalTrials, 24)
 assert.equal(getTaskConfig('stroop', 'adult').blockSize, 12)
@@ -48,7 +43,7 @@ assert.equal(getTaskConfig('digit', 'adult').maxSpan, 8)
 assert.equal(getTaskConfig('missing', 'adult'), null)
 
 for (const ageGroup of ['child', 'adult']) {
-  for (const taskId of ['reaction', 'simple_reaction', 'stroop', 'flanker', 'nback']) {
+  for (const taskId of ['reaction', 'stroop', 'flanker', 'nback']) {
     const config = getTaskConfig(taskId, ageGroup)
     assert.equal(config.formalTrials <= 60, true, `${ageGroup}/${taskId} 不得超过 60 个正式试次`)
     assert.equal(config.formalTrials % config.blockSize, 0, `${ageGroup}/${taskId} 小节必须完整分割`)
@@ -58,4 +53,4 @@ for (const ageGroup of ['child', 'adult']) {
   }
 }
 
-console.log('七项认知参数测试全部通过')
+console.log('六项认知参数测试全部通过')
