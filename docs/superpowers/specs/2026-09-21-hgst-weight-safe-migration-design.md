@@ -6,8 +6,8 @@
 
 ## 来源与目标
 
-- 来源：`C:\Users\Lenovo\Desktop\源码 - 副本\backend\artifacts\hgst_adhd_bundle.pt`
-- 目标：`C:\Users\Lenovo\Desktop\ADHD-AB协作版\backend\models\hgst_adhd_bundle.pt`
+- 来源：相邻旧源码工作区中的 `backend/artifacts/hgst_adhd_bundle.pt`
+- 目标：当前项目中的 `backend/models/hgst_adhd_bundle.pt`
 - 来源文件大小：`59,203,363` 字节
 - 来源 SHA-256：`74575AFA48EF423461CA463F8C57CC2F1B767C3CF320C94367C00E02ABA7F95A`
 
