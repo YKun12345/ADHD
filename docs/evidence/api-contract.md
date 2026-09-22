@@ -16,7 +16,7 @@
 | POST | `/patient/submit_scale` | 患者 | 量表类型、答题分值、答题者类型 | 量表得分、风险级别、雷达和建议 |
 | POST | `/patient/submit_cognitive_test` | 患者 | `test_type`、`result_json` | 规范化后的任务类型、结果和记录时间 |
 | POST | `/patient/submit_daily_log` | 患者 | 当日专注、情绪、行为、用药和备注字段 | 追踪记录 |
-| GET | `/patient/comprehensive_report` | 患者 | 无 | 最新量表、七项认知、追踪、影像和模型结果 |
+| GET | `/patient/comprehensive_report` | 患者 | 无 | 最新量表、认知、追踪、影像和模型结果 |
 | POST | `/ai/chat` | 患者/研究者 | 消息及可选上下文 | AI 或显式不可用状态 |
 | POST | `/care/doctor/patient/{patient_id}/tasks` | 研究者 | 任务标题、描述和截止时间 | 患者任务 |
 | GET | `/care/patient/tasks` | 患者 | 无 | 患者任务列表 |
@@ -24,25 +24,24 @@
 | POST | `/care/patient/messages` | 患者 | 消息内容 | 医患消息记录 |
 | GET | `/care/patient/messages` | 患者 | 无 | 医患消息列表 |
 
-## 七项认知任务契约
+## 六项活动认知任务与历史兼容
 
-顺序和 ID 固定为：
+小程序当前顺序和 ID 固定为：
 
 1. `reaction`：Go/No-Go
-2. `simple_reaction`：简单反应时
-3. `stroop`：Stroop
-4. `trail`：连线测试
-5. `flanker`：Flanker
-6. `nback`：2-back
-7. `digit`：数字广度
+2. `stroop`：Stroop
+3. `flanker`：Flanker
+4. `nback`：2-back
+5. `trail`：连线测试
+6. `digit`：数字广度
 
 提交结构：
 
 ```json
 {
-  "test_type": "simple_reaction",
+  "test_type": "reaction",
   "result_json": {
-    "test_name": "简单反应时",
+    "test_name": "Go/No-Go 测试",
     "status_text": "已完成",
     "finished_at": "2026-08-30T08:00:00Z",
     "metrics": [
@@ -59,11 +58,12 @@
 规则：
 
 - 未知 `test_type` 返回 HTTP 422，不写数据库。
+- `simple_reaction` 不再是小程序活动任务，但后端仍接受并展示已有的历史记录。
 - 历史别名 `gonogo`、`go_no_go` 规范为 `reaction`；`digit_span`、`digit-span` 规范为 `digit`。
 - 历史字段 `avg_reaction_ms`、`correct_rate`、`duration_s`、`correct`、`wrong`、`max_span` 在服务端转换为当前 `raw_result`。
 - `accuracy` 统一使用 0–100 百分数；历史 0–1 比率会乘以 100。
-- 综合报告必须按照上述顺序返回已完成任务；没有完成的任务不伪造结果。
-- 反应速度优先使用 `simple_reaction`，缺失时才回退到 Go/No-Go；抑制控制中的误触仍使用 `reaction.false_starts`。
+- 综合报告只返回已完成任务；没有完成的任务不伪造结果。旧患者数据中的 `simple_reaction` 仍可用于历史报告。
+- 新的小程序反应与抑制数据使用 `reaction`，其中误触使用 `reaction.false_starts`。
 
 ## 医生端和模型接口
 

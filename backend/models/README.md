@@ -1,13 +1,26 @@
 # backend/models/ — HGST 部署模型目录
 
-真实 HGST 时间序列分类模型的部署权重统一放在本目录。当前仓库**不随源码附带真实权重**：
-默认演示走 Mock（见 `USE_MOCK_MODEL`），真实链路在放入下列权重文件后自动启用。
+真实 HGST 时间序列分类模型的部署权重统一放在本目录。Git 仓库**不随源码附带真实权重**；
+本地放入下列权重文件后，后端可以发现部署 bundle，但真实推理仍要求兼容的 Python、PyTorch
+和 DHG 运行环境。推理模式及演示标识由 `USE_MOCK_MODEL` 控制。
 
 ## 权重文件
 
 | 文件 | 作用 |
 |---|---|
 | `hgst_adhd_bundle.pt` | 部署版推理 bundle（默认路径，可用环境变量 `HGST_DEPLOYMENT_BUNDLE_PATH` 覆盖） |
+
+## 本地迁移记录
+
+2026-09-21 从相邻旧源码工作区的 `backend/artifacts/hgst_adhd_bundle.pt` 安全迁移到本目录：
+
+- 文件大小：`59,203,363` 字节
+- SHA-256：`74575AFA48EF423461CA463F8C57CC2F1B767C3CF320C94367C00E02ABA7F95A`
+- 只读结构检查：包含 `encoder_state_dict`、`classifier_state_dict`、`classifier_input_dim`
+- Git 状态：继续由 `*.pt` 规则忽略，仅作为本机部署资产保存
+
+这条记录只证明文件身份和结构标识正确，不表示当前电脑已经具备真实推理依赖，也不代表模型
+准确率已经重新验证。部署到其他电脑时，需要单独安全传输权重并再次核对上述 SHA-256。
 
 ## bundle 契约（`torch.save` 出的 dict）
 

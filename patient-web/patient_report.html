@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的报告 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="bg-page" data-copilot-page="report">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html">首页</a></li>
+                <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_test.html">认知测试</a></li>
+                <li><a href="patient_tracking.html">14天追踪</a></li>
+                <li><a href="patient_report.html" class="active">我的报告</a></li>
+                <li><a href="clinical_pathway.html">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI 助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="info-block" style="padding-top: 120px; min-height: 80vh;">
+        <div class="info-container block-center">
+            <h1 style="font-size: 2.5rem; color: #0F172A; margin-bottom: 1rem;">我的动态临床报告</h1>
+            <p class="center-sub">量表结果提交后会自动同步到这里，并逐步整合认知测试、14天追踪和影像分析摘要，形成一份持续更新的综合报告。</p>
+
+            <div id="reportLoading" class="todo-widget" style="text-align: center; max-width: 980px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                <p style="color:#64748B; font-size:1.05rem;">正在加载最新报告...</p>
+            </div>
+
+            <div id="reportEmpty" class="todo-widget hidden" style="text-align: center; max-width: 980px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                <h3 style="font-size: 1.4rem; color: #0F172A; margin-bottom: 1rem;">还没有可展示的量表报告</h3>
+                <p style="color:#64748B; margin-bottom:1.5rem;">请先完成 ASRS 或 SNAP-IV 量表，系统会自动把结果同步到本页。</p>
+                <a href="patient_scale.html" class="btn-primary-orange" style="text-decoration:none; display:inline-flex;">去做行为量表</a>
+            </div>
+
+            <div id="reportContent" class="hidden report-page-layout" style="max-width: 1320px; margin: 0 auto; text-align: left;">
+                <div class="report-main-waterfall">
+                    <div class="todo-widget report-waterfall-card report-scale-card" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                            <h3><ion-icon name="podium-outline" style="color: var(--primary-blue);"></ion-icon> 最新量表结果</h3>
+                            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; justify-content:flex-end;">
+                                <button id="reportAiExplainBtn" class="btn-secondary" type="button" style="padding:0.72rem 1.15rem; font-size:0.92rem;">
+                                    <ion-icon name="sparkles-outline" style="margin-right:0.35rem;"></ion-icon> AI解读
+                                </button>
+                                <span id="reportBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                            </div>
+                        </div>
+                        <div class="report-scale-stack">
+                            <div>
+                                <div id="reportMeta" class="report-meta-row"></div>
+                                <h4 id="reportScaleTitle" style="font-size:1.35rem; color:#0F172A; margin-bottom:0.8rem;">--</h4>
+                                <p id="reportSummary" style="color:#475569; line-height:1.8; margin-bottom:1.5rem;">--</p>
+                                <div id="reportRecommendations" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+                            </div>
+                            <div class="report-radar-panel compact">
+                                <div id="reportRadar" style="width:100%; height:540px;"></div>
+                            </div>
+                        </div>
+                        <div class="alert-box note" style="margin-top:1.4rem;">
+                            <ion-icon name="shield-checkmark-outline"></ion-icon>
+                            <span id="reportDisclaimer"><strong>医学免责说明：</strong> 本报告仅用于辅助筛查与追踪，不构成正式医学诊断。</span>
+                        </div>
+                    </div>
+
+                    <div id="reportAiPanel" class="todo-widget report-ai-panel hidden report-waterfall-card" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="report-ai-panel-top">
+                            <div>
+                                <div id="reportAiStatus" class="report-ai-status">点击上方“AI解读”开始生成</div>
+                                <h3 id="reportAiTitle">AI 会把你的报告翻译成更容易理解的话</h3>
+                            </div>
+                            <a id="reportAiDeepLink" href="patient_ai.html" class="btn-outline" style="text-decoration:none; padding:0.72rem 1rem; font-size:0.92rem;">去 AI 助手继续问</a>
+                        </div>
+                        <p id="reportAiSummary" class="report-ai-summary">这里会展示一段通俗总结、关键信息和下一步建议。</p>
+                        <div class="report-ai-grid">
+                            <div class="report-ai-section">
+                                <strong>关键发现</strong>
+                                <ul id="reportAiFindings"></ul>
+                            </div>
+                            <div class="report-ai-section">
+                                <strong>下一步建议</strong>
+                                <ul id="reportAiActions"></ul>
+                            </div>
+                        </div>
+                        <div id="reportAiDisclaimer" class="ai-mini-note"></div>
+                    </div>
+
+                    <div id="trackingSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                            <h3><ion-icon name="calendar-outline" style="color: var(--primary-blue);"></ion-icon> 14天数据追踪</h3>
+                            <span id="trackingBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                        </div>
+                        <div id="trackingMetaChips" style="display:flex; flex-wrap:wrap; gap:0.7rem; margin-bottom:1rem;"></div>
+                        <p id="trackingSummaryText" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                        <div class="report-tracking-chart-grid">
+                            <div class="report-ai-section">
+                                <strong>情绪走势</strong>
+                                <div id="reportTrackingLineChart" style="width:100%; height:320px;"></div>
+                            </div>
+                            <div class="report-ai-section">
+                                <strong>情绪分布</strong>
+                                <div id="reportTrackingDonutChart" style="width:100%; height:320px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="imagingSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                            <h3><ion-icon name="scan-outline" style="color: var(--primary-blue);"></ion-icon> 影像可视化摘要</h3>
+                            <span id="imagingBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                        </div>
+                        <p id="imagingSummary" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                        <div id="imagingMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;"></div>
+                        <div id="imagingFiles" style="display:flex; flex-wrap:wrap; gap:0.75rem;"></div>
+                        <div class="report-imaging-preview-grid">
+                            <section class="report-imaging-slot">
+                                <strong>脑切面截图预览</strong>
+                                <div id="imagingSlicePreview" class="report-imaging-placeholder">研究端同步脑切面截图后，将在这里展示给患者与研究人员查看。</div>
+                            </section>
+                            <section class="report-imaging-slot">
+                                <strong>3D 表面截图预览</strong>
+                                <div id="imagingSurfacePreview" class="report-imaging-placeholder">研究端同步 3D 表面截图后，将在这里展示给患者与研究人员查看。</div>
+                            </section>
+                        </div>
+                        <div class="report-imaging-interpretation">
+                            <strong>可视化结果文字解读</strong>
+                            <p id="imagingInterpretation">研究端同步脑影像截图与结果说明后，这里会展示对应的可视化文字解读。</p>
+                        </div>
+                    </div>
+
+                    <div id="modelPredictionSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                            <h3><ion-icon name="pulse-outline" style="color: var(--primary-blue);"></ion-icon> 影像分析结果</h3>
+                            <span id="modelPredictionBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                        </div>
+                        <div class="report-prediction-grid">
+                            <div>
+                                <div class="report-prediction-result-row">
+                                    <div class="report-prediction-stat">
+                                        <span class="report-prediction-kicker">二分类结果</span>
+                                        <strong id="modelPredictionLabel">--</strong>
+                                    </div>
+                                    <div class="report-prediction-stat">
+                                        <span class="report-prediction-kicker">置信等级</span>
+                                        <strong id="modelPredictionConfidence">--</strong>
+                                    </div>
+                                </div>
+                                <p id="modelPredictionSummary" class="report-prediction-summary">--</p>
+                                <div id="modelPredictionMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem;"></div>
+                            </div>
+                            <div class="report-prediction-bars">
+                                <div class="report-probability-card">
+                                    <div class="report-probability-top">
+                                        <strong>ADHD 概率</strong>
+                                        <span id="modelPredictionAdhdValue">--</span>
+                                    </div>
+                                    <div class="report-probability-track">
+                                        <div id="modelPredictionAdhdBar" class="report-probability-fill adhd"></div>
+                                    </div>
+                                </div>
+                                <div class="report-probability-card">
+                                    <div class="report-probability-top">
+                                        <strong>未患病概率</strong>
+                                        <span id="modelPredictionControlValue">--</span>
+                                    </div>
+                                    <div class="report-probability-track">
+                                        <div id="modelPredictionControlBar" class="report-probability-fill control"></div>
+                                    </div>
+                                </div>
+                                <p class="report-prediction-note">该结果来自研究端上传时序影像数据后的模型推理，仅供辅助参考，不替代医生正式诊断。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="cognitiveSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
+                            <h3><ion-icon name="game-controller-outline" style="color: var(--primary-blue);"></ion-icon> 认知能力摘要</h3>
+                            <span id="cognitiveBadge" style="padding:0.4rem 0.8rem; border-radius:999px; background:#EFF6FF; color:#1D4ED8; font-weight:700; font-size:0.9rem;">--</span>
+                        </div>
+                        <div class="report-cognitive-stack">
+                            <div>
+                                <p id="cognitiveSummary" style="color:#475569; line-height:1.8; margin-bottom:1rem;">--</p>
+                                <div id="cognitiveMeta" style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:1rem;"></div>
+                                <div id="cognitiveTests" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
+                            </div>
+                            <div class="report-radar-panel compact">
+                                <div id="cognitiveRadar" style="width:100%; height:520px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="report-side-panel">
+                    <div id="careSection" class="todo-widget report-side-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                        <div class="report-ai-panel-top">
+                            <div>
+                                <div class="report-ai-status">研究端协同</div>
+                                <h3>研究人员推送任务</h3>
+                            </div>
+                        </div>
+                        <div class="care-board">
+                            <section class="care-card">
+                                <p>查看研究端建议你补充的量表、认知测试或追踪任务，并在完成后标记状态。</p>
+                                <div id="patientTaskList" class="care-mini-list"></div>
+                                <div id="patientTaskEmpty" class="care-mini-empty">当前还没有研究人员推送的任务。</div>
+                            </section>
+                            <section class="care-card">
+                                <h3>给研究人员留言</h3>
+                                <p>围绕当前报告、追踪与任务进度进行异步沟通，消息会直接发送给研究人员，不会发给 AI 助手。</p>
+                                <div id="patientMessageList" class="care-message-thread"></div>
+                                <div id="patientMessageEmpty" class="care-mini-empty">当前还没有消息记录。</div>
+                                <form id="patientMessageForm" class="care-form">
+                                    <textarea id="patientMessageInput" placeholder="例如：我已经完成认知测试了，想请你看看最近追踪结果有什么变化。"></textarea>
+                                    <div id="patientMessageFeedback" class="care-feedback"></div>
+                                    <div class="care-form-actions">
+                                        <button id="patientSendMessageBtn" class="btn-primary-orange" type="submit">发送给研究人员</button>
+                                    </div>
+                                </form>
+                            </section>
+                        </div>
+                    </div>
+
+                    <!-- 行动建议面板 -->
+                    <div id="actionAdvicePanel" class="todo-widget report-side-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 1.2rem;">
+                        <div class="report-ai-panel-top" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <div class="report-ai-status" style="color:#F59E0B; background:#FEF3C7;">从结论到行动</div>
+                                <h3>推荐操作</h3>
+                            </div>
+                        </div>
+                        <div id="actionAdviceList" style="display:flex; flex-direction:column; gap:0.85rem;"></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="app-footer" style="padding: 2rem 0; margin-top: auto;">
+        <div class="footer-container" style="justify-content: center;">
+            <span>知行合“医” - 专注每刻 © 2026</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="js/api.js?v=20260405c"></script>
+    <script src="js/report.js?v=20260405c"></script>
+    <script>
+    // ==============================
+    // 行动建议面板逻辑
+    // ==============================
+    document.addEventListener('DOMContentLoaded', async function() {
+        // 加载综合报告数据，生成行动建议
+        try {
+            const report = await window.API?.Patient?.getComprehensiveReport().catch(() => null);
+            if (report) renderActionAdvice(report);
+        } catch(e) {}
+    });
+
+    function renderActionAdvice(report) {
+        const panel = document.getElementById('actionAdvicePanel');
+        const list = document.getElementById('actionAdviceList');
+        if (!panel || !list) return;
+
+        const scale = report?.latest_scale;
+        const cog = report?.cognitive_profile;
+        const tracking = report?.tracking_summary;
+        const imaging = report?.imaging_analysis;
+
+        const actions = [];
+
+        // 根据风险等级和数据生成建议
+        const riskLevel = scale?.risk_level;
+        const trackingDone = tracking?.completed_count || 0;
+        const trackingTotal = tracking?.total_days || 14;
+
+        if (riskLevel === 'high' && trackingDone < trackingTotal) {
+            actions.push({
+                icon: '⚠️',
+                title: '注意：风险评分较高',
+                desc: `量表显示高风险，建议继续完成14天追踪（当前 ${trackingDone}/${trackingTotal} 天），以获得动态数据支持。`,
+                btnText: '继续追踪打卡',
+                btnUrl: 'patient_tracking.html',
+                color: '#B45309',
+                bg: '#FEF3C7',
+                border: '#FDE68A'
+            });
+        }
+
+        if (!cog || cog.sessions_count < 1) {
+            actions.push({
+                icon: '🧠',
+                title: '建议补充认知测试',
+                desc: '尚未完成客观认知数据采集，补充认知测试能让AI解读更全面。',
+                btnText: '开始认知测试',
+                btnUrl: 'patient_test.html',
+                color: '#1D4ED8',
+                bg: '#EFF6FF',
+                border: '#BFDBFE'
+            });
+        } else if (trackingDone < trackingTotal) {
+            actions.push({
+                icon: '📅',
+                title: `追踪还差 ${trackingTotal - trackingDone} 天`,
+                desc: `连续14天追踪能建立更稳定的个人基线，完成后系统将自动生成趋势分析。`,
+                btnText: `今日打卡（已 ${trackingDone} 天）`,
+                btnUrl: 'patient_tracking.html',
+                color: '#047857',
+                bg: '#ECFDF5',
+                border: '#A7F3D0'
+            });
+        }
+
+        if (!imaging?.prediction_label && scale && cog?.sessions_count > 0) {
+            actions.push({
+                icon: '🔬',
+                title: '等待影像分析',
+                desc: '请联系研究人员上传脑功能时间序列数据，系统将自动运行GNN模型分析。',
+                btnText: '给研究人员留言',
+                btnUrl: '#careSection',
+                color: '#6D28D9',
+                bg: '#F5F3FF',
+                border: '#DDD6FE'
+            });
+        }
+
+        if (trackingDone >= trackingTotal && cog?.sessions_count > 0 && scale) {
+            actions.push({
+                icon: '✨',
+                title: '核心数据已完整',
+                desc: '量表、认知测试和14天追踪均已完成，点击"AI解读"获取个性化分析报告。',
+                btnText: '查看AI解读',
+                btnUrl: '#reportAiPanel',
+                color: '#7C3AED',
+                bg: 'linear-gradient(135deg, #F5F3FF, #EFF6FF)',
+                border: '#C4B5FD'
+            });
+        }
+
+        if (actions.length === 0) return;
+
+        panel.classList.remove('hidden');
+        list.innerHTML = actions.map(a => `
+            <div style="padding:0.9rem 1rem; border-radius:16px;
+                background:${a.bg}; border:1.5px solid ${a.border};
+                transition: transform 0.2s ease;"
+                onmouseover="this.style.transform='translateY(-2px)'"
+                onmouseout="this.style.transform=''">
+                <div style="display:flex; align-items:flex-start; gap:0.6rem; margin-bottom:0.5rem;">
+                    <span style="font-size:1.3rem; line-height:1;">${a.icon}</span>
+                    <strong style="font-size:0.88rem; color:${a.color}; line-height:1.4;">${a.title}</strong>
+                </div>
+                <p style="font-size:0.8rem; color:#475569; line-height:1.65; margin:0 0 0.7rem;">${a.desc}</p>
+                <a href="${a.btnUrl}" style="display:inline-flex; align-items:center; gap:0.4rem;
+                    padding:0.5rem 1rem; border-radius:10px;
+                    background:${a.color}; color:white;
+                    font-size:0.8rem; font-weight:700; text-decoration:none;
+                    transition: opacity 0.2s ease;"
+                    onmouseover="this.style.opacity='0.85'"
+                    onmouseout="this.style.opacity='1'">
+                    ${a.btnText} <ion-icon name="arrow-forward-outline"></ion-icon>
+                </a>
+            </div>
+        `).join('');
+    }
+
+    </script>
+    <script src="js/report_ai.js?v=20260405c"></script>
+    <script src="js/patient_copilot.js?v=20260405c"></script>
+</body>
+</html>

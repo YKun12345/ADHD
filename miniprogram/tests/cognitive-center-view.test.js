@@ -15,7 +15,6 @@ const appConfig = JSON.parse(
 )
 
 for (const route of [
-  'pages/simple-reaction/index',
   'pages/trail/index',
   'pages/flanker/index',
   'pages/nback/index',

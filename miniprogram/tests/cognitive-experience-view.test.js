@@ -7,7 +7,6 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), 'utf8')
 
 const themes = [
   ['cognitive', 'theme-lagoon'],
-  ['simple-reaction', 'theme-sunrise'],
   ['stroop', 'theme-spectrum'],
   ['trail', 'theme-lavender'],
   ['flanker', 'theme-forest'],

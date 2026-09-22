@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>患者主页 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body data-copilot-page="home">
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="patient_home.html" class="active">首页</a></li>
+                <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_test.html">认知测试</a></li>
+                <li><a href="patient_tracking.html">14天追踪</a></li>
+                <li><a href="patient_report.html">我的报告</a></li>
+                <li><a href="clinical_pathway.html">我的路径</a></li>
+                <li><a href="patient_education.html">科普</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="patient_ai.html" class="icon-btn" title="AI助手">
+                    <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </a>
+                <div class="user-profile">
+                    <ion-icon name="person-circle"></ion-icon>
+                    <a href="patient_profile.html" style="color: inherit; text-decoration: none;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION with curved bottom -->
+    <section class="hero-split">
+        <!-- SVG Interactive Background -->
+        <svg class="neuron-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice">
+            <g stroke="#E0EBF5" stroke-width="1.5" fill="none">
+                <!-- Sweeping artistic organic curves bypassing text center -->
+                <path d="M -100,200 Q 400,50 850,350 T 1500,300" />
+                <path d="M -50,750 Q 400,900 800,650 T 1500,700" />
+                <path d="M 850,350 L 800,650 L 1200,200" />
+                <path d="M 50,100 L 200,750 L 850,350" />
+                
+                <!-- Synapses bounding -->
+                <!-- Mint Green -->
+                <circle cx="850" cy="350" r="22" fill="#A3E4D7" />
+                <circle cx="1200" cy="200" r="26" fill="#A3E4D7" />
+                <!-- Sky Blue -->
+                <circle cx="400" cy="50" r="30" fill="#85C1E9" />
+                <circle cx="800" cy="650" r="24" fill="#85C1E9" id="synapseFlash" />
+                <circle cx="50" cy="100" r="16" fill="#85C1E9" />
+                <!-- Lilac -->
+                <circle cx="200" cy="750" r="18" fill="#D2B4DE" />
+                <circle cx="400" cy="900" r="28" fill="#D2B4DE" />
+                <circle cx="1400" cy="320" r="20" fill="#D2B4DE" />
+            </g>
+        </svg>
+
+        <div class="hero-content">
+            <!-- Left: Text & Buttons -->
+            <div class="hero-left slide-up">
+                <h1>14天认知行为追踪评估</h1>
+                <p class="subtitle">基于行为实验与脑网络分析，生成您的专属认知能力报告。</p>
+                <div class="btn-group">
+                    <button class="btn-primary-orange" id="heroStartScale">填写量表</button>
+                    <button class="btn-secondary" id="heroStartTest">开始测试</button>
+                    <button class="btn-outline" id="heroLogEmotion">记录日志</button>
+                </div>
+            </div>
+            
+            <!-- Right: Dashboard Snippet / ToDo -->
+            <div class="hero-right home-hero-right slide-up" style="animation-delay: 0.1s;">
+                <div class="todo-widget home-task-widget">
+                    <div class="todo-header">
+                        <h3><ion-icon name="calendar-outline"></ion-icon> 专属任务</h3>
+                        <span class="progress-text">打卡: 5/14 天</span>
+                    </div>
+                    <div id="homeAiRoute" class="home-ai-route">
+                        <div class="home-ai-route-top">
+                            <div>
+                                <span class="home-ai-route-kicker">AI推荐流程</span>
+                                <h4 id="homeAiRouteTitle" class="home-ai-route-title">正在整理你当前更适合优先完成的任务…</h4>
+                                <p id="homeAiRouteText" class="home-ai-route-text">系统会结合你的量表、认知测试、14天追踪和报告情况，推荐下一步最值得做的动作。</p>
+                            </div>
+                            <span id="homeAiRouteBadge" class="home-ai-route-badge">实时更新</span>
+                        </div>
+                        <div id="homeAiRouteMeta" class="home-ai-route-meta"></div>
+                        <div class="home-ai-route-actions">
+                            <a id="homeAiPrimaryAction" href="patient_ai.html" class="btn-primary-orange" style="text-decoration:none;">去 AI 助手看看</a>
+                            <a id="homeAiSecondaryAction" href="patient_report.html" class="btn-outline" style="text-decoration:none;">查看我的报告</a>
+                        </div>
+                    </div>
+                    <div class="progress-track" style="margin-bottom: 1.5rem;">
+                        <div class="progress-fill fill-green" style="width: 35%;"></div>
+                    </div>
+                    
+                    <!-- One-time Scale -->
+                    <div class="task-card" id="taskScale">
+                        <div class="task-icon bg-purple-light"><ion-icon name="document-text-outline"></ion-icon></div>
+                        <div class="task-info">
+                            <h4>行为量表 <span class="badge info">单次必填</span></h4>
+                            <p>建立医学评估基线，仅需填写一次。</p>
+                        </div>
+                        <ion-icon class="arrow-go" name="chevron-forward"></ion-icon>
+                    </div>
+
+                    <!-- Daily Tasks -->
+                    <div class="task-card" id="taskCognitive">
+                        <div class="task-icon bg-blue-light"><ion-icon name="game-controller-outline"></ion-icon></div>
+                        <div class="task-info">
+                            <h4>认知测试 <span class="badge warning">每日任务</span></h4>
+                            <p>约需 5 分钟，含 N-back 测试。</p>
+                        </div>
+                        <ion-icon class="arrow-go" name="chevron-forward"></ion-icon>
+                    </div>
+
+                    <div class="task-card" id="taskEmotion">
+                        <div class="task-icon bg-yellow-light"><ion-icon name="happy-outline"></ion-icon></div>
+                        <div class="task-info">
+                            <h4>情绪日志 <span class="badge warning">每日任务</span></h4>
+                            <p>记录今天主观状态波动。</p>
+                        </div>
+                        <ion-icon class="arrow-go" name="chevron-forward"></ion-icon>
+                    </div>
+
+                    <div class="all-done-msg hidden" id="allDoneMsg">
+                        <ion-icon name="checkmark-circle"></ion-icon>
+                        <p>今日任务已完美打卡！</p>
+                    </div>
+
+                    <!-- 成就展示 -->
+                    <div id="homeStreakWidget" style="margin-top:1rem;"></div>
+
+                    <!-- 路径快速入口 -->
+                    <div style="margin-top:1.1rem; padding:0.9rem; background:linear-gradient(135deg,#EFF6FF,#F5F3FF); border-radius:16px; border:1px solid rgba(124,58,237,0.15);">
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.55rem;">
+                                <ion-icon name="git-branch-outline" style="color:#7C3AED; font-size:1.2rem;"></ion-icon>
+                                <span style="font-size:0.88rem; font-weight:700; color:#4C1D95;">查看完整临床路径</span>
+                            </div>
+                            <a href="clinical_pathway.html" style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.45rem 0.85rem; border-radius:10px; background:#7C3AED; color:white; font-size:0.8rem; font-weight:700; text-decoration:none; transition:background 0.2s ease;" onmouseover="this.style.background='#6D28D9'" onmouseout="this.style.background='#7C3AED'">
+                                进入 <ion-icon name="chevron-forward"></ion-icon>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Decorative SVG curve at the bottom matching reference structure -->
+        <svg class="hero-curve" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path d="M0,0 C480,120 960,120 1440,0 L1440,120 L0,120 Z" fill="#F8FAFC"></path>
+        </svg>
+    </section>
+
+    <!-- SECTION 1: ADHD Intro (Light Background) -->
+    <section class="info-block bg-page">
+        <div class="info-container alternating">
+            <div class="info-text">
+                <h2>认识 ADHD：不仅是分心，而是独特的大脑运转方式</h2>
+                <p>注意力缺陷多动障碍（ADHD）不仅影响儿童，也会伴随许多成年人。表现为难以维持专注、情绪波动、执行功能较弱等特征。但同时，它也常常伴随着极致的创造力、高活力与非凡的发散性思维。</p>
+                <p>本系统致力于通过长期的数据采样，以包容和科学的视角帮助您全面了解认知薄弱项，并发掘自我潜能。</p>
+                <button class="btn-outline">阅读相关科普文献</button>
+            </div>
+            <div class="info-visual">
+                <!-- Abstract placeholder for illustration -->
+                <div class="illustration-box bg-purple">
+                    <ion-icon name="color-filter-outline"></ion-icon>
+                    <div class="glow-orb"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: Cognitive Tests Science (White Background) -->
+    <section class="info-block">
+        <div class="info-container alternating reverse">
+            <div class="info-text">
+                <h2>科学客观的评估手段：<br>嵌入式认知实验集群</h2>
+                <p>本模块不直接出现在首页强制打断您，而是作为一个独立功能区存在。系统内置了医学界广泛采用的执行功能实验范式：</p>
+                <ul>
+                    <li><strong>N-back 记忆更迭：</strong> 循环评估您的工作记忆实时更新能力与认知负载极限量。</li>
+                    <li><strong>Go/No-Go 抑制控制：</strong> 精准测量大脑的冲动抑制效率与持续执行控制水平。</li>
+                    <li><strong>Stroop 颜色词干扰：</strong> 严谨考察选择性提取注意力以及中枢抗干扰的能力。</li>
+                </ul>
+                <p>无需复杂设备，每天仅需 5 分钟的网页级交互，即可获得高精度的神经反应时数据支撑后续 GNN 解析。</p>
+            </div>
+            <div class="info-visual">
+                <div class="illustration-box bg-blue">
+                    <ion-icon name="cube-outline"></ion-icon>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 3: 14-Day Tracking (Light Background, Dark Cards) -->
+    <section class="info-block bg-page" style="padding-bottom: 8rem;">
+        <div class="info-container block-center">
+            <h2>为期 14 天的动态追踪，沉淀您的表型画像</h2>
+            <p class="center-sub">人类的大脑运转状态始终处于微波浮动中，单次数十分钟的问卷量表往往无法还原真实全貌。我们建议您参与为期 2 周的连续认知响应追踪，从而建立起极具医疗解析价值的个人数字基线。</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon-wrap"><ion-icon name="bar-chart-outline"></ion-icon></div>
+                    <h4>五维执行功能雷达</h4>
+                    <p>基于14天沉淀，动态生成且不断衰减纠错的个人脑机能表现五维雷达图。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrap"><ion-icon name="pulse-outline"></ion-icon></div>
+                    <h4>主客观情绪融合折线</h4>
+                    <p>创新性将您的每日主观日记情感与客观神经反应时进行交叉比对，发掘潜藏焦虑。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrap"><ion-icon name="git-network-outline"></ion-icon></div>
+                    <h4>GNN 大脑皮层分析</h4>
+                    <p>汇集两周结果输入后台图图神经网络框架，预测脑岛拓扑功能，生成专家级报告。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 4: FAQ (Deep Blue) -->
+    <section class="info-block bg-deep-navy">
+        <div class="info-container faq-container">
+            <h2 class="section-title text-white">常见问题解答</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>什么是神经环路追踪？与传统量表有何不同？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>传统量表依赖于您的主观回忆，容易产生记忆偏差。而神经网络追踪通过高频连续的行为实验，记录您最真实的毫秒级反应时变化，客观还原并穿透您执行功能的每日波动。</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>14天的追踪必须连续无中断吗？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>为了获得高精准基线，强烈建议尽量连续打卡。如果您偶尔漏打卡一两天，后台的 Graph Neural Network 算法会自动进行趋势平滑插补运算，不会导致整体基线失效。</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>基于系统大网络生成的报告具备最终临床确诊效力吗？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>本平台作为数字化客观测评辅具，提供的五维雷达图和表型分析主要用于【专家辅助评估】和【日常用药行为干预评测】。详细的确诊治疗请务必遵从您的医生专业指导意见。</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>我的脑认知行为测试数据隐私如何保障？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>知行合“医”全面遵循国际医疗数据保密规范（HIPAA / GDPA等同）。所有测试产生的行为节点将即刻进行脱敏与分布式加密存储，绝对保障数据仅用于您及授权医生的病情解析。</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>专家端系统和我的个人界面如何建立动态关联？</span>
+                        <ion-icon name="add-outline"></ion-icon>
+                    </div>
+                    <div class="faq-answer">
+                        <p>由于存在严格的使用规范隔离，您的动态图网络变化报告仅存在于患者端数据库。当您复诊时，可以授权主治医生将您的加密标识录入专家端数据链路，专家终端才能够抓取您的图鉴解析。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 5: Expert Banner (White transition) -->
+    <section class="info-block bg-white">
+        <div class="info-container">
+            <div class="expert-banner">
+                <h2 class="text-white">对评估结果或功能实现还有疑问？</h2>
+                <button class="btn-cyan-solid">咨询我们的产品督导</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 6: Extended Reading (Light Blue/Gray) -->
+    <section class="info-block bg-page">
+        <div class="info-container">
+            <div class="section-header-row">
+                <h2 class="section-title">相关拓展阅读</h2>
+                <a href="#" class="view-all-link">查看全部专栏 <ion-icon name="chevron-forward-outline"></ion-icon></a>
+            </div>
+            <div class="reading-grid">
+                <!-- Card 1 -->
+                <div class="article-card">
+                    <div class="article-img bg-cyan-gradient">
+                        <ion-icon name="albums-outline"></ion-icon>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-tag text-cyan">前沿研究</span>
+                        <h3>知行合“医” ADHD 认知皮层评估与系统自动化报告深度解析</h3>
+                        <a href="#" class="article-link">阅读文章 <ion-icon name="arrow-forward"></ion-icon></a>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="article-card">
+                    <div class="article-img bg-green-gradient">
+                        <ion-icon name="clipboard-outline"></ion-icon>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-tag text-green">原理解读</span>
+                        <h3>一图读懂 Vanderbilt 儿童评估量表（VADRS）的临床医学权重</h3>
+                        <a href="#" class="article-link">阅读文章 <ion-icon name="arrow-forward"></ion-icon></a>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="article-card">
+                    <div class="article-img bg-orange-gradient">
+                        <ion-icon name="people-circle-outline"></ion-icon>
+                    </div>
+                    <div class="article-content">
+                        <span class="article-tag text-orange">干预实践</span>
+                        <h3>成人期注意缺陷共病现象：常见并发症排查与长效情绪干预策略</h3>
+                        <a href="#" class="article-link">阅读文章 <ion-icon name="arrow-forward"></ion-icon></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医” - 专注每刻</span>
+            </div>
+            <div class="footer-links">
+                <span>临床科研验证</span> | <span>隐私政策说明</span> | <span>关于我们团队</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/achievement.js"></script>
+    <script src="js/orchestrator.js"></script>
+    <script src="js/patient.js"></script>
+    <script src="js/patient_copilot.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 渲染连续天数 widget
+        if (window.Achievement) {
+            window.Achievement.renderStreak('homeStreakWidget');
+        }
+        // 任务卡点击跳转
+        document.getElementById('taskScale')?.addEventListener('click', () => window.location.href='patient_scale.html');
+        document.getElementById('taskCognitive')?.addEventListener('click', () => window.location.href='patient_test.html');
+        document.getElementById('taskEmotion')?.addEventListener('click', () => window.location.href='patient_tracking.html');
+    });
+    </script>
+</body>
+</html>

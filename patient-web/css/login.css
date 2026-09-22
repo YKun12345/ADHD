@@ -1,0 +1,634 @@
+/* login.css - Split Screen Refactor */
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Prevent scrolling for split view */
+    background: var(--bg-surface);
+}
+
+.login-split {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* LEFT SIDE - Brand & Illustration */
+.split-left {
+    flex: 1;
+    background: linear-gradient(135deg, #ECF5F9 0%, #E8F5EE 50%, #F5ECF5 100%); /* Morandi gradient: Pale Blue -> Mint -> Pale Lilac */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem;
+    overflow: hidden;
+    transition: background 0.8s ease; /* For theme shift */
+}
+
+/* Researcher theme shift logic triggered by class on parent/body */
+body.theme-researcher .split-left {
+    background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E1 100%); /* Deep/Strict Slate for researchers */
+}
+body.theme-researcher .neuron-bg {
+    opacity: 0.8; /* Make it more obvious */
+}
+body.theme-researcher .neuron-bg path {
+    stroke: #64748B; /* Harder slate lines for bold visibility */
+    stroke-width: 1.8px;
+}
+body.theme-researcher .neuron-bg circle {
+    fill: #475569; /* Even darker slate dots for extreme contrast */
+}
+
+.neuron-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Parallax smoothing */
+}
+
+/* Ambient SVG CSS physics */
+.neuron-bg circle {
+    animation: floatNode 8s ease-in-out infinite alternate;
+    transform-origin: center;
+}
+.neuron-bg circle:nth-child(odd) {
+    animation-duration: 12s;
+    animation-direction: alternate-reverse;
+}
+.neuron-bg path {
+    animation: pulsePath 6s ease-in-out infinite alternate;
+    stroke: #85C1E9; /* Made default patient lines slightly brighter/clearer */
+}
+
+@keyframes floatNode {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(12px, -15px) scale(1.08); }
+    100% { transform: translate(-8px, 12px) scale(0.92); }
+}
+@keyframes pulsePath {
+    0% { stroke-opacity: 0.4; stroke-width: 1px; }
+    100% { stroke-opacity: 0.9; stroke-width: 1.5px; }
+}
+
+.brand-content {
+    position: relative;
+    z-index: 10;
+    max-width: 700px; /* Widened to fit English perfectly on one line */
+    margin-left: 3.5rem;
+}
+
+.logo-large {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem; /* Increased slightly to move the slogan box down as requested */
+    margin-left: 2rem; /* Aligns horizontally with the text boundary inside the slogan box */
+}
+
+.logo-large ion-icon {
+    font-size: 3.5rem;
+    color: var(--primary-blue);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+}
+
+body.theme-researcher .logo-large ion-icon {
+    color: #334155;
+}
+
+.logo-large h1 {
+    font-size: 3rem;
+    color: #2D3748;
+    margin: 0;
+    font-weight: 800;
+}
+
+.slogan-box {
+    background: rgba(255, 255, 255, 0.65); /* Increased opacity so lines behind don't visually clash with text */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 2rem;
+    border-radius: var(--radius-card);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    cursor: default;
+}
+
+.slogan-box:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08); /* Fancy float effect */
+}
+
+.slogan-cn {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #333333;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.slogan-en {
+    font-size: 1.05rem;
+    color: #666666;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    white-space: nowrap; /* Forces English to stay on one single line */
+}
+
+/* RIGHT SIDE - Form Area */
+.split-right {
+    flex: 0 0 550px;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    padding: 6rem 4rem 2rem 4rem; /* Increased top padding dramatically to push form down */
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.03);
+    z-index: 10;
+    overflow-y: auto;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 3rem;
+}
+
+.form-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Segmented Control */
+.role-segmented-control {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.segment-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem 1.2rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-card);
+    cursor: pointer;
+    background: #F9FAFB;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.segment-pill:hover, .segment-pill:focus-visible {
+    background: #F3F4F6;
+    border-color: #D1D5DB;
+}
+
+.segment-pill ion-icon {
+    font-size: 2rem;
+    color: #9CA3AF;
+    transition: color 0.3s;
+}
+
+.role-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.role-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #4B5563;
+}
+
+.role-desc {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+}
+
+/* Active States */
+.segment-pill.active[data-role="patient"] {
+    background: #FFFAF5;
+    border-color: var(--accent-orange);
+}
+.segment-pill.active[data-role="patient"] ion-icon {
+    color: var(--accent-orange);
+}
+.segment-pill.active[data-role="patient"] .role-title {
+    color: var(--accent-orange);
+}
+
+.segment-pill.active[data-role="researcher"] {
+    background: #F0F4F8;
+    border-color: #3B82F6;
+}
+.segment-pill.active[data-role="researcher"] ion-icon {
+    color: #3B82F6;
+}
+.segment-pill.active[data-role="researcher"] .role-title {
+    color: #1E3A8A;
+}
+
+/* Form Labels & Grouping */
+.login-greeting {
+    font-size: 1rem;
+    color: #6B7280;
+    margin-bottom: 1rem;
+}
+
+.input-group-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+}
+
+.input-group-top label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+/* Inputs */
+.input-field {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4rem;
+    color: #9CA3AF;
+    transition: color 0.2s;
+}
+
+.input-field input,
+.input-field select {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3.2rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-btn);
+    font-size: 1.05rem;
+    font-family: inherit;
+    background: #F9FAFB;
+    transition: all 0.3s;
+    outline: none;
+    color: #333;
+}
+
+.input-field select {
+    appearance: none;
+    cursor: pointer;
+}
+
+/* Soft Color Halo on Focus */
+.input-field input:focus,
+.input-field select:focus {
+    background: #FFFFFF;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(137, 207, 240, 0.2); 
+    /* Gentle light blue glow */
+}
+
+/* Researcher theme halo */
+body.theme-researcher .input-field input:focus,
+body.theme-researcher .input-field select:focus {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); 
+}
+
+.input-field input:focus ~ .input-icon,
+.input-field select:focus ~ .input-icon {
+    color: var(--primary-blue);
+}
+
+body.theme-researcher .input-field input:focus ~ .input-icon,
+body.theme-researcher .input-field select:focus ~ .input-icon {
+    color: #3B82F6;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover {
+    color: #4B5563;
+}
+
+.password-rules {
+    margin: -0.8rem 0 1.4rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+}
+
+.password-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.9rem;
+    color: #64748B;
+}
+
+.password-rule + .password-rule {
+    margin-top: 0.45rem;
+}
+
+.password-rule ion-icon {
+    font-size: 1rem;
+    color: #94A3B8;
+}
+
+.password-rule.is-pass {
+    color: #047857;
+}
+
+.password-rule.is-pass ion-icon {
+    color: #10B981;
+}
+
+.password-rule.is-fail {
+    color: #B45309;
+}
+
+.password-rule.is-fail ion-icon {
+    color: #F59E0B;
+}
+
+/* Consent Checkbox */
+.consent-wrap {
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+    transition: opacity 0.3s, height 0.3s;
+    opacity: 1;
+    overflow: hidden;
+}
+
+/* Specific Toggles for roles */
+.consent-researcher, .staff-id-wrapper {
+    display: none;
+}
+
+body.theme-researcher .consent-researcher, 
+body.theme-researcher .staff-id-wrapper {
+    display: block;
+}
+
+body.theme-researcher .consent-patient {
+    display: none;
+}
+
+/* Auth Mode Transitions (Login vs Register) */
+.register-only {
+    display: none;
+}
+body.mode-register .register-only {
+    display: block;
+}
+body.mode-register .input-group-top.register-only {
+    display: flex;
+}
+body.mode-register span.register-only {
+    display: inline;
+}
+body.mode-register .login-only {
+    display: none;
+}
+
+.custom-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.custom-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    width: 22px;
+    height: 22px;
+    background-color: #F8FAFC;
+    border: 2px solid #8B949E; /* Made darker as required */
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+    border-color: var(--accent-orange);
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+    background-color: var(--accent-orange);
+    border-color: var(--accent-orange);
+}
+
+.checkmark::after {
+    content: "";
+    display: none;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.custom-checkbox input:checked ~ .checkmark::after {
+    display: block;
+}
+
+.consent-text {
+    font-size: 0.9rem;
+    color: #6B7280;
+    line-height: 1.5;
+}
+
+.protocol-link {
+    color: #0F766E; /* Dark teal from image */
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.protocol-link:hover {
+    text-decoration: underline;
+}
+
+/* Action Buttons */
+.action-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.global-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px; /* Set to standard rounded rect like the image */
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color: white;
+    background-color: #F97316; /* Solid bright orange */
+    box-shadow: 0 6px 15px rgba(249, 115, 22, 0.25);
+}
+
+body.theme-researcher .global-btn {
+    background-color: #1E3A8A; /* Deep blue for researchers */
+    box-shadow: 0 6px 15px rgba(30, 58, 138, 0.3);
+}
+
+.global-btn:not(.disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 127, 80, 0.4);
+}
+
+body.theme-researcher .global-btn:not(.disabled):hover {
+    background-color: #1E40AF;
+    box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4);
+}
+
+.global-btn.disabled,
+body.theme-researcher .global-btn.disabled {
+    background-color: #E2E8F0;
+    color: #9CA3AF;
+    cursor: not-allowed;
+    box-shadow: none;
+    pointer-events: none;
+}
+
+.forgot-link {
+    font-size: 0.9rem;
+    color: #9CA3AF;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: var(--text-heading);
+}
+
+/* Feedback */
+.form-feedback {
+    padding: 0.8rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius-btn);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-feedback ion-icon {
+    font-size: 1.2rem;
+}
+
+.feedback-error {
+    background-color: #FFF7ED; /* Gentle warning orange background instead of red anxiety */
+    border: 1px solid #FFEDD5;
+    color: #EA580C; /* Muted orange text */
+}
+
+/* Registration section */
+.register-lead {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-body);
+    margin-top: 3rem; /* Replaced auto with fixed space so the form behaves cohesively */
+}
+
+.security-notice {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.security-notice ion-icon {
+    font-size: 1rem;
+    color: #10B981;
+}
+
+.register-link {
+    color: #0F766E; /* Dark teal matching the protocol links */
+    font-weight: 700;
+    text-decoration: none;
+}
+
+body.theme-researcher .register-link {
+    color: #2563EB;
+}
+
+.register-link:hover {
+    text-decoration: underline;
+}
+
+/* Micro Animations */
+@keyframes synapseFlash {
+    0% { fill: #E5F0F9; transform: scale(1); opacity: 1; }
+    50% { fill: #FFD700; transform: scale(1.5); opacity: 0.8; }
+    100% { fill: #E5F0F9; transform: scale(1); opacity: 1; }
+}
+
+.flash-trigger {
+    animation: synapseFlash 0.8s ease-in-out;
+    transform-origin: center;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .login-split {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .split-left {
+        flex: none;
+        padding: 2rem;
+        text-align: center;
+        min-height: 40vh;
+    }
+    .split-right {
+        flex: 1;
+        padding: 2rem;
+    }
+}

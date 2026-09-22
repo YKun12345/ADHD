@@ -19,7 +19,6 @@ const expectedRoutes = [
   'pages/scale/index',
   'pages/cognitive-center/index',
   'pages/cognitive/index',
-  'pages/simple-reaction/index',
   'pages/stroop/index',
   'pages/trail/index',
   'pages/flanker/index',
@@ -221,7 +220,7 @@ assert.match(read('pages', 'scale', 'index.wxml'), /unsupported-icon[^>]*aria-hi
 assert.match(read('pages', 'scale', 'index.wxss'), /\.unsupported-icon::before[\s\S]*\.unsupported-icon::after/)
 assert.match(read('pages', 'cognitive-center', 'index.wxml'), /class="test-arrow"\s+aria-hidden="true"><\/view>/)
 assert.match(read('pages', 'cognitive-center', 'index.wxss'), /\.test-arrow\s*\{[^}]*border-top[^}]*border-right/s)
-assert.match(read('pages', 'cognitive-center', 'index.wxml'), /completion-banner[\s\S]*completion-banner__mark[^>]*aria-hidden="true"[\s\S]*七项任务已完成/)
+assert.match(read('pages', 'cognitive-center', 'index.wxml'), /completion-banner[\s\S]*completion-banner__mark[^>]*aria-hidden="true"[\s\S]*六项任务已完成/)
 assert.match(read('pages', 'scale', 'index.wxml'), /recommendation-dot"\s+aria-hidden="true"><\/view>/)
 assert.match(read('pages', 'scale', 'index.wxss'), /\.recommendation-dot\s*\{[^}]*border-radius\s*:\s*50%/s)
 

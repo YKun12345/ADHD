@@ -13,7 +13,7 @@ const {
 
 const initialSummary = buildCognitiveSummary({})
 const COGNITIVE_GROUPS = Object.freeze([
-  { id: 'response', title: '抑制与反应', description: '建议用时约 4 分钟', taskIds: ['reaction', 'simple_reaction'] },
+  { id: 'response', title: '抑制与反应', description: '建议用时约 2 分钟', taskIds: ['reaction'] },
   { id: 'attention', title: '注意与冲突', description: '建议用时约 6 分钟', taskIds: ['stroop', 'flanker'] },
   { id: 'memory', title: '工作记忆与执行', description: '建议用时约 12 分钟', taskIds: ['nback', 'trail', 'digit'] }
 ])
@@ -31,7 +31,7 @@ registerPatientPage({
     patientKey: '',
     ageGroup: 'child',
     batteryActionText: '开始完整评估',
-    remainingMinutes: 23,
+    remainingMinutes: 21,
     groups: buildGroups(initialSummary.cards),
     ...initialSummary
   },

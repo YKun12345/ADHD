@@ -95,7 +95,6 @@ const localReport = buildLocalReport({
   scaleResult: scaleResult(),
   cognitiveResults: {
     reaction: cognitivePayload('reaction', 80, 420),
-    simple_reaction: cognitiveRawPayload('simple_reaction', { accuracy: 90, median_reaction_time_ms: 310 }),
     stroop: cognitiveRawPayload('stroop', { accuracy: 75, median_reaction_time_ms: 640, interference_effect_ms: 95 }),
     trail: cognitiveRawPayload('trail', { accuracy: 92, elapsed_ms: 28000, errors: 2 }),
     flanker: cognitivePayload('flanker', 83, 510),
@@ -136,14 +135,13 @@ assert.deepEqual(
 )
 assert.equal(localReport.scale.riskLabel, '中等风险')
 assert.equal(localReport.scale.respondentLabel, '本人填写')
-assert.equal(localReport.cognitive.completedCount, 7)
-assert.equal(localReport.cognitive.totalCount, 7)
+assert.equal(localReport.cognitive.completedCount, 6)
+assert.equal(localReport.cognitive.totalCount, 6)
 assert.equal(localReport.cognitive.cards[0].primaryMetric, '正确率 80%')
-assert.equal(localReport.cognitive.cards[1].primaryMetric, '中位反应时 310 ms')
-assert.equal(localReport.cognitive.cards[2].primaryMetric, '中位反应时 640 ms')
-assert.equal(localReport.cognitive.cards[2].secondaryMetric, '干扰效应 95 ms')
-assert.equal(localReport.cognitive.cards[3].primaryMetric, '总用时 28.0 秒')
-assert.equal(localReport.cognitive.cards[6].primaryMetric, '顺背 7 · 倒背 5')
+assert.equal(localReport.cognitive.cards[1].primaryMetric, '中位反应时 640 ms')
+assert.equal(localReport.cognitive.cards[1].secondaryMetric, '干扰效应 95 ms')
+assert.equal(localReport.cognitive.cards[2].primaryMetric, '总用时 28.0 秒')
+assert.equal(localReport.cognitive.cards[5].primaryMetric, '顺背 7 · 倒背 5')
 assert.equal(localReport.tracking.completedCount, 2)
 assert.equal(localReport.tracking.averageMood, 3)
 assert.equal(localReport.tracking.averageAttention, 4)

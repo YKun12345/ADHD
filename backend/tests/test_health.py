@@ -44,7 +44,14 @@ def test_health_uses_temporary_sqlite(client, sqlite_database_path: Path) -> Non
 
 
 def test_static_routes_expose_only_the_doctor_web(client) -> None:
-    assert client.get("/doctor-web/login.html").status_code == 200
+    for public_path in (
+        "/doctor-web/login.html",
+        "/patient-web/",
+        "/patient-web/login.html",
+        "/patient-web/patient_home.html",
+        "/patient-web/js/api.js",
+    ):
+        assert client.get(public_path).status_code == 200, public_path
     for private_path in (
         "/backend/app/main.py",
         "/miniprogram/app.json",

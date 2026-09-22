@@ -72,7 +72,7 @@ assert.match(getOnboardingContent('patient').disclaimer, /不替代医生诊断/
 assert.match(getOnboardingContent('researcher').items.join(''), /电脑网页/)
 
 for (const pageKey of [
-  'home', 'scale', 'cognitive-center', 'cognitive', 'simple-reaction',
+  'home', 'scale', 'cognitive-center', 'cognitive',
   'stroop', 'trail', 'flanker', 'nback', 'digit-span', 'tracking',
   'tracking-trend', 'report', 'patient-tasks', 'patient-messages',
   'care-pathway', 'ai-chat', 'education', 'privacy-settings',

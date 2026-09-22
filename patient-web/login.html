@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!-- AI辅助生成:Doubao-Seed-2.0-Code，2026-03-20 18:27 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <div class="login-split">
+        <!-- Left Side: Brand & Background -->
+        <div class="split-left">
+            <!-- Abstract low-saturation Morandi SVG Neurons Background -->
+            <svg class="neuron-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="none">
+                <g stroke="#E0EBF5" stroke-width="1" fill="none">
+                    <!-- Elegant Brain-Arch Connections -->
+                    <path d="M 100,120 L 400,150 L 600,250 L 700,450 L 650,700 L 450,850 L 150,800" />
+                    <path d="M 400,150 L 500,600 L 700,450 L 600,250 L 500,600 L 650,700" />
+                    <path d="M 500,600 L 450,850" />
+
+                    <!-- Synapses / Nodes (Morandi colors) -->
+                    <!-- Enhanced Mint Green -->
+                    <circle cx="100" cy="120" r="18" fill="#A3E4D7" />
+                    <circle cx="650" cy="700" r="22" fill="#A3E4D7" />
+                    <!-- Enhanced Sky Blue -->
+                    <circle cx="400" cy="150" r="28" fill="#85C1E9" />
+                    <circle cx="500" cy="600" r="20" fill="#85C1E9" id="synapseFlash" />
+                    <!-- Enhanced Lilac -->
+                    <circle cx="600" cy="250" r="18" fill="#D2B4DE" />
+                    <circle cx="700" cy="450" r="25" fill="#D2B4DE" />
+                    <circle cx="450" cy="850" r="14" fill="#D2B4DE" />
+                    <circle cx="150" cy="800" r="15" fill="#A3E4D7" />
+                </g>
+            </svg>
+
+            <div class="brand-content slide-up">
+                <div class="logo-large">
+                    <ion-icon name="analytics"></ion-icon>
+                    <h1>知行合“医”</h1>
+                </div>
+                <div class="slogan-box">
+                    <p class="slogan-cn">看见每一种独特的专注<br>读懂每一颗跳跃的心</p>
+                    <p class="slogan-en">Seeing Unique Focus, Understanding Every Jumping Heart.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Interaction Form -->
+        <div class="split-right">
+            <div class="form-container slide-up" style="animation-delay: 0.1s;">
+                <!-- Role Selection Segmented Control -->
+                <div class="role-segmented-control" id="roleSelector">
+                    <div class="segment-pill active" data-role="patient" tabindex="0">
+                        <ion-icon name="heart"></ion-icon>
+                        <div class="role-text">
+                            <span class="role-title">就诊者</span>
+                            <span class="role-desc">我是来就诊的</span>
+                        </div>
+                    </div>
+                    <div class="segment-pill" data-role="researcher" tabindex="0">
+                        <ion-icon name="flask"></ion-icon>
+                        <div class="role-text">
+                            <span class="role-title">研究人员</span>
+                            <span class="role-desc">我是来进行科研的</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="formFeedback" class="form-feedback hidden"></div>
+
+                <p class="login-greeting login-only">欢迎回来，请登录您的个人账户</p>
+                <p class="login-greeting register-only">开启数字疗法之旅，请注册您的属性账户</p>
+
+                <!-- Login Form (Dynamic to both) -->
+                <form id="mainForm">
+                    <div class="input-group-top register-only">
+                        <label>姓名</label>
+                    </div>
+                    <div class="input-field register-only">
+                        <ion-icon name="person-outline" class="input-icon"></ion-icon>
+                        <input type="text" id="fullNameInput" placeholder="请输入您的姓名" />
+                    </div>
+
+                    <div class="input-group-top">
+                        <label>邮箱地址</label>
+                    </div>
+                    <div class="input-field">
+                        <ion-icon name="mail-outline" class="input-icon"></ion-icon>
+                        <input type="email" id="emailInput" placeholder="example@neurobridge.com" required />
+                    </div>
+
+                    <div class="staff-id-wrapper">
+                        <div class="input-group-top">
+                            <label>工作证号 / 工号</label>
+                        </div>
+                        <div class="input-field">
+                            <ion-icon name="id-card-outline" class="input-icon"></ion-icon>
+                            <input type="text" id="staffIdInput" placeholder="请输入您的工号" />
+                        </div>
+                    </div>
+
+                    <div id="patientTypeSection" class="register-only" style="display: none;">
+                        <div class="input-group-top">
+                            <label>就诊者类型</label>
+                        </div>
+                        <div class="input-field">
+                            <ion-icon name="people-outline" class="input-icon"></ion-icon>
+                            <select id="patientTypeInput">
+                                <option value="adult">成人</option>
+                                <option value="child">儿童青少年</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group-top password-group">
+                        <label><span class="login-only">登录密码</span><span class="register-only">设置密码</span></label>
+                        <a href="#" class="forgot-link login-only">忘记密码？</a>
+                    </div>
+                    <div class="input-field">
+                        <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                        <input type="password" id="passwordInput" placeholder="请输入您的密码" required />
+                        <button type="button" class="password-toggle" id="togglePasswordBtn">
+                            <ion-icon name="eye-outline"></ion-icon>
+                        </button>
+                    </div>
+                    <div id="passwordRules" class="password-rules register-only">
+                        <div class="password-rule" data-rule="length">
+                            <ion-icon name="remove-circle-outline"></ion-icon>
+                            <span>长度不少于 8 位</span>
+                        </div>
+                        <div class="password-rule" data-rule="numeric">
+                            <ion-icon name="remove-circle-outline"></ion-icon>
+                            <span>不能为纯数字</span>
+                        </div>
+                        <div class="password-rule" data-rule="common">
+                            <ion-icon name="remove-circle-outline"></ion-icon>
+                            <span>不能使用常见弱密码</span>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password (Register Only) -->
+                    <div class="input-group-top register-only">
+                        <label>确认密码</label>
+                    </div>
+                    <div class="input-field register-only">
+                        <ion-icon name="shield-checkmark-outline" class="input-icon"></ion-icon>
+                        <input type="password" id="confirmPasswordInput" placeholder="请再次输入您的密码" />
+                    </div>
+
+                    <!-- Patient ONLY -> Consent -->
+                    <div class="consent-wrap consent-patient" id="patientConsentWrap">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" id="patientConsentCheckbox">
+                            <span class="checkmark"></span>
+                            <span class="consent-text">我已阅读并同意 <a href="#" class="protocol-link">隐私政策</a> 和 <a href="#"
+                                    class="protocol-link">用户协议</a></span>
+                        </label>
+                    </div>
+
+                    <!-- Researcher ONLY -> Consent -->
+                    <div class="consent-wrap consent-researcher" id="researcherConsentWrap">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" id="researcherConsentCheckbox">
+                            <span class="checkmark"></span>
+                            <span class="consent-text">我已阅读并签署 <a href="#" class="protocol-link">科研数据保密协议</a> 和 <a
+                                    href="#" class="protocol-link">系统使用规范</a></span>
+                        </label>
+                    </div>
+
+                    <div class="action-wrap">
+                        <button type="submit" class="global-btn disabled" id="submitBtn">
+                            <span class="login-only">Login / 登录</span>
+                            <span class="register-only">Register / 注册</span>
+                        </button>
+                    </div>
+
+                    <div class="register-lead">
+                        <span class="login-only">还没有账号？ <a href="#" class="register-link"
+                                id="toRegisterBtn">立即注册</a></span>
+                        <span class="register-only">已有账号？ <a href="#" class="register-link"
+                                id="toLoginBtn">立即登录</a></span>
+                    </div>
+
+                    <div class="security-notice">
+                        <ion-icon name="shield-checkmark-outline"></ion-icon> 所有数据经过加密处理，确保您的医疗隐私安全
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/login.js"></script>
+</body>
+
+</html>

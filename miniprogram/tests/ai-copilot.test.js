@@ -14,7 +14,6 @@ const expectedKeys = [
   'scale',
   'cognitive-center',
   'cognitive',
-  'simple-reaction',
   'stroop',
   'trail',
   'flanker',

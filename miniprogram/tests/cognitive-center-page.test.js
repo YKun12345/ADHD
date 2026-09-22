@@ -74,23 +74,23 @@ emptyPage.onLoad()
 emptyPage.onShow()
 assert.equal(emptyPage.data.patientName, '认知中心患者')
 assert.equal(emptyPage.data.completedCount, 0)
-assert.equal(emptyPage.data.totalCount, 7)
+assert.equal(emptyPage.data.totalCount, 6)
 assert.equal(emptyPage.data.progressPercent, 0)
-assert.equal(emptyPage.data.cards.length, 7)
+assert.equal(emptyPage.data.cards.length, 6)
 
 storage[LATEST_RESULTS_KEY] = {
   reaction: payload('reaction', 80)
 }
 emptyPage.onShow()
 assert.equal(emptyPage.data.completedCount, 1)
-assert.equal(emptyPage.data.progressPercent, 14)
+assert.equal(emptyPage.data.progressPercent, 17)
 assert.equal(emptyPage.data.cards[0].primaryMetric, '正确率 80%')
 
 storage[LATEST_RESULTS_KEY].stroop = payload('stroop', 75)
 emptyPage.onShow()
 assert.equal(emptyPage.data.completedCount, 2)
 assert.equal(emptyPage.data.allCompleted, false)
-assert.equal(emptyPage.data.progressPercent, 29)
+assert.equal(emptyPage.data.progressPercent, 33)
 
 emptyPage.handleTestTap({
   currentTarget: {

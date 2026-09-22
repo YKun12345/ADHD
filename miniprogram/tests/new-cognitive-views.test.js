@@ -3,7 +3,6 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const pages = [
-  ['simple-reaction', '简单反应时', 'handleTargetTap'],
   ['trail', '连线测试', 'handleNodeTap'],
   ['flanker', '箭头抗干扰任务', 'handleAnswer'],
   ['nback', '两步位置记忆任务', 'handleAnswer'],
@@ -42,4 +41,4 @@ const digitView = fs.readFileSync(path.resolve(__dirname, '../pages/digit-span/i
 assert.match(digitView, /连续两轮未答对后会提前结束该方向/)
 assert.doesNotMatch(digitView, /所有预设长度都会完成/)
 
-console.log('五个新增认知页面视图测试全部通过')
+console.log('四个新增认知页面视图测试全部通过')

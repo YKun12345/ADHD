@@ -20,7 +20,6 @@ const RADAR_SCHEMAS = Object.freeze({
 })
 const COGNITIVE_DEFINITIONS = Object.freeze([
   { id: 'reaction', title: '反应抑制任务', metric: 'accuracy' },
-  { id: 'simple_reaction', title: '简单反应时', metric: 'simpleReaction' },
   { id: 'stroop', title: '颜色干扰任务', metric: 'stroop' },
   { id: 'trail', title: '连线测试', metric: 'trail' },
   { id: 'flanker', title: '箭头抗干扰任务', metric: 'accuracy' },
@@ -183,13 +182,6 @@ function percentMetric(value, fallback = '已记录结果') {
 }
 
 function cognitiveMetrics(definition, rawResult) {
-  if (definition.metric === 'simpleReaction') {
-    const median = finiteNumber(rawResult.median_reaction_time_ms)
-    return {
-      primaryMetric: median === null ? '已记录结果' : `中位反应时 ${Math.round(median)} ms`,
-      secondaryMetric: percentMetric(rawResult.accuracy, '暂无有效率')
-    }
-  }
   if (definition.metric === 'trail') {
     const elapsed = finiteNumber(rawResult.elapsed_ms)
     const errors = finiteNumber(rawResult.errors)
@@ -264,8 +256,8 @@ function normalizeLocalCognitive(value) {
     completedCount: cards.length,
     totalCount: COGNITIVE_DEFINITIONS.length,
     summary: cards.length === COGNITIVE_DEFINITIONS.length
-      ? '七项认知任务均已完成。'
-      : `已完成 ${cards.length}/7 项认知任务，可继续补充测试。`,
+      ? '六项认知任务均已完成。'
+      : `已完成 ${cards.length}/${COGNITIVE_DEFINITIONS.length} 项认知任务，可继续补充测试。`,
     cards
   }
 }
@@ -319,8 +311,8 @@ function mergeCognitive(localCognitive, serverCognitive) {
     completedCount: cards.length,
     totalCount: COGNITIVE_DEFINITIONS.length,
     summary: server.summary || (cards.length === COGNITIVE_DEFINITIONS.length
-      ? '七项认知任务均已完成。'
-      : `已完成 ${cards.length}/7 项认知任务。`),
+      ? '六项认知任务均已完成。'
+      : `已完成 ${cards.length}/${COGNITIVE_DEFINITIONS.length} 项认知任务。`),
     cards
   }
 }

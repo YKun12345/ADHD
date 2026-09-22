@@ -67,8 +67,7 @@
     catchtouchstart="handleDragStart"
     catchtouchmove="handleDragMove"
     catchtouchend="handleDragEnd"
-    catchtouchcancel="handleDragEnd"
-    bindtap="togglePanel"
+    catchtouchcancel="handleDragCancel"
   >
     <view class="ai-copilot__icon">
       <ai-mascot

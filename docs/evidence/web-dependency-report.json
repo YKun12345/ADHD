@@ -8,7 +8,7 @@
     "findviz/static/js/main.js",
     "HGST-main"
   ],
-  "scanned_files": 95,
+  "scanned_files": 125,
   "missing_count": 0,
   "references": [
     {
@@ -57,13 +57,6 @@
       "source": "doctor-web/doctor_analysis.html",
       "reference": "css/style.css",
       "resolved_target": "doctor-web/css/style.css",
-      "exists": true,
-      "kind": "html"
-    },
-    {
-      "source": "doctor-web/doctor_analysis.html",
-      "reference": "dac_dashboard.html",
-      "resolved_target": "doctor-web/dac_dashboard.html",
       "exists": true,
       "kind": "html"
     },
@@ -612,6 +605,1147 @@
       "resolved_target": "findviz/static/css/webfonts/fa-v4compatibility.woff2",
       "exists": true,
       "kind": "css"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/clinical_pathway.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/index.html",
+      "reference": "login.html",
+      "resolved_target": "patient-web/login.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/login.html",
+      "reference": "css/login.css",
+      "resolved_target": "patient-web/css/login.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/login.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/login.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/login.html",
+      "reference": "js/login.js",
+      "resolved_target": "patient-web/js/login.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "js/patient_ai.js",
+      "resolved_target": "patient-web/js/patient_ai.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_ai.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_education.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "js/achievement.js",
+      "resolved_target": "patient-web/js/achievement.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "js/orchestrator.js",
+      "resolved_target": "patient-web/js/orchestrator.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "js/patient.js",
+      "resolved_target": "patient-web/js/patient.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_home.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "login.html",
+      "resolved_target": "patient-web/login.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_profile.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "js/api.js?v=20260405c",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "js/patient_copilot.js?v=20260405c",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "js/report.js?v=20260405c",
+      "resolved_target": "patient-web/js/report.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "js/report_ai.js?v=20260405c",
+      "resolved_target": "patient-web/js/report_ai.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_report.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "js/scale.js",
+      "resolved_target": "patient-web/js/scale.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_scale.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "js/achievement.js",
+      "resolved_target": "patient-web/js/achievement.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "js/games.js",
+      "resolved_target": "patient-web/js/games.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=digit",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=flanker",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=nback",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=reaction",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=stroop",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_test_session.html?test=trail",
+      "resolved_target": "patient-web/patient_test_session.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "js/patient_test_session.js",
+      "resolved_target": "patient-web/js/patient_test_session.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_test_session.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "clinical_pathway.html",
+      "resolved_target": "patient-web/clinical_pathway.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "css/patient.css",
+      "resolved_target": "patient-web/css/patient.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "css/style.css",
+      "resolved_target": "patient-web/css/style.css",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "js/api.js",
+      "resolved_target": "patient-web/js/api.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "js/patient_copilot.js",
+      "resolved_target": "patient-web/js/patient_copilot.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "js/tracking.js",
+      "resolved_target": "patient-web/js/tracking.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "js/tracking_ai.js",
+      "resolved_target": "patient-web/js/tracking_ai.js",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "login.html",
+      "resolved_target": "patient-web/login.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_ai.html",
+      "resolved_target": "patient-web/patient_ai.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_education.html",
+      "resolved_target": "patient-web/patient_education.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_home.html",
+      "resolved_target": "patient-web/patient_home.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_profile.html",
+      "resolved_target": "patient-web/patient_profile.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_report.html",
+      "resolved_target": "patient-web/patient_report.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_scale.html",
+      "resolved_target": "patient-web/patient_scale.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_test.html",
+      "resolved_target": "patient-web/patient_test.html",
+      "exists": true,
+      "kind": "html"
+    },
+    {
+      "source": "patient-web/patient_tracking.html",
+      "reference": "patient_tracking.html",
+      "resolved_target": "patient-web/patient_tracking.html",
+      "exists": true,
+      "kind": "html"
     }
   ]
 }

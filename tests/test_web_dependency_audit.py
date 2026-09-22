@@ -73,6 +73,7 @@ class WebDependencyAuditTests(unittest.TestCase):
 
     def test_merge_layout_separates_active_doctor_and_legacy_patient_web(self) -> None:
         doctor_web = ROOT / "doctor-web"
+        active_web = ROOT / "patient-web"
         legacy_web = ROOT / "archive" / "legacy-patient-web"
 
         for name in (
@@ -95,6 +96,19 @@ class WebDependencyAuditTests(unittest.TestCase):
             "clinical_pathway.html",
         ):
             self.assertTrue((legacy_web / name).is_file(), name)
+            self.assertTrue((active_web / name).is_file(), name)
+
+        for archived in legacy_web.rglob("*"):
+            if not archived.is_file() or archived.name == "README.md":
+                continue
+            relative = archived.relative_to(legacy_web)
+            active = active_web / relative
+            self.assertTrue(active.is_file(), relative.as_posix())
+            self.assertEqual(
+                archived.read_text(encoding="utf-8").replace("\r\n", "\n"),
+                active.read_text(encoding="utf-8").replace("\r\n", "\n"),
+                relative.as_posix(),
+            )
 
         self.assertEqual([], sorted(path.name for path in ROOT.glob("*.htm*")))
         active_text = "\n".join(

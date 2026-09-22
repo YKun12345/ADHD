@@ -6,7 +6,6 @@ const { BATTERY_STATE_KEY, createBatteryState, normalizeBatteryState, completeBa
 
 const TASK_URLS = Object.freeze({
   reaction: '/pages/cognitive/index?mode=battery',
-  simple_reaction: '/pages/simple-reaction/index?mode=battery',
   stroop: '/pages/stroop/index?mode=battery',
   trail: '/pages/trail/index?mode=battery',
   flanker: '/pages/flanker/index?mode=battery',

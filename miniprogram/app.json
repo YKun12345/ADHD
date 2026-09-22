@@ -13,7 +13,6 @@
     "pages/scale/index",
     "pages/cognitive-center/index",
     "pages/cognitive/index",
-    "pages/simple-reaction/index",
     "pages/stroop/index",
     "pages/trail/index",
     "pages/flanker/index",

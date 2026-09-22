@@ -7,7 +7,6 @@ const pageKeys = [
   'scale',
   'cognitive-center',
   'cognitive',
-  'simple-reaction',
   'stroop',
   'trail',
   'flanker',
@@ -57,7 +56,7 @@ for (const pageKey of pageKeys) {
       new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!submitting && \\(phase === 'intro' \\|\\| phase === 'break' \\|\\| phase === 'result'\\)\\}\\}"\\s+page-key="${pageKey}"\\s*/>`),
       `${pageKey} 必须仅在介绍、休息和结果阶段渲染 ai-copilot`
     )
-  } else if (['simple-reaction', 'digit-span'].includes(pageKey)) {
+  } else if (pageKey === 'digit-span') {
     assert.match(wxml, new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!submitting && \\(phase === 'intro' \\|\\| phase === 'result'\\)\\}\\}"\\s+page-key="${pageKey}"\\s*/>`))
   } else if (pageKey === 'trail') {
     assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!submitting && \(phase === 'intro' \|\| phase === 'rest' \|\| phase === 'result'\)\}\}"\s+page-key="trail"\s*\/>/)

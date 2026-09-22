@@ -1,6 +1,5 @@
 const TASK_ORDER = Object.freeze([
   'reaction',
-  'simple_reaction',
   'stroop',
   'flanker',
   'nback',
@@ -10,7 +9,6 @@ const TASK_ORDER = Object.freeze([
 
 const BASE_CONFIG = Object.freeze({
   reaction: Object.freeze({ practiceTrials: 5, responseWindowMs: 1200, goRatio: 0.8 }),
-  simple_reaction: Object.freeze({ practiceTrials: 4, minDelayMs: 1000, maxDelayMs: 2500, responseWindowMs: 1200 }),
   stroop: Object.freeze({ practiceTrials: 8, responseWindowMs: 2500 }),
   trail: Object.freeze({ practiceNodes: 4 }),
   flanker: Object.freeze({ practiceTrials: 8, responseWindowMs: 1800 }),
@@ -21,7 +19,6 @@ const BASE_CONFIG = Object.freeze({
 const AGE_CONFIG = Object.freeze({
   child: Object.freeze({
     reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
-    simple_reaction: Object.freeze({ formalTrials: 20, blockSize: 20 }),
     stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 2 / 3 }),
     trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
     flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),
@@ -30,7 +27,6 @@ const AGE_CONFIG = Object.freeze({
   }),
   adult: Object.freeze({
     reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
-    simple_reaction: Object.freeze({ formalTrials: 20, blockSize: 20 }),
     stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 0.75 }),
     trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
     flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),

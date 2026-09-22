@@ -1,6 +1,6 @@
 # AB 合并版后端
 
-本目录以 B 的 FastAPI 后端为主线，服务 A 微信小程序和 `doctor-web/` 医生端。完整启动说明以仓库根目录 `README.md` 为准。
+本目录以 B 的 FastAPI 后端为主线，同时服务 A 微信小程序、`patient-web/` 患者端和 `doctor-web/` 医生端。三者共用 `/api/v1`、账号体系和数据库。完整启动说明以仓库根目录 `README.md` 为准。
 
 ## 最小开发流程
 
@@ -20,6 +20,7 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 
 - `http://127.0.0.1:8000/api/v1/health`
 - `http://127.0.0.1:8000/docs`
+- `http://127.0.0.1:8000/patient-web/`
 - `http://127.0.0.1:8000/doctor-web/`
 
 ## 数据库

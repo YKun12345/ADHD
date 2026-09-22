@@ -2,7 +2,6 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 
 const pageCases = [
-  ['simple-reaction', 'handleTargetTap'],
   ['trail', 'handleNodeTap'],
   ['flanker', 'handleAnswer'],
   ['nback', 'handleAnswer'],
@@ -63,4 +62,4 @@ for (const [pageName, answerHandler] of pageCases) {
   page.onUnload()
 }
 
-console.log('五个新增认知页面控制器测试全部通过')
+console.log('四个新增认知页面控制器测试全部通过')
