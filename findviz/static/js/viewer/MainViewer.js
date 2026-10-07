@@ -22,7 +22,7 @@ import DistancePopover from './components/distance/DistancePopover.js';
 import ColorSliders from './components/fmri/ColorSliders.js';
 import Montage from './components/fmri/Montage.js';
 import Movie from './components/fmri/movie/Movie.js';
-import MoviePopover from './components/fmri/movie/moviePopover.js';
+import MoviePopover from './components/fmri/movie/MoviePopover.js';
 import PreprocessFmri from './components/fmri/PreprocessFmri.js';
 import TimeConvert from './components/fmri/TimeConvert.js';
 import TimeSlider from './components/fmri/TimeSlider.js';
@@ -46,7 +46,7 @@ import ColorBar from './plots/ColorBar.js';
 import Distance from './plots/Distance.js';
 import GiftiViewer from './plots/GiftiViewer.js';
 import NiftiViewer from './plots/NiftiViewer.js';
-import TimeCourse from './plots/TimeCourse.js';
+import TimeCourse from './plots/timecourse.js';
 // click handler
 import { NiftiClickHandler, GiftiClickHandler } from './plots/clickHandlers.js';
 

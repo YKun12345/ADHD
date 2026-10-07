@@ -183,7 +183,7 @@ async function waitForFindvizCacheReady(expectedType, maxAttempts = 40, delayMs 
 
 async function ensureMainViewerLoaded() {
     if (!MainViewerClass) {
-        const module = await import('../findviz/static/js/viewer/MainViewer.js');
+        const module = await import('../../findviz/static/js/viewer/MainViewer.js');
         MainViewerClass = module.default;
     }
     return MainViewerClass;
