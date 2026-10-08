@@ -1,0 +1,15 @@
+<view wx:if="{{visible}}" class="instruction-overlay" catchtap="stopPropagation" catchtouchmove="stopPropagation" aria-role="dialog" aria-label="{{content.title}}开始前说明" aria-modal="true">
+  <view class="instruction-dialog">
+    <text class="instruction-title">{{content.title}}</text>
+    <text class="instruction-subtitle">请先了解规则，再开始测试</text>
+    <scroll-view class="instruction-body" scroll-y="true">
+      <text class="instruction-label">测试目的</text><text class="instruction-copy">{{content.purpose}}</text>
+      <text class="instruction-label">操作方法</text><text class="instruction-copy">{{content.method}}</text>
+      <text class="instruction-label">颜色与符号</text><text class="instruction-copy">{{content.signals}}</text>
+      <text class="instruction-label">题量与阶段</text><text class="instruction-copy">{{content.amount}}</text>
+      <view class="instruction-example"><text class="instruction-label">简短示例</text><text class="instruction-copy">{{content.example}}</text></view>
+    </scroll-view>
+    <text class="instruction-countdown" aria-live="polite">{{ready ? '阅读完成，准备好后点击开始' : '请阅读说明，' + remaining + ' 秒后可开始'}}</text>
+    <button class="instruction-start {{ready ? '' : 'instruction-start--disabled'}}" disabled="{{!ready}}" bindtap="start">{{ready ? '开始测试' : '开始测试（' + remaining + '）'}}</button>
+  </view>
+</view>

@@ -1,0 +1,12 @@
+.instruction-overlay { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 36rpx; box-sizing: border-box; background: rgba(13, 36, 47, .55); }
+.instruction-dialog { width: 100%; max-width: 680rpx; max-height: 90vh; box-sizing: border-box; padding: 32rpx; border-radius: 30rpx; background: #fff; color: #17324d; display: flex; flex-direction: column; }
+.instruction-title { display: block; font-size: 34rpx; font-weight: 700; }
+.instruction-subtitle { display: block; margin-top: 10rpx; color: #506b75; font-size: 23rpx; }
+.instruction-body { margin-top: 18rpx; height: 55vh; min-height: 0; }
+.instruction-label { display: block; margin-top: 18rpx; font-size: 25rpx; font-weight: 700; }
+.instruction-copy { display: block; margin-top: 6rpx; color: #365465; font-size: 24rpx; line-height: 1.65; }
+.instruction-example { margin-top: 18rpx; padding: 4rpx 18rpx 18rpx; border-radius: 18rpx; background: #eef6f7; }
+.instruction-countdown { display: block; margin: 22rpx 0 14rpx; color: #506b75; font-size: 23rpx; text-align: center; }
+.instruction-start { min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: 20rpx; background: #236b80; color: #fff; font-size: 27rpx; font-weight: 600; }
+.instruction-start--disabled { background: #dbe5e8; color: #506b75; }
+.instruction-start::after { border: none; }

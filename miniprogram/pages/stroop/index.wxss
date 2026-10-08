@@ -502,3 +502,7 @@ page {
 .section-break-card__title { margin-top: 14rpx; font-size: 36rpx; font-weight: 750; }
 .section-break-card__message { max-width: 520rpx; margin-top: 14rpx; color: #526575; font-size: 24rpx; line-height: 1.7; }
 .section-break-card__button { width: 100%; margin-top: 30rpx; }
+
+.result-card { text-align: center; }
+.result-card .result-heading { justify-content: center; }
+.result-card .result-heading-copy { align-items: center; text-align: center; }

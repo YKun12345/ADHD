@@ -132,4 +132,16 @@ assert.deepEqual(
   }
 )
 
+
+
+// Omitted responses count against accuracy but have no measured reaction time.
+const omissionSummary = summarizeStroopTrials([
+  evaluateStroopChoice(STROOP_TRIALS[0], STROOP_TRIALS[0].colorKey, 800),
+  evaluateStroopChoice(STROOP_TRIALS[1], null, null)
+])
+assert.equal(omissionSummary.accuracy, 50)
+assert.equal(omissionSummary.omissions, 1)
+assert.equal(omissionSummary.average_reaction_time_ms, 800)
+assert.equal(omissionSummary.fastest_reaction_time_ms, 800)
+
 console.log('Stroop 测试数据测试全部通过')

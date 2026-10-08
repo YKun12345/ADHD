@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 from backend.app.services.cognitive_contract import (
     canonical_test_type,
     normalize_result_json,
+    validate_test_run_id,
 )
 
 
@@ -15,6 +16,8 @@ class CognitiveTestSubmitRequest(BaseModel):
 
     @model_validator(mode="after")
     def normalize_cognitive_payload(self) -> "CognitiveTestSubmitRequest":
+        if "test_run_id" in self.result_json:
+            validate_test_run_id(self.result_json["test_run_id"])
         self.test_type = canonical_test_type(self.test_type)
         self.result_json = normalize_result_json(self.test_type, self.result_json)
         return self

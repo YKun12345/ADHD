@@ -108,9 +108,11 @@ CREATE TABLE cognitive_tests (
 	id INTEGER NOT NULL AUTO_INCREMENT, 
 	patient_id INTEGER NOT NULL, 
 	test_type VARCHAR(64) NOT NULL, 
+	test_run_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin,
 	result_json JSON NOT NULL, 
 	created_at DATETIME NOT NULL, 
 	PRIMARY KEY (id), 
+	CONSTRAINT uq_cognitive_tests_patient_type_run UNIQUE (patient_id, test_type, test_run_id),
 	FOREIGN KEY(patient_id) REFERENCES patients (id) ON DELETE CASCADE
 );
 

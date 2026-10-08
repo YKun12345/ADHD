@@ -50,16 +50,8 @@ for (const pageKey of pageKeys) {
     '/components/ai-copilot/index',
     `${pageKey} 未声明 ai-copilot`
   )
-  if (pageKey === 'cognitive' || pageKey === 'stroop' || pageKey === 'flanker' || pageKey === 'nback') {
-    assert.match(
-      wxml,
-      new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!submitting && \\(phase === 'intro' \\|\\| phase === 'break' \\|\\| phase === 'result'\\)\\}\\}"\\s+page-key="${pageKey}"\\s*/>`),
-      `${pageKey} 必须仅在介绍、休息和结果阶段渲染 ai-copilot`
-    )
-  } else if (pageKey === 'digit-span') {
-    assert.match(wxml, new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!submitting && \\(phase === 'intro' \\|\\| phase === 'result'\\)\\}\\}"\\s+page-key="${pageKey}"\\s*/>`))
-  } else if (pageKey === 'trail') {
-    assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!submitting && \(phase === 'intro' \|\| phase === 'rest' \|\| phase === 'result'\)\}\}"\s+page-key="trail"\s*\/>/)
+  if (['cognitive', 'stroop', 'flanker', 'nback', 'digit-span', 'trail'].includes(pageKey)) {
+    assert.equal(wxml.includes(`wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="${pageKey}"`), true, `${pageKey} 说明弹窗和测试期间不显示AI助手`)
   } else if (pageKey === 'tracking') {
     assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!noteFocused && !submitting\}\}"\s+page-key="tracking"\s*\/>/)
   } else if (pageKey === 'home' || pageKey === 'doctor-home' || pageKey === 'doctor-guide-settings' || pageKey === 'privacy-settings') {

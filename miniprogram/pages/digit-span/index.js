@@ -1,18 +1,36 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { getTaskConfig } = require('../../utils/cognitive-config')
+const { withTaskInstructions } = require('../../utils/cognitive-instructions')
 const { buildDigitTrials, evaluateDigitTrial, shouldStopDigitDirection, summarizeDigitTrials, buildDigitSpanPayload } = require('../../utils/digit-span-test')
 const { loadCognitiveContext, finishPage, retryPageSync, goNextBatteryTask, clearTimers, schedule } = require('../../utils/cognitive-page-support')
 
 const PENDING_KEY = 'pending_digit_result'
 
-registerPatientPage({
+function isCurrentRecall(page, event) {
+  if (!page.data.running || page.data.phase !== 'recall') return false
+  const dataset = event && event.currentTarget && event.currentTarget.dataset
+  return !dataset || dataset.trial === undefined || Number(dataset.trial) === page.data.currentTrial
+}
+
+registerPatientPage(withTaskInstructions('digit', {
   data: { patientName: '患者', ageGroup: 'child', mode: 'single', phase: 'intro', running: false, submitting: false, directionText: '顺背', shownDigit: '', answer: [], answerText: '', currentTrial: 0, totalTrials: 0, progressPercent: 0, result: null, syncStatus: '', hasPendingResult: false, nextTaskId: '', keypad: [1, 2, 3, 4, 5, 6, 7, 8, 9, 0] },
   onLoad(query) { this._context = loadCognitiveContext(query); this._config = getTaskConfig('digit', this._context.ageGroup); const count = (this._config.maxSpan - this._config.minSpan + 1) * this._config.trialsPerSpan * 2; this.setData({ ...this._context, totalTrials: count, hasPendingResult: Boolean(wx.getStorageSync(PENDING_KEY)) }) },
   startTest() { if (this.data.running || this.data.submitting) return; clearTimers(this); this._trials = buildDigitTrials(this._config.minSpan, this._config.maxSpan, this._config.trialsPerSpan); this._records = []; this._index = 0; this.setData({ running: true, progressPercent: 0, result: null, syncStatus: '' }); this._presentTrial() },
-  _presentTrial() { const trial = this._trials[this._index]; this._shownIndex = 0; this.setData({ phase: 'presenting', directionText: trial.direction === 'forward' ? '顺背' : '倒背', currentTrial: this._index + 1, answer: [], answerText: '', shownDigit: '' }); const showNext = () => { if (this._shownIndex >= trial.sequence.length) { this.setData({ phase: 'recall', shownDigit: '' }); return } this.setData({ shownDigit: String(trial.sequence[this._shownIndex]) }); this._shownIndex += 1; schedule(this, () => { this.setData({ shownDigit: '' }); schedule(this, showNext, this._config.gapMs) }, this._config.digitDurationMs) }; showNext() },
-  handleDigitTap(event) { if (!this.data.running || this.data.phase !== 'recall') return; const answer = [...this.data.answer, Number(event.currentTarget.dataset.digit)]; this.setData({ answer, answerText: answer.join(' ') }) },
-  handleDelete() { if (this.data.phase !== 'recall') return; const answer = this.data.answer.slice(0, -1); this.setData({ answer, answerText: answer.join(' ') }) },
-  submitAnswer() { if (!this.data.running || this.data.phase !== 'recall') return; const direction = this._trials[this._index].direction; this._records.push(evaluateDigitTrial(this._trials[this._index], this.data.answer)); this._index += 1; if (shouldStopDigitDirection(this._records, direction, this._config.trialsPerSpan)) { while (this._index < this._trials.length && this._trials[this._index].direction === direction) this._index += 1 } this.setData({ progressPercent: Math.round((this._index / this._trials.length) * 100) }); if (this._index >= this._trials.length) return this._completeTest(); this.setData({ phase: 'feedback' }); schedule(this, () => this._presentTrial(), 450) },
+  _presentTrial() { const trial = this._trials[this._index]; this._shownIndex = 0; this.setData({ phase: 'presenting', directionText: trial.direction === 'forward' ? '顺背' : '倒背', currentTrial: this._records.length + 1, answer: [], answerText: '', shownDigit: '' }); const showNext = () => { if (this._shownIndex >= trial.sequence.length) { this.setData({ phase: 'recall', shownDigit: '' }); return } this.setData({ shownDigit: String(trial.sequence[this._shownIndex]) }); this._shownIndex += 1; schedule(this, () => { this.setData({ shownDigit: '' }); schedule(this, showNext, this._config.gapMs) }, this._config.digitDurationMs) }; showNext() },
+  handleDigitTap(event) {
+    if (!isCurrentRecall(this, event)) return
+    const value = event.currentTarget.dataset.digit
+    const digit = Number(value)
+    if (value === null || value === undefined || value === '' || !Number.isInteger(digit) || digit < 0 || digit > 9) return
+    const answer = [...this.data.answer, digit]
+    this.setData({ answer, answerText: answer.join(' ') })
+  },
+  handleDelete(event) {
+    if (!isCurrentRecall(this, event)) return
+    const answer = this.data.answer.slice(0, -1)
+    this.setData({ answer, answerText: answer.join(' ') })
+  },
+  submitAnswer(event) { if (!isCurrentRecall(this, event)) return; const direction = this._trials[this._index].direction; this._records.push(evaluateDigitTrial(this._trials[this._index], this.data.answer)); this._index += 1; if (shouldStopDigitDirection(this._records, direction, this._config.trialsPerSpan)) { while (this._index < this._trials.length && this._trials[this._index].direction === direction) this._index += 1 } this.setData({ progressPercent: Math.round((this._index / this._trials.length) * 100) }); if (this._index >= this._trials.length) return this._completeTest(); if (this._trials[this._index].direction !== direction) { this.setData({ phase: 'direction-change', directionText: '倒背' }); schedule(this, () => this._presentTrial(), 1500); return } this.setData({ phase: 'feedback' }); schedule(this, () => this._presentTrial(), 450) },
   _completeTest() { clearTimers(this); this.setData({ progressPercent: 100 }); const summary = summarizeDigitTrials(this._records); return finishPage(this, 'digit', buildDigitSpanPayload(summary, this._records, this._context), PENDING_KEY) },
   retrySync() { return retryPageSync(this, PENDING_KEY) }, goNext() { goNextBatteryTask(this) }, goBack() { wx.navigateBack({ delta: 1 }) },
   onHide() {
@@ -23,4 +41,4 @@ registerPatientPage({
     }
   },
   onUnload() { clearTimers(this) }
-})
+}))

@@ -3,6 +3,7 @@ from statistics import mean
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_db, require_roles
@@ -39,6 +40,7 @@ from backend.app.services.security_service import (
 )
 from backend.app.services.cognitive_contract import (
     CANONICAL_COGNITIVE_TYPES,
+    CONTINUOUS_PROTOCOL_ID,
     canonical_test_type,
     normalize_result_json,
 )
@@ -316,25 +318,26 @@ def _extract_latest_cognitive_profile(
     nback_raw = raw_result(nback)
     digit_raw = raw_result(digit)
     reaction_speed_raw = simple_reaction_raw or reaction_raw
+    extended_trail = bool(trail and (trail.result_json or {}).get("protocol_id") == CONTINUOUS_PROTOCOL_ID)
 
     reaction_speed = _clamp_score(
         (
             _inverse_time_score(_extract_float(reaction_speed_raw, "average_reaction_time_ms"), 250, 900) * 0.45
             + _inverse_time_score(_extract_float(stroop_raw, "average_reaction_time_ms"), 500, 1800) * 0.2
             + _inverse_time_score(_extract_float(flanker_raw, "average_reaction_time_ms"), 400, 1600) * 0.2
-            + _inverse_time_score(_extract_float(trail_raw, "elapsed_ms"), 6000, 40000) * 0.15
-        )
+            + (0 if extended_trail else _inverse_time_score(_extract_float(trail_raw, "elapsed_ms"), 6000, 40000) * 0.15)
+        ) / (0.85 if extended_trail else 1)
     )
 
     attention_control = _clamp_score(
         (
             _accuracy_score(_extract_float(stroop_raw, "accuracy")) * 0.4
             + _accuracy_score(_extract_float(flanker_raw, "accuracy")) * 0.35
-            + (
+            + (0 if extended_trail else (
                 _inverse_time_score(_extract_float(trail_raw, "elapsed_ms"), 6000, 40000) * 0.5
                 + _clamp_score(20 - (_extract_float(trail_raw, "errors") or 0) * 4) * 0.5
-            ) * 0.25
-        )
+            ) * 0.25)
+        ) / (0.75 if extended_trail else 1)
     )
 
     inhibitory_control = _clamp_score(
@@ -373,6 +376,11 @@ def _extract_latest_cognitive_profile(
         f"工作记忆 {working_memory}/20。平台判定为“{level_text}”。"
         "这些分值用于项目内长期追踪，不替代医生诊断。"
     )
+    if extended_trail:
+        summary += (
+            "连线采用连续版协议 continuous-mobile-v4（A 30节点、B 30节点），仅展示客观用时和错误，"
+            "不纳入综合分；反应速度与注意控制按其余任务的原有权重重新分配，不能直接与旧协议综合分比较。"
+        )
 
     def build_item(record: CognitiveTest | None) -> CognitiveTestReportItem | None:
         if record is None:
@@ -388,10 +396,28 @@ def _extract_latest_cognitive_profile(
             except ValueError:
                 parsed_finished_at = None
         normalized_type = canonical_test_type(record.test_type)
+        status_text = result_json.get("status_text") or "已记录"
+        if normalized_type == "trail" and result_json.get("protocol_id") == CONTINUOUS_PROTOCOL_ID:
+            raw = result_json.get("raw_result") or {}
+            elapsed_ms = _extract_float(raw, "elapsed_ms")
+            total_text = f"{elapsed_ms / 1000:.1f} 秒" if elapsed_ms is not None else "--"
+            key_metric = f"总用时 {total_text}，错误 {raw.get('errors', '--')} 次"
+            stages = raw.get("stages")
+            if isinstance(stages, list):
+                for index, stage in enumerate(stages[:2]):
+                    if not isinstance(stage, dict):
+                        continue
+                    duration = _extract_float(stage, "elapsedMs")
+                    stage_text = f"{duration / 1000:.1f} 秒" if duration is not None else "--"
+                    key_metric += (
+                        f"；{'A' if index == 0 else 'B'} {stage_text}，"
+                        f"错误 {stage.get('errors', '--')} 次，{stage.get('nodeCount', '--')}节点"
+                    )
+            status_text = f"{status_text} · 客观记录 · {CONTINUOUS_PROTOCOL_ID}"
         return CognitiveTestReportItem(
             test_type=normalized_type,
             test_name=result_json.get("test_name") or normalized_type,
-            status_text=result_json.get("status_text") or "已记录",
+            status_text=status_text,
             key_metric=str(key_metric),
             finished_at=parsed_finished_at,
         )
@@ -533,16 +559,39 @@ def submit_cognitive_test(
             detail="Patient profile not found for current user.",
         )
 
+    run_id = payload.result_json.get("test_run_id")
+    patient_id = patient.id
+    existing_query = select(CognitiveTest).where(
+        CognitiveTest.patient_id == patient_id,
+        CognitiveTest.test_type == payload.test_type,
+        CognitiveTest.test_run_id == run_id,
+    )
+    existing = db.scalar(existing_query) if run_id is not None else None
+    if existing is not None:
+        return CognitiveTestResponse(
+            id=existing.id, test_type=existing.test_type,
+            result_json=existing.result_json, created_at=existing.created_at,
+        )
+
     record = CognitiveTest(
         patient_id=patient.id,
         test_type=payload.test_type,
+        test_run_id=run_id,
         result_json=payload.result_json,
     )
     db.add(record)
-    db.commit()
+    try:
+        db.flush()
+        capture_cognitive_test_cipher(db, patient, record)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        # Another request may have committed this run after our initial lookup.
+        existing = db.scalar(existing_query) if run_id is not None else None
+        if existing is None:
+            raise
+        record = existing
     db.refresh(record)
-    capture_cognitive_test_cipher(db, patient, record)
-    db.commit()
 
     return CognitiveTestResponse(
         id=record.id,
