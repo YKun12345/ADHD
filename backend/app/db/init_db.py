@@ -105,6 +105,41 @@ def _ensure_care_message_client_id_column() -> None:
             )
 
 
+def _ensure_cognitive_test_run_id_column() -> None:
+    inspector = inspect(engine)
+    if "cognitive_tests" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("cognitive_tests")}
+    if "test_run_id" not in columns:
+        with engine.begin() as conn:
+            if engine.dialect.name == "mysql":
+                conn.exec_driver_sql(
+                    "ALTER TABLE cognitive_tests ADD COLUMN test_run_id "
+                    "VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL"
+                )
+            elif engine.dialect.name == "sqlite":
+                conn.exec_driver_sql("ALTER TABLE cognitive_tests ADD COLUMN test_run_id VARCHAR(64)")
+            else:
+                raise RuntimeError("Cognitive run id upgrade supports SQLite and MySQL only")
+
+    inspector = inspect(engine)
+    unique_columns = ["patient_id", "test_type", "test_run_id"]
+    has_unique = any(
+        index.get("unique") and index.get("column_names") == unique_columns
+        for index in inspector.get_indexes("cognitive_tests")
+    ) or any(
+        constraint.get("column_names") == unique_columns
+        for constraint in inspector.get_unique_constraints("cognitive_tests")
+    )
+    if not has_unique:
+        with engine.begin() as conn:
+            conn.exec_driver_sql(
+                "CREATE UNIQUE INDEX uq_cognitive_tests_patient_type_run "
+                "ON cognitive_tests (patient_id, test_type, test_run_id)"
+            )
+
+
 def _ensure_imaging_visualization_screenshot_columns() -> None:
     inspector = inspect(engine)
     if "imaging_visualizations" not in inspector.get_table_names():
@@ -350,6 +385,7 @@ def init_db() -> None:
     _ensure_patient_assignment_column()
     _ensure_tracking_log_activities_column()
     _ensure_care_message_client_id_column()
+    _ensure_cognitive_test_run_id_column()
     _ensure_imaging_visualization_screenshot_columns()
     _ensure_model_prediction_detail_columns()
     _ensure_security_runtime_columns()

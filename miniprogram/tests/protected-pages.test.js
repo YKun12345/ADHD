@@ -11,6 +11,10 @@ const PROTECTED_PAGES = [
   'cognitive-center',
   'cognitive',
   'stroop',
+  'trail',
+  'flanker',
+  'nback',
+  'digit-span',
   'tracking',
   'tracking-trend',
   'report',
@@ -39,7 +43,7 @@ for (const pageName of PROTECTED_PAGES) {
   const guardRequires = source.match(
     /^const \{ registerPatientPage \} = require\('\.\.\/\.\.\/utils\/patient-page'\)$/gm
   ) || []
-  const guardedRegistrations = source.match(/^registerPatientPage\(\{/gm) || []
+  const guardedRegistrations = source.match(/^registerPatientPage\((?:\{|withTaskInstructions\()/gm) || []
   const directRegistrations = source.match(/^Page\(\{/gm) || []
 
   if (guardRequires.length !== 1) {

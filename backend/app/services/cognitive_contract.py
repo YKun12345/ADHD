@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from typing import Any
 
@@ -31,6 +32,14 @@ TEST_NAMES = {
     "nback": "2-back",
     "digit": "数字广度",
 }
+
+CONTINUOUS_PROTOCOL_ID = "continuous-mobile-v4"
+
+
+def validate_test_run_id(value: Any) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,64}", value):
+        raise ValueError("test_run_id must contain 1-64 ASCII letters, digits, '.', '_', ':' or '-'")
+    return value
 
 
 def canonical_test_type(value: str) -> str:

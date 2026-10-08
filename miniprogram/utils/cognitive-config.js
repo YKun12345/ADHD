@@ -8,7 +8,7 @@ const TASK_ORDER = Object.freeze([
 ])
 
 const BASE_CONFIG = Object.freeze({
-  reaction: Object.freeze({ practiceTrials: 5, responseWindowMs: 1200, goRatio: 0.8 }),
+  reaction: Object.freeze({ practiceTrials: 5, responseWindowMs: 800, goRatio: 0.8 }),
   stroop: Object.freeze({ practiceTrials: 8, responseWindowMs: 2500 }),
   trail: Object.freeze({ practiceNodes: 4 }),
   flanker: Object.freeze({ practiceTrials: 8, responseWindowMs: 1800 }),
@@ -19,18 +19,18 @@ const BASE_CONFIG = Object.freeze({
 const AGE_CONFIG = Object.freeze({
   child: Object.freeze({
     reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
-    stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 2 / 3 }),
-    trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
-    flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),
-    nback: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    stroop: Object.freeze({ formalTrials: 24, blockSize: 24, congruentRatio: 2 / 3 }),
+    trail: Object.freeze({ partANodes: 30, partBPairs: 15 }),
+    flanker: Object.freeze({ formalTrials: 24, blockSize: 24 }),
+    nback: Object.freeze({ formalTrials: 24, blockSize: 24 }),
     digit: Object.freeze({ maxSpan: 7 })
   }),
   adult: Object.freeze({
     reaction: Object.freeze({ formalTrials: 25, blockSize: 25 }),
-    stroop: Object.freeze({ formalTrials: 24, blockSize: 12, congruentRatio: 0.75 }),
-    trail: Object.freeze({ partANodes: 12, partBPairs: 6 }),
-    flanker: Object.freeze({ formalTrials: 24, blockSize: 12 }),
-    nback: Object.freeze({ formalTrials: 24, blockSize: 12 }),
+    stroop: Object.freeze({ formalTrials: 24, blockSize: 24, congruentRatio: 0.75 }),
+    trail: Object.freeze({ partANodes: 30, partBPairs: 15 }),
+    flanker: Object.freeze({ formalTrials: 24, blockSize: 24 }),
+    nback: Object.freeze({ formalTrials: 24, blockSize: 24 }),
     digit: Object.freeze({ maxSpan: 8 })
   })
 })
@@ -51,9 +51,9 @@ function getTaskConfig(taskId, ageGroup) {
     ...AGE_CONFIG[group][taskId],
     taskId,
     ageGroup: group,
-    schemaVersion: 5,
-    protocolId: 'ultra-brief-mobile-v3',
-    protocolLabel: '轻量移动筛查版',
+    schemaVersion: 6,
+    protocolId: 'continuous-mobile-v4',
+    protocolLabel: '连续移动筛查版',
     practicePassPercent: 75,
     maxPracticeAttempts: 3
   })

@@ -19,8 +19,8 @@ const {
   mergeLatestResult
 } = require('../../utils/cognitive-results')
 const { getTaskConfig } = require('../../utils/cognitive-config')
-const { getSectionState } = require('../../utils/cognitive-experience')
-const { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, goNextBatteryTask } = require('../../utils/cognitive-page-support')
+const { withTaskInstructions } = require('../../utils/cognitive-instructions')
+const { loadCognitiveContext, finishPage, retryPageSync, syncPayload, goNextBatteryTask } = require('../../utils/cognitive-page-support')
 
 const PENDING_RESULT_KEY = 'pending_cognitive_result'
 const WAITING_DELAYS = [800, 1000, 1200, 1400]
@@ -39,13 +39,13 @@ function feedbackFor(record) {
   const messages = {
     commission: '本轮应保持不点击',
     omission: '本轮需要点击',
-    false_start: '请等待图形出现'
+    false_start: '请等待页面变色'
   }
 
   return messages[record.errorType] || '请集中注意力'
 }
 
-registerPatientPage({
+registerPatientPage(withTaskInstructions('reaction', {
   data: {
     patientName: '患者',
     ageGroup: 'child',
@@ -62,38 +62,20 @@ registerPatientPage({
     stimulusLabel: '',
     feedbackText: '',
     feedbackCorrect: false,
-    breakTitle: '',
-    breakMessage: '',
-    nextSection: 1,
-    totalSections: 1,
     result: null,
     syncStatus: '',
     hasPendingResult: false
   },
 
   onLoad(query) {
-    const user = wx.getStorageSync('current_user') || {}
-    const pendingResult = wx.getStorageSync(PENDING_RESULT_KEY)
     this._context = loadCognitiveContext(query)
     this._config = getTaskConfig('reaction', this._context.ageGroup)
-    this._useFullProtocol = Boolean(user.patient_profile && user.patient_profile.patient_type)
-    this._trials = this._useFullProtocol
-      ? buildGoNoGoTrials(this._config.formalTrials)
-      : TRIAL_SEQUENCE.slice()
-    const sectionState = getSectionState(
-      0,
-      this._trials.length,
-      this._config.blockSize
-    )
-
+    this._useFullProtocol = true
+    this._trials = buildGoNoGoTrials(this._config.formalTrials)
     this.setData({
-      patientName: user.full_name || '患者',
-      ageGroup: this._context.ageGroup,
-      mode: this._context.mode,
+      ...this._context,
       totalTrials: this._trials.length,
-      nextSection: sectionState.nextSection,
-      totalSections: sectionState.totalSections,
-      hasPendingResult: Boolean(pendingResult)
+      hasPendingResult: Boolean(wx.getStorageSync(PENDING_RESULT_KEY))
     })
   },
 
@@ -117,7 +99,7 @@ registerPatientPage({
       progressPercent: 0,
       stimulusType: '',
       stimulusLabel: '',
-      feedbackText: '保持专注，等待图形出现',
+      feedbackText: '保持专注，等待页面变色',
       feedbackCorrect: false,
       result: null,
       syncStatus: ''
@@ -129,19 +111,21 @@ registerPatientPage({
     this._clearTimers()
     const index = this.data.currentTrialIndex
     const delay = WAITING_DELAYS[index % WAITING_DELAYS.length]
+    this._trialHandled = false
 
     this.setData({
       phase: 'waiting',
       stimulusType: '',
       stimulusLabel: '',
-      feedbackText: '保持专注，等待图形出现',
+      feedbackText: '保持专注，等待页面变色',
       feedbackCorrect: false
     })
 
     const lease = capturePatientSessionLease()
+    const generation = this._runGeneration
     this._stimulusTimer = setTimeout(() => {
       this._stimulusTimer = null
-      if (!isPatientSessionLeaseCurrent(lease)) return
+      if (this._disposed || this._hidden || generation !== this._runGeneration || !isPatientSessionLeaseCurrent(lease)) return
       this._showStimulus()
     }, delay)
   },
@@ -163,18 +147,21 @@ registerPatientPage({
     })
 
     const lease = capturePatientSessionLease()
+    const generation = this._runGeneration
     this._responseTimer = setTimeout(() => {
       this._responseTimer = null
-      if (!isPatientSessionLeaseCurrent(lease)) return
+      if (this._disposed || this._hidden || generation !== this._runGeneration || !isPatientSessionLeaseCurrent(lease)) return
       const record = evaluateTrial({
         type,
         action: 'timeout'
       })
       this._finishTrial(record)
-    }, RESPONSE_WINDOW_MS)
+    }, this._config.responseWindowMs)
   },
 
-  handleTestTap() {
+  handleTestTap(event) {
+    const trialNumber = event && event.currentTarget && event.currentTarget.dataset.trial
+    if (trialNumber !== undefined && Number(trialNumber) !== this.data.currentTrialNumber) return
     if (!this.data.running) {
       return
     }
@@ -210,9 +197,11 @@ registerPatientPage({
   },
 
   _finishTrial(record) {
-    if (!record || !this.data.running) {
+    if (!record || !this.data.running || this._trialHandled || !['waiting', 'stimulus'].includes(this.data.phase)) {
       return
     }
+
+    this._trialHandled = true
 
     if (this._stimulusTimer) {
       clearTimeout(this._stimulusTimer)
@@ -240,28 +229,12 @@ registerPatientPage({
     })
 
     const lease = capturePatientSessionLease()
+    const generation = this._runGeneration
     this._feedbackTimer = setTimeout(() => {
       this._feedbackTimer = null
-      if (!isPatientSessionLeaseCurrent(lease)) return
+      if (this._disposed || this._hidden || generation !== this._runGeneration || !isPatientSessionLeaseCurrent(lease)) return
       if (completed >= this._trials.length) {
         this._completeTest()
-        return
-      }
-
-      const sectionState = getSectionState(
-        completed,
-        this._trials.length,
-        this._config.blockSize
-      )
-      if (this._useFullProtocol && sectionState.shouldBreak) {
-        this.setData({
-          phase: 'break',
-          running: false,
-          breakTitle: sectionState.title,
-          breakMessage: sectionState.message,
-          nextSection: sectionState.nextSection,
-          totalSections: sectionState.totalSections
-        })
         return
       }
 
@@ -275,102 +248,17 @@ registerPatientPage({
   },
 
   async _completeTest() {
-    this._trials = Array.isArray(this._trials) && this._trials.length
-      ? this._trials
-      : TRIAL_SEQUENCE.slice()
-    const result = summarizeTrials(this._records)
-    if (result.total_trials !== this._trials.length) {
-      return
-    }
-
+    if (this._completionSaved || !Array.isArray(this._records) || this._records.length !== this._config.formalTrials) return
     this._clearTimers()
     this._finishedAt = this._finishedAt || new Date().toISOString()
-    const payload = buildCognitivePayload(
-      this._records,
-      this._finishedAt,
-      this._useFullProtocol ? this._context : null
-    )
-    if (this._useFullProtocol) attachProtocolMetadata(payload, this._config, this._records.length)
-    const latestResults = mergeLatestResult(
-      wx.getStorageSync(LATEST_RESULTS_KEY),
-      payload
-    )
-    wx.setStorageSync(LATEST_RESULTS_KEY, latestResults)
-    const nextTaskId = recordBatteryCompletion(this._context, 'reaction')
-
-    this.setData({
-      phase: 'result',
-      running: false,
-      progressPercent: 100,
-      result,
-      nextTaskId,
-      syncStatus: '同步中'
-    })
-
-    return this._syncResult(payload)
+    const payload = buildCognitivePayload(this._records, this._finishedAt, this._context)
+    this.setData({ progressPercent: 100 })
+    return finishPage(this, 'reaction', payload, PENDING_RESULT_KEY, this._records.length)
   },
 
-  async _syncResult(payload) {
-    if (this.data.submitting || !payload) {
-      return
-    }
-
-    this.setData({
-      submitting: true,
-      syncStatus: '同步中'
-    })
-
-    const lease = capturePatientSessionLease()
-
-    try {
-      await request({
-        url: '/patient/submit_cognitive_test',
-        method: 'POST',
-        data: payload
-      })
-      if (!isPatientSessionLeaseCurrent(lease)) return
-      wx.removeStorageSync(PENDING_RESULT_KEY)
-      this.setData({
-        submitting: false,
-        syncStatus: '已同步',
-        hasPendingResult: false
-      })
-    } catch (error) {
-      if (
-        isPatientSessionError(error) ||
-        !isPatientSessionLeaseCurrent(lease)
-      ) {
-        return
-      }
-      wx.setStorageSync(PENDING_RESULT_KEY, payload)
-      this.setData({
-        submitting: false,
-        syncStatus: '待同步',
-        hasPendingResult: true
-      })
-    }
-  },
-
-  retrySync() {
-    if (this.data.submitting) {
-      return
-    }
-
-    const pendingPayload = wx.getStorageSync(PENDING_RESULT_KEY)
-    const localPayload = buildCognitivePayload(
-      this._records,
-      this._finishedAt,
-      this._useFullProtocol ? this._context : null
-    )
-    return this._syncResult(pendingPayload || localPayload)
-  },
-
-  restartTest() {
-    if (this.data.submitting) {
-      return
-    }
-    this.startTest()
-  },
+  _syncResult(payload) { return syncPayload(this, payload, PENDING_RESULT_KEY) },
+  retrySync() { return retryPageSync(this, PENDING_RESULT_KEY) },
+  restartTest() { return this.startTest() },
 
   _clearTimers() {
     for (const key of [
@@ -395,19 +283,6 @@ registerPatientPage({
     })
   },
 
-  continueSection() {
-    if (this.data.phase !== 'break' || this.data.submitting) return
-    const nextIndex = this._records.length
-    this.setData({
-      phase: 'waiting',
-      running: true,
-      currentTrialIndex: nextIndex,
-      currentTrialNumber: nextIndex + 1,
-      feedbackText: '保持专注，等待图形出现',
-      feedbackCorrect: false
-    })
-    this._scheduleTrial()
-  },
 
   onHide() {
     if (this.data.running) {
@@ -440,7 +315,7 @@ registerPatientPage({
       delta: 1
     })
   }
-})
+}))
 
 module.exports = {
   PENDING_RESULT_KEY,

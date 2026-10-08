@@ -185,9 +185,12 @@ function cognitiveMetrics(definition, rawResult) {
   if (definition.metric === 'trail') {
     const elapsed = finiteNumber(rawResult.elapsed_ms)
     const errors = finiteNumber(rawResult.errors)
+    const stages = Array.isArray(rawResult.stages) ? rawResult.stages : []
+    const stageText = stages.filter((stage) => stage && finiteNumber(stage.elapsedMs) !== null && finiteNumber(stage.errors) !== null && finiteNumber(stage.nodeCount) !== null)
+      .map((stage) => `${stage.stage}：${stage.nodeCount}节点，${(stage.elapsedMs / 1000).toFixed(1)}秒，错误${stage.errors}次`).join('；')
     return {
       primaryMetric: elapsed === null ? '已记录结果' : `总用时 ${(elapsed / 1000).toFixed(1)} 秒`,
-      secondaryMetric: errors === null ? '暂无错误记录' : `错误 ${Math.round(errors)} 次`
+      secondaryMetric: stageText || (errors === null ? '暂无错误记录' : `错误 ${Math.round(errors)} 次`)
     }
   }
   if (definition.metric === 'stroop') {
@@ -239,6 +242,8 @@ function normalizeLocalCognitive(value) {
     const rawResult = isObject(resultJson) ? resultJson.raw_result : null
     if (!isObject(rawResult)) continue
     const metrics = cognitiveMetrics(definition, rawResult)
+    const protocolLabel = cleanText(resultJson.protocol_label)
+    if (protocolLabel) metrics.secondaryMetric += ` · ${protocolLabel}${resultJson.protocol_schema_version ? ` v${resultJson.protocol_schema_version}` : ''}`
     const quality = isObject(resultJson.quality) ? resultJson.quality : null
     cards.push({
       id: definition.id,

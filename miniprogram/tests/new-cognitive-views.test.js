@@ -22,13 +22,9 @@ for (const [pageName, title, handler] of pages) {
   assert.match(wxss, /safe-area-inset-bottom/)
   assert.equal(json.usingComponents['ui-nav'], '/components/ui-nav/index')
 
-  if (pageName === 'flanker' || pageName === 'nback') {
-    assert.match(wxml, /phase === 'break'/, `${pageName} 缺少分节休息阶段`)
-    assert.match(wxml, /{{breakTitle}}/)
-    assert.match(wxml, /{{breakMessage}}/)
-    assert.match(wxml, /bindtap="continueSection"/)
-    assert.match(wxss, /\.section-break-card/)
-  }
+  assert.match(wxml, /<task-instructions/)
+  assert.doesNotMatch(wxml, /phase === 'break'|phase === 'rest'|继续下一节/)
+  assert.equal(json.usingComponents['task-instructions'], '/components/task-instructions/index')
 
   if (pageName === 'trail') {
     assert.match(wxml, /<canvas\b[^>]*canvas-id="trail-lines"/)

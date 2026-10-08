@@ -10,8 +10,19 @@ page {
 }
 
 .cognitive-page--testing {
-  background: #f5f8f9;
+  background: #fff;
 }
+
+.full-screen-stimulus { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 120; min-height: 100%; box-sizing: border-box; margin: 0; padding: calc(100rpx + env(safe-area-inset-top)) 32rpx calc(36rpx + env(safe-area-inset-bottom)); border-radius: 0; display: flex; flex-direction: column; align-items: stretch; user-select: none; }
+.full-screen-stimulus--white { background: #fff; color: #17324d; }
+.full-screen-stimulus--go { background: #3f8b7f; color: #fff; }
+.full-screen-stimulus--nogo { background: #c85c52; color: #fff; }
+.full-screen-prompt { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.full-screen-prompt .stimulus-label { font-size: 92rpx; font-weight: 700; }
+.full-screen-prompt .stimulus-help { color: inherit; font-size: 28rpx; }
+.full-screen-stimulus .test-progress-track { flex: none; }
+.full-screen-stimulus .test-progress-value { background: #17324d; }
+.test-exit { align-self: flex-start; margin-bottom: 24rpx; padding: 12rpx 18rpx; border: 1rpx solid currentColor; border-radius: 14rpx; font-size: 23rpx; }
 
 .cognitive-shell--testing {
   height: 100vh;
@@ -579,3 +590,13 @@ page {
 .section-break-card__title { margin-top: 14rpx; font-size: 36rpx; font-weight: 750; }
 .section-break-card__message { max-width: 520rpx; margin-top: 14rpx; color: #506b75; font-size: 24rpx; line-height: 1.7; }
 .section-break-card__button { width: 100%; margin-top: 30rpx; }
+
+/* The interactive surface and its stimulus background share the full viewport. */
+.cognitive-page--testing .test-stage.full-screen-stimulus { min-height: 0; margin: 0; border-radius: 0; align-items: stretch; justify-content: flex-start; }
+.cognitive-page--testing .test-stage.full-screen-stimulus--white { background: #fff; color: #17324d; }
+.cognitive-page--testing .test-stage.full-screen-stimulus--go { background: #3f8b7f; color: #fff; }
+.cognitive-page--testing .test-stage.full-screen-stimulus--nogo { background: #c85c52; color: #fff; }
+
+.result-card { text-align: center; }
+.result-card .result-heading { justify-content: center; }
+.result-card .result-heading-copy { align-items: center; text-align: center; }

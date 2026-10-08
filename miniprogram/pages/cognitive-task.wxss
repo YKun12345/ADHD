@@ -17,8 +17,10 @@ page { min-height: 100%; background: linear-gradient(160deg, #f9fcfd 0%, #f1f8fa
 .progress-track { height: 10rpx; margin-top: 16rpx; overflow: hidden; border-radius: 999rpx; background: #dfeaed; }
 .progress-value { height: 100%; border-radius: inherit; background: #3f8b7f; }
 .stimulus-area { min-height: 420rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 24rpx; border-radius: 28rpx; background: #fff; }
-.result-grid { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 24rpx; }
-.result-stat { box-sizing: border-box; width: calc(50% - 9rpx); padding: 22rpx; border-radius: 20rpx; background: #eff6f7; text-align: center; }
+.result-card { box-sizing: border-box; width: 100%; margin-left: auto; margin-right: auto; text-align: center; }
+.result-card .primary-button,.result-card .secondary-button { width: 100%; }
+.result-grid { width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: stretch; margin-top: 6rpx; }
+.result-stat { box-sizing: border-box; width: 48%; margin-top: 18rpx; padding: 22rpx; border-radius: 20rpx; background: #eff6f7; text-align: center; }
 .result-value { display: block; font-size: 34rpx; font-weight: 700; }
 .result-label { display: block; margin-top: 8rpx; color: #5d747d; font-size: 21rpx; }
 .sync-status { display: block; margin-top: 18rpx; color: #3f7c78; font-size: 22rpx; text-align: center; }
