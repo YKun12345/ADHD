@@ -153,5 +153,23 @@
     "A personal-center home link targeted an absent doctor_home.html. It now targets doctor_analysis.html.",
     "The legacy staff boundary check now permits only the active patient profile reference in the shared role-aware account script.",
     "PPT was not edited. Real models were not retrained."
-  ]
+  ],
+  "after_upstream_merge": {
+    "python_focused": {
+      "passed": 57,
+      "failed": 0,
+      "warnings": 1,
+      "seconds": 94.94
+    },
+    "node": {
+      "passed": 114,
+      "failed": 0,
+      "skipped": 0
+    },
+    "resolved_conflicts": 7,
+    "application_code_matches_tested_snapshot": "906b623",
+    "historical_remote_evidence_preserved": true,
+    "backend_health": 200,
+    "personal_center_page": 200
+  }
 }
