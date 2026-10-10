@@ -370,33 +370,62 @@ function renderCognitiveSummary(profile) {
         section.classList.add('hidden');
         return;
     }
-
     section.classList.remove('hidden');
-    document.getElementById('cognitiveBadge').textContent = `${profile.latest_tests?.length || 0} 项测试`;
-    document.getElementById('cognitiveSummary').textContent = profile.summary || '已生成认知能力摘要。';
-
+    const groups = Array.isArray(profile.protocol_profiles) && profile.protocol_profiles.length
+        ? profile.protocol_profiles : [profile];
     const meta = document.getElementById('cognitiveMeta');
-    meta.innerHTML = '';
-    Object.entries(profile.radar_scores || {}).forEach(([key, value]) => {
-        meta.appendChild(createChip(`${COGNITIVE_RADAR_LABELS[key] || key}：${value}/20`));
-    });
-
     const tests = document.getElementById('cognitiveTests');
-    tests.innerHTML = '';
-    (profile.latest_tests || []).forEach((item) => {
-        const row = document.createElement('div');
-        row.style.cssText = 'padding:0.95rem 1rem;border-radius:14px;background:#F8FAFC;border:1px solid #E2E8F0;';
-        row.innerHTML = `
-            <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:0.35rem;">
-                <strong style="color:#0F172A;font-size:0.96rem;">${item.test_name}</strong>
-                <span style="color:#64748B;font-size:0.82rem;">${formatDateTime(item.finished_at)}</span>
-            </div>
-            <div style="color:#475569;font-size:0.9rem;line-height:1.6;">${item.status_text} · 关键指标：${item.key_metric}</div>
-        `;
-        tests.appendChild(row);
-    });
-
-    initRadarChart('cognitiveRadar', profile.radar_scores || {}, COGNITIVE_RADAR_LABELS);
+    let selector = null;
+    if (groups.length > 1) {
+        selector = document.createElement('select');
+        selector.id = 'cognitiveProtocolSelect';
+        selector.ariaLabel = '选择认知测试来源与协议';
+        selector.style.cssText = 'width:100%;padding:0.7rem;border:1px solid #CBD5E1;border-radius:10px;background:#FFFFFF;color:#334155;';
+        groups.forEach((group) => {
+            const option = document.createElement('option');
+            option.value = group.protocol_key;
+            const source = { patient_web: '网页', miniprogram: '小程序', unknown: '来源未知' }[group.source] || group.source;
+            const age = { adult: '成人', child: '儿童', unspecified: '未区分年龄', unknown: '年龄组未知' }[group.age_group] || group.age_group;
+            option.textContent = `${source} · ${group.protocol_label || group.protocol_id} v${group.protocol_schema_version} · ${age}`;
+            selector.appendChild(option);
+        });
+        selector.value = profile.active_protocol_key || groups[0].protocol_key;
+        selector.addEventListener('change', () => {
+            renderGroup(groups.find((group) => group.protocol_key === selector.value) || groups[0]);
+        });
+    }
+    function renderGroup(group) {
+        document.getElementById('cognitiveBadge').textContent = `${group.latest_tests?.length || 0} 项测试`;
+        document.getElementById('cognitiveSummary').textContent = group.summary || '已生成认知能力摘要。';
+        meta.innerHTML = '';
+        if (selector) meta.appendChild(selector);
+        Object.entries(group.radar_scores || {}).forEach(([key, value]) => {
+            meta.appendChild(createChip(`${COGNITIVE_RADAR_LABELS[key] || key}：${value}/20`));
+        });
+        tests.innerHTML = '';
+        (group.latest_tests || []).forEach((item) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'padding:0.95rem 1rem;border-radius:14px;background:#F8FAFC;border:1px solid #E2E8F0;';
+            const heading = document.createElement('div');
+            heading.style.cssText = 'display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:0.35rem;';
+            const title = document.createElement('strong');
+            title.style.cssText = 'color:#0F172A;font-size:0.96rem;';
+            title.textContent = item.test_name;
+            const time = document.createElement('span');
+            time.style.cssText = 'color:#64748B;font-size:0.82rem;';
+            time.textContent = formatDateTime(item.finished_at);
+            heading.appendChild(title);
+            heading.appendChild(time);
+            const detail = document.createElement('div');
+            detail.style.cssText = 'color:#475569;font-size:0.9rem;line-height:1.6;';
+            detail.textContent = `${item.status_text} · 关键指标：${item.key_metric}`;
+            row.appendChild(heading);
+            row.appendChild(detail);
+            tests.appendChild(row);
+        });
+        initRadarChart('cognitiveRadar', group.radar_scores || {}, COGNITIVE_RADAR_LABELS);
+    }
+    renderGroup(groups.find((group) => group.protocol_key === profile.active_protocol_key) || groups[0]);
 }
 
 function initTrackingCharts(logs = [], totalDays = 14) {

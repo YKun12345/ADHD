@@ -1,31 +1,3 @@
-(function interceptAuthFromParams() {
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get('_token');
-        const userStr = params.get('_user');
-        
-        let updated = false;
-        if (token) {
-            localStorage.setItem('smartbrain_token', token);
-            params.delete('_token');
-            updated = true;
-        }
-        if (userStr) {
-            localStorage.setItem('smartbrain_user', userStr);
-            params.delete('_user');
-            updated = true;
-        }
-        
-        if (updated) {
-            const newSearch = params.toString() ? '?' + params.toString() : '';
-            const newUrl = window.location.pathname + newSearch + window.location.hash;
-            window.history.replaceState({}, document.title, newUrl);
-        }
-    } catch (e) {
-        console.error('Failed to intercept cross-domain auth:', e);
-    }
-})();
-
 const LOCAL_API_ORIGIN = 'http://127.0.0.1:8000';
 const REQUEST_TIMEOUT_MS = 120000;
 
@@ -78,7 +50,7 @@ function normalizeErrorMessage(data) {
     return '请求失败，请稍后重试。';
 }
 
-async function request(endpoint, options = {}) {
+async function request(endpoint, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
     const token = localStorage.getItem('smartbrain_token');
     const headers = {
         'Content-Type': 'application/json',
@@ -87,7 +59,7 @@ async function request(endpoint, options = {}) {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     const config = {
         ...options,
@@ -133,7 +105,7 @@ async function request(endpoint, options = {}) {
                 localStorage.removeItem('smartbrain_user');
                 if (!window._authRedirectPending) {
                     window._authRedirectPending = true;
-                    setTimeout(() => { window.location.href = 'login.html'; }, 300);
+                    setTimeout(() => { window.location.href = '../patient-web/login.html'; }, 300);
                 }
             } else {
                 throw new Error('认证未通过，请重新登录。');
@@ -165,6 +137,11 @@ window.API = {
         register: (data) => request('/auth/register', { method: 'POST', body: data }),
         login: (data) => request('/auth/login', { method: 'POST', body: data }),
         getMe: () => request('/auth/me', { method: 'GET' }),
+        logout: () => request('/imaging/session', { method: 'DELETE', credentials: 'include' }, 5000),
+    },
+
+    Imaging: {
+        getUploadLimits: () => request('/imaging/upload_limits', { method: 'GET' }),
     },
 
     Patient: {
@@ -179,10 +156,7 @@ window.API = {
         bindPatientByEmail: (data) => request('/doctor/bind_patient', { method: 'POST', body: data }),
         getMyPatients: () => request('/doctor/my_patients', { method: 'GET' }),
         getDashboardStats: () => request('/doctor/dashboard_stats', { method: 'GET' }),
-        getPatientsList: (page = 1, keyword = '') =>
-            request(`/doctor/patients_list?page=${page}&keyword=${encodeURIComponent(keyword)}`, { method: 'GET' }),
         predictModel: (formData) => request('/model/predict_fmri', { method: 'POST', body: formData }),
-        uploadImage: (formData) => request('/doctor/upload_image', { method: 'POST', body: formData }),
         getPatientReportDetails: (patientId) => request(`/doctor/patient/${patientId}/report`, { method: 'GET' }),
         saveImagingVisualization: (patientId, data) =>
             request(`/doctor/patient/${patientId}/imaging_visualization`, { method: 'POST', body: data }),

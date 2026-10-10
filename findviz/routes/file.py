@@ -7,6 +7,7 @@ from findviz.routes.shared import data_manager
 from findviz.routes.utils import convert_value, Routes
 from findviz.viz import exception
 from findviz.viz.io.cache import Cache
+from findviz.workspace import current_patient_id
 from findviz.viz.io.nifti import NiftiFiles
 from findviz.viz.io.gifti import GiftiFiles
 from findviz.viz.io.timecourse import get_ts_header
@@ -25,6 +26,8 @@ def check_cache():
     logger.info("Checking cache status")
     cache = Cache()
     has_cache = cache.exists()
+    if current_patient_id() and not data_manager.ctx.fmri_file_type:
+        has_cache = False
     logger.info(f"Cache check: exists={has_cache}, path={cache.get_cache_path()}")
     if has_cache:
         try:
@@ -53,6 +56,7 @@ def clear_cache():
     try:
         cache = Cache()
         cache.clear()
+        data_manager.reset()
         return jsonify({'success': True})
     except Exception as e:
         logger.error("Error clearing cache: %s", str(e), exc_info=True)

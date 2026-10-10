@@ -33,7 +33,7 @@
     <view class="battery-card glass-surface">
       <view class="battery-copy">
         <text class="battery-title">完整认知评估</text>
-        <text class="battery-description">轻量移动筛查版按推荐顺序完成六项，短任务单节完成，长任务会分节休息</text>
+        <text class="battery-description">连续移动筛查版按推荐顺序完成六项，每项先阅读说明，任务内部连续完成</text>
         <text class="battery-time">预计剩余 {{remainingMinutes}} 分钟</text>
       </view>
       <button class="battery-button ui-button ui-button--primary" bindtap="startOrResumeBattery">{{batteryActionText}}</button>

@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-10",
+  "python": {
+    "passed": 184,
+    "failed": 0,
+    "execution": "separate file and findviz scenario groups",
+    "initial_web_audit": {
+      "passed": 2,
+      "failed": 2
+    },
+    "corrected_web_audit": {
+      "passed": 4,
+      "failed": 0
+    },
+    "groups": [
+      {
+        "group": "test_ai_runtime",
+        "summary": "8 passed in 1.03s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_care",
+        "summary": "3 passed, 1 warning in 11.77s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_cognitive_contract",
+        "summary": "20 passed, 1 warning in 40.68s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_cognitive_protocols",
+        "summary": "14 passed, 1 warning in 28.33s",
+        "exit_code": 0
+      },
+      {
+        "group": "auth",
+        "summary": "14 passed, 13 deselected, 5 warnings in 31.81s",
+        "exit_code": 0
+      },
+      {
+        "group": "upload",
+        "summary": "9 passed, 18 deselected, 1 warning in 21.14s",
+        "exit_code": 0
+      },
+      {
+        "group": "logs",
+        "summary": "4 passed, 23 deselected, 1 warning in 12.37s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_findviz_web",
+        "summary": "3 passed, 5 warnings in 11.55s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_health",
+        "summary": "8 passed, 1 warning in 18.48s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_hgst_evaluation",
+        "summary": "10 passed in 3.18s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_imaging_session_logout",
+        "summary": "2 passed, 1 warning in 8.42s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_imaging_upload_capacity",
+        "summary": "3 passed, 5 warnings in 11.45s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_model_modes",
+        "summary": "8 passed in 3.06s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_model_upload",
+        "summary": "7 passed, 1 warning in 17.01s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_schema_upgrade",
+        "summary": "2 passed in 1.93s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_security_advanced",
+        "summary": "37 passed, 1 warning in 116.81s (0:01:56)",
+        "exit_code": 0
+      },
+      {
+        "group": "test_security_regressions",
+        "summary": "8 passed, 1 warning in 27.08s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_seed_idempotency",
+        "summary": "2 passed, 1 warning in 9.14s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_tracking_extended",
+        "summary": "1 passed, 1 warning in 6.11s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_delivery_manifest",
+        "summary": "3 passed in 0.11s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_deployment_configuration",
+        "summary": "6 passed in 9.42s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_repository_cleanliness",
+        "summary": "8 passed in 2.68s",
+        "exit_code": 0
+      },
+      {
+        "group": "test_web_dependency_audit",
+        "summary": "4 passed in 9.61s",
+        "exit_code": 0
+      }
+    ]
+  },
+  "node": {
+    "passed": 114,
+    "failed": 0,
+    "skipped": 0
+  },
+  "syntax": {
+    "python_compile": true,
+    "powershell_launcher": true
+  },
+  "backend_launcher_check": true,
+  "excluded": [
+    "real .env files",
+    "databases",
+    "keys",
+    "runtime logs and uploads",
+    "model weights",
+    "scratch files and worktrees"
+  ],
+  "base_main": "ad1ae82bc1ad06dd041517ce06b18672019aee3e",
+  "notes": [
+    "A personal-center home link targeted an absent doctor_home.html. It now targets doctor_analysis.html.",
+    "The legacy staff boundary check now permits only the active patient profile reference in the shared role-aware account script.",
+    "PPT was not edited. Real models were not retrained."
+  ]
+}

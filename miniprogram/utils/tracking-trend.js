@@ -11,7 +11,11 @@ function valuesFor(logs, field) {
   const values = Array(TOTAL_DAYS).fill(null)
   for (const log of Array.isArray(logs) ? logs : []) {
     if (!log || !Number.isInteger(log.day_index) || log.day_index < 1 || log.day_index > TOTAL_DAYS) continue
-    const value = Number(log[field])
+    const rawValue = log[field]
+    if (rawValue === null || rawValue === undefined || typeof rawValue === 'boolean') continue
+    if (typeof rawValue !== 'number' && typeof rawValue !== 'string') continue
+    if (typeof rawValue === 'string' && rawValue.trim() === '') continue
+    const value = Number(rawValue)
     if (Number.isFinite(value)) values[log.day_index - 1] = value
   }
   return values
@@ -61,4 +65,12 @@ function createChartPoints(values, width, height, padding = 20, maxValue = 5, mi
   })
 }
 
-module.exports = { buildTrackingTrendModel, createChartPoints }
+function createDayAxisTicks(layout) {
+  return [1, 7, TOTAL_DAYS].map((day) => ({
+    day,
+    label: `第${day}天`,
+    x: layout.left + Math.round(layout.plotWidth * (day - 1) / (TOTAL_DAYS - 1))
+  }))
+}
+
+module.exports = { buildTrackingTrendModel, createChartPoints, createDayAxisTicks }

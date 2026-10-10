@@ -1,13 +1,13 @@
 const TEST_INFO = {
-    reaction: {
-        key: 'reaction',
-        type: '反应时测试',
+    simple_reaction: {
+        key: 'simple_reaction',
+        type: '简单反应时测试',
         category: '即时反应与误触控制',
         resultMode: '平均反应时 + 最快反应 + 误触次数',
         instructions: [
             '等待圆形由橙色变为绿色后立即点击。',
             '测试共 5 轮，过早点击会记为误触并重置当前轮次。',
-            '结果主要用于观察基础反应速度和冲动控制情况。'
+            '结果用于记录基础反应速度与提前点击情况；本任务不含 No-Go 试次。'
         ]
     },
     stroop: {
@@ -23,7 +23,7 @@ const TEST_INFO = {
     },
     trail: {
         key: 'trail',
-        type: '连线测试',
+        type: '连线测试（8节点）',
         category: '视觉搜索与顺序执行',
         resultMode: '完成用时 + 错误次数 + 完成状态',
         instructions: [
@@ -56,7 +56,7 @@ const TEST_INFO = {
     },
     digit: {
         key: 'digit',
-        type: '数字广度测试',
+        type: '数字广度测试（仅顺背）',
         category: '短时记忆容量',
         resultMode: '正确轮次 + 最高跨度 + 失败跨度',
         instructions: [
@@ -68,7 +68,7 @@ const TEST_INFO = {
 };
 
 const sessionState = {
-    testType: 'reaction',
+    testType: 'simple_reaction',
     running: false,
     completed: false,
     timeouts: [],
@@ -86,15 +86,16 @@ function $(id) {
 
 function getTestType() {
     const params = new URLSearchParams(window.location.search);
-    const testType = params.get('test') || 'reaction';
-    return TEST_INFO[testType] ? testType : 'reaction';
+    const requested = params.get('test') || 'simple_reaction';
+    const testType = requested === 'reaction' ? 'simple_reaction' : requested;
+    return TEST_INFO[testType] ? testType : 'simple_reaction';
 }
 
 function updateTestInfo() {
     const info = TEST_INFO[sessionState.testType];
     $('testTypeDisplay').textContent = info.type;
     $('testCategoryDisplay').textContent = info.category;
-    $('testResultMode').textContent = info.resultMode;
+    $('testResultMode').textContent = `${info.resultMode} · 网页简版，结果按协议单独记录`;
     $('testInstructions').innerHTML = info.instructions.map((item) => `<li>${item}</li>`).join('');
 }
 
@@ -211,8 +212,13 @@ function renderResultCard(result) {
     $('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function webResultMetadata() {
+    return { source: 'patient_web', protocol_id: 'patient-web-preview-v1', protocol_label: '网页简版', protocol_schema_version: 1, age_group: 'unspecified' };
+}
+
 function persistResultLocally(result) {
     const latest = {
+        ...webResultMetadata(),
         test_key: result.testKey,
         test_name: result.testName,
         status_text: result.statusText,
@@ -232,6 +238,7 @@ async function syncResultIfPossible(result) {
     const payload = {
         test_type: result.testKey,
         result_json: {
+            ...webResultMetadata(),
             test_name: result.testName,
             summary: result.summary,
             status_text: result.statusText,
@@ -496,8 +503,8 @@ function startReactionTest() {
             const average = averageOf(runtime.reactionTimes);
             const fastest = Math.min(...runtime.reactionTimes);
             finalizeTestSession({
-                testKey: 'reaction',
-                testName: TEST_INFO.reaction.type,
+                testKey: 'simple_reaction',
+                testName: TEST_INFO.simple_reaction.type,
                 statusText: '已完成测试',
                 summary: '反应时间测试已完成。系统已根据 5 轮有效作答生成结果，可用于观察即时反应速度与误触控制情况。',
                 metrics: [
@@ -1238,7 +1245,7 @@ function startTest() {
     resetResultCard();
 
     switch (sessionState.testType) {
-        case 'reaction':
+        case 'simple_reaction':
             startReactionTest();
             break;
         case 'stroop':

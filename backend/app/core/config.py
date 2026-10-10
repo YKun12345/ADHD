@@ -31,7 +31,9 @@ class Settings:
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
+    )
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
 
     MYSQL_HOST: str = os.getenv("MYSQL_HOST", "127.0.0.1")
@@ -49,8 +51,12 @@ class Settings:
         "DEEPSEEK_BASE_URL",
         "https://api.deepseek.com/chat/completions",
     ).strip()
-    DEEPSEEK_CHAT_MODEL: str = os.getenv("DEEPSEEK_CHAT_MODEL", "deepseek-v4-flash").strip()
-    DEEPSEEK_REMINDER_MODEL: str = os.getenv("DEEPSEEK_REMINDER_MODEL", "deepseek-v4-flash").strip()
+    DEEPSEEK_CHAT_MODEL: str = os.getenv(
+        "DEEPSEEK_CHAT_MODEL", "deepseek-v4-flash"
+    ).strip()
+    DEEPSEEK_REMINDER_MODEL: str = os.getenv(
+        "DEEPSEEK_REMINDER_MODEL", "deepseek-v4-flash"
+    ).strip()
     DEEPSEEK_TIMEOUT_SECONDS: int = int(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", "300"))
     HGST_PRETRAINED_WEIGHTS_PATH: str = (
         os.getenv("HGST_PRETRAINED_WEIGHTS_PATH", "") or _DEFAULT_HGST_PRETRAINED
@@ -71,12 +77,36 @@ class Settings:
     ).strip()
     UPLOAD_MAX_BYTES: int = int(os.getenv("UPLOAD_MAX_BYTES", str(10 * 1024 * 1024)))
 
+    DATA_ENCRYPTION_KEY: str = os.getenv("DATA_ENCRYPTION_KEY", "").strip()
+    SECURITY_MASTER_KEY_PATH: str = os.getenv(
+        "SECURITY_MASTER_KEY_PATH",
+        str(Path(__file__).resolve().parents[2] / ".keys" / "data_encryption.key"),
+    ).strip()
+
     def __init__(self) -> None:
         if self.APP_ENV == "production":
             if not self.DATABASE_URL:
                 raise RuntimeError("DATABASE_URL is required when APP_ENV=production.")
-            if self.SECRET_KEY in {"", "change-me", "placeholder", "example"}:
-                raise RuntimeError("A non-placeholder SECRET_KEY is required in production.")
+            if len(self.SECRET_KEY) < 32 or self.SECRET_KEY.lower().startswith(
+                ("change-me", "placeholder", "example")
+            ):
+                raise RuntimeError(
+                    "A non-placeholder SECRET_KEY of at least 32 characters is required in production."
+                )
+            from urllib.parse import urlsplit, unquote
+
+            password = unquote(urlsplit(self.DATABASE_URL).password or "")
+            if password.lower().startswith(("change-me", "placeholder", "example")):
+                raise RuntimeError(
+                    "A non-placeholder database password is required in production."
+                )
+            if (
+                not self.DATA_ENCRYPTION_KEY
+                and not Path(self.SECURITY_MASTER_KEY_PATH).is_file()
+            ):
+                raise RuntimeError(
+                    "Production requires DATA_ENCRYPTION_KEY or an existing SECURITY_MASTER_KEY_PATH."
+                )
 
     @cached_property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

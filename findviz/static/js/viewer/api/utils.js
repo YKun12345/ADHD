@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../../workspaceRequest.js';
 // utils.js
 import { displayInlineError, clearInlineError, modalErrorHandler } from '../error.js';
 
@@ -37,7 +38,7 @@ export const makeRequest = async (url, options, errorConfig) => {
                 ...options.headers
               };
 
-        const response = await fetch(finalUrl, {
+        const response = await workspaceFetch(finalUrl, {
             ...options,
             headers
         });

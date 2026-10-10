@@ -8,7 +8,7 @@
 # 说明：
 #   - 默认 APP_ENV=development，使 seed_demo_data 能播种演示账号（production 下该脚本会拒绝执行）。
 #   - api 启动顺序：先 create_tables（create_all 建表，幂等），再播种演示数据，再起 uvicorn。
-#   - 正式生产：把 APP_ENV 改 production 并把下方 api.command 里的 seed 段去掉，另配强 SECRET_KEY/DATABASE_URL。
+#   - 正式生产：设置 APP_ENV=production、强 SECRET_KEY/DATA_ENCRYPTION_KEY，并配置真实推理镜像。
 #   - 数据库口令请避开 URL 保留字符：@ : / ? # [ ] 等。
 #   - Redis 服务当前用不上，仅按需开启（docker compose --profile cache up -d）。
 
@@ -50,6 +50,12 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       SECRET_KEY: ${SECRET_KEY:-change-me-demo-2026}
+      # API 仅向宿主回环开放；可信 nginx 经 Docker 网关转发 HTTPS。
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-*}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:-}
+      SECURITY_MASTER_KEY_PATH: ${SECURITY_MASTER_KEY_PATH:-/app/backend/.keys/data_encryption.key}
+      # 此镜像仅用于演示；真实推理必须安装依赖、提供权重并改为 false。
+      USE_MOCK_MODEL: ${USE_MOCK_MODEL:-true}
       DATABASE_URL: mysql+pymysql://${MYSQL_USER:-adhd}:${MYSQL_PASSWORD:-change-me-demo}@db:3306/${MYSQL_DB:-adhd_demo}?charset=utf8mb4
       MYSQL_HOST: db
       MYSQL_PORT: 3306
@@ -60,18 +66,19 @@ services:
       # 浏览器跨域：doctor-web 与 API 同源时无需填；仅当前端单独部署到别的域名时按需填写
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-}
       # AI 能力（可选，留空走模板降级）
-      QWEN_API_KEY: ${QWEN_API_KEY:-}
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
-      QWEN_CHAT_MODEL: ${QWEN_CHAT_MODEL:-qwen-plus-latest}
-      QWEN_REMINDER_MODEL: ${QWEN_REMINDER_MODEL:-qwen-flash}
-      QWEN_TIMEOUT_SECONDS: ${QWEN_TIMEOUT_SECONDS:-120}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/chat/completions}
+      DEEPSEEK_CHAT_MODEL: ${DEEPSEEK_CHAT_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_REMINDER_MODEL: ${DEEPSEEK_REMINDER_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_TIMEOUT_SECONDS: ${DEEPSEEK_TIMEOUT_SECONDS:-300}
       # 上传目录与上限
       UPLOAD_ROOT: ${UPLOAD_ROOT:-backend/uploads}
       UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
+      FINDVIZ_MAX_UPLOAD_BYTES: ${FINDVIZ_MAX_UPLOAD_BYTES:-536870912}
     command:
       - sh
       - -c
-      - python -m backend.create_tables && python -m backend.scripts.seed_demo_data && exec uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+      - python -m backend.create_tables && if [ "$${APP_ENV}" != "production" ]; then python -m backend.scripts.seed_demo_data; fi && exec uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --proxy-headers
     depends_on:
       db:
         condition: service_healthy
@@ -80,8 +87,12 @@ services:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
       - api_uploads:/app/backend/uploads
+      - api_keys:/app/backend/.keys
+      - api_migration_backups:/app/backend/migration-backups
 
 volumes:
   mysql_data:
   redis_data:
   api_uploads:
+  api_keys:
+  api_migration_backups:

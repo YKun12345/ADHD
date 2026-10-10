@@ -100,6 +100,7 @@ async function run() {
       metrics: { total_trials: 12 }
     }
     const cognitiveSync = cognitivePage._syncResult(payload)
+    const writesBeforeResponse = writes.length
     requestOptions[0].success({
       statusCode: 401,
       data: { detail: 'patient session expired' }
@@ -115,7 +116,7 @@ async function run() {
       'a real 401 cleanup must not be followed by cognitive pending-data restore'
     )
     assert.equal(
-      writes.some(([key]) => key === 'pending_cognitive_result'),
+      writes.slice(writesBeforeResponse).some(([key]) => key === 'pending_cognitive_result'),
       false
     )
 

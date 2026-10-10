@@ -32,4 +32,18 @@ assert.equal(summary.conflict_effect_ms, 200)
 assert.equal(summary.condition_metrics.incongruent.accuracy, 100)
 assert.equal(buildFlankerPayload(summary, [], { ageGroup: 'adult' }).test_type, 'flanker')
 
+
+
+// The overall average must not silently report the median.
+const unevenTimes = summarizeFlankerTrials([
+  evaluateFlankerTrial({ condition: 'congruent', target: 'left' }, 'left', 300),
+  evaluateFlankerTrial({ condition: 'congruent', target: 'left' }, 'left', 500),
+  evaluateFlankerTrial({ condition: 'incongruent', target: 'right' }, 'right', 1600),
+  evaluateFlankerTrial({ condition: 'neutral', target: 'right' }, 'left', 10),
+  evaluateFlankerTrial({ condition: 'neutral', target: 'left' }, '', null)
+])
+assert.equal(unevenTimes.average_reaction_time_ms, 800)
+assert.equal(unevenTimes.condition_metrics.congruent.median_reaction_time_ms, 400)
+assert.equal(unevenTimes.accuracy, 60)
+
 console.log('Flanker 测试数据测试全部通过')

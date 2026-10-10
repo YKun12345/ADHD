@@ -1,0 +1,87 @@
+{
+  "checked_at": "2026-10-10T09:50:59.608Z",
+  "documents": [
+    {
+      "file": "ADHD智慧辅助诊断平台作品说明-修订-2026-10-10.docx",
+      "changed_paragraphs": [
+        2,
+        87,
+        139,
+        145,
+        156,
+        161,
+        163,
+        164,
+        166
+      ],
+      "added_keepNext_paragraphs": [],
+      "parts_changed": [
+        "word/document.xml"
+      ],
+      "xml_valid": true,
+      "paragraphs": 194,
+      "tables": 5,
+      "path": "C:/Users/Lenovo/Desktop/ADHD数媒竞赛材料/ADHD智慧辅助诊断平台作品说明-修订-2026-10-10.docx",
+      "sha256": "0ba9b7c88898513937dd36af992c72cbbbe32315c8ac838ce989ff939f895f83"
+    },
+    {
+      "file": "数字媒体竞赛答辩质询问题清单-修订-2026-10-10.docx",
+      "changed_paragraphs": [
+        17,
+        24,
+        40,
+        65,
+        71,
+        81,
+        82,
+        84,
+        87,
+        90,
+        91,
+        93,
+        96,
+        99,
+        115,
+        124,
+        125
+      ],
+      "added_keepNext_paragraphs": [
+        36,
+        37,
+        38
+      ],
+      "parts_changed": [
+        "word/document.xml"
+      ],
+      "xml_valid": true,
+      "paragraphs": 129,
+      "tables": 6,
+      "path": "C:/Users/Lenovo/Desktop/ADHD数媒竞赛材料/数字媒体竞赛答辩质询问题清单-修订-2026-10-10.docx",
+      "sha256": "19fa529919bd494448dee4b02c07f4566f2861928052a60970c19ceded2f34fb"
+    }
+  ],
+  "render": {
+    "engine": "Microsoft Word readonly COM export + bundled Poppler",
+    "main_pages": 10,
+    "questions_pages": 4,
+    "all_final_pages_visually_checked": true,
+    "main_pdf": "C:/Users/Lenovo/Desktop/ADHD-AB协作版/.codex-tmp/2026-10-10-security-remediation/docx/native-render/main-after.pdf",
+    "questions_pdf": "C:/Users/Lenovo/Desktop/ADHD-AB协作版/.codex-tmp/2026-10-10-security-remediation/docx/native-render/questions-after.pdf"
+  },
+  "original_documents_match_backups": true,
+  "validation": {
+    "deployment": 6,
+    "web_dependency_audit": 4,
+    "repository_cleanliness": 8,
+    "all_passed": true,
+    "docker_live_deployment": false
+  },
+  "new_backup_persistence_volume": "api_migration_backups:/app/backend/migration-backups",
+  "final_revision": {
+    "question_25_opening": "安全可信部分的“权限管控”截图中出现",
+    "fixed_slide_page_references_remaining": 0,
+    "questions_re_rendered_pages": 4,
+    "questions_all_pages_visually_checked": true,
+    "xml_and_package_preservation_rechecked": true
+  }
+}

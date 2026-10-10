@@ -41,6 +41,12 @@
 {
   "test_type": "reaction",
   "result_json": {
+    "schema_version": 2,
+    "protocol_id": "continuous-mobile-v4",
+    "protocol_label": "连续移动筛查版",
+    "protocol_schema_version": 6,
+    "actual_trials": 25,
+    "test_run_id": "wx-mg000001-example",
     "test_name": "Go/No-Go 测试",
     "status_text": "已完成",
     "finished_at": "2026-08-30T08:00:00Z",
@@ -64,6 +70,14 @@
 - `accuracy` 统一使用 0–100 百分数；历史 0–1 比率会乘以 100。
 - 综合报告只返回已完成任务；没有完成的任务不伪造结果。旧患者数据中的 `simple_reaction` 仍可用于历史报告。
 - 新的小程序反应与抑制数据使用 `reaction`，其中误触使用 `reaction.false_starts`。
+- 当前协议为 `continuous-mobile-v4`，协议结构版本为 6；结果结构 `schema_version` 仍为 2。成人与儿童共享连续流程，保留各自既有参数。
+- Go/No-Go 正式 25 次，沿用实际 800ms 刺激响应窗口与原有随机、计分规则。Stroop、Flanker 正式各 24 次。2-back 呈现 24 次，前两次建立记忆不计分，`raw_result.total_trials` 为 22，而 `actual_trials` 为 24。
+- 连线 A 为 30 个数字，B 为 15 组数字与字母、30 个节点；`actual_trials` 为 60，`raw_result.stages` 分别保存 `stage`、`nodeCount`、`elapsedMs`、`errors` 和 `completed`。B 的简短规则提示不计入任一阶段用时。
+- 数字广度保留顺背/倒背和每个长度两轮的原有终止条件，`actual_trials` 为实际已作答轮数。各任务不再等待“继续下一节”。
+- 新客户端为每次主动开始生成 `test_run_id`，重试沿用同一 ID。ID 为 1–64 个 ASCII 字母、数字或 `._:-`；同患者、同规范任务类型、同 ID 重复提交返回原记录，不增加认知记录及安全采集记录。历史未携带 ID 的提交继续接受，不补写或合并历史记录。
+- 新协议连线节点增多，服务端展示 A/B 用时、节点及错误，并将其排除于旧连线时长和错误阈值形成的综合分数；仍使用其余原有指标，避免将新旧节点数量直接比较。
+
+现有数据库新增可空 `cognitive_tests.test_run_id` 和 `(patient_id, test_type, test_run_id)` 唯一索引。应用启动沿用现有 schema 升级流程；也提供 `backend/sql/migrations/20261004_cognitive_run_id_{sqlite,mysql}.sql` 供部署时选择执行。不要对已有该字段的库重复执行手工脚本；本次开发未运行现有业务库升级或生产迁移。
 
 ## 医生端和模型接口
 

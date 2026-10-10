@@ -23,8 +23,9 @@
         <text class="axis-label">纵轴为数值 · 横轴为追踪天数</text>
       </view>
       <text class="chart-data-summary">刻度范围 {{rangeMinimum}} · 中间值 {{rangeMidpoint}} · {{rangeMaximum}} {{metricUnit}}</text>
-      <canvas class="trend-canvas" type="2d" id="trackingTrendCanvas" aria-label="14天状态变化趋势图"></canvas>
-      <view class="axis-labels"><text>第1天</text><text>第7天</text><text>第14天</text></view>
+      <view class="chart-plot" id="trackingTrendPlot">
+        <canvas class="trend-canvas" type="2d" id="trackingTrendCanvas" style="width: {{chartCanvasWidth}}px; height: {{chartCanvasHeight}}px;" aria-label="14天状态变化趋势图"></canvas>
+      </view>
       <text class="chart-status" wx:if="{{chartStatusMessage}}" aria-live="polite">{{chartStatusMessage}}</text>
       <text class="gap-tip">空白日期表示当天尚未记录，不按 0 计算</text>
     </view>

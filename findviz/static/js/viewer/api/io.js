@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../../workspaceRequest.js';
 // io.js
 // apis for saving and loading scenes
 // - saveScene
@@ -20,7 +21,7 @@ export const saveScene = async (sceneName, errorMessageId) => {
     $(`#${errorMessageId}`).hide();
     try {
         // Use fetch with blob response type to handle binary data
-        const response = await fetch(url, {
+        const response = await workspaceFetch(url, {
             method: 'POST',
             body: formData
         });

@@ -24,7 +24,7 @@ for (const [page, theme] of themes) {
 for (const page of ['cognitive', 'stroop', 'flanker', 'nback']) {
   assert.match(
     read('pages', page, 'index.wxml'),
-    /精简移动筛查版/,
+    /连续移动筛查版/,
     `${page} 缺少精简协议说明`
   )
 }

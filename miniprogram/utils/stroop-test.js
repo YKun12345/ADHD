@@ -116,7 +116,7 @@ function summarizeStroopTrials(records = []) {
   const congruentRecords = validRecords.filter((record) => record.congruent)
   const incongruentRecords = validRecords.filter((record) => !record.congruent)
   const reactionTimes = validRecords
-    .filter((record) => Number.isFinite(Number(record.reactionTimeMs)))
+    .filter((record) => record.reactionTimeMs !== null && record.reactionTimeMs !== undefined && Number.isFinite(Number(record.reactionTimeMs)))
     .map((record) => normalizeReactionTime(record.reactionTimeMs))
   const correctReactionTimes = correctRecords.map((record) => (
     normalizeReactionTime(record.reactionTimeMs)

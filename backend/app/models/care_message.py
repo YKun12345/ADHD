@@ -4,10 +4,11 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.patient import Patient
@@ -47,7 +48,7 @@ class CareMessage(Base):
         nullable=False,
         default=CareMessageType.TEXT,
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(EncryptedValue("care_messages.content", "text"), nullable=False)
     client_message_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     related_task_id: Mapped[int | None] = mapped_column(
         ForeignKey("patient_tasks.id", ondelete="SET NULL"),

@@ -37,8 +37,7 @@ def _ensure_patient_assignment_column() -> None:
     with engine.begin() as conn:
         if engine.dialect.name == "mysql":
             conn.exec_driver_sql(
-                "ALTER TABLE patients "
-                "ADD COLUMN assigned_researcher_id INTEGER NULL"
+                "ALTER TABLE patients ADD COLUMN assigned_researcher_id INTEGER NULL"
             )
             conn.exec_driver_sql(
                 "CREATE INDEX ix_patients_assigned_researcher_id "
@@ -51,7 +50,9 @@ def _ensure_patient_assignment_column() -> None:
                 "ON DELETE SET NULL"
             )
         elif engine.dialect.name == "sqlite":
-            conn.exec_driver_sql("ALTER TABLE patients ADD COLUMN assigned_researcher_id INTEGER")
+            conn.exec_driver_sql(
+                "ALTER TABLE patients ADD COLUMN assigned_researcher_id INTEGER"
+            )
 
 
 def _ensure_tracking_log_activities_column() -> None:
@@ -65,9 +66,13 @@ def _ensure_tracking_log_activities_column() -> None:
 
     with engine.begin() as conn:
         if engine.dialect.name == "mysql":
-            conn.exec_driver_sql("ALTER TABLE tracking_logs ADD COLUMN activities VARCHAR(500) NULL")
+            conn.exec_driver_sql(
+                "ALTER TABLE tracking_logs ADD COLUMN activities VARCHAR(500) NULL"
+            )
         elif engine.dialect.name == "sqlite":
-            conn.exec_driver_sql("ALTER TABLE tracking_logs ADD COLUMN activities VARCHAR(500)")
+            conn.exec_driver_sql(
+                "ALTER TABLE tracking_logs ADD COLUMN activities VARCHAR(500)"
+            )
 
 
 def _ensure_care_message_client_id_column() -> None:
@@ -105,12 +110,53 @@ def _ensure_care_message_client_id_column() -> None:
             )
 
 
+def _ensure_cognitive_test_run_id_column() -> None:
+    inspector = inspect(engine)
+    if "cognitive_tests" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("cognitive_tests")}
+    if "test_run_id" not in columns:
+        with engine.begin() as conn:
+            if engine.dialect.name == "mysql":
+                conn.exec_driver_sql(
+                    "ALTER TABLE cognitive_tests ADD COLUMN test_run_id "
+                    "VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL"
+                )
+            elif engine.dialect.name == "sqlite":
+                conn.exec_driver_sql(
+                    "ALTER TABLE cognitive_tests ADD COLUMN test_run_id VARCHAR(64)"
+                )
+            else:
+                raise RuntimeError(
+                    "Cognitive run id upgrade supports SQLite and MySQL only"
+                )
+
+    inspector = inspect(engine)
+    unique_columns = ["patient_id", "test_type", "test_run_id"]
+    has_unique = any(
+        index.get("unique") and index.get("column_names") == unique_columns
+        for index in inspector.get_indexes("cognitive_tests")
+    ) or any(
+        constraint.get("column_names") == unique_columns
+        for constraint in inspector.get_unique_constraints("cognitive_tests")
+    )
+    if not has_unique:
+        with engine.begin() as conn:
+            conn.exec_driver_sql(
+                "CREATE UNIQUE INDEX uq_cognitive_tests_patient_type_run "
+                "ON cognitive_tests (patient_id, test_type, test_run_id)"
+            )
+
+
 def _ensure_imaging_visualization_screenshot_columns() -> None:
     inspector = inspect(engine)
     if "imaging_visualizations" not in inspector.get_table_names():
         return
 
-    column_names = {column["name"] for column in inspector.get_columns("imaging_visualizations")}
+    column_names = {
+        column["name"] for column in inspector.get_columns("imaging_visualizations")
+    }
     screenshot_columns = {
         "slice_screenshot_name": "VARCHAR(255)",
         "slice_screenshot_data": "TEXT",
@@ -129,7 +175,9 @@ def _ensure_imaging_visualization_screenshot_columns() -> None:
 
     with engine.begin() as conn:
         for name, definition in missing_columns.items():
-            conn.exec_driver_sql(f"ALTER TABLE imaging_visualizations ADD COLUMN {name} {definition}")
+            conn.exec_driver_sql(
+                f"ALTER TABLE imaging_visualizations ADD COLUMN {name} {definition}"
+            )
         if engine.dialect.name == "mysql":
             conn.exec_driver_sql(
                 "ALTER TABLE imaging_visualizations "
@@ -143,7 +191,9 @@ def _ensure_model_prediction_detail_columns() -> None:
     if "model_predictions" not in inspector.get_table_names():
         return
 
-    column_names = {column["name"] for column in inspector.get_columns("model_predictions")}
+    column_names = {
+        column["name"] for column in inspector.get_columns("model_predictions")
+    }
     detail_columns = {
         "upload_id": "INTEGER",
         "probability_control": "FLOAT",
@@ -161,7 +211,9 @@ def _ensure_model_prediction_detail_columns() -> None:
     if missing_columns:
         with engine.begin() as conn:
             for name, definition in missing_columns.items():
-                conn.exec_driver_sql(f"ALTER TABLE model_predictions ADD COLUMN {name} {definition}")
+                conn.exec_driver_sql(
+                    f"ALTER TABLE model_predictions ADD COLUMN {name} {definition}"
+                )
 
     _ensure_model_prediction_upload_constraints()
 
@@ -179,8 +231,7 @@ def _ensure_model_prediction_upload_constraints() -> None:
         # preserving the legacy table and its data.
         indexes = inspector.get_indexes("model_predictions")
         has_unique_upload_index = any(
-            index.get("unique")
-            and index.get("column_names") == ["upload_id"]
+            index.get("unique") and index.get("column_names") == ["upload_id"]
             for index in indexes
         )
         with engine.begin() as conn:
@@ -228,8 +279,7 @@ def _ensure_model_prediction_upload_constraints() -> None:
     if engine.dialect.name == "mysql":
         indexes = inspector.get_indexes("model_predictions")
         has_unique_upload_index = any(
-            index.get("unique")
-            and index.get("column_names") == ["upload_id"]
+            index.get("unique") and index.get("column_names") == ["upload_id"]
             for index in indexes
         )
         foreign_keys = inspector.get_foreign_keys("model_predictions")
@@ -278,9 +328,11 @@ def _disable_legacy_fixed_dac_account() -> None:
     """Disable the old public demo administrator if an upgraded database contains it."""
 
     with Session(engine) as db:
-        legacy_accounts = db.query(User).filter(
-            (User.staff_id == "admin123") | (User.email == "admin123@qq.com")
-        ).all()
+        legacy_accounts = (
+            db.query(User)
+            .filter((User.staff_id == "admin123") | (User.email == "admin123@qq.com"))
+            .all()
+        )
         changed = False
         for account in legacy_accounts:
             if account.is_active:
@@ -292,7 +344,11 @@ def _disable_legacy_fixed_dac_account() -> None:
 
 def _ensure_default_mcs_node() -> None:
     with Session(engine) as db:
-        existing = db.query(SecurityMcsNode).filter(SecurityMcsNode.node_code == "LOCAL-MCS-001").one_or_none()
+        existing = (
+            db.query(SecurityMcsNode)
+            .filter(SecurityMcsNode.node_code == "LOCAL-MCS-001")
+            .one_or_none()
+        )
         if existing is not None:
             existing.node_name = "Local Medical Cloud Server #1"
             existing.storage_backend = "local_db"
@@ -316,7 +372,10 @@ def _ensure_default_mcs_node() -> None:
 def _ensure_security_runtime_columns() -> None:
     inspector = inspect(engine)
     if "security_cipher_records" in inspector.get_table_names():
-        columns = {column["name"] for column in inspector.get_columns("security_cipher_records")}
+        columns = {
+            column["name"]
+            for column in inspector.get_columns("security_cipher_records")
+        }
         missing = {
             name: definition
             for name, definition in {
@@ -327,10 +386,14 @@ def _ensure_security_runtime_columns() -> None:
         }
         with engine.begin() as conn:
             for name, definition in missing.items():
-                conn.exec_driver_sql(f"ALTER TABLE security_cipher_records ADD COLUMN {name} {definition}")
+                conn.exec_driver_sql(
+                    f"ALTER TABLE security_cipher_records ADD COLUMN {name} {definition}"
+                )
 
     if "security_audit_tasks" in inspector.get_table_names():
-        columns = {column["name"] for column in inspector.get_columns("security_audit_tasks")}
+        columns = {
+            column["name"] for column in inspector.get_columns("security_audit_tasks")
+        }
         missing = {
             name: definition
             for name, definition in {
@@ -341,7 +404,9 @@ def _ensure_security_runtime_columns() -> None:
         }
         with engine.begin() as conn:
             for name, definition in missing.items():
-                conn.exec_driver_sql(f"ALTER TABLE security_audit_tasks ADD COLUMN {name} {definition}")
+                conn.exec_driver_sql(
+                    f"ALTER TABLE security_audit_tasks ADD COLUMN {name} {definition}"
+                )
 
 
 def init_db() -> None:
@@ -350,16 +415,53 @@ def init_db() -> None:
     _ensure_patient_assignment_column()
     _ensure_tracking_log_activities_column()
     _ensure_care_message_client_id_column()
+    _ensure_cognitive_test_run_id_column()
     _ensure_imaging_visualization_screenshot_columns()
     _ensure_model_prediction_detail_columns()
     _ensure_security_runtime_columns()
+    _ensure_security_evidence_columns()
+    from backend.app.db.encryption_migration import migrate_sensitive_storage
+
+    migrate_sensitive_storage(engine)
     _disable_legacy_fixed_dac_account()
     _ensure_default_mcs_node()
 
-    from backend.app.services.security_service import get_security_config, sync_security_runtime_entities
+    from backend.app.services.security_service import (
+        get_security_config,
+        sync_security_runtime_entities,
+        _ensure_log_chain_head,
+        migrate_legacy_audit_anchor,
+    )
 
     with Session(engine) as db:
+        migrate_legacy_audit_anchor(db)
+        _ensure_log_chain_head(db)
         config = get_security_config(db)
         if config is not None and config.is_initialized:
             sync_security_runtime_entities(db)
-            db.commit()
+        db.commit()
+
+
+def _ensure_security_evidence_columns() -> None:
+    additions = {
+        "security_audit_logs": {
+            "previous_hash": "VARCHAR(64)",
+            "entry_hash": "VARCHAR(64)",
+        },
+        "ai_chat_logs": {
+            "provider": "VARCHAR(32)",
+            "model_name": "VARCHAR(100)",
+            "mode": "VARCHAR(32)",
+        },
+    }
+    inspector = inspect(engine)
+    for table, columns in additions.items():
+        if table not in inspector.get_table_names():
+            continue
+        existing = {c["name"] for c in inspector.get_columns(table)}
+        with engine.begin() as conn:
+            for name, definition in columns.items():
+                if name not in existing:
+                    conn.exec_driver_sql(
+                        f"ALTER TABLE {table} ADD COLUMN {name} {definition}"
+                    )

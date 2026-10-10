@@ -1,7 +1,8 @@
-<ai-copilot wx:if="{{!submitting && (phase === 'intro' || phase === 'break' || phase === 'result')}}" page-key="cognitive" />
+<task-instructions visible="{{instructionVisible}}" content="{{taskInstruction}}" remaining="{{instructionRemaining}}" ready="{{instructionReady}}" bindstart="handleInstructionStart" />
+<ai-copilot wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="cognitive" />
 <view class="cognitive-shell {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-shell--testing' : ''}}">
 <ui-nav title="Go / No-Go" />
-<view class="cognitive-page theme-lagoon {{phase === 'intro' || phase === 'break' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
+<view class="cognitive-page theme-lagoon {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
   <view class="cognitive-content">
     <view class="page-heading">
       <view class="assessment-hero-icon">
@@ -25,7 +26,7 @@
     <view class="instruction-card glass-surface" wx:if="{{phase === 'intro'}}">
       <text class="section-title">测试说明</text>
       <text class="section-description">
-        每轮图形出现前请保持不动，按颜色完成操作。
+        等待页面变色，按整个测试页面的颜色完成操作。
       </text>
 
       <view class="rule-list">
@@ -46,65 +47,23 @@
       </view>
 
       <view class="notice-box">
-        精简移动筛查版共 {{totalTrials}} 个试次并分为 {{totalSections}} 小节。提前点击也会记录为误触；结果不可与标准化临床工具直接等同。
+        连续移动筛查版共 {{totalTrials}} 个试次，连续完成。提前点击也会记录为误触；结果不可与标准化临床工具直接等同。
       </view>
       <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
 
-    <view
-      class="test-card glass-surface"
-      wx:elif="{{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback'}}"
-    >
-      <view class="test-progress-header">
-        <text class="test-progress-label">测试进度</text>
-        <text class="test-progress-count">
-          {{currentTrialNumber}} / {{totalTrials}}
-        </text>
+    <view wx:elif="{{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback'}}"
+      class="test-stage full-screen-stimulus {{phase === 'stimulus' ? 'full-screen-stimulus--' + stimulusType : 'full-screen-stimulus--white'}}"
+      aria-role="button" aria-label="{{phase === 'waiting' ? '白色等待页面，请勿点击' : phase === 'stimulus' && stimulusType === 'go' ? '绿色页面，请点击' : phase === 'stimulus' ? '红色页面，请勿点击' : '白色轮次间隔'}}"
+      data-trial="{{currentTrialNumber}}" bindtap="handleTestTap">
+      <view class="test-exit" catchtap="goBack" aria-role="button">退出测试</view>
+      <view class="test-progress-header"><text>测试进度</text><text>{{currentTrialNumber}} / {{totalTrials}}</text></view>
+      <view class="test-progress-track"><view class="test-progress-value" style="{{'width: ' + progressPercent + '%;'}}"></view></view>
+      <view class="full-screen-prompt">
+        <block wx:if="{{phase === 'stimulus'}}"><text class="stimulus-label">{{stimulusLabel}}</text><text class="stimulus-help">{{stimulusType === 'go' ? '点击测试页面' : '请勿点击，等待页面恢复白色'}}</text></block>
+        <block wx:elif="{{phase === 'waiting'}}"><text class="waiting-label">等待变色</text><text class="waiting-help">此时请勿点击</text></block>
+        <block wx:else><text class="feedback-text">{{feedbackText}}</text><text class="feedback-help">准备进入下一轮</text></block>
       </view>
-      <view class="test-progress-track">
-        <view
-          class="test-progress-value"
-          style="{{'width: ' + progressPercent + '%;'}}"
-        ></view>
-      </view>
-
-      <view
-        class="test-stage"
-        aria-role="button"
-        aria-label="{{phase === 'waiting' ? '等待图形，请不要点击' : phase === 'stimulus' && stimulusType === 'go' ? '目标出现，请点击' : phase === 'stimulus' ? '抑制目标，无需点击' : '本轮反馈'}}"
-        bindtap="handleTestTap"
-      >
-        <view class="waiting-state" wx:if="{{phase === 'waiting'}}">
-          <view class="waiting-ring"></view>
-          <text class="waiting-label">等待图形</text>
-          <text class="waiting-help">此时请不要点击</text>
-        </view>
-
-        <view class="stimulus-state" wx:elif="{{phase === 'stimulus'}}">
-          <view class="stimulus-circle stimulus-circle--{{stimulusType}}">
-            <text class="stimulus-label">{{stimulusLabel}}</text>
-          </view>
-          <text class="stimulus-help">
-            {{stimulusType === 'go' ? '现在点击屏幕' : '保持不动'}}
-          </text>
-        </view>
-
-        <view class="feedback-state" wx:else>
-          <view class="feedback-icon {{feedbackCorrect ? 'feedback-icon--correct' : 'feedback-icon--error'}}" aria-hidden="true"></view>
-          <text class="feedback-text">{{feedbackText}}</text>
-          <text class="feedback-help">准备进入下一轮</text>
-        </view>
-      </view>
-    </view>
-
-    <view class="section-break-card glass-surface" wx:elif="{{phase === 'break'}}">
-      <view class="section-break-card__mascot" aria-hidden="true">
-        <view class="section-break-card__spark"></view>
-      </view>
-      <text class="section-break-card__eyebrow">专注旅程 · {{nextSection}} / {{totalSections}}</text>
-      <text class="section-break-card__title">{{breakTitle}}</text>
-      <text class="section-break-card__message">{{breakMessage}}</text>
-      <button class="section-break-card__button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="continueSection">继续下一节</button>
     </view>
 
     <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">

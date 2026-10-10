@@ -34,7 +34,7 @@ const expectedRoutes = [
   'pages/education/index',
   'pages/education-detail/index'
 ]
-const expectedComponents = ['ai-copilot', 'ai-mascot', 'onboarding-guide', 'ui-icon', 'ui-nav']
+const expectedComponents = ['ai-copilot', 'ai-mascot', 'onboarding-guide', 'task-instructions', 'ui-icon', 'ui-nav']
 
 assert.deepEqual(
   collectRoutes({

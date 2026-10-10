@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../workspaceRequest.js';
 ﻿import { DOM_IDS } from '../constants/DomIds.js';
 import { API_ENDPOINTS } from '../constants/APIEndpoints.js';
 import NiftiFileManager from './components/NiftiFileManager.js';
@@ -49,7 +50,7 @@ class FileUploader {
 		try {
 			const uploadData = this.getFiles();
 			uploadData.append('fmri_file_type', fmriFileType);
-			const response = await fetch(API_ENDPOINTS.UPLOAD.FILES, {
+			const response = await workspaceFetch(API_ENDPOINTS.UPLOAD.FILES, {
 				method: 'POST',
 				body: uploadData
 			});

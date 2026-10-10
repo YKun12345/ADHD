@@ -57,11 +57,13 @@ class SecurityCipherRecordListResponse(BaseModel):
 class SecurityTemporalAuditRequest(BaseModel):
     patient_id: int
     source_type: str = Field(pattern="^(tracking|scale|cognitive)$")
+    audit_group: str | None = Field(default=None,max_length=512)
 
 
 class SecuritySpatialAuditRequest(BaseModel):
     patient_ids: list[int] = Field(min_length=1)
     source_type: str = Field(pattern="^(tracking|scale|cognitive)$")
+    audit_group: str | None = Field(default=None,max_length=512)
 
 
 class SecurityTemporalAuditResponse(BaseModel):
@@ -81,6 +83,8 @@ class SecurityTemporalAuditResponse(BaseModel):
 
 
 class SecurityAuditLogItem(BaseModel):
+    previous_hash: str | None = None
+    entry_hash: str | None = None
     id: int
     audit_task_id: int | None = None
     patient_id: int | None = None
@@ -139,9 +143,15 @@ class SecurityPatientOverviewResponse(BaseModel):
     assigned_mcs_node_name: str | None = None
     cipher_record_count: int = 0
     has_cipher_records: bool = False
+    audit_groups: dict[str,list[str]] = Field(default_factory=dict)
     cipher_source_counts: dict = Field(default_factory=dict)
     latest_temporal_audit_id: int | None = None
     latest_temporal_audit_status: str | None = None
     latest_temporal_audit_passed: bool | None = None
     latest_temporal_audit_source_type: str | None = None
     latest_temporal_audit_completed_at: str | None = None
+
+
+class SecurityDacPatientListResponse(BaseModel):
+    total: int
+    items: list[dict]

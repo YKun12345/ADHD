@@ -142,6 +142,13 @@ assert.equal(localReport.cognitive.cards[1].primaryMetric, '中位反应时 640 
 assert.equal(localReport.cognitive.cards[1].secondaryMetric, '干扰效应 95 ms')
 assert.equal(localReport.cognitive.cards[2].primaryMetric, '总用时 28.0 秒')
 assert.equal(localReport.cognitive.cards[5].primaryMetric, '顺背 7 · 倒背 5')
+const extendedTrail = cognitiveRawPayload('trail', { elapsed_ms: 62000, errors: 3, stages: [
+  { stage: 'A', elapsedMs: 27000, errors: 1, nodeCount: 30 },
+  { stage: 'B', elapsedMs: 35000, errors: 2, nodeCount: 30 }
+] })
+Object.assign(extendedTrail.result_json, { protocol_label: '连续移动筛查版', protocol_schema_version: 6, actual_trials: 60 })
+const continuousReport = buildLocalReport({ user, cognitiveResults: { trail: extendedTrail } })
+assert.equal(continuousReport.cognitive.cards[0].secondaryMetric, 'A：30节点，27.0秒，错误1次；B：30节点，35.0秒，错误2次 · 连续移动筛查版 v6')
 assert.equal(localReport.tracking.completedCount, 2)
 assert.equal(localReport.tracking.averageMood, 3)
 assert.equal(localReport.tracking.averageAttention, 4)

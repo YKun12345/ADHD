@@ -1,7 +1,8 @@
-<ai-copilot wx:if="{{!submitting && (phase === 'intro' || phase === 'break' || phase === 'result')}}" page-key="stroop" />
+<task-instructions visible="{{instructionVisible}}" content="{{taskInstruction}}" remaining="{{instructionRemaining}}" ready="{{instructionReady}}" bindstart="handleInstructionStart" />
+<ai-copilot wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="stroop" />
 <view class="stroop-shell {{phase === 'testing' || phase === 'feedback' ? 'stroop-shell--testing' : ''}}">
 <ui-nav title="颜色干扰任务" />
-<view class="stroop-page theme-spectrum {{phase === 'intro' || phase === 'break' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'testing' || phase === 'feedback' ? 'stroop-page--testing' : ''}}">
+<view class="stroop-page theme-spectrum {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'testing' || phase === 'feedback' ? 'stroop-page--testing' : ''}}">
   <view class="stroop-content">
     <view class="page-heading">
       <view class="assessment-hero-icon">
@@ -33,7 +34,7 @@
         <text class="example-answer">文字是“红”，实际颜色是蓝，应选择“蓝”</text>
       </view>
       <view class="notice-box">
-        精简移动筛查版共 {{totalTrials}} 个试次并分为 {{totalSections}} 小节。每题只能选择一次；结果不可与标准化临床工具直接等同。
+        连续移动筛查版共 {{totalTrials}} 个试次，连续完成。每题只能选择一次；结果不可与标准化临床工具直接等同。
       </view>
       <button class="primary-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="startTest">开始测试</button>
     </view>
@@ -71,6 +72,7 @@
           wx:for="{{colors}}"
           wx:key="key"
           data-key="{{item.key}}"
+          data-trial="{{currentTrialNumber}}"
           hover-class="{{phase === 'testing' ? 'color-button--pressed' : 'none'}}"
           disabled="{{phase !== 'testing'}}"
           bindtap="handleAnswer"
@@ -79,16 +81,6 @@
           <text>{{item.label}}</text>
         </button>
       </view>
-    </view>
-
-    <view class="section-break-card glass-surface" wx:elif="{{phase === 'break'}}">
-      <view class="section-break-card__mascot" aria-hidden="true">
-        <view class="section-break-card__spark"></view>
-      </view>
-      <text class="section-break-card__eyebrow">色彩旅程 · {{nextSection}} / {{totalSections}}</text>
-      <text class="section-break-card__title">{{breakTitle}}</text>
-      <text class="section-break-card__message">{{breakMessage}}</text>
-      <button class="section-break-card__button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="continueSection">继续下一节</button>
     </view>
 
     <view class="result-card glass-surface" wx:elif="{{phase === 'result'}}">

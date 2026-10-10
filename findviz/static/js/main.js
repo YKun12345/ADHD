@@ -1,3 +1,4 @@
+import { workspaceFetch } from './workspaceRequest.js';
 // main.js
 
 import MainViewer from './viewer/MainViewer.js';
@@ -8,7 +9,7 @@ import { DOM_IDS } from './constants/DomIds.js';
 async function main() {
     // Check if data was pre-loaded via CLI
     try {
-        const response = await fetch('/check_cache');
+        const response = await workspaceFetch(`${window.FINDVIZ_BASE_PATH || ''}/check_cache`);
         const data = await response.json();
 
         if (data.has_cache) {

@@ -1,363 +1,99 @@
 const assert = require('node:assert/strict')
-
-const {
-  TRIAL_SEQUENCE,
-  evaluateTrial,
-  buildCognitivePayload
-} = require('../utils/gonogo-test')
-const { LATEST_RESULTS_KEY } = require('../utils/cognitive-results')
+const { createHarness } = require('./helpers/cognitive-harness')
 const { advancePatientDataRevision } = require('../utils/session-privacy')
-
-const calls = {
-  requests: [],
-  storageWrites: [],
-  storageRemovals: [],
-  navigateBack: []
-}
-
-let storage = {}
-let requestImplementation = async () => ({ id: 1 })
-let pageDefinition
-let now = 1000
-let nextTimerId = 1
-let timers = new Map()
-
-const nativeSetTimeout = global.setTimeout
-const nativeClearTimeout = global.clearTimeout
-const nativeDateNow = Date.now
-
-global.setTimeout = (callback, delay) => {
-  const id = nextTimerId
-  nextTimerId += 1
-  timers.set(id, { callback, delay })
-  return id
-}
-
-global.clearTimeout = (id) => {
-  timers.delete(id)
-}
-
-Date.now = () => now
-
-function runTimer(id) {
-  const timer = timers.get(id)
-  assert.ok(timer, `定时器 ${id} 应存在`)
-  timers.delete(id)
-  timer.callback()
-}
-
-const requestPath = require.resolve('../utils/request')
-require.cache[requestPath] = {
-  id: requestPath,
-  filename: requestPath,
-  loaded: true,
-  exports: {
-    request(options) {
-      calls.requests.push(options)
-      return requestImplementation(options)
-    },
-    isPatientSessionError(error) {
-      return Boolean(error) && (
-        error.code === 'SESSION_CHANGED' || error.statusCode === 401
-      )
-    }
-  }
-}
-
-global.wx = {
-  getStorageSync(key) {
-    return storage[key]
-  },
-  setStorageSync(key, value) {
-    storage[key] = value
-    calls.storageWrites.push([key, value])
-  },
-  removeStorageSync(key) {
-    delete storage[key]
-    calls.storageRemovals.push(key)
-  },
-  navigateBack(options) {
-    calls.navigateBack.push(options)
-  }
-}
-
-global.Page = (definition) => {
-  pageDefinition = definition
-}
-
-require('../pages/cognitive/index')
-
-function createPage() {
-  return {
-    ...pageDefinition,
-    data: JSON.parse(JSON.stringify(pageDefinition.data)),
-    setData(patch) {
-      this.data = {
-        ...this.data,
-        ...patch
-      }
-    }
-  }
-}
-
-function reset() {
-  calls.requests = []
-  calls.storageWrites = []
-  calls.storageRemovals = []
-  calls.navigateBack = []
-  storage = {
-    access_token: 'test-token',
-    current_user: {
-      id: 1,
-      role: 'patient',
-      full_name: '认知测试患者'
-    }
-  }
-  requestImplementation = async () => ({ id: 1 })
-  now = 1000
-  nextTimerId = 1
-  timers = new Map()
-}
-
-async function flushPromises() {
-  await Promise.resolve()
-  await Promise.resolve()
-}
+const WAITING_DELAYS = [800, 1000, 1200, 1400]
 
 async function run() {
-  reset()
-  const page = createPage()
-  page.onLoad()
-  assert.equal(page.data.patientName, '认知测试患者')
-  assert.equal(page.data.phase, 'intro')
-  assert.equal(page.data.totalTrials, 10)
+  const h = createHarness()
+  try {
+    const page = h.load('cognitive')
+    assert.equal(page.data.totalTrials, 25)
+    assert.equal(page._trials.filter(type => type === 'go').length, 20)
+    h.start(page)
+    page.handleTestTap(); page.handleTestTap()
+    assert.equal(page._records.length, 1)
+    assert.equal(page._records[0].errorType, 'false_start')
+    h.advance(450)
+    page._trials[1] = 'go'
+    h.advance(WAITING_DELAYS[1])
+    assert.equal(page.data.stimulusType, 'go')
+    h.advance(326)
+    page.handleTestTap(); page.handleTestTap()
+    assert.equal(page._records.length, 2)
+    assert.equal(page._records[1].reactionTimeMs, 326)
+    assert.equal(page.data.phase, 'feedback')
+    assert.equal(page.data.stimulusType, '')
+    page.onUnload()
 
-  page.startTest()
-  assert.equal(page.data.phase, 'waiting')
-  assert.equal(page.data.running, true)
-  assert.equal(page.data.currentTrialNumber, 1)
-  assert.equal(timers.size, 1)
-  const waitingTimer = page._stimulusTimer
-  assert.ok([800, 1000, 1200, 1400].includes(timers.get(waitingTimer).delay))
+    const red = h.load('cognitive')
+    h.start(red)
+    red._trials[0] = 'nogo'
+    h.advance(800)
+    assert.equal(red.data.stimulusLabel, '停')
+    h.advance(799)
+    assert.equal(red._records.length, 0)
+    h.advance(1)
+    assert.equal(red._records[0].correct, true, '红色期间不点击是正确操作')
+    red.onUnload()
+    const wrongRed = h.load('cognitive')
+    h.start(wrongRed); wrongRed._trials[0] = 'nogo'; h.advance(800)
+    wrongRed.handleTestTap()
+    assert.equal(wrongRed._records[0].errorType, 'commission')
+    wrongRed.onUnload()
 
-  page.startTest()
-  assert.equal(timers.size, 1, '重复启动不能创建额外定时器')
-
-  page.handleTestTap()
-  assert.equal(page.data.phase, 'feedback')
-  assert.equal(page._records.length, 1)
-  assert.equal(page._records[0].errorType, 'false_start')
-  assert.equal(timers.has(waitingTimer), false)
-  assert.equal(timers.get(page._feedbackTimer).delay, 450)
-
-  runTimer(page._feedbackTimer)
-  assert.equal(page.data.currentTrialNumber, 2)
-  assert.equal(page.data.phase, 'waiting')
-
-  const secondWaitingTimer = page._stimulusTimer
-  runTimer(secondWaitingTimer)
-  assert.equal(page.data.phase, 'stimulus')
-  assert.equal(page.data.stimulusType, TRIAL_SEQUENCE[1])
-  assert.equal(timers.get(page._responseTimer).delay, 800)
-
-  now = 1326
-  page.handleTestTap()
-  assert.equal(page._records[1].correct, true)
-  assert.equal(page._records[1].reactionTimeMs, 326)
-  assert.equal(page.data.phase, 'feedback')
-
-  reset()
-  storage.current_user.patient_profile = { patient_type: 'adult' }
-  const sectionPage = createPage()
-  sectionPage.onLoad()
-  assert.equal(sectionPage.data.totalTrials, 25)
-  sectionPage.startTest()
-  sectionPage._clearTimers()
-  sectionPage._records = sectionPage._trials.slice(0, 19).map((type) => (
-    evaluateTrial({
-      type,
-      action: type === 'go' ? 'tap' : 'timeout',
-      reactionTimeMs: 260
-    })
-  ))
-  sectionPage.setData({
-    currentTrialIndex: 19,
-    currentTrialNumber: 20,
-    phase: 'stimulus'
-  })
-  const sectionType = sectionPage._trials[19]
-  sectionPage._finishTrial(evaluateTrial({
-    type: sectionType,
-    action: sectionType === 'go' ? 'tap' : 'timeout',
-    reactionTimeMs: 280
-  }))
-  assert.equal(sectionPage.data.feedbackText, '作答已记录')
-  runTimer(sectionPage._feedbackTimer)
-  assert.equal(sectionPage.data.phase, 'waiting')
-  assert.equal(sectionPage.data.running, true)
-  assert.equal(sectionPage.data.currentTrialNumber, 21)
-  assert.equal(timers.size, 1)
-  sectionPage.onUnload()
-
-  reset()
-  const timeoutPage = createPage()
-  timeoutPage.startTest()
-  timeoutPage._records = TRIAL_SEQUENCE.slice(0, 9).map((type) => (
-    evaluateTrial({
-      type,
-      action: type === 'go' ? 'tap' : 'timeout',
-      reactionTimeMs: 300
-    })
-  ))
-  timeoutPage.setData({
-    currentTrialIndex: 9,
-    currentTrialNumber: 10,
-    phase: 'waiting'
-  })
-  timeoutPage._clearTimers()
-  timeoutPage._showStimulus()
-  assert.equal(timeoutPage.data.stimulusType, 'nogo')
-  runTimer(timeoutPage._responseTimer)
-  assert.equal(timeoutPage._records[9].correct, true)
-  runTimer(timeoutPage._feedbackTimer)
-  await flushPromises()
-  assert.equal(timeoutPage.data.phase, 'result')
-  assert.equal(timeoutPage.data.result.total_trials, 10)
-  assert.equal(timeoutPage.data.result.correct_trials, 10)
-  assert.equal(timeoutPage.data.syncStatus, '已同步')
-  assert.equal(calls.requests.length, 1)
-  assert.deepEqual(calls.requests[0], {
-    url: '/patient/submit_cognitive_test',
-    method: 'POST',
-    data: buildCognitivePayload(
-      timeoutPage._records,
-      timeoutPage._finishedAt
-    )
-  })
-  assert.deepEqual(
-    storage[LATEST_RESULTS_KEY].reaction,
-    calls.requests[0].data
-  )
-
-  reset()
-  requestImplementation = async () => {
-    throw new Error('offline')
-  }
-  const offlinePage = createPage()
-  offlinePage._records = TRIAL_SEQUENCE.map((type) => (
-    evaluateTrial({
-      type,
-      action: type === 'go' ? 'tap' : 'timeout',
-      reactionTimeMs: 280
-    })
-  ))
-  await offlinePage._completeTest()
-  assert.equal(offlinePage.data.phase, 'result')
-  assert.equal(offlinePage.data.syncStatus, '待同步')
-  assert.deepEqual(
-    storage.pending_cognitive_result,
-    buildCognitivePayload(offlinePage._records, offlinePage._finishedAt)
-  )
-  assert.equal(storage[LATEST_RESULTS_KEY].reaction.test_type, 'reaction')
-
-  requestImplementation = async () => ({ id: 2 })
-  await offlinePage.retrySync()
-  assert.equal(offlinePage.data.syncStatus, '已同步')
-  assert.equal(storage.pending_cognitive_result, undefined)
-
-  for (const sessionError of [
-    Object.assign(new Error('expired'), { statusCode: 401 }),
-    Object.assign(new Error('changed'), { code: 'SESSION_CHANGED' })
-  ]) {
-    reset()
-    requestImplementation = async () => {
-      throw sessionError
+    const complete = h.load('cognitive', { mode: 'battery' })
+    h.start(complete)
+    for (let index = 0; index < 25; index++) {
+      h.advance(WAITING_DELAYS[index % 4])
+      if (complete._trials[index] === 'go') { h.advance(250); complete.handleTestTap(); complete.handleTestTap() }
+      else h.advance(800)
+      h.advance(450)
+      assert.notEqual(complete.data.phase, 'break')
     }
-    const invalidSessionPage = createPage()
-    await invalidSessionPage._syncResult({ test_type: 'reaction' })
-    assert.equal(storage.pending_cognitive_result, undefined)
-    assert.equal(
-      calls.storageWrites.some(([key]) => key === 'pending_cognitive_result'),
-      false
-    )
-  }
+    await h.flush()
+    assert.equal(complete.data.result.total_trials, 25)
+    assert.equal(complete.data.result.accuracy, 100)
+    assert.equal(complete.data.syncStatus, '已同步')
+    assert.equal(complete.data.nextTaskId, 'stroop')
+    const payload = h.storage.cognitive_latest_results.reaction
+    assert.equal(payload.result_json.protocol_id, 'continuous-mobile-v4')
+    assert.equal(payload.result_json.actual_trials, 25)
+    assert.ok(payload.result_json.test_run_id)
+    const count = h.requests.length
+    await complete._completeTest()
+    assert.equal(h.requests.length, count)
+    complete.onUnload()
 
-  reset()
-  const staleTimerPage = createPage()
-  staleTimerPage.startTest()
-  staleTimerPage._records = TRIAL_SEQUENCE.slice(0, 9).map((type) => (
-    evaluateTrial({
-      type,
-      action: type === 'go' ? 'tap' : 'timeout',
-      reactionTimeMs: 250
-    })
-  ))
-  staleTimerPage.setData({
-    currentTrialIndex: 9,
-    currentTrialNumber: 10,
-    phase: 'waiting'
-  })
-  staleTimerPage._clearTimers()
-  staleTimerPage._showStimulus()
-  runTimer(staleTimerPage._responseTimer)
-  const staleCompletionTimer = staleTimerPage._feedbackTimer
-  advancePatientDataRevision()
-  runTimer(staleCompletionTimer)
-  await flushPromises()
-  assert.equal(storage[LATEST_RESULTS_KEY], undefined)
+    h.setRequest(async () => { throw new Error('offline') })
+    const offline = h.load('cognitive')
+    h.start(offline)
+    for (let index = 0; index < 25; index++) { h.advance(WAITING_DELAYS[index % 4]); if (offline._trials[index] === 'go') offline.handleTestTap(); else h.advance(800); h.advance(450) }
+    await h.flush()
+    assert.equal(offline.data.syncStatus, '待同步')
+    const pending = h.storage.pending_cognitive_result
+    assert.equal(pending, offline._lastPayload)
+    h.setRequest(async () => ({ id: 2 }))
+    await offline.retrySync()
+    assert.equal(h.storage.pending_cognitive_result, undefined)
+    assert.equal(h.requests.at(-1).data.result_json.test_run_id, pending.result_json.test_run_id)
+    offline.onUnload()
 
-  reset()
-  const endedPage = createPage()
-  endedPage.startTest()
-  assert.equal(typeof endedPage.onPatientSessionEnded, 'function')
-  endedPage.onPatientSessionEnded()
-  assert.equal(timers.size, 0)
-  assert.deepEqual(endedPage._records, [])
-  assert.equal(endedPage.data.running, false)
-
-  reset()
-  let releaseRequest
-  requestImplementation = () => new Promise((resolve) => {
-    releaseRequest = resolve
-  })
-  const guardedPage = createPage()
-  guardedPage._records = TRIAL_SEQUENCE.map((type) => (
-    evaluateTrial({
-      type,
-      action: type === 'go' ? 'tap' : 'timeout',
-      reactionTimeMs: 250
-    })
-  ))
-  guardedPage._finishedAt = '2026-08-21T02:30:00.000Z'
-  guardedPage.setData({ result: { total_trials: 10 } })
-  const firstSync = guardedPage.retrySync()
-  const secondSync = guardedPage.retrySync()
-  assert.equal(calls.requests.length, 1)
-  releaseRequest({ id: 3 })
-  await Promise.all([firstSync, secondSync])
-
-  reset()
-  const unloadPage = createPage()
-  unloadPage.startTest()
-  const activeTimer = unloadPage._stimulusTimer
-  unloadPage.onUnload()
-  assert.equal(timers.has(activeTimer), false)
-  assert.equal(unloadPage.data.running, false)
-
-  const navigationPage = createPage()
-  navigationPage.goBack()
-  assert.deepEqual(calls.navigateBack, [{ delta: 1 }])
-
-  console.log('Go/No-Go 页面控制逻辑测试全部通过')
+    const hidden = h.load('cognitive')
+    h.start(hidden)
+    const oldTimer = [...h.timers.values()][0].callback
+    hidden.onHide(); hidden.onShow(); h.start(hidden)
+    oldTimer()
+    assert.equal(hidden.data.phase, 'waiting', '旧运行的回调不得改变新运行')
+    hidden.onUnload()
+    const ended = h.load('cognitive')
+    h.start(ended)
+    advancePatientDataRevision()
+    h.advance(5000)
+    assert.equal(ended._records.length, 0)
+    ended.onPatientSessionEnded()
+    assert.equal(h.timers.size, 0)
+    assert.equal(ended.data.running, false)
+    console.log('Go/No-Go连续流程、800毫秒抑制、计时器与同步测试通过')
+  } finally { h.restore() }
 }
-
-run()
-  .catch((error) => {
-    console.error(error)
-    process.exitCode = 1
-  })
-  .finally(() => {
-    global.setTimeout = nativeSetTimeout
-    global.clearTimeout = nativeClearTimeout
-    Date.now = nativeDateNow
-  })
+run().catch(error => { console.error(error); process.exitCode = 1 })

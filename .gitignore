@@ -53,3 +53,12 @@ Thumbs.db
 
 # Claude Code local config
 .claude/
+
+# Local keys and artifact build contexts
+.keys/
+backend/.keys/
+.codex-ppt-build/
+.preview/
+%SystemDrive%/
+migration-backups/
+backend/migration-backups/

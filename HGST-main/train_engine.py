@@ -6,7 +6,18 @@ import torch.nn.functional as F
 from torch import optim as optim
 from model import MLP_classifier
 import torch.nn.functional as F
-from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, roc_auc_score, confusion_matrix
+import numpy as np
+from pathlib import Path
+import sys
+
+# Allow this research script to run directly from HGST-main as well as the project root.
+_project_root = str(Path(__file__).resolve().parents[1])
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+from backend.app.services.hgst_runtime.evaluation import (
+    ValidationCheckpoint, classification_metrics, snapshot_state_dict, validate_partitions,
+)
+from sklearn.metrics import confusion_matrix
 
 
 def pretrain_fmri(model, preprocessed_data, HG_aug_list, optimizer, scheduler, max_epoch, device, topo_sim_all, cl, attr, use_sim,logger):
@@ -77,10 +88,8 @@ def pretrain_fmri(model, preprocessed_data, HG_aug_list, optimizer, scheduler, m
 
 
 def compute_specificity(y_true, y_pred):
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-    specificity = tn / (tn + fp)
-    return specificity
-
+    tn, fp, _, _ = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    return float(tn / (tn + fp)) if tn + fp else float("nan")
 
 
 def graph_classification_evaluation(k, model, preprocessed_data, num_classes, 
@@ -116,31 +125,20 @@ def graph_classification_evaluation(k, model, preprocessed_data, num_classes,
 
 def MLP_tune(
         all_hg_emb, max_epoch, num_classes, lr_f, weight_decay_f,
-        device, train_mask, val_mask, test_mask, labels,logger,  mute=False):
-
+        device, train_mask, val_mask, test_mask, labels, logger, mute=False):
+    if max_epoch < 1:
+        raise ValueError("Classifier training needs at least one epoch")
     all_hg_emb = all_hg_emb.to(device)
-    labels = labels.to(device)
-    labels = labels.long()
-    train_mask = train_mask.to(device)
-    val_mask = val_mask.to(device)
-    test_mask = test_mask.to(device)
-
-    best_val_acc = 0
-    best_val_epoch = 0
-    best_model = None
-    best_val_recall = 0
-    best_val_precision = 0
-    best_val_f1 = 0
-    best_val_auc = 0
-    best_val_specificity = 0
-    
-    
-
-    classifier = MLP_classifier(all_hg_emb.shape[1], num_classes)   
-    num_finetune_params = [p.numel() for p in classifier.parameters() if p.requires_grad]
-    logger.info(f"num parameters for finetuning: {sum(num_finetune_params)}")
-    
-    classifier.to(device)
+    labels = labels.to(device).long()
+    train_mask, val_mask, test_mask = [mask.to(device) for mask in (train_mask, val_mask, test_mask)]
+    validate_partitions(
+        *(np.flatnonzero(mask.detach().cpu().numpy()) for mask in (train_mask, val_mask, test_mask)),
+        n_samples=len(labels),
+    )
+    selection = ValidationCheckpoint()
+    classifier = MLP_classifier(all_hg_emb.shape[1], num_classes).to(device)
+    num_finetune_params = sum(p.numel() for p in classifier.parameters() if p.requires_grad)
+    logger.info(f"num parameters for finetuning: {num_finetune_params}")
     optimizer_f = create_optimizer("adam", classifier, lr_f, weight_decay_f)
 
     epoch_iter = tqdm(range(max_epoch))
@@ -151,74 +149,33 @@ def MLP_tune(
         optimizer_f.zero_grad()
         loss.backward()
         optimizer_f.step()
-
+        classifier.eval()
         with torch.no_grad():
-            classifier.eval()
-            pred = classifier(all_hg_emb, None) 
-            pred_labels = pred.argmax(dim=1)
-            
-            val_pred = pred[val_mask]
-            val_true = labels[val_mask]
-            val_pred_labels = val_pred.argmax(dim=1)
-        
-            
-            val_acc = accuracy_score(val_true.cpu(), val_pred_labels.cpu())
-            val_loss = F.cross_entropy(val_pred, val_true)
-            val_recall = recall_score(val_true.cpu(), val_pred_labels.cpu(), average='macro', zero_division=0)
-            val_precision = precision_score(val_true.cpu(), val_pred_labels.cpu(), average='macro', zero_division=0)
-            val_f1 = f1_score(val_true.cpu(), val_pred_labels.cpu(), average='macro', zero_division=0)
-            try:
-                val_auc = roc_auc_score(val_true.cpu(), F.softmax(val_pred, dim=1)[:, 1].cpu(),multi_class='ovr')   # multi_class='ovr' 时，roc_auc_score支持多类
-            except ValueError:
-                val_auc = 0.0  
-            val_specificity = compute_specificity(val_true.cpu(), val_pred_labels.cpu())
-
-
+            val_logits = classifier(all_hg_emb[val_mask], None)
+            val_loss = F.cross_entropy(val_logits, labels[val_mask])
+            val_probabilities = F.softmax(val_logits, dim=1).cpu().numpy()
+        val_metrics = classification_metrics(labels[val_mask].cpu().numpy(), val_probabilities)
+        selection.consider(epoch, val_metrics, lambda: snapshot_state_dict(classifier.state_dict()))
         epoch_iter.set_description(
-            f"# Epoch: {epoch}, train_loss:{loss.item(): .4f}, val_loss:{val_loss.item(): .4f}, "
-            f"val_acc:{val_acc:.4f}, val_recall:{val_recall:.4f}, val_precision:{val_precision:.4f}, "
-            f"val_f1:{val_f1:.4f}, val_auc:{val_auc:.4f}"
+            f"# Epoch: {epoch}, train_loss:{loss.item():.4f}, val_loss:{val_loss.item():.4f}, "
+            f"val_acc:{val_metrics['acc']:.4f}, val_f1:{val_metrics['f1']:.4f}"
         )
-        
-        # Set accuracy as the main metric to select the best model. Also can use other metrics like F1, AUC, etc. as the main metric.
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            best_val_epoch = epoch
-            best_model = deepcopy(classifier)
-            best_val_recall = val_recall 
-            best_val_precision = val_precision
-            best_val_f1 = val_f1
-            best_val_auc = val_auc
-            best_val_specificity = val_specificity
-        elif val_acc == best_val_acc:
-            best_val_recall = max(val_recall, best_val_recall)
-            best_val_precision = max(val_precision, best_val_precision)
-            best_val_f1 = max(val_f1, best_val_f1)
-            best_val_auc = max(val_auc, best_val_auc)
-            best_val_specificity = max(val_specificity, best_val_specificity)
-            
-    
-    logger.info(f"--- Best Val Results ---")
-    logger.info(f"Val Accuracy: {best_val_acc:.4f}")
-    logger.info(f"Val Recall (Sensitivity): {best_val_recall:.4f}")
-    logger.info(f"Val Specificity: {best_val_specificity:.4f}")
-    logger.info(f"Val Precision: {best_val_precision:.4f}")
-    logger.info(f"Val F1 Score: {best_val_f1:.4f}")
-    logger.info(f"Val AUC: {best_val_auc:.4f}")    
-    logger.info(f"Best epoch {best_val_epoch}")
-            
-    return {
-        "test_acc": best_val_acc,
-        "test_recall": best_val_recall,
-        "test_precision": best_val_precision,
-        "test_f1": best_val_f1,
-        "test_auc": best_val_auc,
-        "test_specificity": best_val_specificity,
-        "best_val_acc": best_val_acc,
-        "best_val_epoch": best_val_epoch
-        
-    }
-            
+
+    def evaluate_test():
+        classifier.eval()
+        with torch.no_grad():
+            test_logits = classifier(all_hg_emb[test_mask], None)
+            test_probabilities = F.softmax(test_logits, dim=1).cpu().numpy()
+        return classification_metrics(labels[test_mask].cpu().numpy(), test_probabilities)
+
+    metrics = selection.evaluate_test(classifier.load_state_dict, evaluate_test)
+    logger.info(f"Selected epoch {selection.epoch + 1} by validation accuracy only")
+    for split in ("val", "test"):
+        logger.info(f"--- {split.title()} Results at selected checkpoint ---")
+        for name in ("acc", "recall", "precision", "f1", "auc", "specificity"):
+            logger.info(f"{split}_{name}: {metrics[split + '_' + name]:.4f}")
+    return metrics
+
 
 def create_optimizer(opt, model, lr, weight_decay, get_num_layer=None, get_layer_scale=None):
     opt_lower = opt.lower()

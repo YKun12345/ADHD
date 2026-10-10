@@ -44,6 +44,7 @@ function summarizeCondition(trials) {
 
 function summarizeFlankerTrials(trials) {
   const safeTrials = Array.isArray(trials) ? trials : []
+  const reactionTimes = safeTrials.filter((trial) => trial.correct).map((trial) => trial.responseTimeMs).filter(Number.isFinite)
   const conditionMetrics = {
     congruent: summarizeCondition(safeTrials.filter((trial) => trial.condition === 'congruent')),
     incongruent: summarizeCondition(safeTrials.filter((trial) => trial.condition === 'incongruent')),
@@ -53,7 +54,7 @@ function summarizeFlankerTrials(trials) {
     total_trials: safeTrials.length,
     correct_trials: safeTrials.filter((trial) => trial.correct).length,
     accuracy: safeTrials.length ? Math.round((safeTrials.filter((trial) => trial.correct).length / safeTrials.length) * 100) : 0,
-    average_reaction_time_ms: median(safeTrials.filter((trial) => trial.correct).map((trial) => trial.responseTimeMs).filter(Number.isFinite)),
+    average_reaction_time_ms: reactionTimes.length ? Math.round(reactionTimes.reduce((sum, value) => sum + value, 0) / reactionTimes.length) : 0,
     conflict_effect_ms: conditionMetrics.incongruent.median_reaction_time_ms - conditionMetrics.congruent.median_reaction_time_ms,
     omissions: safeTrials.filter((trial) => trial.outcome === 'omission').length,
     condition_metrics: conditionMetrics

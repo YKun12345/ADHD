@@ -89,12 +89,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             focusPatientReportBtn.href = 'doctor_patients.html';
             focusPatientReportBtn.textContent = '进入患者工作台';
             let emptyBaseUrl = '';
-            let authParams1 = '';
             if (window.location.protocol === 'file:') {
                 emptyBaseUrl = 'http://127.0.0.1:8000/doctor-web/';
-                authParams1 = `?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
             }
-            focusPatientVizBtn.href = `${emptyBaseUrl}doctor_visualization.html${authParams1}`;
+            focusPatientVizBtn.href = `${emptyBaseUrl}doctor_visualization.html`;
             focusPatientVizBtn.textContent = '查看影像可视化';
             return;
         }
@@ -114,12 +112,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         focusPatientReportBtn.href = `doctor_report.html?patient_id=${patient.patient_id}`;
         focusPatientReportBtn.textContent = '查看患者综合分析';
         let baseUrl = '';
-        let authParams2 = '';
         if (window.location.protocol === 'file:') {
             baseUrl = 'http://127.0.0.1:8000/doctor-web/';
-            authParams2 = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
         }
-        focusPatientVizBtn.href = `${baseUrl}doctor_visualization.html?patient_id=${patient.patient_id}${authParams2}`;
+        focusPatientVizBtn.href = `${baseUrl}doctor_visualization.html?patient_id=${patient.patient_id}`;
         focusPatientVizBtn.textContent = '继续影像可视化';
     }
 

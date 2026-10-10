@@ -6,6 +6,7 @@ from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Tex
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 
 class SecuritySystemConfig(Base):
@@ -17,11 +18,20 @@ class SecuritySystemConfig(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    system_version: Mapped[str] = mapped_column(String(32), default="vmemda-lite-v1", nullable=False)
-    storage_mode: Mapped[str] = mapped_column(String(32), default="local_mcs_db", nullable=False)
+    system_version: Mapped[str] = mapped_column(
+        String(32), default="vmemda-lite-v1", nullable=False
+    )
+    storage_mode: Mapped[str] = mapped_column(
+        String(32), default="local_mcs_db", nullable=False
+    )
     public_params_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    secret_params_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    profile_params_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    secret_params_json: Mapped[dict] = mapped_column(
+        EncryptedValue("security_system_configs.secret_params_json", "json"),
+        nullable=False,
+    )
+    profile_params_json: Mapped[dict] = mapped_column(
+        JSON, default=dict, nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -52,8 +62,14 @@ class SecurityUserKey(Base):
     key_role: Mapped[str] = mapped_column(String(32), nullable=False)
     key_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     public_key_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    private_key_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    key_fingerprint: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    private_key_json: Mapped[dict] = mapped_column(
+        EncryptedValue("security_user_keys.private_key_json", "json"),
+        default=dict,
+        nullable=False,
+    )
+    key_fingerprint: Mapped[str] = mapped_column(
+        String(128), index=True, nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -69,10 +85,16 @@ class SecurityMcsNode(Base):
     __tablename__ = "security_mcs_nodes"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    node_code: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    node_code: Mapped[str] = mapped_column(
+        String(64), unique=True, index=True, nullable=False
+    )
     node_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    storage_backend: Mapped[str] = mapped_column(String(32), default="local_db", nullable=False)
-    storage_namespace: Mapped[str] = mapped_column(String(100), default="security_cipher_records", nullable=False)
+    storage_backend: Mapped[str] = mapped_column(
+        String(32), default="local_db", nullable=False
+    )
+    storage_namespace: Mapped[str] = mapped_column(
+        String(100), default="security_cipher_records", nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -112,7 +134,9 @@ class SecurityPatientAssignment(Base):
         index=True,
         nullable=True,
     )
-    assignment_status: Mapped[str] = mapped_column(String(32), default="active", nullable=False)
+    assignment_status: Mapped[str] = mapped_column(
+        String(32), default="active", nullable=False
+    )
     assignment_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -142,7 +166,9 @@ class SecurityCipherRecord(Base):
         nullable=False,
     )
     source_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
-    source_record_id: Mapped[int | None] = mapped_column(Integer, index=True, nullable=True)
+    source_record_id: Mapped[int | None] = mapped_column(
+        Integer, index=True, nullable=True
+    )
     patient_assignment_id: Mapped[int | None] = mapped_column(
         ForeignKey("security_patient_assignments.id", ondelete="SET NULL"),
         index=True,
@@ -154,12 +180,18 @@ class SecurityCipherRecord(Base):
         nullable=True,
     )
     time_bucket: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
-    dimension_labels_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    dimension_labels_json: Mapped[list] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
     encrypted_payload: Mapped[str] = mapped_column(Text, nullable=False)
-    integrity_digest: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    integrity_digest: Mapped[str] = mapped_column(
+        String(128), index=True, nullable=False
+    )
     key_fingerprint: Mapped[str] = mapped_column(String(128), nullable=False)
-    cipher_version: Mapped[str] = mapped_column(String(32), default="vmemda-lite-v1", nullable=False)
+    cipher_version: Mapped[str] = mapped_column(
+        String(32), default="vmemda-lite-v1", nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -204,18 +236,28 @@ class SecurityAuditTask(Base):
     task_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
     source_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="created", nullable=False)
-    included_record_ids_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    included_record_ids_json: Mapped[list] = mapped_column(
+        JSON, default=list, nullable=False
+    )
     aggregate_ciphertext: Mapped[str | None] = mapped_column(Text, nullable=True)
     aggregate_digest: Mapped[str | None] = mapped_column(String(128), nullable=True)
     verification_passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    verification_details_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
-    decrypted_stats_json: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    verification_details_json: Mapped[dict] = mapped_column(
+        JSON, default=dict, nullable=False
+    )
+    decrypted_stats_json: Mapped[dict] = mapped_column(
+        EncryptedValue("security_audit_tasks.decrypted_stats_json", "json"),
+        default=dict,
+        nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     patient = relationship("Patient")
     requested_by = relationship("User")
@@ -242,6 +284,8 @@ class SecurityAuditLog(Base):
         index=True,
         nullable=True,
     )
+    previous_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    entry_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     action: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
@@ -255,3 +299,13 @@ class SecurityAuditLog(Base):
     audit_task = relationship("SecurityAuditTask")
     patient = relationship("Patient")
     actor = relationship("User")
+
+
+class SecurityLogChainHead(Base):
+    __tablename__ = "security_log_chain_head"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    last_log_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="GENESIS"
+    )
+    state_tag: Mapped[str] = mapped_column(String(64), nullable=False)

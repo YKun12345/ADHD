@@ -40,6 +40,8 @@ def _store_ai_chat_turns(
     user_message: str,
     assistant_reply: str,
     scope: str,
+    model: str,
+    degraded: bool,
 ) -> None:
     patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
     if patient is None:
@@ -59,6 +61,10 @@ def _store_ai_chat_turns(
             content=assistant_reply.strip(),
         ),
     ]
+    for log in logs:
+        log.provider = _provider_name(model, degraded)
+        log.model_name = model
+        log.mode = "safety_guard" if model == "safety-guard" else ("local_fallback" if log.provider == "local" else "remote")
     db.add_all(logs)
     db.commit()
 
@@ -88,7 +94,7 @@ def chat_with_ai(
         context_scope=payload.context_scope,
         snapshot=snapshot,
     )
-    _store_ai_chat_turns(db, current_user, payload.message, reply, payload.context_scope)
+    _store_ai_chat_turns(db, current_user, payload.message, reply, payload.context_scope, model, degraded)
     return AIChatResponse(
         reply=reply,
         model=model,

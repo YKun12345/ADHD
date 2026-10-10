@@ -8,6 +8,7 @@ from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.imaging_visualization import ImagingVisualization
@@ -31,7 +32,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     staff_id: Mapped[str | None] = mapped_column(String(64), index=True, nullable=True)
-    full_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    full_name: Mapped[str] = mapped_column(EncryptedValue("users.full_name", "text"), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         SqlEnum(UserRole, native_enum=False),

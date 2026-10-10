@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from typing import Any
 
@@ -31,6 +32,14 @@ TEST_NAMES = {
     "nback": "2-back",
     "digit": "数字广度",
 }
+
+CONTINUOUS_PROTOCOL_ID = "continuous-mobile-v4"
+
+
+def validate_test_run_id(value: Any) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,64}", value):
+        raise ValueError("test_run_id must contain 1-64 ASCII letters, digits, '.', '_', ':' or '-'")
+    return value
 
 
 def canonical_test_type(value: str) -> str:
@@ -127,7 +136,7 @@ def _legacy_raw_result(test_type: str, source: dict[str, Any]) -> dict[str, Any]
 
 
 def normalize_result_json(test_type: str, value: dict[str, Any]) -> dict[str, Any]:
-    canonical_type = canonical_test_type(test_type)
+    canonical_type = result_test_type(test_type, value)
     normalized = deepcopy(value)
     supplied_raw = normalized.get("raw_result")
     if isinstance(supplied_raw, dict):
@@ -151,7 +160,86 @@ def normalize_result_json(test_type: str, value: dict[str, Any]) -> dict[str, An
     else:
         raw = _legacy_raw_result(canonical_type, normalized)
 
+    normalized.update(protocol_metadata(test_type, value))
     normalized["raw_result"] = raw
     normalized.setdefault("test_name", TEST_NAMES[canonical_type])
     normalized.setdefault("status_text", "已记录")
     return normalized
+
+WEB_PROTOCOL_ID = "patient-web-preview-v1"
+LEGACY_PROTOCOL_ID = "legacy-unversioned"
+PROTOCOL_SOURCES = {WEB_PROTOCOL_ID: "patient_web", CONTINUOUS_PROTOCOL_ID: "miniprogram"}
+PROTOCOL_LABELS = {WEB_PROTOCOL_ID: "网页简版", CONTINUOUS_PROTOCOL_ID: "连续移动筛查版", LEGACY_PROTOCOL_ID: "历史未标注协议"}
+AGE_GROUPS = {"adult", "child", "unspecified", "unknown"}
+
+
+def _metadata_token(value: Any, maximum: int = 96) -> bool:
+    return isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_.:-]{1," + str(maximum) + "}", value) is not None
+
+
+def validate_protocol_metadata(value: dict[str, Any]) -> None:
+    for key in ("source", "protocol_id"):
+        if key in value and not _metadata_token(value[key]):
+            raise ValueError(f"{key} must be a nonempty ASCII protocol identifier")
+    version = value.get("protocol_schema_version")
+    if "protocol_schema_version" in value and (type(version) is not int or not 0 <= version <= 1_000_000):
+        raise ValueError("protocol_schema_version must be a nonnegative integer")
+    if "age_group" in value and (not isinstance(value["age_group"], str) or value["age_group"] not in AGE_GROUPS):
+        raise ValueError("unsupported cognitive age_group")
+    expected_source = PROTOCOL_SOURCES.get(value.get("protocol_id"))
+    if expected_source and "source" in value and value["source"] != expected_source:
+        raise ValueError("source does not match the supplied cognitive protocol")
+
+
+def _historical_web_signature(test_type: str, value: dict[str, Any]) -> bool:
+    raw = value.get("raw_result") if isinstance(value.get("raw_result"), dict) else value
+    if test_type in {"reaction", "simple_reaction"}:
+        return (raw.get("target_rounds") == 5 and "completed_rounds" in raw
+                and not any(key in raw for key in ("go_trials", "nogo_trials", "commission_errors", "omission_errors")))
+    if test_type == "trail":
+        return raw.get("total_points") == 8 and "completed_points" in raw
+    if test_type == "digit":
+        return ("correct_rounds" in raw and "highest_span" in raw
+                and any(key in raw for key in ("failed_span", "final_span", "current_span"))
+                and "backward_max_span" not in raw)
+    return False
+
+
+def result_test_type(test_type: str, value: dict[str, Any]) -> str:
+    canonical = canonical_test_type(test_type)
+    protocol = value.get("protocol_id")
+    if canonical == "reaction" and (
+        protocol == WEB_PROTOCOL_ID or (not protocol and _historical_web_signature(canonical, value))
+    ):
+        return "simple_reaction"
+    return canonical
+
+
+def protocol_metadata(test_type: str, value: dict[str, Any]) -> dict[str, Any]:
+    # Report reads tolerate old, unvalidated rows; writes validate explicit metadata separately.
+    supplied_protocol = value.get("protocol_id")
+    protocol = supplied_protocol if _metadata_token(supplied_protocol) else LEGACY_PROTOCOL_ID
+    inferred_web = not supplied_protocol and _historical_web_signature(canonical_test_type(test_type), value)
+    if inferred_web:
+        protocol = WEB_PROTOCOL_ID
+    supplied_source = value.get("source")
+    source = supplied_source if _metadata_token(supplied_source) else PROTOCOL_SOURCES.get(protocol, "unknown")
+    version = value.get("protocol_schema_version")
+    if type(version) is not int or not 0 <= version <= 1_000_000:
+        version = 1 if inferred_web else 0
+    age_group = value.get("age_group")
+    if not isinstance(age_group, str) or age_group not in AGE_GROUPS:
+        age_group = "unspecified" if protocol == WEB_PROTOCOL_ID else "unknown"
+    label = value.get("protocol_label")
+    label = label.strip() if isinstance(label, str) and label.strip() else PROTOCOL_LABELS.get(protocol, protocol)
+    key = f"{source}|{protocol}|{version}|{age_group}"
+    return {
+        "source": source, "protocol_id": protocol, "protocol_label": label,
+        "protocol_schema_version": version, "age_group": age_group,
+        "protocol_inferred": inferred_web or value.get("protocol_inferred") is True,
+        "protocol_key": key,
+    }
+
+
+def cognitive_series_id(test_type: str, value: dict[str, Any]) -> str:
+    return f"{result_test_type(test_type, value)}|{protocol_metadata(test_type, value)['protocol_key']}"

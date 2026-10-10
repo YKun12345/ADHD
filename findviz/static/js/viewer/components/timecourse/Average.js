@@ -7,7 +7,8 @@ import ContextManager from '../../api/ContextManager.js';
 
 function getAnalysisViewUrl(analysis) {
     const basePath = window.FINDVIZ_BASE_PATH || '';
-    return `${basePath}/analysis_view/${analysis}`;
+    const patientQuery = window.FINDVIZ_PATIENT_ID ? `?patient_id=${encodeURIComponent(window.FINDVIZ_PATIENT_ID)}` : '';
+    return `${basePath}/analysis_view/${analysis}${patientQuery}`;
 }
 
 class Average {

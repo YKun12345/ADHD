@@ -103,7 +103,7 @@
     <view class="report-card__header">
       <view>
         <text class="report-card__title">认知测试</text>
-        <text class="report-card__subtitle">反应抑制与颜色干扰任务结果</text>
+        <text class="report-card__subtitle">六项认知任务的客观指标与结果，不同来源与协议分别记录</text>
       </view>
       <text wx:if="{{cognitive.hasData}}" class="report-card__tag">
         {{cognitive.completedCount}} / {{cognitive.totalCount}} 项
@@ -113,12 +113,13 @@
     <block wx:if="{{cognitive.hasData}}">
       <view
         wx:for="{{cognitive.cards}}"
-        wx:key="id"
+        wx:key="seriesId"
         class="cognitive-item"
       >
         <view>
           <text class="cognitive-item__title">{{item.title}}</text>
           <text class="cognitive-item__secondary">{{item.secondaryMetric}}</text>
+          <text class="cognitive-item__secondary">{{item.protocolText}}</text>
         </view>
         <text class="cognitive-item__metric">{{item.primaryMetric}}</text>
       </view>

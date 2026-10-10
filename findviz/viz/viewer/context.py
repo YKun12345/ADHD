@@ -116,7 +116,7 @@ class VisualizationContext:
     """
     def __init__(self, context_id: str):
         self.context_id = context_id
-        self._state = Optional[NiftiVisualizationState | GiftiVisualizationState]
+        self._state: Optional[NiftiVisualizationState | GiftiVisualizationState] = None
     
     @requires_state
     @property

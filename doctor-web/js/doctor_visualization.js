@@ -24,12 +24,17 @@ window.FINDVIZ_BASE_PATH = resolveFindvizBasePath();
 
 import { initBootstrapComponents } from '../../findviz/static/js/utils.js';
 import { DOM_IDS } from '../../findviz/static/js/constants/DomIds.js';
+import { readUploadResponse, validateUploadSize } from './imaging_upload.js';
+import { workspaceFetch } from '../../findviz/static/js/workspaceRequest.js';
 
 let boundPatients = [];
 let currentSelectedPatient = null;
 let fragmentsInjected = false;
 let MainViewerClass = null;
 let lastVisualizationPayload = null;
+let sessionPatientId = null;
+let sessionExpiresAt = 0;
+let uploadInProgress = false;
 let screenshotState = {
     slice: { name: null, dataUrl: null },
     surface: { name: null, dataUrl: null },
@@ -57,7 +62,7 @@ function setStartupAlert(message = '', type = 'error') {
 }
 
 async function fetchFragment(path) {
-    const response = await fetch(path);
+    const response = await workspaceFetch(path);
     if (!response.ok) {
         throw new Error(`加载 findviz 片段失败：${path}`);
     }
@@ -119,17 +124,37 @@ async function ensureFindvizFragments() {
     fragmentsInjected = true;
 }
 
-async function clearFindvizCache() {
-    try {
-        await fetch(`${window.FINDVIZ_BASE_PATH}/clear_cache`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    } catch (error) {
-        console.warn('Failed to clear findviz cache before reloading workspace:', error);
+async function ensureImagingSession() {
+    if (!currentSelectedPatient) throw new Error('请先从患者工作台进入本页。');
+    const workspaceOrigin = new URL(window.FINDVIZ_BASE_PATH, window.location.href).origin;
+    if (!['http:', 'https:'].includes(window.location.protocol) || workspaceOrigin !== window.location.origin) {
+        throw new Error('请从后端服务提供的研究平台打开影像页面，影像会话需要同源访问。');
     }
+    const patientId = Number(currentSelectedPatient.patient_id);
+    if (sessionPatientId === patientId && Date.now() < sessionExpiresAt - 60000) return;
+    const token = localStorage.getItem('smartbrain_token');
+    if (!token) throw new Error('请先登录研究平台。');
+    const response = await fetch('/api/v1/imaging/session', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient_id: patientId })
+    });
+    if (!response.ok) {
+        if (response.status === 404) {
+            throw new Error('影像服务尚未更新，请重启项目服务后刷新页面。');
+        }
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || '影像工作区授权失败，请确认当前患者仍与你绑定。');
+    }
+    const session = await response.json();
+    sessionPatientId = Number(session.patient_id);
+    sessionExpiresAt = Date.now() + Number(session.expires_in) * 1000;
+    window.FINDVIZ_PATIENT_ID = sessionPatientId;
+}
+
+async function clearFindvizCache() {
+    const response = await workspaceFetch(`${window.FINDVIZ_BASE_PATH}/clear_cache`, { method: 'POST' });
+    if (!response.ok) throw new Error('清理当前患者影像工作区失败。');
 }
 
 function resetFindvizWorkspaceUi() {
@@ -163,7 +188,7 @@ function resetFindvizWorkspaceUi() {
 async function waitForFindvizCacheReady(expectedType, maxAttempts = 40, delayMs = 500) {
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         try {
-            const response = await fetch(`${window.FINDVIZ_BASE_PATH}/check_cache`, {
+            const response = await workspaceFetch(`${window.FINDVIZ_BASE_PATH}/check_cache`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -174,6 +199,7 @@ async function waitForFindvizCacheReady(expectedType, maxAttempts = 40, delayMs 
                 return payload;
             }
         } catch (error) {
+            if (error.message?.includes('授权失败')) throw error;
             console.warn('Failed to poll findviz cache readiness:', error);
         }
         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -410,13 +436,7 @@ function updatePatientLinks(patient) {
     const workspaceUrl = patientId ? `doctor_patients.html?focus_patient_id=${patientId}` : 'doctor_patients.html';
     const reportUrl = patientId ? `doctor_report.html?patient_id=${patientId}` : 'doctor_patients.html';
     const imagingUrl = patientId ? `doctor_imaging.html?patient_id=${patientId}` : 'doctor_imaging.html';
-    let baseUrl = '';
-    let authParams = '';
-    if (window.location.protocol === 'file:') {
-        baseUrl = 'http://127.0.0.1:8000/doctor-web/';
-        authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
-    }
-    const visualizationUrl = patientId ? `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}` : `${baseUrl}doctor_visualization.html?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
+    const visualizationUrl = patientId ? `doctor_visualization.html?patient_id=${patientId}` : 'doctor_visualization.html';
 
     const backToWorkspace = $('backToPatientReportLink');
     const openPatientReport = $('openPatientReportLink');
@@ -508,6 +528,7 @@ function buildUploadFormData(fileType) {
 }
 
 async function uploadAndVisualize(fileType) {
+    if (uploadInProgress) return;
     if (!currentSelectedPatient) {
         setUploadFeedback('请先从患者工作台进入本页，系统需要知道当前影像属于哪位患者。', 'error');
         return;
@@ -523,22 +544,25 @@ async function uploadAndVisualize(fileType) {
         return;
     }
 
+    uploadInProgress = true;
+    $('submit-file').disabled = true;
+    $('submit-file-gifti').disabled = true;
     setUploadFeedback('正在上传影像文件并启动可视化工作区...', '');
 
     try {
+        await ensureImagingSession();
+        const limits = await window.API.Imaging.getUploadLimits();
+        validateUploadSize(Array.from(formData.values()).filter(value => typeof value?.size === 'number'), Number(limits.max_body_bytes));
         await clearFindvizCache();
         resetFindvizWorkspaceUi();
         await ensureFindvizFragments();
 
-        const response = await fetch(`${window.FINDVIZ_BASE_PATH}/upload`, {
+        const response = await workspaceFetch(`${window.FINDVIZ_BASE_PATH}/upload`, {
             method: 'POST',
             body: formData
         });
 
-        const result = await response.json();
-        if (!response.ok) {
-            throw new Error(result.error || '影像上传失败，请检查文件格式或后端服务状态。');
-        }
+        const result = await readUploadResponse(response);
 
         const resolvedFileType = result.file_type || fileType;
         setUploadFeedback('影像已上传，正在初始化可视化工作区...', '');
@@ -546,6 +570,7 @@ async function uploadAndVisualize(fileType) {
         try {
             await waitForFindvizCacheReady(resolvedFileType, 10, 300);
         } catch (cacheError) {
+            if (cacheError.message?.includes('授权失败')) throw cacheError;
             console.warn('Findviz cache readiness check timed out, continuing with direct metadata:', cacheError);
         }
         resetViewerShell();
@@ -560,6 +585,10 @@ async function uploadAndVisualize(fileType) {
     } catch (error) {
         console.error('Failed to upload and visualize:', error);
         setUploadFeedback(error.message || '影像上传或工作区初始化失败。', 'error');
+    } finally {
+        uploadInProgress = false;
+        $('submit-file').disabled = false;
+        $('submit-file-gifti').disabled = false;
     }
 }
 
@@ -612,19 +641,7 @@ async function loadPatientContext() {
     renderSelectedPatient(null);
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        await ensureFindvizFragments();
-        await loadPatientContext();
-        setStartupAlert('', '');
-    } catch (error) {
-        console.error('Failed to initialize doctor visualization page:', error);
-        setStartupAlert(
-            `影像可视化初始化失败：${error.message || '请确认后端已启动。'} 若本地后端尚未启动，请先运行 <code>uvicorn backend.app.main:app --reload</code>，再通过 <code>http://127.0.0.1:8000/doctor-web/doctor_visualization.html</code> 访问本页。`
-        );
-        return;
-    }
-
+function bindVisualizationControls() {
     $('submit-file')?.addEventListener('click', () => uploadAndVisualize('nifti'));
     $('submit-file-gifti')?.addEventListener('click', () => uploadAndVisualize('gifti'));
     $('upload-file')?.addEventListener('click', () => $('nifti-func')?.click());
@@ -651,4 +668,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     renderScreenshotPreview('slice');
     renderScreenshotPreview('surface');
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    bindVisualizationControls();
+    try {
+        await loadPatientContext();
+        if (currentSelectedPatient) await ensureImagingSession();
+        await ensureFindvizFragments();
+        const limits = await window.API.Imaging.getUploadLimits();
+        const capacity = $('uploadCapacityHint');
+        if (capacity) capacity.textContent = '每次上传的影像文件总大小上限为 ' + (Number(limits.max_body_bytes) / (1024 * 1024)).toFixed(0) + ' MB；较大 NIfTI 文件可使用 .nii.gz。';
+        setStartupAlert('', '');
+    } catch (error) {
+        console.error('Failed to initialize doctor visualization page:', error);
+        setStartupAlert(
+            `影像可视化初始化失败：${error.message || '请从研究平台患者工作台重新进入。'}`
+        );
+        return;
+    }
+
+
 });

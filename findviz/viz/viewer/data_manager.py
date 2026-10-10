@@ -1,15 +1,10 @@
-"""
-Backend Data Management with DataManager singleton pattern.
-
-This module provides a centralized data management system for the FIND viewer,
-handling multiple visualization states (both NIFTI and GIFTI). 
-It implements a singleton pattern to ensure consistent state across the application.
-
-Classes:
-    DataManager: Singleton manager for visualization state
-"""
+"""Viewer states isolated by request user/patient; the standalone CLI has its own state."""
 
 from typing import Dict, Optional, ClassVar, List
+from threading import RLock
+from collections import OrderedDict
+from time import monotonic
+from findviz.workspace import current_workspace
 
 from findviz.logger_config import setup_logger
 from findviz.viz.viewer.context import VisualizationContext
@@ -19,43 +14,43 @@ logger = setup_logger(__name__)
 
 
 class DataManager:
-    """Singleton manager for visualization state with support for multiple contexts.
-    
-    This class implements the singleton pattern to maintain a single source of truth
-    for the visualization state across the entire application. It handles both NIFTI
-    and GIFTI data types and their associated metadata.
-    
-    Attributes:
-        _instance (ClassVar[Optional['DataManager']]): Singleton instance
-        _contexts (Dict[str, VisualizationContext]): Dictionary mapping context IDs to contexts
-        _active_context_id (str): ID of the currently active context
-    
-    Methods:
-        __new__: Create or return the singleton instance
-        active_context: Get the currently active visualization context
-        create_analysis_context: Create a new context for analysis results
-        get_context: Get a context by its ID
-        get_context_ids: Get all available context IDs
-        load: Load a scene file
-        get_active_context_id: Get the ID of the currently active context
-        save: save the current scene
-        switch_context: Switch the active context to the specified ID
-    """
+    """Resolve one manager per workspace, with bounded temporary image retention."""
+    # CLI compatibility is kept separate from authenticated patient workspaces.
     _instance: ClassVar[Optional['DataManager']] = None
+    _instances = OrderedDict()
+    _instance_lock = RLock()
     _contexts: Dict[str, VisualizationContext]
     _active_context_id: str
-    
+
     def __new__(cls) -> 'DataManager':
-        """Create or return the singleton instance."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            # Initialize instance attributes 
-            cls._instance._contexts = {}  # Dictionary to store multiple visualization contexts
-            cls._instance._active_context_id = "main"  # Default context is "main"
-            cls._instance._contexts["main"] = VisualizationContext("main")
-            logger.info("Data manager initialized")
-        return cls._instance
-    
+        namespace = current_workspace()
+        with cls._instance_lock:
+            if namespace == 'standalone-cli':
+                instance = cls._instance
+            else:
+                now = monotonic()
+                for key, (instance, last_used) in list(cls._instances.items()):
+                    if now - last_used > 1800:
+                        cls._instances.pop(key)
+                entry = cls._instances.pop(namespace, None)
+                instance = entry[0] if entry else None
+            if instance is None:
+                instance = super().__new__(cls)
+                instance._contexts = {'main': VisualizationContext('main')}
+                instance._active_context_id = 'main'
+                if namespace == 'standalone-cli':
+                    cls._instance = instance
+            if namespace != 'standalone-cli':
+                cls._instances[namespace] = (instance, monotonic())
+                # Bound in-memory image retention; eviction only releases temporary viewer state.
+                while len(cls._instances) > 32:
+                    cls._instances.popitem(last=False)
+            return instance
+
+    def reset(self):
+        self._contexts = {'main': VisualizationContext('main')}
+        self._active_context_id = 'main'
+
     @property
     def ctx(self) -> VisualizationContext:
         """Short alias for the currently active visualization context."""

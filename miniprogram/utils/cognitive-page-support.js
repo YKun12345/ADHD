@@ -50,6 +50,8 @@ function attachProtocolMetadata(payload, config, actualTrials) {
     : Number.isInteger(rawTotal) && rawTotal >= 0
       ? rawTotal
       : trials.length
+  payload.result_json.source = 'miniprogram'
+  payload.result_json.age_group = config.ageGroup === 'adult' ? 'adult' : 'child'
   payload.result_json.protocol_id = config.protocolId
   payload.result_json.protocol_label = config.protocolLabel
   payload.result_json.protocol_schema_version = config.schemaVersion
@@ -58,25 +60,38 @@ function attachProtocolMetadata(payload, config, actualTrials) {
 }
 
 async function syncPayload(page, payload, pendingKey) {
-  if (!payload || page.data.submitting) return false
+  if (!payload || page._disposed || page.data.submitting) return false
+  // Persist before sending: a closed page must not lose an unacknowledged result.
+  wx.setStorageSync(pendingKey, payload)
   page.setData({ submitting: true, syncStatus: '同步中' })
   const lease = capturePatientSessionLease()
+  const matchesPending = () => {
+    const pending = wx.getStorageSync(pendingKey)
+    if (!pending || pending.test_type !== payload.test_type) return false
+    const runId = payload.result_json && payload.result_json.test_run_id
+    return runId
+      ? pending.result_json && pending.result_json.test_run_id === runId
+      : JSON.stringify(pending) === JSON.stringify(payload)
+  }
   try {
     await request({ url: '/patient/submit_cognitive_test', method: 'POST', data: payload })
     if (!isPatientSessionLeaseCurrent(lease)) return false
-    wx.removeStorageSync(pendingKey)
-    page.setData({ submitting: false, syncStatus: '已同步', hasPendingResult: false })
+    if (matchesPending()) wx.removeStorageSync(pendingKey)
+    if (!page._disposed) page.setData({ submitting: false, syncStatus: '已同步', hasPendingResult: Boolean(wx.getStorageSync(pendingKey)) })
     return true
   } catch (error) {
     if (isPatientSessionError(error) || !isPatientSessionLeaseCurrent(lease)) return false
-    wx.setStorageSync(pendingKey, payload)
-    page.setData({ submitting: false, syncStatus: '待同步', hasPendingResult: true })
+    if (!page._disposed) page.setData({ submitting: false, syncStatus: '待同步', hasPendingResult: Boolean(wx.getStorageSync(pendingKey)) })
     return false
   }
 }
 
 function finishPage(page, taskId, payload, pendingKey, actualTrials) {
+  if (!payload || page._completionSaved || page._disposed || page._hidden) return false
+  if (page._runLease && !isPatientSessionLeaseCurrent(page._runLease)) return false
+  page._completionSaved = true
   attachProtocolMetadata(payload, page._config, actualTrials)
+  if (page._context && page._context.testRunId) payload.result_json.test_run_id = page._context.testRunId
   saveLatestPayload(payload)
   const nextTaskId = recordBatteryCompletion(page._context, taskId)
   page._lastPayload = payload
@@ -102,12 +117,15 @@ function clearTimers(page) {
 }
 
 function schedule(page, callback, delay) {
+  const generation = page._runGeneration
+  const lease = capturePatientSessionLease()
   const timer = setTimeout(() => {
     page._timers = (page._timers || []).filter((value) => value !== timer)
+    if (page._disposed || page._hidden || generation !== page._runGeneration || !isPatientSessionLeaseCurrent(lease)) return
     callback()
   }, delay)
   page._timers = [...(page._timers || []), timer]
   return timer
 }
 
-module.exports = { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, finishPage, retryPageSync, goNextBatteryTask, clearTimers, schedule }
+module.exports = { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, finishPage, syncPayload, retryPageSync, goNextBatteryTask, clearTimers, schedule }

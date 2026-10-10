@@ -5,6 +5,7 @@ This package provides tools for visualizing and discovering patterns in fMRI dat
 """
 
 from flask import Flask
+from findviz.request_security import MemoryUploadRequest, upload_body_limit, upload_limit_error
 from findviz.logger_config import setup_logger
 from findviz.viz.io.cache import Cache
 
@@ -18,6 +19,12 @@ logger = setup_logger(__name__)
 def create_app(clear_cache=False, testing=False):
     """Application factory function."""
     app = Flask(__name__)
+    app.request_class = MemoryUploadRequest
+    app.config["MAX_CONTENT_LENGTH"] = upload_body_limit()
+
+    @app.errorhandler(413)
+    def report_upload_limit(_error):
+        return upload_limit_error(), 413
 
     # Clean up any existing cache on startup
     if clear_cache:

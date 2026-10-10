@@ -37,6 +37,11 @@ def get_log_entries():
     if log_file is None:
         log_file = find_most_recent_log_file()
     
+    if log_file is None:
+        return jsonify([])
+    if not re.fullmatch(r'app-run-\d{8}-\d{6}\.log', log_file):
+        return jsonify({'error': 'Invalid log file name.'}), 400
+
     # Get log entries
     log_entries = get_recent_log_entries(
         max_entries=max_entries,

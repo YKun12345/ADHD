@@ -25,3 +25,18 @@ tmp
 .env
 backend/.env
 backend/artifacts
+
+# 本地构建、预览、备份、密钥与上传内容不进入镜像
+.codex-ppt-build
+.preview
+.codex-tmp
+.worktrees
+%SystemDrive%
+.keys
+backend/.keys
+uploads
+backend/uploads
+**/logs
+*.log
+migration-backups
+backend/migration-backups

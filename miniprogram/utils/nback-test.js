@@ -60,7 +60,7 @@ function logit(value) {
 }
 
 function summarizeNBackTrials(trials) {
-  const safeTrials = Array.isArray(trials) ? trials : []
+  const safeTrials = Array.isArray(trials) ? trials.filter((trial) => trial && trial.scored !== false) : []
   const hits = safeTrials.filter((trial) => trial.outcome === 'hit').length
   const misses = safeTrials.filter((trial) => trial.outcome === 'miss').length
   const falseAlarms = safeTrials.filter((trial) => trial.outcome === 'false_alarm').length
@@ -69,7 +69,7 @@ function summarizeNBackTrials(trials) {
   const correct = hits + correctRejections
   const times = safeTrials.filter((trial) => trial.correct && Number.isFinite(trial.responseTimeMs)).map((trial) => trial.responseTimeMs)
   return {
-    total_trials: safeTrials.length, hits, misses, false_alarms: falseAlarms, correct_rejections: correctRejections, omissions,
+    total_trials: safeTrials.length, correct_trials: correct, hits, misses, false_alarms: falseAlarms, correct_rejections: correctRejections, omissions,
     accuracy: safeTrials.length ? Math.round((correct / safeTrials.length) * 100) : 0,
     average_reaction_time_ms: times.length ? Math.round(times.reduce((sum, value) => sum + value, 0) / times.length) : 0,
     d_prime: Number((logit(correctedRate(hits, hits + misses)) - logit(correctedRate(falseAlarms, falseAlarms + correctRejections))).toFixed(2))

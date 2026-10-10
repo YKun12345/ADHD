@@ -8,14 +8,16 @@ import secrets
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
+from backend.app.core.data_encryption import scoped_key
 
 from backend.app.models.cognitive_test import CognitiveTest
 from backend.app.models.patient import Patient
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.security import (
     SecurityAuditLog,
+    SecurityLogChainHead,
     SecurityAuditTask,
     SecurityCipherRecord,
     SecurityMcsNode,
@@ -27,7 +29,7 @@ from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole, UserSubrole
 
 
-SECURITY_SCHEME_VERSION = "vmemda-lite-v1"
+SECURITY_SCHEME_VERSION = "paillier-aesgcm-evidence-v2"
 LOCAL_MCS_MODE = "local_mcs_db"
 DEFAULT_MAX_RECORDS = 128
 DEFAULT_MCS_NODE_CODE = "LOCAL-MCS-001"
@@ -84,7 +86,7 @@ def _lcm(a: int, b: int) -> int:
     return abs(a * b) // _gcd(a, b)
 
 
-def _is_probable_prime(candidate: int, rounds: int = 8) -> bool:
+def _is_probable_prime(candidate: int, rounds: int = 32) -> bool:
     if candidate < 2:
         return False
     small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
@@ -121,7 +123,7 @@ def _generate_prime(bits: int) -> int:
             return candidate
 
 
-def _generate_paillier_keypair(bits: int = 512) -> dict[str, str]:
+def _generate_paillier_keypair(bits: int = 2048) -> dict[str, str]:
     p = _generate_prime(bits // 2)
     q = _generate_prime(bits // 2)
     while q == p:
@@ -158,9 +160,11 @@ def _decrypt_with_paillier(n: int, lam: int, mu: int, ciphertext: int) -> int:
     return (l_value * mu) % n
 
 
-def _build_profile_params(labels: list[str], max_value: int, max_records: int) -> dict[str, Any]:
+def _build_profile_params(
+    labels: list[str], max_value: int, max_records: int
+) -> dict[str, Any]:
     max_sum = max_value * max_records
-    max_square_sum = (max_value ** 2) * max_records
+    max_square_sum = (max_value**2) * max_records
     boundary = max(max_sum, max_square_sum) + 1
 
     sequence: list[int] = []
@@ -210,7 +214,10 @@ def get_security_config(db: Session) -> SecuritySystemConfig | None:
 def get_default_mcs_node(db: Session) -> SecurityMcsNode | None:
     return db.scalar(
         select(SecurityMcsNode)
-        .where(SecurityMcsNode.node_code == DEFAULT_MCS_NODE_CODE, SecurityMcsNode.is_active.is_(True))
+        .where(
+            SecurityMcsNode.node_code == DEFAULT_MCS_NODE_CODE,
+            SecurityMcsNode.is_active.is_(True),
+        )
         .order_by(SecurityMcsNode.id.desc())
     )
 
@@ -234,7 +241,9 @@ def ensure_patient_security_assignment(
     actor_user_id: int | None = None,
 ) -> SecurityPatientAssignment:
     assignment = db.scalar(
-        select(SecurityPatientAssignment).where(SecurityPatientAssignment.patient_id == patient.id)
+        select(SecurityPatientAssignment).where(
+            SecurityPatientAssignment.patient_id == patient.id
+        )
     )
     dac_user = get_primary_dac_user(db)
     mcs_node = get_default_mcs_node(db)
@@ -255,7 +264,7 @@ def ensure_patient_security_assignment(
             assignment.assigned_dac_user_id = dac_user.id
         if assignment.assigned_mcs_node_id is None and mcs_node is not None:
             assignment.assigned_mcs_node_id = mcs_node.id
-        assignment.assignment_status = "active"
+        # Preserve explicit suspension/revocation during startup synchronization.
 
     db.flush()
     return assignment
@@ -272,6 +281,32 @@ def _append_audit_log(
     audit_task_id: int | None = None,
     detail_json: dict[str, Any] | None = None,
 ) -> SecurityAuditLog:
+    if db.get_bind().dialect.name == "sqlite":
+        # A database write lock lasts until commit; SQLite ignores SELECT FOR UPDATE.
+        db.execute(
+            update(SecurityLogChainHead)
+            .where(SecurityLogChainHead.id == 1)
+            .values(last_log_id=SecurityLogChainHead.last_log_id)
+        )
+    head = db.scalar(
+        select(SecurityLogChainHead)
+        .where(SecurityLogChainHead.id == 1)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if head is None:
+        _ensure_log_chain_head(db)
+        head = db.get(SecurityLogChainHead, 1)
+    if head is None:
+        head = SecurityLogChainHead(
+            id=1, last_hash="GENESIS", state_tag=_chain_tag(None, "GENESIS")
+        )
+        db.add(head)
+        db.flush()
+    if not hmac.compare_digest(
+        head.state_tag, _chain_tag(head.last_log_id, head.last_hash)
+    ):
+        raise ValueError("Audit chain head integrity mismatch.")
     log = SecurityAuditLog(
         audit_task_id=audit_task_id,
         patient_id=patient_id,
@@ -280,8 +315,15 @@ def _append_audit_log(
         status=status,
         message=message,
         detail_json=detail_json or {},
+        created_at=_utcnow(),
+        previous_hash=head.last_hash,
     )
     db.add(log)
+    db.flush()
+    log.entry_hash = _log_hash(log)
+    head.last_log_id = log.id
+    head.last_hash = log.entry_hash
+    head.state_tag = _chain_tag(head.last_log_id, head.last_hash)
     db.flush()
     return log
 
@@ -289,14 +331,24 @@ def _append_audit_log(
 def _ensure_system_ready(config: SecuritySystemConfig | None) -> SecuritySystemConfig:
     if config is None or not config.is_initialized:
         raise ValueError("Security system has not been initialized yet.")
+    expected = (config.secret_params_json or {}).get("public_config_digest")
+    if not expected or not hmac.compare_digest(
+        expected, _security_config_digest(config)
+    ):
+        raise ValueError(
+            "Security configuration integrity failed; restore the authenticated configuration."
+        )
     return config
 
 
 def initialize_security_system(db: Session, actor: User) -> SecuritySystemConfig:
+    if actor.role != UserRole.RESEARCHER or actor.subrole != UserSubrole.DAC:
+        raise ValueError("DAC permission required.")
     existing = get_security_config(db)
     if existing and existing.is_initialized:
-        return existing
+        return _ensure_system_ready(existing)
 
+    _ensure_log_chain_head(db)
     keypair = _generate_paillier_keypair()
     profile_params = {
         source_type: _build_profile_params(
@@ -320,6 +372,7 @@ def initialize_security_system(db: Session, actor: User) -> SecuritySystemConfig
         "lambda": keypair["lambda"],
         "mu": keypair["mu"],
         "audit_secret": secrets.token_hex(32),
+        "audit_log_chain_version": 1,
     }
     config.profile_params_json = profile_params
     config.updated_at = _utcnow()
@@ -328,6 +381,11 @@ def initialize_security_system(db: Session, actor: User) -> SecuritySystemConfig
         db.add(config)
     db.flush()
 
+    config.secret_params_json = {
+        **config.secret_params_json,
+        "public_config_digest": _security_config_digest(config),
+    }
+    db.flush()
     users = db.scalars(select(User)).all()
     for user in users:
         provision_security_materials_for_user(db, user, auto_commit=False)
@@ -339,7 +397,10 @@ def initialize_security_system(db: Session, actor: User) -> SecuritySystemConfig
         status="success",
         message="安全系统已初始化，本地 MCS 模拟存储层已就绪。",
         actor_user_id=actor.id,
-        detail_json={"system_version": SECURITY_SCHEME_VERSION, "storage_mode": LOCAL_MCS_MODE},
+        detail_json={
+            "system_version": SECURITY_SCHEME_VERSION,
+            "storage_mode": LOCAL_MCS_MODE,
+        },
     )
     db.commit()
     db.refresh(config)
@@ -399,7 +460,7 @@ def provision_security_materials_for_user(
         db,
         action="key_provision",
         status="success",
-        message=f"已为用户 {user.full_name} 分配安全密钥材料。",
+        message="已为授权账户分配安全标识材料。",
         actor_user_id=user.id,
         patient_id=patient.id if patient else None,
         detail_json={"fingerprint": fingerprint, "key_role": key_role},
@@ -425,7 +486,9 @@ def _pack_dimensions(profile: dict[str, Any], dimension_values: dict[str, int]) 
     return total
 
 
-def _unpack_aggregate(profile: dict[str, Any], packed_value: int, record_count: int) -> dict[str, Any]:
+def _unpack_aggregate(
+    profile: dict[str, Any], packed_value: int, record_count: int
+) -> dict[str, Any]:
     labels: list[str] = profile["labels"]
     sequence: list[int] = profile["sequence"]
     decoded = [0 for _ in sequence]
@@ -441,7 +504,11 @@ def _unpack_aggregate(profile: dict[str, Any], packed_value: int, record_count: 
         total = decoded[index]
         square_total = decoded[len(labels) + index]
         average = total / record_count if record_count else 0.0
-        variance = max(0.0, (square_total / record_count) - (average ** 2)) if record_count else 0.0
+        variance = (
+            max(0.0, (square_total / record_count) - (average**2))
+            if record_count
+            else 0.0
+        )
         stats[label] = {
             "sum": round(total, 4),
             "average": round(average, 4),
@@ -486,11 +553,69 @@ def _upsert_cipher_record(
     if config is None or not config.is_initialized:
         return None
 
+    _ensure_system_ready(config)
+    db.flush()  # Capture the pending authorized business update before hashing.
+    previous = db.scalar(
+        select(SecurityCipherRecord)
+        .where(
+            SecurityCipherRecord.patient_id == patient.id,
+            SecurityCipherRecord.source_type == source_type,
+            SecurityCipherRecord.source_record_id == source_record_id,
+        )
+        .order_by(SecurityCipherRecord.id.desc())
+    )
+    source = _source_record(db, source_type, source_record_id)
+    source_digest = _source_digest(source)
+    if (
+        previous
+        and (previous.metadata_json or {}).get("source_digest") == source_digest
+    ):
+        return previous
     profile = _load_profile(config, source_type)
+    if any(
+        not 0 <= value <= profile["max_value"] for value in dimension_values.values()
+    ):
+        raise ValueError("Audit value exceeds the declared packing bounds.")
     paillier = _load_paillier_params(config)
-    assignment = ensure_patient_security_assignment(db, patient, actor_user_id=patient.user_id)
-    packed_value = _pack_dimensions(profile, dimension_values)
-    encrypted_payload = _encrypt_with_paillier(paillier["n"], paillier["g"], packed_value)
+    assignment = ensure_patient_security_assignment(
+        db, patient, actor_user_id=patient.user_id
+    )
+    if assignment.assignment_status != "active":
+        return None
+    metadata_json = {
+        **metadata_json,
+        "source_digest": source_digest,
+        "evidence_version": int(
+            (previous.metadata_json or {}).get("evidence_version", 0)
+        )
+        + 1
+        if previous
+        else 1,
+        "supersedes_record_id": previous.id if previous else None,
+        "previous_integrity_digest": previous.integrity_digest if previous else None,
+        "patient_assignment_id": assignment.id,
+        "mcs_node_id": assignment.assigned_mcs_node_id,
+        "dimension_labels": profile["labels"],
+        "cipher_version": SECURITY_SCHEME_VERSION,
+    }
+    if source_type == "cognitive":
+        from backend.app.services.cognitive_contract import (
+            protocol_metadata,
+            result_test_type,
+        )
+
+        metadata_json.update(
+            protocol_metadata(source.test_type, source.result_json or {})
+        )
+        metadata_json["canonical_test_type"] = result_test_type(
+            source.test_type, source.result_json or {}
+        )
+    metadata_json["audit_group"] = _audit_group_from_metadata(
+        source_type, metadata_json
+    )
+    encrypted_payload = _encrypt_with_paillier(
+        paillier["n"], paillier["g"], _pack_dimensions(profile, dimension_values)
+    )
     digest = _hmac_digest(
         config.secret_params_json["audit_secret"],
         _record_digest_payload(
@@ -503,42 +628,38 @@ def _upsert_cipher_record(
             metadata_json=metadata_json,
         ),
     )
-
-    record = db.scalar(
-        select(SecurityCipherRecord).where(
-            SecurityCipherRecord.source_type == source_type,
-            SecurityCipherRecord.source_record_id == source_record_id,
-        )
+    record = SecurityCipherRecord(
+        patient_id=patient.id,
+        source_type=source_type,
+        source_record_id=source_record_id,
+        patient_assignment_id=assignment.id,
+        mcs_node_id=assignment.assigned_mcs_node_id,
+        time_bucket=time_bucket,
+        dimension_labels_json=profile["labels"],
+        metadata_json=metadata_json,
+        encrypted_payload=encrypted_payload,
+        integrity_digest=digest,
+        key_fingerprint=user_key.key_fingerprint,
+        cipher_version=SECURITY_SCHEME_VERSION,
     )
-    if record is None:
-        record = SecurityCipherRecord(
-            patient_id=patient.id,
-            source_type=source_type,
-            source_record_id=source_record_id,
-            patient_assignment_id=assignment.id,
-            mcs_node_id=assignment.assigned_mcs_node_id,
-            time_bucket=time_bucket,
-            dimension_labels_json=profile["labels"],
-            metadata_json=metadata_json,
-            encrypted_payload=encrypted_payload,
-            integrity_digest=digest,
-            key_fingerprint=user_key.key_fingerprint,
-            cipher_version=SECURITY_SCHEME_VERSION,
-        )
-        db.add(record)
-    else:
-        record.time_bucket = time_bucket
-        record.patient_assignment_id = assignment.id
-        record.mcs_node_id = assignment.assigned_mcs_node_id
-        record.dimension_labels_json = profile["labels"]
-        record.metadata_json = metadata_json
-        record.encrypted_payload = encrypted_payload
-        record.integrity_digest = digest
-        record.key_fingerprint = user_key.key_fingerprint
-        record.cipher_version = SECURITY_SCHEME_VERSION
-        record.updated_at = _utcnow()
-
+    db.add(record)
     db.flush()
+    _append_audit_log(
+        db,
+        action="evidence_append",
+        status="success",
+        message="已追加业务记录的加密证据版本。",
+        patient_id=patient.id,
+        actor_user_id=patient.user_id,
+        detail_json={
+            "record_id": record.id,
+            "source_type": source_type,
+            "source_record_id": source_record_id,
+            "evidence_version": metadata_json["evidence_version"],
+            "integrity_digest": record.integrity_digest,
+            "audit_group": metadata_json["audit_group"],
+        },
+    )
     return record
 
 
@@ -548,7 +669,9 @@ def _extract_scale_dimensions(scale_result: ScaleResult) -> dict[str, int]:
     return {
         "total_score": int(round(float(scale_result.total_score or 0) * 10)),
         "risk_score": RISK_SCORE_MAP.get(scale_result.risk_level or "low", 100),
-        "attention_control": int(round(float(radar_scores.get("attention_control", 0)) * 10)),
+        "attention_control": int(
+            round(float(radar_scores.get("attention_control", 0)) * 10)
+        ),
         "hyperactivity": int(round(float(radar_scores.get("hyperactivity", 0)) * 10)),
     }
 
@@ -565,40 +688,72 @@ def _extract_tracking_dimensions(log: TrackingLog) -> dict[str, int]:
     }
 
 
-def _collect_numeric_values(payload: Any) -> list[float]:
-    values: list[float] = []
-    if isinstance(payload, (int, float)):
-        values.append(float(payload))
-        return values
-    if isinstance(payload, dict):
-        for value in payload.values():
-            values.extend(_collect_numeric_values(value))
-    elif isinstance(payload, list):
-        for item in payload:
-            values.extend(_collect_numeric_values(item))
-    return values
-
-
 def _extract_cognitive_dimensions(record: CognitiveTest) -> dict[str, int]:
     payload = record.result_json or {}
-    numeric_values = _collect_numeric_values(payload)
-    bounded = [value for value in numeric_values if math.isfinite(value)]
+    metrics = {
+        **payload,
+        **(payload.get("raw_result") or {}),
+        **(payload.get("metrics") or {}),
+    }
 
-    mean_value = sum(bounded) / len(bounded) if bounded else 0.0
-    accuracy_candidates = [value for value in bounded if 0 <= value <= 1]
-    latency_candidates = [value for value in bounded if value > 1]
+    def number(names):
+        for name in names:
+            value = metrics.get(name)
+            if (
+                isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                and math.isfinite(value)
+            ):
+                return float(value)
+        return None
 
+    accuracy = number(
+        ["accuracy_pct", "accuracy_percent", "accuracy", "overall_accuracy"]
+    )
+    if accuracy is None:
+        correct = number(["correct_trials", "correct_count", "correct"])
+        total = number(["total_trials", "total_count", "total"])
+        accuracy = (
+            100 * correct / total
+            if correct is not None and total and 0 <= correct <= total
+            else 0
+        )
+    elif 0 <= accuracy <= 1 and not any(
+        k in metrics for k in ("accuracy_pct", "accuracy_percent")
+    ):
+        accuracy *= 100
+    latency = number(
+        [
+            "mean_rt_ms",
+            "avg_rt_ms",
+            "mean_reaction_time_ms",
+            "average_reaction_time_ms",
+            "reaction_time_ms",
+            "average_reaction_time",
+            "mean_rt",
+            "avgReactionTime",
+        ]
+    )
+    if latency is None:
+        seconds = number(["mean_rt_seconds", "reaction_time_seconds"])
+        latency = seconds * 1000 if seconds is not None else 0
+    performance = number(["performance_score", "normalized_score", "score"])
     return {
-        "performance_score": int(round(mean_value * 100)),
-        "accuracy_score": int(round((max(accuracy_candidates) if accuracy_candidates else 0.0) * 100)),
-        "latency_score": int(round(min(latency_candidates) if latency_candidates else 0.0)),
+        "performance_score": int(round(max(0, performance or 0))),
+        "accuracy_score": int(round(max(0, min(100, accuracy)))),
+        "latency_score": int(round(max(0, latency or 0))),
     }
 
 
-def capture_scale_result_cipher(db: Session, patient: Patient, scale_result: ScaleResult) -> SecurityCipherRecord | None:
+def capture_scale_result_cipher(
+    db: Session, patient: Patient, scale_result: ScaleResult
+) -> SecurityCipherRecord | None:
     user_key = db.scalar(
         select(SecurityUserKey)
-        .where(SecurityUserKey.patient_id == patient.id, SecurityUserKey.is_active.is_(True))
+        .where(
+            SecurityUserKey.patient_id == patient.id,
+            SecurityUserKey.is_active.is_(True),
+        )
         .order_by(SecurityUserKey.id.desc())
     )
     if user_key is None:
@@ -618,16 +773,23 @@ def capture_scale_result_cipher(db: Session, patient: Patient, scale_result: Sca
         time_bucket=f"scale-{scale_result.id}",
         metadata_json={
             "scale_type": scale_result.scale_type,
-            "created_at": scale_result.created_at.isoformat() if scale_result.created_at else None,
+            "created_at": scale_result.created_at.isoformat()
+            if scale_result.created_at
+            else None,
         },
         dimension_values=_extract_scale_dimensions(scale_result),
     )
 
 
-def capture_tracking_log_cipher(db: Session, patient: Patient, log: TrackingLog) -> SecurityCipherRecord | None:
+def capture_tracking_log_cipher(
+    db: Session, patient: Patient, log: TrackingLog
+) -> SecurityCipherRecord | None:
     user_key = db.scalar(
         select(SecurityUserKey)
-        .where(SecurityUserKey.patient_id == patient.id, SecurityUserKey.is_active.is_(True))
+        .where(
+            SecurityUserKey.patient_id == patient.id,
+            SecurityUserKey.is_active.is_(True),
+        )
         .order_by(SecurityUserKey.id.desc())
     )
     if user_key is None:
@@ -653,10 +815,15 @@ def capture_tracking_log_cipher(db: Session, patient: Patient, log: TrackingLog)
     )
 
 
-def capture_cognitive_test_cipher(db: Session, patient: Patient, record: CognitiveTest) -> SecurityCipherRecord | None:
+def capture_cognitive_test_cipher(
+    db: Session, patient: Patient, record: CognitiveTest
+) -> SecurityCipherRecord | None:
     user_key = db.scalar(
         select(SecurityUserKey)
-        .where(SecurityUserKey.patient_id == patient.id, SecurityUserKey.is_active.is_(True))
+        .where(
+            SecurityUserKey.patient_id == patient.id,
+            SecurityUserKey.is_active.is_(True),
+        )
         .order_by(SecurityUserKey.id.desc())
     )
     if user_key is None:
@@ -683,28 +850,40 @@ def capture_cognitive_test_cipher(db: Session, patient: Patient, record: Cogniti
 
 
 def _backfill_existing_cipher_records(db: Session) -> None:
+    captured = set(
+        db.execute(
+            select(
+                SecurityCipherRecord.source_type, SecurityCipherRecord.source_record_id
+            )
+        ).all()
+    )
     patients = db.scalars(select(Patient)).all()
     for patient in patients:
         scale_results = db.scalars(
             select(ScaleResult).where(ScaleResult.patient_id == patient.id)
         ).all()
         for item in scale_results:
-            capture_scale_result_cipher(db, patient, item)
+            if ("scale", item.id) not in captured:
+                capture_scale_result_cipher(db, patient, item)
 
         cognitive_tests = db.scalars(
             select(CognitiveTest).where(CognitiveTest.patient_id == patient.id)
         ).all()
         for item in cognitive_tests:
-            capture_cognitive_test_cipher(db, patient, item)
+            if ("cognitive", item.id) not in captured:
+                capture_cognitive_test_cipher(db, patient, item)
 
         tracking_logs = db.scalars(
             select(TrackingLog).where(TrackingLog.patient_id == patient.id)
         ).all()
         for item in tracking_logs:
-            capture_tracking_log_cipher(db, patient, item)
+            if ("tracking", item.id) not in captured:
+                capture_tracking_log_cipher(db, patient, item)
 
 
-def sync_security_runtime_entities(db: Session, *, actor_user_id: int | None = None) -> None:
+def sync_security_runtime_entities(
+    db: Session, *, actor_user_id: int | None = None
+) -> None:
     patients = db.scalars(select(Patient)).all()
     for patient in patients:
         ensure_patient_security_assignment(db, patient, actor_user_id=actor_user_id)
@@ -736,22 +915,36 @@ def build_security_status(db: Session) -> dict[str, Any]:
     }
 
 
-def list_key_assignments(db: Session) -> list[dict[str, Any]]:
-    users = db.scalars(select(User).order_by(User.created_at.desc())).all()
+def list_key_assignments(db: Session, actor: User) -> list[dict[str, Any]]:
+    assigned = db.scalars(
+        select(SecurityPatientAssignment.patient_user_id).where(
+            SecurityPatientAssignment.assigned_dac_user_id == actor.id,
+            SecurityPatientAssignment.assignment_status == "active",
+        )
+    ).all()
+    users = db.scalars(
+        select(User)
+        .where(User.id.in_([actor.id, *assigned]))
+        .order_by(User.created_at.desc())
+    ).all()
     items: list[dict[str, Any]] = []
     for user in users:
         key_record = db.scalar(
             select(SecurityUserKey)
-            .where(SecurityUserKey.user_id == user.id, SecurityUserKey.is_active.is_(True))
+            .where(
+                SecurityUserKey.user_id == user.id, SecurityUserKey.is_active.is_(True)
+            )
             .order_by(SecurityUserKey.id.desc())
         )
         patient = db.scalar(select(Patient).where(Patient.user_id == user.id))
         items.append(
             {
                 "user_id": user.id,
-                "full_name": user.full_name,
-                "email": user.email,
-                "staff_id": user.staff_id,
+                "full_name": patient_alias(patient.id)
+                if patient
+                else "DAC-" + str(user.id),
+                "email": "身份信息已隔离",
+                "staff_id": None,
                 "role": user.role.value,
                 "subrole": user.subrole.value if user.subrole else None,
                 "patient_id": patient.id if patient else None,
@@ -766,7 +959,9 @@ def list_key_assignments(db: Session) -> list[dict[str, Any]]:
 
 def list_mcs_nodes(db: Session) -> list[dict[str, Any]]:
     nodes = db.scalars(
-        select(SecurityMcsNode).order_by(SecurityMcsNode.created_at.asc(), SecurityMcsNode.id.asc())
+        select(SecurityMcsNode).order_by(
+            SecurityMcsNode.created_at.asc(), SecurityMcsNode.id.asc()
+        )
     ).all()
     return [
         {
@@ -782,30 +977,44 @@ def list_mcs_nodes(db: Session) -> list[dict[str, Any]]:
     ]
 
 
-def list_patient_assignments(db: Session) -> list[dict[str, Any]]:
+def list_patient_assignments(db: Session, actor: User) -> list[dict[str, Any]]:
     assignments = db.scalars(
         select(SecurityPatientAssignment)
-        .order_by(SecurityPatientAssignment.updated_at.desc(), SecurityPatientAssignment.id.desc())
+        .where(SecurityPatientAssignment.assigned_dac_user_id == actor.id)
+        .order_by(
+            SecurityPatientAssignment.updated_at.desc(),
+            SecurityPatientAssignment.id.desc(),
+        )
     ).all()
 
     items: list[dict[str, Any]] = []
     for assignment in assignments:
         patient = db.get(Patient, assignment.patient_id)
-        dac_user = db.get(User, assignment.assigned_dac_user_id) if assignment.assigned_dac_user_id else None
-        mcs_node = db.get(SecurityMcsNode, assignment.assigned_mcs_node_id) if assignment.assigned_mcs_node_id else None
+        dac_user = (
+            db.get(User, assignment.assigned_dac_user_id)
+            if assignment.assigned_dac_user_id
+            else None
+        )
+        mcs_node = (
+            db.get(SecurityMcsNode, assignment.assigned_mcs_node_id)
+            if assignment.assigned_mcs_node_id
+            else None
+        )
         items.append(
             {
                 "id": assignment.id,
                 "patient_id": assignment.patient_id,
-                "patient_name": patient.user.full_name if patient and patient.user else None,
+                "patient_name": patient_alias(patient.id) if patient else None,
                 "patient_user_id": assignment.patient_user_id,
                 "assigned_dac_user_id": assignment.assigned_dac_user_id,
-                "assigned_dac_name": dac_user.full_name if dac_user else None,
+                "assigned_dac_name": "DAC-" + str(dac_user.id) if dac_user else None,
                 "assigned_mcs_node_id": assignment.assigned_mcs_node_id,
                 "assigned_mcs_node_code": mcs_node.node_code if mcs_node else None,
                 "assignment_status": assignment.assignment_status,
                 "assignment_version": assignment.assignment_version,
-                "updated_at": assignment.updated_at.isoformat() if assignment.updated_at else None,
+                "updated_at": assignment.updated_at.isoformat()
+                if assignment.updated_at
+                else None,
             }
         )
     return items
@@ -813,20 +1022,38 @@ def list_patient_assignments(db: Session) -> list[dict[str, Any]]:
 
 def build_patient_security_overview(db: Session, patient_id: int) -> dict[str, Any]:
     assignment = db.scalar(
-        select(SecurityPatientAssignment).where(SecurityPatientAssignment.patient_id == patient_id)
+        select(SecurityPatientAssignment).where(
+            SecurityPatientAssignment.patient_id == patient_id
+        )
     )
     patient = db.get(Patient, patient_id)
-    dac_user = db.get(User, assignment.assigned_dac_user_id) if assignment and assignment.assigned_dac_user_id else None
-    mcs_node = db.get(SecurityMcsNode, assignment.assigned_mcs_node_id) if assignment and assignment.assigned_mcs_node_id else None
+    dac_user = (
+        db.get(User, assignment.assigned_dac_user_id)
+        if assignment and assignment.assigned_dac_user_id
+        else None
+    )
+    mcs_node = (
+        db.get(SecurityMcsNode, assignment.assigned_mcs_node_id)
+        if assignment and assignment.assigned_mcs_node_id
+        else None
+    )
 
     records = db.scalars(
         select(SecurityCipherRecord)
         .where(SecurityCipherRecord.patient_id == patient_id)
-        .order_by(SecurityCipherRecord.created_at.desc(), SecurityCipherRecord.id.desc())
+        .order_by(
+            SecurityCipherRecord.created_at.desc(), SecurityCipherRecord.id.desc()
+        )
     ).all()
     cipher_source_counts: dict[str, int] = {}
+    audit_groups: dict[str, list[str]] = {}
     for record in records:
-        cipher_source_counts[record.source_type] = cipher_source_counts.get(record.source_type, 0) + 1
+        cipher_source_counts[record.source_type] = (
+            cipher_source_counts.get(record.source_type, 0) + 1
+        )
+        group = _audit_group_from_metadata(record.source_type, record.metadata_json)
+        if group not in audit_groups.setdefault(record.source_type, []):
+            audit_groups[record.source_type].append(group)
 
     latest_temporal_audit = db.scalar(
         select(SecurityAuditTask)
@@ -860,20 +1087,35 @@ def build_patient_security_overview(db: Session, patient_id: int) -> dict[str, A
         "cipher_record_count": len(records),
         "has_cipher_records": bool(records),
         "cipher_source_counts": cipher_source_counts,
-        "latest_temporal_audit_id": latest_temporal_audit.id if latest_temporal_audit else None,
-        "latest_temporal_audit_status": latest_temporal_audit.status if latest_temporal_audit else None,
-        "latest_temporal_audit_passed": latest_temporal_audit.verification_passed if latest_temporal_audit else None,
-        "latest_temporal_audit_source_type": latest_temporal_audit.source_type if latest_temporal_audit else None,
-        "latest_temporal_audit_completed_at": latest_temporal_audit.completed_at.isoformat() if latest_temporal_audit and latest_temporal_audit.completed_at else None,
-        "patient_name": patient.user.full_name if patient and patient.user else None,
+        "audit_groups": audit_groups,
+        "latest_temporal_audit_id": latest_temporal_audit.id
+        if latest_temporal_audit
+        else None,
+        "latest_temporal_audit_status": latest_temporal_audit.status
+        if latest_temporal_audit
+        else None,
+        "latest_temporal_audit_passed": latest_temporal_audit.verification_passed
+        if latest_temporal_audit
+        else None,
+        "latest_temporal_audit_source_type": latest_temporal_audit.source_type
+        if latest_temporal_audit
+        else None,
+        "latest_temporal_audit_completed_at": latest_temporal_audit.completed_at.isoformat()
+        if latest_temporal_audit and latest_temporal_audit.completed_at
+        else None,
+        "patient_name": patient_alias(patient.id) if patient else None,
     }
 
 
-def list_patient_cipher_records(db: Session, patient_id: int, source_type: str | None = None) -> list[dict[str, Any]]:
+def list_patient_cipher_records(
+    db: Session, patient_id: int, source_type: str | None = None
+) -> list[dict[str, Any]]:
     stmt = (
         select(SecurityCipherRecord)
         .where(SecurityCipherRecord.patient_id == patient_id)
-        .order_by(SecurityCipherRecord.created_at.desc(), SecurityCipherRecord.id.desc())
+        .order_by(
+            SecurityCipherRecord.created_at.desc(), SecurityCipherRecord.id.desc()
+        )
     )
     if source_type:
         stmt = stmt.where(SecurityCipherRecord.source_type == source_type)
@@ -898,9 +1140,12 @@ def list_patient_cipher_records(db: Session, patient_id: int, source_type: str |
     ]
 
 
-def list_recent_audits(db: Session, limit: int = 12) -> list[dict[str, Any]]:
+def list_recent_audits(
+    db: Session, actor: User, limit: int = 12
+) -> list[dict[str, Any]]:
     tasks = db.scalars(
         select(SecurityAuditTask)
+        .where(SecurityAuditTask.requested_by_user_id == actor.id)
         .order_by(SecurityAuditTask.created_at.desc(), SecurityAuditTask.id.desc())
         .limit(limit)
     ).all()
@@ -920,15 +1165,28 @@ def list_recent_audits(db: Session, limit: int = 12) -> list[dict[str, Any]]:
                 "verification_details": task.verification_details_json,
                 "decrypted_stats": task.decrypted_stats_json,
                 "created_at": task.created_at.isoformat() if task.created_at else None,
-                "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+                "completed_at": task.completed_at.isoformat()
+                if task.completed_at
+                else None,
             }
         )
     return items
 
 
-def list_recent_audit_logs(db: Session, limit: int = 20) -> list[dict[str, Any]]:
+def list_recent_audit_logs(
+    db: Session, actor: User, limit: int = 20
+) -> list[dict[str, Any]]:
     logs = db.scalars(
         select(SecurityAuditLog)
+        .where(
+            (SecurityAuditLog.actor_user_id == actor.id)
+            | SecurityAuditLog.patient_id.in_(
+                select(SecurityPatientAssignment.patient_id).where(
+                    SecurityPatientAssignment.assigned_dac_user_id == actor.id,
+                    SecurityPatientAssignment.assignment_status == "active",
+                )
+            )
+        )
         .order_by(SecurityAuditLog.created_at.desc(), SecurityAuditLog.id.desc())
         .limit(limit)
     ).all()
@@ -942,13 +1200,23 @@ def list_recent_audit_logs(db: Session, limit: int = 20) -> list[dict[str, Any]]
             "status": log.status,
             "message": log.message,
             "detail": log.detail_json,
+            "previous_hash": log.previous_hash,
+            "entry_hash": log.entry_hash,
             "created_at": log.created_at.isoformat() if log.created_at else None,
         }
         for log in logs
     ]
 
 
-def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, requester: User) -> SecurityAuditTask:
+def run_temporal_audit(
+    db: Session,
+    *,
+    patient_id: int,
+    source_type: str,
+    requester: User,
+    audit_group: str | None = None,
+) -> SecurityAuditTask:
+    _assert_dac(requester)
     config = _ensure_system_ready(get_security_config(db))
     profile = _load_profile(config, source_type)
     paillier = _load_paillier_params(config)
@@ -975,7 +1243,13 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
         .order_by(SecurityCipherRecord.time_bucket.asc(), SecurityCipherRecord.id.asc())
     ).all()
     if not records:
-        raise ValueError("No encrypted records found for the selected patient and source type.")
+        raise ValueError(
+            "No encrypted records found for the selected patient and source type."
+        )
+    all_versions = _select_audit_group(records, audit_group)
+    records = _latest_versions(all_versions)
+    if len(records) > profile["max_records"]:
+        raise ValueError("Too many records for configured aggregate bounds.")
 
     task = SecurityAuditTask(
         patient_id=patient_id,
@@ -1010,7 +1284,7 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
     nsquare = paillier["n"] * paillier["n"]
     aggregate_cipher = 1
     audit_secret = config.secret_params_json["audit_secret"]
-    verification_issues: list[str] = []
+    verification_issues: list[str] = _verify_evidence(db, all_versions, audit_secret)
 
     for record in records:
         expected_digest = _hmac_digest(
@@ -1027,7 +1301,12 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
         )
         if expected_digest != record.integrity_digest:
             verification_issues.append(f"Record {record.id} integrity digest mismatch.")
-        aggregate_cipher = (aggregate_cipher * int(record.encrypted_payload)) % nsquare
+        try:
+            aggregate_cipher = (
+                aggregate_cipher * int(record.encrypted_payload)
+            ) % nsquare
+        except (ValueError, TypeError):
+            verification_issues.append(f"Record {record.id}: invalid ciphertext.")
 
     task.aggregate_ciphertext = str(aggregate_cipher)
     task.aggregate_digest = _hmac_digest(
@@ -1045,11 +1324,20 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
 
     recomputed_cipher = 1
     for record in records:
-        recomputed_cipher = (recomputed_cipher * int(record.encrypted_payload)) % nsquare
+        try:
+            recomputed_cipher = (
+                recomputed_cipher * int(record.encrypted_payload)
+            ) % nsquare
+        except (ValueError, TypeError):
+            pass
 
-    verification_passed = not verification_issues and recomputed_cipher == aggregate_cipher
+    verification_passed = (
+        not verification_issues and recomputed_cipher == aggregate_cipher
+    )
     if recomputed_cipher != aggregate_cipher:
-        verification_issues.append("Aggregate ciphertext mismatch during DAC recomputation.")
+        verification_issues.append(
+            "Aggregate ciphertext mismatch during DAC recomputation."
+        )
 
     packed_total = _decrypt_with_paillier(
         paillier["n"],
@@ -1057,14 +1345,26 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
         paillier["mu"],
         aggregate_cipher,
     )
-    decrypted_stats = _unpack_aggregate(profile, packed_total, len(records))
+    decrypted_stats = (
+        _unpack_aggregate(profile, packed_total, len(records))
+        if verification_passed
+        else {}
+    )
 
     task.verification_passed = verification_passed
     task.verification_details_json = {
         "record_count": len(records),
-        "verified_record_ids": [record.id for record in records],
+        "verified_record_ids": [record.id for record in records]
+        if verification_passed
+        else [],
+        "checked_record_ids": [record.id for record in records],
         "issues": verification_issues,
         "integrity_verified": not verification_issues,
+        "source_binding_verified": not verification_issues,
+        "historical_evidence_count": len(all_versions),
+        "audit_group": _audit_group_from_metadata(
+            source_type, records[0].metadata_json
+        ),
         "aggregate_verified": recomputed_cipher == aggregate_cipher,
         "mcs_node_id": assignment.assigned_mcs_node_id,
     }
@@ -1074,6 +1374,9 @@ def run_temporal_audit(db: Session, *, patient_id: int, source_type: str, reques
         "record_count": len(records),
         "time_buckets": [record.time_bucket for record in records],
         "stats": decrypted_stats,
+        "audit_group": _audit_group_from_metadata(
+            source_type, records[0].metadata_json
+        ),
     }
     task.status = "completed" if verification_passed else "failed"
     task.completed_at = _utcnow()
@@ -1104,7 +1407,9 @@ def run_spatial_audit(
     patient_ids: list[int],
     source_type: str,
     requester: User,
+    audit_group: str | None = None,
 ) -> SecurityAuditTask:
+    _assert_dac(requester)
     config = _ensure_system_ready(get_security_config(db))
     profile = _load_profile(config, source_type)
     paillier = _load_paillier_params(config)
@@ -1124,7 +1429,9 @@ def run_spatial_audit(
         if assignment is None:
             raise ValueError(f"Patient {patient_id} has no active DAC/MCS assignment.")
         if assignment.assigned_dac_user_id != requester.id:
-            raise ValueError(f"Patient {patient_id} is not assigned to the current DAC auditor.")
+            raise ValueError(
+                f"Patient {patient_id} is not assigned to the current DAC auditor."
+            )
         if assignment.assigned_mcs_node_id is None:
             raise ValueError(f"Patient {patient_id} has no assigned local MCS node.")
         selected_patient_ids.append(patient_id)
@@ -1134,28 +1441,35 @@ def run_spatial_audit(
         raise ValueError("No patients selected for spatial aggregation audit.")
 
     mcs_node_id = assignments[0].assigned_mcs_node_id
-    if any(assignment.assigned_mcs_node_id != mcs_node_id for assignment in assignments):
-        raise ValueError("All selected patients must be routed to the same local MCS node.")
-
-    records: list[SecurityCipherRecord] = []
-    missing_patient_ids: list[int] = []
-    for patient_id in selected_patient_ids:
-        record = db.scalar(
-            select(SecurityCipherRecord)
-            .where(
-                SecurityCipherRecord.patient_id == patient_id,
-                SecurityCipherRecord.source_type == source_type,
-                SecurityCipherRecord.mcs_node_id == mcs_node_id,
-            )
-            .order_by(SecurityCipherRecord.created_at.desc(), SecurityCipherRecord.id.desc())
+    if any(
+        assignment.assigned_mcs_node_id != mcs_node_id for assignment in assignments
+    ):
+        raise ValueError(
+            "All selected patients must be routed to the same local MCS node."
         )
-        if record is None:
-            missing_patient_ids.append(patient_id)
-            continue
-        records.append(record)
 
-    if not records:
-        raise ValueError("No encrypted records found across the selected patient group.")
+    if len(selected_patient_ids) < 2:
+        raise ValueError("Spatial audit requires at least two authorized patients.")
+    all_versions = db.scalars(
+        select(SecurityCipherRecord).where(
+            SecurityCipherRecord.patient_id.in_(selected_patient_ids),
+            SecurityCipherRecord.source_type == source_type,
+            SecurityCipherRecord.mcs_node_id == mcs_node_id,
+        )
+    ).all()
+    all_versions = _select_audit_group(all_versions, audit_group)
+    current = _latest_versions(all_versions)
+    by_patient = {}
+    for record in sorted(current, key=lambda r: r.id):
+        by_patient[record.patient_id] = record
+    records = [by_patient[i] for i in selected_patient_ids if i in by_patient]
+    missing_patient_ids = [i for i in selected_patient_ids if i not in by_patient]
+    if len(records) < 2:
+        raise ValueError(
+            "At least two patients need records in the selected audit group."
+        )
+    if len(records) > profile["max_records"]:
+        raise ValueError("Too many records for configured aggregate bounds.")
 
     task = SecurityAuditTask(
         patient_id=selected_patient_ids[0],
@@ -1194,7 +1508,7 @@ def run_spatial_audit(
     nsquare = paillier["n"] * paillier["n"]
     aggregate_cipher = 1
     audit_secret = config.secret_params_json["audit_secret"]
-    verification_issues: list[str] = []
+    verification_issues: list[str] = _verify_evidence(db, all_versions, audit_secret)
 
     for record in records:
         expected_digest = _hmac_digest(
@@ -1211,7 +1525,12 @@ def run_spatial_audit(
         )
         if expected_digest != record.integrity_digest:
             verification_issues.append(f"Record {record.id} integrity digest mismatch.")
-        aggregate_cipher = (aggregate_cipher * int(record.encrypted_payload)) % nsquare
+        try:
+            aggregate_cipher = (
+                aggregate_cipher * int(record.encrypted_payload)
+            ) % nsquare
+        except (ValueError, TypeError):
+            verification_issues.append(f"Record {record.id}: invalid ciphertext.")
 
     task.aggregate_ciphertext = str(aggregate_cipher)
     task.aggregate_digest = _hmac_digest(
@@ -1229,11 +1548,20 @@ def run_spatial_audit(
 
     recomputed_cipher = 1
     for record in records:
-        recomputed_cipher = (recomputed_cipher * int(record.encrypted_payload)) % nsquare
+        try:
+            recomputed_cipher = (
+                recomputed_cipher * int(record.encrypted_payload)
+            ) % nsquare
+        except (ValueError, TypeError):
+            pass
 
-    verification_passed = not verification_issues and recomputed_cipher == aggregate_cipher
+    verification_passed = (
+        not verification_issues and recomputed_cipher == aggregate_cipher
+    )
     if recomputed_cipher != aggregate_cipher:
-        verification_issues.append("Aggregate ciphertext mismatch during DAC recomputation.")
+        verification_issues.append(
+            "Aggregate ciphertext mismatch during DAC recomputation."
+        )
 
     packed_total = _decrypt_with_paillier(
         paillier["n"],
@@ -1241,16 +1569,28 @@ def run_spatial_audit(
         paillier["mu"],
         aggregate_cipher,
     )
-    decrypted_stats = _unpack_aggregate(profile, packed_total, len(records))
+    decrypted_stats = (
+        _unpack_aggregate(profile, packed_total, len(records))
+        if verification_passed
+        else {}
+    )
 
     task.verification_passed = verification_passed
     task.verification_details_json = {
         "selected_patient_ids": selected_patient_ids,
         "missing_patient_ids": missing_patient_ids,
         "record_count": len(records),
-        "verified_record_ids": [record.id for record in records],
+        "verified_record_ids": [record.id for record in records]
+        if verification_passed
+        else [],
+        "checked_record_ids": [record.id for record in records],
         "issues": verification_issues,
         "integrity_verified": not verification_issues,
+        "source_binding_verified": not verification_issues,
+        "historical_evidence_count": len(all_versions),
+        "audit_group": _audit_group_from_metadata(
+            source_type, records[0].metadata_json
+        ),
         "aggregate_verified": recomputed_cipher == aggregate_cipher,
         "mcs_node_id": mcs_node_id,
     }
@@ -1262,6 +1602,9 @@ def run_spatial_audit(
         "record_count": len(records),
         "mcs_node_id": mcs_node_id,
         "stats": decrypted_stats,
+        "audit_group": _audit_group_from_metadata(
+            source_type, records[0].metadata_json
+        ),
     }
     task.status = "completed" if verification_passed else "failed"
     task.completed_at = _utcnow()
@@ -1284,3 +1627,336 @@ def run_spatial_audit(
     db.commit()
     db.refresh(task)
     return task
+
+
+def _chain_tag(log_id, last_hash: str) -> str:
+    return hmac.new(
+        scoped_key("audit-log"),
+        _json_dumps({"log_id": log_id, "last_hash": last_hash}).encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _log_hash(log: SecurityAuditLog) -> str:
+    timestamp = log.created_at.replace(tzinfo=timezone.utc).isoformat()
+    payload = {
+        "id": log.id,
+        "previous_hash": log.previous_hash,
+        "task": log.audit_task_id,
+        "patient": log.patient_id,
+        "actor": log.actor_user_id,
+        "action": log.action,
+        "status": log.status,
+        "message": log.message,
+        "detail": log.detail_json,
+        "created_at": timestamp,
+    }
+    return hmac.new(
+        scoped_key("audit-log"), _json_dumps(payload).encode(), hashlib.sha256
+    ).hexdigest()
+
+
+def verify_audit_log_chain(db: Session) -> dict[str, Any]:
+    logs = db.scalars(select(SecurityAuditLog).order_by(SecurityAuditLog.id)).all()
+    previous = "GENESIS"
+    issues = []
+    legacy = []
+    last_id = None
+    for log in logs:
+        if not log.entry_hash:
+            legacy.append(log.id)
+            continue
+        if log.previous_hash != previous or not hmac.compare_digest(
+            log.entry_hash, _log_hash(log)
+        ):
+            issues.append(log.id)
+        previous = log.entry_hash
+        last_id = log.id
+    head = db.get(SecurityLogChainHead, 1)
+    config = get_security_config(db)
+    initialized_v2 = bool(config and config.is_initialized)
+    head_valid = (head is None and last_id is None and not initialized_v2) or (
+        head is not None
+        and head.last_log_id == last_id
+        and head.last_hash == previous
+        and hmac.compare_digest(
+            head.state_tag, _chain_tag(head.last_log_id, head.last_hash)
+        )
+    )
+    return {
+        "verified": not issues and head_valid,
+        "checked_records": len(logs) - len(legacy),
+        "invalid_record_ids": issues,
+        "legacy_unprotected_ids": legacy,
+        "head_verified": head_valid,
+    }
+
+
+def patient_alias(patient_id: int) -> str:
+    alias = (
+        hmac.new(scoped_key("patient-alias"), str(patient_id).encode(), hashlib.sha256)
+        .hexdigest()[:12]
+        .upper()
+    )
+    return "P-" + alias
+
+
+def _source_record(db: Session, source_type: str, source_id: int):
+    model = {"scale": ScaleResult, "cognitive": CognitiveTest, "tracking": TrackingLog}[
+        source_type
+    ]
+    return db.get(model, source_id, populate_existing=True)
+
+
+def _source_digest(source) -> str:
+    if source is None:
+        return ""
+    from sqlalchemy import inspect as orm_inspect
+
+    payload = {}
+    for column in orm_inspect(type(source)).columns:
+        value = getattr(source, column.name)
+        if isinstance(value, datetime):
+            value = value.replace(tzinfo=timezone.utc).isoformat()
+        payload[column.name] = value
+    return _hash_text(_json_dumps(payload))
+
+
+def _latest_versions(records):
+    latest = {}
+    for record in records:
+        key = (record.patient_id, record.source_type, record.source_record_id)
+        if key not in latest or record.id > latest[key].id:
+            latest[key] = record
+    return sorted(latest.values(), key=lambda r: (r.time_bucket, r.id))
+
+
+def _verify_evidence(db: Session, records, audit_secret: str) -> list[str]:
+    issues = []
+    chain = verify_audit_log_chain(db)
+    if not chain["verified"]:
+        issues.append("Audit log chain integrity failed.")
+    patient_ids = {r.patient_id for r in records}
+    source_types = {r.source_type for r in records}
+    manifest = db.scalars(
+        select(SecurityAuditLog).where(
+            SecurityAuditLog.action == "evidence_append",
+            SecurityAuditLog.patient_id.in_(patient_ids),
+        )
+    ).all()
+    for entry in manifest:
+        detail = entry.detail_json or {}
+        if not entry.entry_hash or detail.get("source_type") not in source_types:
+            continue
+        saved = db.get(SecurityCipherRecord, detail.get("record_id"))
+        if saved is None:
+            issues.append(f"Evidence append {entry.id}: referenced record missing.")
+        elif (
+            saved.patient_id != entry.patient_id
+            or saved.source_type != detail.get("source_type")
+            or (saved.metadata_json or {}).get("evidence_version")
+            != detail.get("evidence_version")
+            or (
+                detail.get("integrity_digest")
+                and not hmac.compare_digest(
+                    saved.integrity_digest, detail["integrity_digest"]
+                )
+            )
+        ):
+            issues.append(f"Evidence append {entry.id}: history anchor mismatch.")
+    latest_ids = {r.id for r in _latest_versions(records)}
+    by_id = {r.id: r for r in records}
+    for record in records:
+        metadata = record.metadata_json or {}
+        expected = _hmac_digest(
+            audit_secret,
+            _record_digest_payload(
+                patient_id=record.patient_id,
+                source_type=record.source_type,
+                source_record_id=record.source_record_id,
+                time_bucket=record.time_bucket,
+                encrypted_payload=record.encrypted_payload,
+                key_fingerprint=record.key_fingerprint,
+                metadata_json=metadata,
+            ),
+        )
+        if not hmac.compare_digest(expected, record.integrity_digest):
+            issues.append(f"Record {record.id}: digest mismatch.")
+        if not metadata.get("source_digest"):
+            issues.append(f"Record {record.id}: legacy evidence has no source binding.")
+            continue
+        if (
+            metadata.get("patient_assignment_id") != record.patient_assignment_id
+            or metadata.get("mcs_node_id") != record.mcs_node_id
+            or metadata.get("dimension_labels") != record.dimension_labels_json
+            or metadata.get("cipher_version") != record.cipher_version
+        ):
+            issues.append(f"Record {record.id}: evidence context mismatch.")
+        previous_id = metadata.get("supersedes_record_id")
+        if previous_id:
+            previous = by_id.get(previous_id)
+            if (
+                not previous
+                or metadata.get("previous_integrity_digest")
+                != previous.integrity_digest
+            ):
+                issues.append(f"Record {record.id}: evidence history mismatch.")
+        try:
+            number = int(record.encrypted_payload)
+            if number <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            issues.append(f"Record {record.id}: invalid ciphertext.")
+        if record.id in latest_ids:
+            try:
+                source = _source_record(db, record.source_type, record.source_record_id)
+            except Exception:
+                issues.append(f"Record {record.id}: source authentication failed.")
+                continue
+            if (
+                source is None
+                or source.patient_id != record.patient_id
+                or _source_digest(source) != metadata["source_digest"]
+            ):
+                issues.append(f"Record {record.id}: source changed or missing.")
+    return issues
+
+
+def _assert_dac(requester: User) -> None:
+    if requester.role != UserRole.RESEARCHER or requester.subrole != UserSubrole.DAC:
+        raise ValueError("DAC permission required.")
+
+
+def _audit_group_from_metadata(source_type: str, metadata: dict) -> str:
+    if source_type == "scale":
+        return "scale:" + str(metadata.get("scale_type", "unknown"))
+    if source_type == "cognitive":
+        return (
+            "cognitive:"
+            + str(
+                metadata.get(
+                    "canonical_test_type", metadata.get("test_type", "unknown")
+                )
+            )
+            + "|"
+            + str(metadata.get("protocol_key", "unknown|legacy-unversioned|0|unknown"))
+        )
+    return "tracking:v1"
+
+
+def _select_audit_group(records, audit_group):
+    groups = {
+        _audit_group_from_metadata(r.source_type, r.metadata_json) for r in records
+    }
+    if not records:
+        raise ValueError("No encrypted records in the selected audit group.")
+    if audit_group is None:
+        if len(groups) > 1:
+            raise ValueError(
+                "Multiple scales or cognitive protocols found. Select one audit group before aggregation."
+            )
+        return records
+    selected = [
+        r
+        for r in records
+        if _audit_group_from_metadata(r.source_type, r.metadata_json) == audit_group
+    ]
+    if not selected:
+        raise ValueError("No encrypted records in the selected audit group.")
+    return selected
+
+
+def _ensure_log_chain_head(db: Session) -> None:
+    if db.get(SecurityLogChainHead, 1) is not None:
+        return
+    config = get_security_config(db)
+    protected = db.scalar(
+        select(SecurityAuditLog.id)
+        .where(SecurityAuditLog.entry_hash.is_not(None))
+        .limit(1)
+    )
+    if protected is not None or (config and config.is_initialized):
+        raise ValueError(
+            "Audit chain anchor is missing. Restore the backed-up anchor; do not silently create a new chain."
+        )
+    db.add(
+        SecurityLogChainHead(
+            id=1, last_hash="GENESIS", state_tag=_chain_tag(None, "GENESIS")
+        )
+    )
+    db.flush()
+
+
+def migrate_legacy_audit_anchor(db: Session) -> None:
+    """Establish an explicit baseline only for pre-chain, authenticated legacy configuration."""
+    config = get_security_config(db)
+    if not config or not config.is_initialized:
+        return
+    secrets_json = config.secret_params_json or {}
+    if db.get(SecurityLogChainHead, 1) is not None:
+        if not secrets_json.get("audit_log_chain_version") or not secrets_json.get(
+            "public_config_digest"
+        ):
+            config.secret_params_json = {
+                **secrets_json,
+                "audit_log_chain_version": 1,
+                "public_config_digest": _security_config_digest(config),
+            }
+            db.flush()
+        return
+    protected = db.scalar(
+        select(SecurityAuditLog.id)
+        .where(SecurityAuditLog.entry_hash.is_not(None))
+        .limit(1)
+    )
+    v2_evidence = db.scalar(
+        select(SecurityCipherRecord.id)
+        .where(SecurityCipherRecord.cipher_version == SECURITY_SCHEME_VERSION)
+        .limit(1)
+    )
+    if (
+        secrets_json.get("audit_log_chain_version")
+        or protected is not None
+        or v2_evidence is not None
+    ):
+        raise ValueError(
+            "Protected audit anchor is missing; restore it instead of resetting history."
+        )
+    config.secret_params_json = {
+        **secrets_json,
+        "audit_log_chain_version": 1,
+        "public_config_digest": _security_config_digest(config),
+    }
+    db.add(
+        SecurityLogChainHead(
+            id=1, last_hash="GENESIS", state_tag=_chain_tag(None, "GENESIS")
+        )
+    )
+    db.flush()
+    _append_audit_log(
+        db,
+        action="legacy_log_baseline",
+        status="success",
+        message="旧日志保留为历史资料，认证链从本次迁移开始。",
+        detail_json={
+            "legacy_unprotected_count": db.scalar(
+                select(func.count(SecurityAuditLog.id)).where(
+                    SecurityAuditLog.entry_hash.is_(None)
+                )
+            )
+            or 0
+        },
+    )
+
+
+def _security_config_digest(config: SecuritySystemConfig) -> str:
+    payload = {
+        "id": config.id,
+        "system_version": config.system_version,
+        "storage_mode": config.storage_mode,
+        "public_params": config.public_params_json,
+        "profiles": config.profile_params_json,
+    }
+    return hmac.new(
+        scoped_key("security-config"), _json_dumps(payload).encode(), hashlib.sha256
+    ).hexdigest()

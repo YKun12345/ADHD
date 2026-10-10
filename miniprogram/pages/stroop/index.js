@@ -20,8 +20,8 @@ const {
   mergeLatestResult
 } = require('../../utils/cognitive-results')
 const { getTaskConfig } = require('../../utils/cognitive-config')
-const { getSectionState } = require('../../utils/cognitive-experience')
-const { loadCognitiveContext, recordBatteryCompletion, attachProtocolMetadata, goNextBatteryTask } = require('../../utils/cognitive-page-support')
+const { withTaskInstructions } = require('../../utils/cognitive-instructions')
+const { loadCognitiveContext, finishPage, retryPageSync, syncPayload, goNextBatteryTask } = require('../../utils/cognitive-page-support')
 
 const PENDING_STROOP_KEY = 'pending_stroop_result'
 const FEEDBACK_DURATION_MS = 350
@@ -30,7 +30,7 @@ function getColor(key) {
   return COLORS.find((color) => color.key === key) || COLORS[0]
 }
 
-registerPatientPage({
+registerPatientPage(withTaskInstructions('stroop', {
   data: {
     patientName: '患者',
     ageGroup: 'child',
@@ -48,35 +48,19 @@ registerPatientPage({
     currentColorHex: '#17324d',
     feedbackText: '',
     feedbackCorrect: false,
-    breakTitle: '',
-    breakMessage: '',
-    nextSection: 1,
-    totalSections: 1,
     result: null,
     syncStatus: '',
     hasPendingResult: false
   },
 
   onLoad(query) {
-    const user = wx.getStorageSync('current_user') || {}
     this._context = loadCognitiveContext(query)
     this._config = getTaskConfig('stroop', this._context.ageGroup)
-    this._useFullProtocol = Boolean(user.patient_profile && user.patient_profile.patient_type)
-    this._trials = this._useFullProtocol
-      ? buildStroopTrials(this._config.formalTrials, this._config.congruentRatio)
-      : STROOP_TRIALS.slice()
-    const sectionState = getSectionState(
-      0,
-      this._trials.length,
-      this._config.blockSize
-    )
+    this._useFullProtocol = true
+    this._trials = buildStroopTrials(this._config.formalTrials, this._config.congruentRatio)
     this.setData({
-      patientName: user.full_name || '患者',
-      ageGroup: this._context.ageGroup,
-      mode: this._context.mode,
+      ...this._context,
       totalTrials: this._trials.length,
-      nextSection: sectionState.nextSection,
-      totalSections: sectionState.totalSections,
       hasPendingResult: Boolean(wx.getStorageSync(PENDING_STROOP_KEY))
     })
   },
@@ -126,9 +110,10 @@ registerPatientPage({
 
     if (this._useFullProtocol) {
       const lease = capturePatientSessionLease()
+    const generation = this._runGeneration
       this._responseTimer = setTimeout(() => {
         this._responseTimer = null
-        if (!isPatientSessionLeaseCurrent(lease) || this.data.phase !== 'testing') return
+        if (this._disposed || this._hidden || generation !== this._runGeneration || !isPatientSessionLeaseCurrent(lease) || this.data.phase !== 'testing') return
         this._recordTrial(evaluateStroopChoice(trial, null, null), trial)
       }, this._config.responseWindowMs)
     }
@@ -139,7 +124,9 @@ registerPatientPage({
       return
     }
 
-    const selectedKey = event.currentTarget.dataset.key
+    const dataset = event.currentTarget.dataset
+    if (dataset.trial !== undefined && Number(dataset.trial) !== this.data.currentTrialNumber) return
+    const selectedKey = dataset.key
     const trial = this._trials[this.data.currentTrialIndex]
     const record = evaluateStroopChoice(
       trial,
@@ -179,28 +166,12 @@ registerPatientPage({
     })
 
     const lease = capturePatientSessionLease()
+    const generation = this._runGeneration
     this._feedbackTimer = setTimeout(() => {
       this._feedbackTimer = null
-      if (!isPatientSessionLeaseCurrent(lease)) return
+      if (this._disposed || this._hidden || generation !== this._runGeneration || !isPatientSessionLeaseCurrent(lease)) return
       if (completed >= this._trials.length) {
         this._completeTest()
-        return
-      }
-
-      const sectionState = getSectionState(
-        completed,
-        this._trials.length,
-        this._config.blockSize
-      )
-      if (this._useFullProtocol && sectionState.shouldBreak) {
-        this.setData({
-          phase: 'break',
-          running: false,
-          breakTitle: sectionState.title,
-          breakMessage: sectionState.message,
-          nextSection: sectionState.nextSection,
-          totalSections: sectionState.totalSections
-        })
         return
       }
 
@@ -214,101 +185,17 @@ registerPatientPage({
   },
 
   async _completeTest() {
-    this._trials = Array.isArray(this._trials) && this._trials.length
-      ? this._trials
-      : STROOP_TRIALS.slice()
-    const result = summarizeStroopTrials(this._records)
-    if (result.total_trials !== this._trials.length) {
-      return
-    }
-
+    if (this._completionSaved || !Array.isArray(this._records) || this._records.length !== this._config.formalTrials) return
     this._clearFeedbackTimer()
     this._finishedAt = this._finishedAt || new Date().toISOString()
-    const payload = buildStroopPayload(
-      this._records,
-      this._finishedAt,
-      this._useFullProtocol ? this._context : null
-    )
-    if (this._useFullProtocol) attachProtocolMetadata(payload, this._config, this._records.length)
-    const latestResults = mergeLatestResult(
-      wx.getStorageSync(LATEST_RESULTS_KEY),
-      payload
-    )
-    wx.setStorageSync(LATEST_RESULTS_KEY, latestResults)
-    const nextTaskId = recordBatteryCompletion(this._context, 'stroop')
-
-    this.setData({
-      phase: 'result',
-      running: false,
-      progressPercent: 100,
-      result,
-      nextTaskId,
-      syncStatus: '同步中'
-    })
-
-    return this._syncResult(payload)
+    const payload = buildStroopPayload(this._records, this._finishedAt, this._context)
+    this.setData({ progressPercent: 100 })
+    return finishPage(this, 'stroop', payload, PENDING_STROOP_KEY, this._records.length)
   },
 
-  async _syncResult(payload) {
-    if (this.data.submitting || !payload) {
-      return
-    }
-
-    this.setData({
-      submitting: true,
-      syncStatus: '同步中'
-    })
-
-    const lease = capturePatientSessionLease()
-
-    try {
-      await request({
-        url: '/patient/submit_cognitive_test',
-        method: 'POST',
-        data: payload
-      })
-      if (!isPatientSessionLeaseCurrent(lease)) return
-      wx.removeStorageSync(PENDING_STROOP_KEY)
-      this.setData({
-        submitting: false,
-        syncStatus: '已同步',
-        hasPendingResult: false
-      })
-    } catch (error) {
-      if (
-        isPatientSessionError(error) ||
-        !isPatientSessionLeaseCurrent(lease)
-      ) {
-        return
-      }
-      wx.setStorageSync(PENDING_STROOP_KEY, payload)
-      this.setData({
-        submitting: false,
-        syncStatus: '待同步',
-        hasPendingResult: true
-      })
-    }
-  },
-
-  retrySync() {
-    if (this.data.submitting) {
-      return
-    }
-
-    const pendingPayload = wx.getStorageSync(PENDING_STROOP_KEY)
-    const localPayload = buildStroopPayload(
-      this._records,
-      this._finishedAt,
-      this._useFullProtocol ? this._context : null
-    )
-    return this._syncResult(pendingPayload || localPayload)
-  },
-
-  restartTest() {
-    if (!this.data.submitting) {
-      this.startTest()
-    }
-  },
+  _syncResult(payload) { return syncPayload(this, payload, PENDING_STROOP_KEY) },
+  retrySync() { return retryPageSync(this, PENDING_STROOP_KEY) },
+  restartTest() { return this.startTest() },
 
   _clearFeedbackTimer() {
     if (this._feedbackTimer) {
@@ -321,19 +208,6 @@ registerPatientPage({
     }
   },
 
-  continueSection() {
-    if (this.data.phase !== 'break' || this.data.submitting) return
-    const nextIndex = this._records.length
-    this.setData({
-      phase: 'testing',
-      running: true,
-      currentTrialIndex: nextIndex,
-      currentTrialNumber: nextIndex + 1,
-      feedbackText: '',
-      feedbackCorrect: false
-    })
-    this._showTrial()
-  },
 
   onPatientSessionEnded() {
     this._clearFeedbackTimer()
@@ -376,7 +250,7 @@ registerPatientPage({
       delta: 1
     })
   }
-})
+}))
 
 module.exports = {
   PENDING_STROOP_KEY,

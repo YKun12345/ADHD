@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../workspaceRequest.js';
 // viewer.js
 // Main viewer class for fmri and time course data visualization
 
@@ -79,12 +80,13 @@ class MainViewer{
         await this.initializeViewer();
         // Initialize viewer components
         this.initializeComponents();
-        // change DOM elements of upload after successful upload
+        // Wait for initial requests before another upload may clear this workspace.
+        await Promise.all([
+            this.viewer.initPlot(),
+            this.timecourse.initPlot(),
+            this.correlate.ready
+        ]);
         this.afterUpload();
-        // plot fmri data
-        this.viewer.initPlot();
-        // plot time course data
-        this.timecourse.initPlot();
     }
 
     /**
@@ -532,7 +534,7 @@ class MainViewer{
         // Set listener to refresh page when user clicks reupload files
         uploadButton.addEventListener("click", async() => {
             // clear cache
-            await fetch(API_ENDPOINTS.CLEAR_CACHE, {
+            await workspaceFetch(API_ENDPOINTS.CLEAR_CACHE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
