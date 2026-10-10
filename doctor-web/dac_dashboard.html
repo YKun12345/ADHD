@@ -514,6 +514,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="css/account-profile.css?v=20261010c">
 </head>
 <body class="dac-page">
     <nav class="navbar">
@@ -539,10 +540,10 @@
             <div class="dac-card">
                 <div class="dac-kicker">
                     <ion-icon name="shield-checkmark-outline"></ion-icon>
-                    VMEMDA 本地安全扩展
+                    密文统计与审计
                 </div>
-                <h1>用户、DAC、MCS 显式分配与本地聚合审计</h1>
-                <p>当前实现将论文中的 User、DAC、MCS 映射到系统中，并由本地 MCS 节点承担密文存储与聚合工作，DAC 审计员负责验证聚合结果。</p>
+                <h1>敏感数据保护与授权审计</h1>
+                <p>敏感内容认证加密存储，审计身份采用患者代号。本地 MCS 节点执行同态统计与原记录校验，DAC 仅可审计分配范围。</p>
                 <div class="dac-action-row">
                     <button id="initSecurityBtn" class="btn-primary-orange" type="button">初始化安全系统</button>
                     <button id="refreshDacBtn" class="btn-outline" type="button">刷新状态</button>
@@ -571,7 +572,7 @@
         <section class="dac-grid">
             <div class="dac-card">
                 <div class="dac-title"><h2>时间聚合审计</h2></div>
-                <p class="dac-note">针对单个患者，在其分配到的本地 MCS 节点上执行时间序列聚合与验证。</p>
+                <p class="dac-note">同一量表或认知任务协议内，只统计每条业务记录的当前版本；历史证据保留并参与校验。未提供的统计指标按0占位，仅用于一致性审计。</p>
                 <div class="dac-form-grid">
                     <div class="dac-field">
                         <label for="auditPatientSelect">目标患者</label>
@@ -586,6 +587,7 @@
                         </select>
                     </div>
                 </div>
+                <div class="dac-field" style="margin-bottom:1rem;"><label for="auditGroupSelect">量表或任务协议</label><select id="auditGroupSelect"></select></div>
                 <div class="dac-action-row" style="margin-top:0;margin-bottom:1rem;">
                     <button id="runAuditBtn" class="btn-primary-orange" type="button">执行时间审计</button>
                     <button id="loadCipherBtn" class="btn-outline" type="button">查看密文记录</button>
@@ -603,7 +605,7 @@
 
             <div class="dac-card">
                 <div class="dac-title"><h2>空间聚合审计</h2></div>
-                <p class="dac-note">针对多个患者，读取其在同一本地 MCS 节点上的最新密文记录，执行科研空间聚合统计与验证。</p>
+                <p class="dac-note">同一本地 MCS、同一量表或任务协议内，每名患者取最新一条当前版本。审计视图使用代号。</p>
                 <div class="dac-form-grid">
                     <div class="dac-field">
                         <label for="spatialSourceTypeSelect">数据类型</label>
@@ -614,6 +616,7 @@
                         </select>
                     </div>
                 </div>
+                <div class="dac-field" style="margin-bottom:1rem;"><label for="spatialAuditGroupSelect">量表或任务协议</label><select id="spatialAuditGroupSelect"></select></div>
                 <p id="spatialPatientHint" class="patient-pick-note">正在根据当前数据类型整理可选患者...</p>
                 <div id="spatialPatientList" class="patient-pick"></div>
                 <div class="dac-action-row" style="margin-bottom:1rem;">
@@ -666,7 +669,8 @@
         </section>
     </main>
 
-    <script src="js/api.js?v=20260406c"></script>
+    <script src="js/api.js?v=20261010c"></script>
+    <script src="js/account.js?v=20261010c"></script>
     <script src="js/dac_dashboard.js?v=20260406c"></script>
 </body>
 </html>

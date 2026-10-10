@@ -2,10 +2,11 @@
 数据安全增强与审计日志服务
 
 实现数据安全增强功能：
-1. 完整的访问审计日志
-2. 数据脱敏与加密增强
-3. 知情同意数字化管理
-4. 数据生命周期管理
+1. 访问审计日志
+2. 知情同意数字化管理
+3. 数据生命周期管理
+
+敏感内容认证加密由 data_encryption 服务负责。
 """
 
 from __future__ import annotations
@@ -105,14 +106,6 @@ class EnhancedSecurityService:
         "active_data": 365 * 3,  # 3年
         "audit_logs": 365 * 5,   # 5年
         "consent_records": 365 * 10,  # 10年
-    }
-
-    # 敏感字段定义
-    SENSITIVE_FIELDS = {
-        "patient": ["name", "email", "phone", "address", "id_number"],
-        "scale_result": ["score_json", "detailed_answers"],
-        "cognitive_test": ["result_json", "raw_responses"],
-        "tracking_log": ["note", "activities"],
     }
 
     def __init__(self, db: Session):
@@ -248,85 +241,7 @@ class EnhancedSecurityService:
         }
 
     # =========================================================
-    # 2. 数据脱敏与加密
-    # =========================================================
-
-    def anonymize_patient_data(
-        self,
-        patient_data: dict[str, Any],
-        level: str = "standard",
-    ) -> dict[str, Any]:
-        """数据脱敏"""
-        anonymized = patient_data.copy()
-
-        if level == "standard":
-            # 标准脱敏：保留结构，脱敏敏感字段
-            if "name" in anonymized:
-                anonymized["name"] = self._mask_name(anonymized["name"])
-            if "email" in anonymized:
-                anonymized["email"] = self._mask_email(anonymized["email"])
-            if "phone" in anonymized:
-                anonymized["phone"] = self._mask_phone(anonymized["phone"])
-
-        elif level == "research":
-            # 研究用脱敏：完全匿名化
-            for field in ["name", "email", "phone", "address", "id_number"]:
-                if field in anonymized:
-                    del anonymized[field]
-
-            # 替换ID为哈希
-            if "id" in anonymized:
-                anonymized["anonymous_id"] = hash(str(anonymized["id"])) % 10000
-                del anonymized["id"]
-
-        return anonymized
-
-    def _mask_name(self, name: str) -> str:
-        """脱敏姓名"""
-        if len(name) <= 1:
-            return "*"
-        elif len(name) == 2:
-            return name[0] + "*"
-        else:
-            return name[0] + "*" * (len(name) - 2) + name[-1]
-
-    def _mask_email(self, email: str) -> str:
-        """脱敏邮箱"""
-        if "@" not in email:
-            return "***"
-
-        local, domain = email.split("@", 1)
-        if len(local) <= 2:
-            masked_local = local[0] + "*"
-        else:
-            masked_local = local[0] + "*" * (len(local) - 2) + local[-1]
-
-        return f"{masked_local}@{domain}"
-
-    def _mask_phone(self, phone: str) -> str:
-        """脱敏手机号"""
-        if len(phone) < 7:
-            return "***"
-
-        return phone[:3] + "****" + phone[-4:]
-
-    def encrypt_sensitive_data(
-        self,
-        data: dict[str, Any],
-        data_type: str,
-    ) -> dict[str, Any]:
-        """加密敏感数据"""
-        encrypted_data = data.copy()
-
-        sensitive_fields = self.SENSITIVE_FIELDS.get(data_type, [])
-        for field in sensitive_fields:
-            if field in encrypted_data:
-                encrypted_data[field] = f"ENCRYPTED:{encrypted_data[field]}"
-
-        return encrypted_data
-
-    # =========================================================
-    # 3. 知情同意数字化管理
+    # 2. 知情同意数字化管理
     # =========================================================
 
     def record_consent(
@@ -408,7 +323,7 @@ class EnhancedSecurityService:
         return summary
 
     # =========================================================
-    # 4. 数据生命周期管理
+    # 3. 数据生命周期管理
     # =========================================================
 
     def get_data_lifecycle_status(

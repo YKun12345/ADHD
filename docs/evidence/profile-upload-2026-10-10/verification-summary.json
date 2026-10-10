@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-10",
+  "python": {
+    "passed": 35,
+    "grouped": true,
+    "security": 27,
+    "viewer_logout": 5,
+    "upload_capacity": 3
+  },
+  "node": {
+    "passed": 114,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "doctor_personal_center": true,
+    "dac_personal_center": true,
+    "patient_personal_center": true,
+    "logout_to_original_login": true,
+    "imaging_cookie_cleared": true,
+    "nifti_65_mib_upload_view_save": true,
+    "gifti_upload_view_save": true,
+    "uncaught_errors": [],
+    "failed_local_requests": []
+  },
+  "live_backend": {
+    "health": 200,
+    "profile_page": 200,
+    "account_script": 200,
+    "upload_limits_route_registered": true,
+    "upload_limits_status": 200,
+    "actual_upload_limit_bytes": 536870912
+  },
+  "syntax_check": true,
+  "diff_check": true,
+  "upload_limit_bytes": 536870912,
+  "clinical_test_database": "isolated synthetic database",
+  "notes": [
+    "Whole security batch encountered a Windows native access violation; all 27 cases passed in three independent process groups."
+  ],
+  "test_fixture_service_stopped": true,
+  "business_backend_remains_healthy": true
+}

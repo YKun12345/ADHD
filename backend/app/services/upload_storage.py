@@ -82,10 +82,19 @@ def store_timeseries_upload(
     if destination.parent != resolved_root:
         raise UploadValidationError("The upload destination is outside the configured root.")
 
-    destination.write_bytes(file_bytes)
+    from backend.app.core.data_encryption import FILE_MAGIC, encrypt_bytes
+    destination.write_bytes(FILE_MAGIC + encrypt_bytes(file_bytes, "upload:" + destination.name))
     return StoredUpload(
         original_name=original_name,
         stored_path=destination,
         file_size=len(file_bytes),
         file_hash=hashlib.sha256(file_bytes).hexdigest(),
     )
+
+
+def read_stored_upload(path: Path) -> bytes:
+    from backend.app.core.data_encryption import FILE_MAGIC, decrypt_bytes
+    payload = path.read_bytes()
+    if not payload.startswith(FILE_MAGIC):
+        raise UploadValidationError("Legacy upload must be migrated before reading.")
+    return decrypt_bytes(payload[len(FILE_MAGIC):], "upload:" + path.name)

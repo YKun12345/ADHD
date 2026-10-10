@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+from io import BytesIO
 import re
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit
@@ -92,6 +93,7 @@ def imaging_files(file_type: str) -> dict:
 
 @pytest.mark.parametrize("file_type", ["nifti", "gifti"])
 def test_uploaded_images_provide_renderable_data(client, monkeypatch, tmp_path, file_type):
+    from findviz import create_app
     from findviz.routes.shared import data_manager
     from findviz.viz.io.cache import Cache
     from findviz.viz.viewer.context import VisualizationContext
@@ -103,22 +105,22 @@ def test_uploaded_images_provide_renderable_data(client, monkeypatch, tmp_path, 
     monkeypatch.setattr(data_manager, "_contexts", {"main": VisualizationContext("main")})
     monkeypatch.setattr(data_manager, "_active_context_id", "main")
 
-    response = client.post(
-        "/findviz/upload",
-        data={"fmri_file_type": file_type, "ts_input": "false", "task_input": "false"},
-        files=imaging_files(file_type),
-    )
+    # Standalone CLI viewer remains supported; mounted patient access is tested separately.
+    client = create_app(testing=True).test_client()
+    upload_data = {"fmri_file_type": file_type, "ts_input": "false", "task_input": "false"}
+    upload_data.update({key: (BytesIO(content), name) for key, (name, content) in imaging_files(file_type).items()})
+    response = client.post("/upload", data=upload_data, content_type="multipart/form-data")
     assert response.status_code == 201, response.text
-    assert response.json()["file_type"] == file_type
-    metadata_response = client.get("/findviz/get_viewer_metadata?context_id=main")
+    assert response.get_json()["file_type"] == file_type
+    metadata_response = client.get("/get_viewer_metadata?context_id=main")
     assert metadata_response.status_code == 200, metadata_response.text
-    metadata = metadata_response.json()
-    ready = client.get("/findviz/check_cache").json()
+    metadata = metadata_response.get_json()
+    ready = client.get("/check_cache").get_json()
     assert ready["has_cache"] is True
     assert ready["plot_type"] == file_type
-    response = client.get("/findviz/get_fmri_data?context_id=main")
+    response = client.get("/get_fmri_data?context_id=main")
     assert response.status_code == 200, response.text
-    data = response.json()["data"]
+    data = response.get_json()["data"]
     if file_type == "nifti":
         assert set(data["func"]) == {"slice_1", "slice_2", "slice_3"}
         for values in data["func"].values():

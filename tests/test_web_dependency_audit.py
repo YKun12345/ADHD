@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -98,25 +101,37 @@ class WebDependencyAuditTests(unittest.TestCase):
             self.assertTrue((legacy_web / name).is_file(), name)
             self.assertTrue((active_web / name).is_file(), name)
 
-        for archived in legacy_web.rglob("*"):
-            if not archived.is_file() or archived.name == "README.md":
-                continue
-            relative = archived.relative_to(legacy_web)
-            active = active_web / relative
-            self.assertTrue(active.is_file(), relative.as_posix())
-            self.assertEqual(
-                archived.read_text(encoding="utf-8").replace("\r\n", "\n"),
-                active.read_text(encoding="utf-8").replace("\r\n", "\n"),
-                relative.as_posix(),
-            )
+        baseline = json.loads((ROOT / "tests/fixtures/legacy-patient-web.sha256.json").read_text(encoding="utf-8"))
+        actual = {
+            path.relative_to(legacy_web).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in legacy_web.rglob("*") if path.is_file()
+        }
+        self.assertEqual(baseline, actual, "historical patient archive changed")
+        for relative in baseline:
+            if relative != "README.md":
+                self.assertTrue((active_web / relative).is_file(), relative)
 
         self.assertEqual([], sorted(path.name for path in ROOT.glob("*.htm*")))
-        active_text = "\n".join(
-            path.read_text(encoding="utf-8", errors="replace")
-            for path in doctor_web.rglob("*")
+        active_files = [
+            path for path in doctor_web.rglob("*")
             if path.is_file() and path.suffix.lower() in {".html", ".js"}
+        ]
+        active_text = "\n".join(
+            path.read_text(encoding="utf-8", errors="replace") for path in active_files
         )
-        self.assertNotRegex(active_text, r"patient_[A-Za-z0-9_-]*\.html")
+        patient_references = {
+            (path.relative_to(doctor_web).as_posix(), match.group(0))
+            for path in active_files
+            for match in re.finditer(
+                r"""[^\s"'<>]*patient_[A-Za-z0-9_-]*\.html""",
+                path.read_text(encoding="utf-8", errors="replace"),
+            )
+        }
+        self.assertEqual(
+            {("js/account.js", "../patient-web/patient_profile.html")},
+            patient_references,
+            "only the shared role-aware account entry may link to the active patient profile",
+        )
         self.assertNotIn("clinical_pathway.html", active_text)
 
         task_script = (doctor_web / "js" / "doctor_patients.js").read_text(encoding="utf-8")
@@ -126,6 +141,23 @@ class WebDependencyAuditTests(unittest.TestCase):
         self.assertIn("'/pages/report/index'", task_script)
         self.assertIn("client_message_id: clientMessageId", task_script)
         self.assertIn("if (!taskDescription)", task_script)
+
+    def test_active_web_resources_resolve_after_archive_divergence(self) -> None:
+        from tools.web_dependency_audit import audit
+        from findviz import create_app
+
+        flask_routes = {rule.rule for rule in create_app(testing=True).url_map.iter_rules()}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            web_root = Path(temp_dir)
+            for name in ("doctor-web", "patient-web", "findviz"):
+                shutil.copytree(ROOT / name, web_root / name, ignore=shutil.ignore_patterns("__pycache__", "logs"))
+            report = audit(web_root, ())
+            missing = [
+                item["source"] + ": " + item["reference"]
+                for item in report["references"] if not item["exists"] and item["kind"] != "api"
+                and not (item["source"].startswith("findviz/") and item["reference"] in flask_routes)
+            ]
+        self.assertEqual([], missing, "missing active Web resources")
 
     def test_doctor_report_renders_explicit_mock_disclaimer(self) -> None:
         html = (ROOT / "doctor-web" / "doctor_report.html").read_text(encoding="utf-8")

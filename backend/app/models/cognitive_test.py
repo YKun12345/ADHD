@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.mysql import VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.patient import Patient
@@ -31,7 +32,7 @@ class CognitiveTest(Base):
         String(64).with_variant(VARCHAR(64, charset="ascii", collation="ascii_bin"), "mysql"),
         nullable=True,
     )
-    result_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    result_json: Mapped[dict[str, Any]] = mapped_column(EncryptedValue("cognitive_tests.result_json", "json"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

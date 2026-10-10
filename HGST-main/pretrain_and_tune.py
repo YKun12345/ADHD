@@ -11,6 +11,7 @@ from src.data_process import permute_edges
 from src.wasserstein_dis import cot_numpy
 from src.utils import set_seed
 from train_engine import create_optimizer, pretrain_fmri, graph_classification_evaluation
+from backend.app.services.hgst_runtime.evaluation import fit_training_encoder, stratified_partitions
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedKFold
 import json
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_name', type=str, default='ADHD', help='Name of the dataset')
     parser.add_argument('--k_fold', type=int, default=5, help='Number of folds for cross-validation')
     parser.add_argument('--seed', type=int, default=2020, help='Random seed')
+    parser.add_argument('--validation_fraction', '--validation-fraction', type=float, default=0.2, help='Fraction of each outer training fold reserved for validation')
     parser.add_argument('--loss_fn', type=str, default='sce', help='Loss function')
     parser.add_argument('--replace_rate', type=float, default=0.05, help='Replacement rate')
     parser.add_argument('--mask_rate', type=float, default=0.5, help='Masking rate')
@@ -52,6 +54,10 @@ if __name__ == "__main__":
     parser.add_argument('--comment', type=str, default='', help='Comments for the experiment')
 
     args = parser.parse_args()
+    if args.max_epoch_f < 1 or (args.pretrain.lower() == 'true' and args.max_epoch < 1):
+        parser.error('Training epochs must be positive')
+    if not 0 < args.validation_fraction < 1:
+        parser.error('validation_fraction must be between zero and one')
 
     comment=args.comment
     sample_num = args.sample_num
@@ -118,6 +124,7 @@ if __name__ == "__main__":
     logger.info(f"seed: {seed}")
     logger.info(f"sample_num: {sample_num}")
     logger.info(f"k_fold: {k_fold}")
+    logger.info(f"validation_fraction: {args.validation_fraction}")
     logger.info(f"loss_fn: {loss_fn}")
     logger.info(f"replace_rate: {replace_rate}")
     logger.info(f"mask_rate: {mask_rate}")
@@ -201,45 +208,12 @@ if __name__ == "__main__":
     else:
         ids = np.arange(n_data)
 
-    # ------- Data augmentation -------
-    if pretrain:
-        logger.info(f"===============================================")
-        logger.info("Data augmentation...")
-        HG_aug_list = []
-        for i in tqdm(range(n_data)):
-            sorted_index1 = permute_edges(i, preprocessed_data[i][1].H.coalesce().indices(), aug_ratio)
-            HG_aug1 = Hypergraph(num_nodes, list(sorted_index1.values())).to(device)
-            sorted_index2 = permute_edges(i, preprocessed_data[i][1].H.coalesce().indices(), aug_ratio)
-            HG_aug2 = Hypergraph(num_nodes, list(sorted_index2.values())).to(device)
-            HG_aug_list.append((HG_aug1, HG_aug2))
-
-        # ------- Wasserstein distance similarity -------
-        logger.info(f"===============================================")
-        logger.info("Computing Wasserstein distance similarity...")
-        topo_sim_all = []
-        for ni in tqdm(range(n_data)):
-            op_sim = []
-            HG_aug1, HG_aug2 = HG_aug_list[ni]
-
-            for i, e in enumerate(HG_aug1.e[0]):  
-                E1 = np.zeros((len(e), 1))
-                for j, v in enumerate(e):
-                    E1[j] = HG_aug1.deg_v[v]
-
-                E2 = np.zeros((len(HG_aug2.e[0][i]), 1))
-                for j, v in enumerate(HG_aug2.e[0][i]):
-                    E2[j] = HG_aug2.deg_v[v]
-                _, _, cost = cot_numpy(E1, E2)
-                op_sim.append(math.exp(-lamda * cost) + 1e-15)
-            topo_sim = torch.tensor(op_sim).to(device)
-            topo_sim_all.append(topo_sim)
-
-    # ------- Model Pretraining -------
-    logger.info(f"===============================================")
-    model = PreModel(
+    # Every fold starts with a fresh model. Augmentation and SSL see training samples only.
+    def model_factory():
+        fold_model = PreModel(
             in_dim=feature_dim,
             hid_dim=num_hidden,
-            edge_dim=len(HG.e[0]),
+            edge_dim=num_nodes,
             feat_drop=dropout,
             use_bn=True,
             mask_rate=mask_rate,
@@ -247,29 +221,40 @@ if __name__ == "__main__":
             decoder_type=decoder_type,
             loss_fn=loss_fn,
             replace_rate=replace_rate,
-        )
-    if pretrain:
-        logger.info(f"Starting pretraining with seed {seed}")
+        ).to(device)
+        if not pretrain and pre_model is not None:
+            fold_model.load_state_dict(torch.load(pre_model, map_location=device))
+        return fold_model
 
-
-        model.to(device)
-        optimizer = create_optimizer(optim_type, model, lr, weight_decay)
+    def fit_fold_encoder(fold_model, training_data):
+        if not pretrain:
+            return fold_model
+        logger.info(f"Preparing augmentation for {len(training_data)} training samples only")
+        hg_augmentations = []
+        for index, (_, graph, _) in enumerate(tqdm(training_data)):
+            first = permute_edges(index, graph.H.coalesce().indices(), aug_ratio)
+            second = permute_edges(index, graph.H.coalesce().indices(), aug_ratio)
+            hg_augmentations.append((
+                Hypergraph(num_nodes, list(first.values())).to(device),
+                Hypergraph(num_nodes, list(second.values())).to(device),
+            ))
+        topology_similarities = []
+        for first, second in tqdm(hg_augmentations):
+            similarities = []
+            for edge_index, first_edge in enumerate(first.e[0]):
+                first_degrees = np.array([[first.deg_v[node]] for node in first_edge])
+                second_degrees = np.array([[second.deg_v[node]] for node in second.e[0][edge_index]])
+                _, _, cost = cot_numpy(first_degrees, second_degrees)
+                similarities.append(math.exp(-lamda * cost) + 1e-15)
+            topology_similarities.append(torch.tensor(similarities).to(device))
+        optimizer = create_optimizer(optim_type, fold_model, lr, weight_decay)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epoch, eta_min=1e-5)
-
-        model,_ = pretrain_fmri(
-            model, preprocessed_data, HG_aug_list, optimizer, scheduler, max_epoch, device, topo_sim_all, cl, attr, use_sim=True, logger=logger
+        best_encoder, _ = pretrain_fmri(
+            fold_model, training_data, hg_augmentations, optimizer, scheduler,
+            max_epoch, device, topology_similarities, cl, attr, use_sim=True, logger=logger,
         )
-        checkpoint_name = save_model_name if save_model_name else f"pretrained_model_{seed}.pth"
-        save_path=os.path.join(log_dir, checkpoint_name)
-        torch.save(model.state_dict(), save_path)
-        
-    else:
-        model.to(device)
-        if pre_model is not None:
-            logger.info(f"Loading pretrained model from {pre_model}")
-            model.load_state_dict(torch.load(pre_model))
-        
-    
+        return best_encoder
+
     # ------- Tuning -------
     logger.info(f"===============================================")
     logger.info("Starting tuning...")
@@ -281,35 +266,54 @@ if __name__ == "__main__":
     auc_list = []
     specificity_list = []
     
-    model = model.to(device)
-
-    skf=None
-    if data_name=="ADHD":
-        skf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=2020)
-    elif data_name=="MDD":
-        skf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=2022)
+    pretraining_scope = "fold_train_only" if pretrain else ("external_unverified" if pre_model else "none")
+    logger.info(f"Evaluation protocol: disjoint train/validation/test; pretraining_scope={pretraining_scope}")
+    if pretraining_scope == "external_unverified":
+        logger.warning("External encoder provenance is unverified: results are classifier holdout metrics, not verified end-to-end independent test performance")
+    skf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=seed)
     y_labels = lbl.numpy()
-    
-    for fold, (train_index, test_index) in enumerate(skf.split(np.zeros(n_data), y_labels)):
+    fold_manifest = []
+    for fold, (outer_train_index, outer_test_index) in enumerate(skf.split(np.zeros(n_data), y_labels)):
         logger.info(f"############################ Fold {fold + 1}/{k_fold} #####################")
-        
-        train_mask = torch.zeros(n_data, dtype=torch.bool)
-        val_mask = torch.zeros(n_data, dtype=torch.bool)
-        test_mask = torch.zeros(n_data, dtype=torch.bool)
-
+        train_index, val_index, test_index = stratified_partitions(
+            y_labels, outer_train=outer_train_index, outer_test=outer_test_index,
+            validation_fraction=args.validation_fraction, seed=seed + fold,
+        )
+        set_seed(seed + fold)
+        model = fit_training_encoder(model_factory, fit_fold_encoder, preprocessed_data, train_index)
+        if pretrain:
+            checkpoint_name = save_model_name if save_model_name else f"pretrained_model_{seed}.pth"
+            stem, extension = os.path.splitext(checkpoint_name)
+            checkpoint_name = f"{stem}_fold_{fold + 1}{extension or '.pth'}"
+            torch.save(model.state_dict(), os.path.join(log_dir, checkpoint_name))
+        train_mask = torch.zeros(n_data, dtype=torch.bool, device=device)
+        val_mask = torch.zeros(n_data, dtype=torch.bool, device=device)
+        test_mask = torch.zeros(n_data, dtype=torch.bool, device=device)
         train_mask[train_index] = True
+        val_mask[val_index] = True
         test_mask[test_index] = True
-        val_mask[test_index] = True 
-
-        train_mask = train_mask.to(device)
-        val_mask = val_mask.to(device)
-        test_mask = test_mask.to(device)
+        logger.info(f"Samples: train={len(train_index)}, validation={len(val_index)}, test={len(test_index)}")
 
         metric_dict = graph_classification_evaluation(fold,
             model, preprocessed_data, num_classes,
             lr_f, weight_decay_f, max_epoch_f, device,
             train_mask, val_mask, test_mask, lbl, logger=logger, linear_prob=True
         )
+
+        fold_manifest.append({
+            "fold": fold + 1,
+            "train_sample_ids": ids[train_index].tolist(),
+            "validation_sample_ids": ids[val_index].tolist(),
+            "test_sample_ids": ids[test_index].tolist(),
+            "metrics": {key: (float(value) if np.isfinite(value) else None) for key, value in metric_dict.items()},
+        })
+        with open(os.path.join(log_dir, "evaluation_manifest.json"), "w", encoding="utf-8") as manifest_file:
+            json.dump({
+                "seed": seed, "pretraining_scope": pretraining_scope,
+                "end_to_end_test_verified": pretraining_scope != "external_unverified",
+                "selection_metric": "validation_accuracy", "tie_break": "earliest_epoch",
+                "folds": fold_manifest,
+            }, manifest_file, indent=2, allow_nan=False)
 
         acc_list.append(100 * metric_dict["test_acc"])
         recall_list.append(100 * metric_dict["test_recall"])
@@ -322,7 +326,7 @@ if __name__ == "__main__":
 
     
     logger.info(f"===============================================")
-    logger.info("Training completed.")
+    logger.info("Training completed. All reported metrics use the validation-selected checkpoint on held-out test samples.")
     final_acc, final_acc_std = np.mean(acc_list), np.std(acc_list)
     final_recall, final_recall_std = np.mean(recall_list), np.std(recall_list)
     final_precision, final_precision_std = np.mean(precision_list), np.std(precision_list)
@@ -330,9 +334,9 @@ if __name__ == "__main__":
     final_auc, final_auc_std = np.mean(auc_list), np.std(auc_list)
     final_specificity, final_specificity_std = np.mean(specificity_list), np.std(specificity_list)
 
-    logger.info(f"# final_acc: {final_acc:.2f} ± {final_acc_std:.2f}")
-    logger.info(f"# final_recall: {final_recall:.2f} ± {final_recall_std:.2f}")
-    logger.info(f"# final_precision: {final_precision:.2f} ± {final_precision_std:.2f}")
-    logger.info(f"# final_f1: {final_f1:.2f} ± {final_f1_std:.2f}")
-    logger.info(f"# final_auc: {final_auc:.2f} ± {final_auc_std:.2f}")
-    logger.info(f"# final_specificity: {final_specificity:.2f} ± {final_specificity_std:.2f}")
+    logger.info(f"# final_test_acc: {final_acc:.2f} ± {final_acc_std:.2f}")
+    logger.info(f"# final_test_recall: {final_recall:.2f} ± {final_recall_std:.2f}")
+    logger.info(f"# final_test_precision: {final_precision:.2f} ± {final_precision_std:.2f}")
+    logger.info(f"# final_test_f1: {final_f1:.2f} ± {final_f1_std:.2f}")
+    logger.info(f"# final_test_auc: {final_auc:.2f} ± {final_auc_std:.2f}")
+    logger.info(f"# final_test_specificity: {final_specificity:.2f} ± {final_specificity_std:.2f}")

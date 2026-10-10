@@ -238,7 +238,7 @@ def main():
         try:
             process_cli_inputs(args)
         except Exception as e:
-            print(f"Error processing inputs: {str(e)}")
+            print(f"Error processing inputs ({type(e).__name__}). Check the input format and diagnostic event.")
             return
 
     # create app

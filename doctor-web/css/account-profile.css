@@ -1,0 +1,21 @@
+.user-profile[role="link"] { cursor: pointer; }
+.user-profile[role="link"]:focus-visible { outline: 3px solid #93C5FD; outline-offset: 4px; }
+.account-main { padding-top: 120px; min-height: 80vh; }
+.account-title { font-size: 2.5rem; color: #0F172A; margin-bottom: 2rem; text-align: center; }
+.account-layout { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2.5fr; gap: 2rem; }
+.account-card { box-shadow: 0 10px 30px rgba(0,0,0,.05); }
+.account-identity { text-align: center; height: fit-content; }
+.account-avatar { font-size: 6rem; color: #94A3B8; margin-bottom: 1rem; }
+.account-identity h3 { margin-bottom: .5rem; color: #1E293B; overflow-wrap: anywhere; }
+.account-uid { color: #64748B; font-size: .9rem; margin-bottom: 2rem; }
+.account-logout { width: 100%; display: flex; align-items: center; justify-content: center; gap: .5rem; color: #EF4444; border-color: #FECACA; background: #FEF2F2; cursor: pointer; }
+.account-header { border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.account-details { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .85rem 1.2rem; }
+.account-details dt { color: #64748B; }
+.account-details dd { margin: 0; color: #1E293B; overflow-wrap: anywhere; }
+.account-scope { margin-top: 1.5rem; color: #64748B; line-height: 1.8; }
+.account-actions { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.account-actions a, .account-actions button { text-decoration: none; cursor: pointer; }
+.account-actions [hidden] { display: none; }
+.account-status { color: #B45309; margin-top: 1rem; }
+@media (max-width: 700px) { .account-layout { grid-template-columns: 1fr; } .account-title { font-size: 2rem; } }

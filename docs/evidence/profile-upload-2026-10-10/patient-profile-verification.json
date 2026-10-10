@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "patient_personal_center": true,
+  "server_identity": true,
+  "logout_to_original_login": true,
+  "uncaught_errors": [],
+  "failed_local_requests": []
+}

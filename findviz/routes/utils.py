@@ -157,6 +157,8 @@ def handle_context() -> Callable[[Callable[P, R]], Callable[P, R]]:
             # Switch to the requested context
             try:
                 data_manager.switch_context(context_id)
+                if data_manager.ctx._state is None:
+                    return make_response({'error': '当前患者工作区尚未载入影像。'}, 404)
             except ValueError as e:
                 logger.error(f"Invalid context requested: {context_id}")
                 return make_response({'error': str(e)}, 400)

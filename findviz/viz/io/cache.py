@@ -2,9 +2,13 @@
 Module for caching uploaded files and data
 """
 import atexit
-import json
 import signal
 import tempfile
+import os
+import hashlib
+import secrets
+from threading import RLock
+from findviz.workspace import current_workspace
 
 from pathlib import Path
 
@@ -17,31 +21,41 @@ logger = setup_logger(__name__)
 class Cache:
     """Class for managing temporary cache of uploaded files and data"""
     _instance = None
+    _instances = {}
+    _instance_lock = RLock()
 
     def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Cache, cls).__new__(cls)
-            # Initialize instance attributes here
-            cls._instance._initialize()
-        return cls._instance
+        namespace = current_workspace()
+        with cls._instance_lock:
+            if namespace == 'standalone-cli':
+                if cls._instance is None:
+                    cls._instance = super(Cache, cls).__new__(cls)
+                    cls._instance._initialize(namespace)
+                return cls._instance
+            if namespace not in cls._instances:
+                instance = super(Cache, cls).__new__(cls)
+                instance._initialize(namespace)
+                cls._instances[namespace] = instance
+            return cls._instances[namespace]
 
-    def _initialize(self):
-        """Initialize the cache instance"""
-        self.temp_dir = Path(tempfile.gettempdir()) / "findviz_cache"
-        self.temp_dir.mkdir(exist_ok=True)
-        self.cache_file = self.temp_dir / "viewer_cache.json"
-        
-        # Register cleanup on exit
+    def _initialize(self, namespace='standalone-cli'):
+        self.namespace = namespace
+        partition = hashlib.sha256(namespace.encode()).hexdigest()
+        cache_root = Path(os.environ.get('FINDVIZ_CACHE_ROOT', str(Path(tempfile.gettempdir()) / 'findviz_cache')))
+        self.temp_dir = cache_root / partition
+        self.temp_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        # A new name avoids loading historical unauthenticated/plaintext metadata.
+        self.cache_file = self.temp_dir / 'viewer_cache.aesgcm'
         atexit.register(self.cleanup)
+        if namespace == 'standalone-cli':
+            try:
+                signal.signal(signal.SIGINT, cleanup_handler(self))
+                signal.signal(signal.SIGTERM, cleanup_handler(self))
+            except (ValueError, AttributeError):
+                pass
 
-        # Register signal handlers
-        try:
-            # Handle Ctrl+C (SIGINT)
-            signal.signal(signal.SIGINT, cleanup_handler(self))
-            # Handle termination (SIGTERM)
-            signal.signal(signal.SIGTERM, cleanup_handler(self))
-        except (ValueError, AttributeError):
-            pass
+    def _encryption_context(self):
+        return 'findviz.metadata:' + getattr(self, 'namespace', 'standalone-cli')
 
     def _ensure_temp_dir(self):
         """Ensure temporary directory exists"""
@@ -66,8 +80,16 @@ class Cache:
             # serialize data
             serialized_data = self._serialize_data(data)
             # save to cache file
-            with open(self.cache_file, 'w') as f:
-                json.dump(serialized_data, f)
+            from backend.app.core.data_encryption import encrypt_value
+            envelope = encrypt_value(serialized_data, self._encryption_context())
+            temporary = self.cache_file.with_name(self.cache_file.name + '.' + secrets.token_hex(8))
+            try:
+                with open(temporary, 'x', encoding='utf8') as out:
+                    out.write(envelope)
+                os.chmod(temporary, 0o600)
+                os.replace(temporary, self.cache_file)
+            finally:
+                temporary.unlink(missing_ok=True)
             logger.info(f"Viewer metadata saved to cache at {self.cache_file}")
         except Exception as e:
             logger.error(f"Failed to save cache: {str(e)}")
@@ -84,8 +106,11 @@ class Cache:
         """
         try:
             if self.cache_file.exists():
-                with open(self.cache_file, 'r') as f:
-                    return json.load(f)
+                from backend.app.core.data_encryption import decrypt_value, PREFIX
+                envelope = self.cache_file.read_text(encoding='utf8')
+                if not envelope.startswith(PREFIX):
+                    raise ValueError('Unauthenticated viewer metadata.')
+                return decrypt_value(envelope, self._encryption_context())
             return None
         except Exception as e:
             logger.error(f"Failed to load cache: {str(e)}")
@@ -104,7 +129,7 @@ class Cache:
             if not during_shutdown:
                 logger.error(f"Failed to clear cache: {str(e)}")
             else:
-                print(f"Warning: Failed to clear cache: {str(e)}")
+                print(f"Warning: Failed to clear cache ({type(e).__name__}).")
             if not during_shutdown:
                 raise IOError(f"Failed to clear cache: {str(e)}")
 
@@ -140,7 +165,7 @@ class Cache:
                 if not any(self.temp_dir.iterdir()):
                     self.temp_dir.rmdir()
         except Exception as e:
-            print(f"Warning: Failed to clean up cache: {str(e)}")
+            print(f"Warning: Failed to clean up cache ({type(e).__name__}).")
     
     def _serialize_data(self, data):
         """Serialize data before saving to cache.

@@ -7,7 +7,8 @@ import Spinner from '../../components/Spinner.js';
 
 function getAnalysisViewUrl(analysis) {
     const basePath = window.FINDVIZ_BASE_PATH || '';
-    return `${basePath}/analysis_view/${analysis}`;
+    const patientQuery = window.FINDVIZ_PATIENT_ID ? `?patient_id=${encodeURIComponent(window.FINDVIZ_PATIENT_ID)}` : '';
+    return `${basePath}/analysis_view/${analysis}${patientQuery}`;
 }
 
 class Correlate {
@@ -61,7 +62,7 @@ class Correlate {
         this.modalButton.prop('disabled', false);
 
         // fill correlation time course select
-        this.fillCorrelateTimeCourseSelect();
+        this.ready = this.fillCorrelateTimeCourseSelect();
 
         // initialize spinner
         this.spinner = new Spinner(
@@ -124,32 +125,22 @@ class Correlate {
      /**
      * Fill the correlation time course select with labels
      */
-     fillCorrelateTimeCourseSelect() {
-        this.getPlotLabels(async (labels) => {
-            // clear the select
-            this.correlateTimeCourseSelect.empty();
-            // if no labels, do nothing
-            if (labels.length === 0) {
-                return;
-            }
-            // add labels to select
-            for (const label of labels) {
-                this.correlateTimeCourseSelect.append(`<option value='${label}'>${label}</option>`);
-            }
-            // select the last label as the selected time course
-            this.correlateTimeCourseSelect.val(labels[labels.length - 1]);
-            this.selectedTimeCourse = labels[labels.length - 1];
-            // check if time course is preprocessed
-            const isPreprocessed = await this.contextManager.plot.checkTsPreprocessed(
-                this.selectedTimeCourse, 
-                this.timeCourseTypes[this.selectedTimeCourse]
-            );
-            if (isPreprocessed.is_preprocessed) {
-                this.prepAlert.show();
-            } else {
-                this.prepAlert.hide();
-            }
-        });
+    async fillCorrelateTimeCourseSelect() {
+        const labels = await this.getPlotLabels();
+        this.correlateTimeCourseSelect.empty();
+        this.selectedTimeCourse = labels.length ? labels[labels.length - 1] : null;
+        this.modalButton.prop('disabled', labels.length === 0);
+        if (!labels.length) return;
+        for (const label of labels) {
+            this.correlateTimeCourseSelect.append($('<option>').val(label).text(label));
+        }
+        this.correlateTimeCourseSelect.val(this.selectedTimeCourse);
+        const isPreprocessed = await this.contextManager.plot.checkTsPreprocessed(
+            this.selectedTimeCourse,
+            this.timeCourseTypes[this.selectedTimeCourse]
+        );
+        if (isPreprocessed.is_preprocessed) this.prepAlert.show();
+        else this.prepAlert.hide();
     }
 
     /**

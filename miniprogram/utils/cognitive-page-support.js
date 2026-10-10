@@ -50,6 +50,8 @@ function attachProtocolMetadata(payload, config, actualTrials) {
     : Number.isInteger(rawTotal) && rawTotal >= 0
       ? rawTotal
       : trials.length
+  payload.result_json.source = 'miniprogram'
+  payload.result_json.age_group = config.ageGroup === 'adult' ? 'adult' : 'child'
   payload.result_json.protocol_id = config.protocolId
   payload.result_json.protocol_label = config.protocolLabel
   payload.result_json.protocol_schema_version = config.schemaVersion

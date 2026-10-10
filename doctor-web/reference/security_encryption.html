@@ -284,220 +284,83 @@
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1>面向医疗数据上云场景的国密保护方案</h1>
-  <div class="sub">数据加密 · 身份保护 · 访问授权 · 在线审计 — 为平台提供全链路安全保障</div>
+  <h1>四层数据保护与审计</h1>
+  <div class="sub">选定数值同态统计 · 敏感内容认证加密 · 按角色授权 · 可验证历史记录</div>
 </div>
-
-<!-- Goal -->
 <div class="goal-banner">
   <div class="goal-icon">🎯</div>
   <div class="goal-text">
-    <div class="goal-title">目标：解决医疗数据上云后的隐私性、完整性、可信性挑战</div>
-    <div class="goal-desc">通过数据加密、身份保护、访问授权、在线审计，实现防泄露、防篡改、防未授权访问，支持云端长期安全存储与验证</div>
+    <div class="goal-title">科研与演示平台的实际保护范围</div>
+    <div class="goal-desc">保护选定业务内容与文件，限制身份信息与患者范围的访问，并保留可校验的历史记录。实际效果取决于部署、密钥管理与旧数据迁移；此说明不代表合规认证或临床验证。</div>
   </div>
 </div>
-
 <div class="main">
-
-  <!-- ═══ Left: Four Pillars ═══ -->
   <div class="pillars">
-
-    <!-- Pillar 1: 数据加密 -->
     <div class="pillar p-blue">
-      <div class="pillar-head">
-        <div class="p-icon">🔐</div>
-        <div>
-          <div class="p-title">数据加密</div>
-          <div class="p-sub">Data Encryption</div>
-        </div>
-      </div>
+      <div class="pillar-head"><div class="p-icon">🔐</div><div><div class="p-title">隐私保护</div><div class="p-sub">Data Protection</div></div></div>
       <div class="pillar-body">
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>Paillier 同态加密</strong> — 512 位密钥，支持密文同态聚合，数据不解密即可完成统计运算</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>多维数据打包</strong> — 量表/追踪/认知数据按维度编码为单个明文整数，一次加密覆盖多维指标</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>HMAC-SHA256 完整性校验</strong> — 每条密文记录附带摘要，防篡改可验证</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text">密文存储于 <code>SecurityCipherRecord</code>，版本标识 <code>vmemda-lite-v1</code></div>
-        </div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>Paillier 同态加密</strong> — 对选定数值指标进行加密与聚合，统计范围以实际提取的字段为准。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>AES-GCM 认证加密</strong> — 保护敏感 JSON、文本、上传文件和私钥，兼顾内容保密与完整性校验。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>独立密钥保管</strong> — 主密钥由部署环境或独立文件提供，与数据库备份分开保存。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>保护范围</strong> — 服务端按授权解密业务内容；旧数据须完成迁移，传输还需部署 HTTPS。</div></div>
       </div>
     </div>
-
-    <!-- Pillar 2: 身份保护 -->
     <div class="pillar p-green">
-      <div class="pillar-head">
-        <div class="p-icon">🛡️</div>
-        <div>
-          <div class="p-title">身份保护</div>
-          <div class="p-sub">Identity Protection</div>
-        </div>
-      </div>
+      <div class="pillar-head"><div class="p-icon">🛡️</div><div><div class="p-title">身份隔离</div><div class="p-sub">Identity Separation</div></div></div>
       <div class="pillar-body">
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>数据脱敏</strong> — 姓名 <code>张*三</code> · 邮箱 <code>u***@example.com</code> · 手机 <code>138****5678</code></div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>多级脱敏策略</strong> — 标准级（部分遮蔽）/ 研究级（完全移除，生成匿名 ID）</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>用户密钥隔离</strong> — 每用户独立密钥对 <code>SecurityUserKey</code>，密钥指纹绑定</div>
-        </div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>审计患者代号</strong> — DAC 审计页面使用伪名化代号，遮蔽姓名和联系方式。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>按用途返回身份</strong> — 已绑定且有权限的医生可在诊疗页面查看必要身份信息。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>伪名化边界</strong> — 身份与业务仍可由授权服务关联；患者代号不等同于彻底匿名化。</div></div>
       </div>
     </div>
-
-    <!-- Pillar 3: 访问授权 -->
     <div class="pillar p-purple">
-      <div class="pillar-head">
-        <div class="p-icon">🔑</div>
-        <div>
-          <div class="p-title">访问授权</div>
-          <div class="p-sub">Access Authorization</div>
-        </div>
-      </div>
+      <div class="pillar-head"><div class="p-icon">🔑</div><div><div class="p-title">权限管控</div><div class="p-sub">Access Control</div></div></div>
       <div class="pillar-body">
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>JWT 认证</strong> — HS256 算法，bcrypt 密码哈希，24h 令牌有效期</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>角色权限</strong> — Patient / Researcher / DAC（数据访问控制器）三级角色</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>DAC 专属权限</strong> — 空间聚合审计、密钥管理等高敏感操作仅 DAC 可执行</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>患者分配机制</strong> — <code>SecurityPatientAssignment</code> 绑定患者与研究员，越权自动拦截</div>
-        </div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>JWT 与密码哈希</strong> — 使用 HS256 登录令牌和 bcrypt 密码哈希，令牌期限由部署配置决定。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>角色检查</strong> — 患者、研究人员与 DAC 的可执行操作按接口分别检查。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>患者范围检查</strong> — 诊疗访问检查医生绑定关系，审计访问检查 DAC 角色及患者分配。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>关键访问留痕</strong> — 记录关键读取、修改与拒绝访问，便于追查授权范围。</div></div>
       </div>
     </div>
-
-    <!-- Pillar 4: 在线审计 -->
     <div class="pillar p-orange">
-      <div class="pillar-head">
-        <div class="p-icon">📋</div>
-        <div>
-          <div class="p-title">在线审计</div>
-          <div class="p-sub">Online Audit</div>
-        </div>
-      </div>
+      <div class="pillar-head"><div class="p-icon">📋</div><div><div class="p-title">可信存证</div><div class="p-sub">Record Verification</div></div></div>
       <div class="pillar-body">
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>不可变审计日志</strong> — <code>SecurityAuditLog</code> 记录所有操作：系统初始化、密钥发放、数据访问</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>时间维度审计</strong> — 同态聚合单患者跨时间数据，不解密即可计算趋势统计</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>空间维度审计</strong> — 跨患者聚合，支持群体统计，个体密文始终受保护</div>
-        </div>
-        <div class="tech-row">
-          <div class="tech-dot"></div>
-          <div class="tech-text"><strong>完整性验证链</strong> — 聚合前后均校验 HMAC 摘要，确保数据未被篡改</div>
-        </div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>来源摘要</strong> — 将原始内容摘要、版本与密文元数据绑定校验，发现覆盖内容不一致时明确提示。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>历史版本保留</strong> — 内容变化产生新版本，保留旧记录及关联审计结果。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>同态统计审计</strong> — 支持选定数值的时间或患者聚合；范围与提取规则保持一致。</div></div>
+        <div class="tech-row"><div class="tech-dot"></div><div class="tech-text"><strong>真实性边界</strong> — 校验能检查记录一致性，不能证明最初填写真实，也不能承诺检测任何改动。</div></div>
       </div>
     </div>
-
   </div>
-
-  <!-- ═══ Right Column ═══ -->
   <div class="right-col">
-
-    <!-- Encryption Flow -->
     <div class="flow-box">
-      <div class="fb-title">🔐 加密 → 审计数据流</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">📊</div>
-        <div class="fs-text"><strong>原始数据</strong> — 量表 / 追踪 / 认知 / 影像</div>
-      </div>
+      <div class="fb-title">🔐 保存与审计流程</div>
+      <div class="flow-step"><div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">📊</div><div class="fs-text"><strong>业务数据</strong> — 量表、追踪、认知与上传文件</div></div>
       <div class="flow-arrow">↓</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--purple-glow);color:var(--purple)">📦</div>
-        <div class="fs-text"><strong>维度打包</strong> — 多维指标编码为整数</div>
-      </div>
+      <div class="flow-step"><div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">📦</div><div class="fs-text"><strong>按范围保护</strong> — 敏感内容 AES-GCM；选定指标 Paillier</div></div>
       <div class="flow-arrow">↓</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">🔒</div>
-        <div class="fs-text"><strong>Paillier 加密</strong> — 密文支持同态运算</div>
-      </div>
+      <div class="flow-step"><div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">🔒</div><div class="fs-text"><strong>受控存储</strong> — 密文、来源摘要与版本关联保存</div></div>
       <div class="flow-arrow">↓</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--green-glow);color:var(--green)">✅</div>
-        <div class="fs-text"><strong>HMAC 摘要</strong> — 生成完整性校验值</div>
-      </div>
+      <div class="flow-step"><div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">✅</div><div class="fs-text"><strong>授权读取</strong> — 检查角色、绑定与审计分配</div></div>
       <div class="flow-arrow">↓</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--orange-glow);color:var(--orange)">💾</div>
-        <div class="fs-text"><strong>密文存储</strong> — 数据库安全落盘</div>
-      </div>
+      <div class="flow-step"><div class="fs-icon" style="background:var(--blue-glow);color:var(--blue)">📋</div><div class="fs-text"><strong>一致性审计</strong> — 核对摘要、保留历史并记录审计结果</div></div>
       <div class="flow-arrow">↓</div>
-
-      <div class="flow-step">
-        <div class="fs-icon" style="background:var(--cyan);color:#fff">📊</div>
-        <div class="fs-text"><strong>同态聚合审计</strong> — 密文直接运算 → 验证摘要 → 输出统计</div>
-      </div>
     </div>
-
-    <!-- Effect -->
     <div class="effect-box">
-      <div class="eb-title">✅ 解决的核心问题</div>
+      <div class="eb-title">可检查的保护目标</div>
       <div class="effect-grid">
-        <div class="effect-item" style="background:var(--blue-glow)">
-          <div class="ei-icon">🚫</div>
-          <div class="ei-label">防泄露</div>
-          <div class="ei-sub">全程密文存储</div>
-        </div>
-        <div class="effect-item" style="background:var(--green-glow)">
-          <div class="ei-icon">🔒</div>
-          <div class="ei-label">防篡改</div>
-          <div class="ei-sub">HMAC 完整性校验</div>
-        </div>
-        <div class="effect-item" style="background:var(--purple-glow)">
-          <div class="ei-icon">⛔</div>
-          <div class="ei-label">防未授权</div>
-          <div class="ei-sub">RBAC + DAC 权限</div>
-        </div>
-        <div class="effect-item" style="background:var(--orange-glow)">
-          <div class="ei-icon">☁️</div>
-          <div class="ei-label">云端长期存储</div>
-          <div class="ei-sub">在线验证与审计</div>
-        </div>
+        <div class="effect-item" style="background:var(--blue-glow)"><div class="ei-icon">🔐</div><div class="ei-label">降低泄露风险</div><div class="ei-sub">敏感内容认证加密</div></div>
+        <div class="effect-item" style="background:var(--green-glow)"><div class="ei-icon">✅</div><div class="ei-label">发现校验不一致</div><div class="ei-sub">来源摘要与元数据校验</div></div>
+        <div class="effect-item" style="background:var(--purple-glow)"><div class="ei-icon">⛔</div><div class="ei-label">限制未授权访问</div><div class="ei-sub">角色与患者范围检查</div></div>
+        <div class="effect-item" style="background:var(--orange-glow)"><div class="ei-icon">📚</div><div class="ei-label">保留历史版本</div><div class="ei-sub">记录变化与审计结果</div></div>
       </div>
     </div>
-
-    <!-- Patent -->
     <div class="patent-box">
-      <div class="pb-icon">📜</div>
-      <div class="pb-title">专利支撑</div>
-      <div class="pb-desc">相关医疗数据安全算法 / 方案具备专利支撑<br>为平台的医疗数据保护设计提供可信背书</div>
+      <div class="pb-icon">📌</div><div class="pb-title">部署与验收边界</div>
+      <div class="pb-desc">主密钥、数据库、上传文件与备份应分别管理。生产使用仍需完成 HTTPS、权限、迁移、备份恢复及运行环境验收；算法名称本身不构成安全认证。</div>
     </div>
-
   </div>
-
 </div>
-
 </body>
 </html>

@@ -2,6 +2,7 @@
 Main application routes.
 """
 from flask import Blueprint, render_template, request
+from findviz.workspace import current_patient_id
 
 from findviz.routes.shared import data_manager
 
@@ -14,9 +15,10 @@ def index():
     return render_template(
         'index.html',
         embed_mode=embed_mode,
-        patient_name=request.args.get('patient_name', ''),
-        patient_email=request.args.get('patient_email', ''),
-        return_url=request.args.get('return_url', ''),
+        patient_id=current_patient_id(),
+        patient_name=f'患者 {current_patient_id()}' if current_patient_id() else '',
+        patient_email='',
+        return_url='/doctor-web/doctor_patients.html' if current_patient_id() else '',
     )
 
 # display analysis view for a specific analysis route
@@ -36,7 +38,8 @@ def analysis_view(analysis):
         plot_type=plot_type,
         analysis=analysis,
         embed_mode=request.args.get('embed') == '1',
-        patient_name=request.args.get('patient_name', ''),
-        patient_email=request.args.get('patient_email', ''),
-        return_url=request.args.get('return_url', ''),
+        patient_id=current_patient_id(),
+        patient_name=f'患者 {current_patient_id()}' if current_patient_id() else '',
+        patient_email='',
+        return_url='/doctor-web/doctor_patients.html' if current_patient_id() else '',
     )

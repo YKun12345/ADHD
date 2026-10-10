@@ -1,0 +1,50 @@
+{
+  "environment": {
+    "windowWidth": 390,
+    "windowHeight": 844,
+    "pixelRatio": 3,
+    "recordedDays": 14
+  },
+  "bounds": [
+    {
+      "id": "",
+      "dataset": {},
+      "left": 14,
+      "right": 376,
+      "top": 280,
+      "bottom": 679,
+      "width": 362,
+      "height": 399
+    },
+    {
+      "id": "",
+      "dataset": {},
+      "left": 29.666667938232422,
+      "right": 360.3333549499512,
+      "top": 377.66668701171875,
+      "bottom": 393.16668701171875,
+      "width": 330.66668701171875,
+      "height": 15.5
+    },
+    {
+      "id": "trackingTrendCanvas",
+      "dataset": {},
+      "left": 29.666667938232422,
+      "right": 360.3333549499512,
+      "top": 401.16668701171875,
+      "bottom": 629.1666870117188,
+      "width": 330.66668701171875,
+      "height": 228
+    },
+    {
+      "id": "trackingTrendPlot",
+      "dataset": {},
+      "left": 29.666667938232422,
+      "right": 360.3333549499512,
+      "top": 401.16668701171875,
+      "bottom": 629.1666870117188,
+      "width": 330.66668701171875,
+      "height": 228
+    }
+  ]
+}

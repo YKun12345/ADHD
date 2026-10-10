@@ -335,9 +335,12 @@ def test_extended_trail_reports_objective_stages_and_protocol(client) -> None:
 def test_extended_trail_duration_does_not_penalize_other_task_scores(client) -> None:
     headers = register_patient(client)
     for test_type in ["reaction", "stroop", "flanker", "nback", "digit"]:
+        # The comparison must use tasks from the same protocol as the extended trail.
+        result = canonical_result(test_type)
+        result.update(source="miniprogram", protocol_id="continuous-mobile-v4", protocol_schema_version=6)
         response = client.post(
             "/api/v1/patient/submit_cognitive_test", headers=headers,
-            json={"test_type": test_type, "result_json": canonical_result(test_type)},
+            json={"test_type": test_type, "result_json": result},
         )
         assert response.status_code == 201
     profiles = []

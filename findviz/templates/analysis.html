@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智绘脑图 · 脑影像可视化</title>
+    <title>知行合医 · 脑影像可视化</title>
     <link rel="icon" href="data:,">
     <!-- Load CSS stylesheets first -->
     <link rel="stylesheet" href="{{ request.script_root }}/static/css/vendor/bootstrap.min.css">
@@ -39,7 +39,7 @@
 {% if embed_mode %}
   <div class="embed-topbar">
     <div class="embed-brand">
-      <span class="embed-brand-pill">智绘脑图</span>
+      <span class="embed-brand-pill">知行合医</span>
       <span class="embed-brand-title">脑影像可视化工作台</span>
     </div>
     <div class="embed-patient">
@@ -108,6 +108,7 @@
   <!-- Analysis Viewer javascript -->
   <script type="module">
     window.FINDVIZ_BASE_PATH = {{ request.script_root|tojson }};
+    window.FINDVIZ_PATIENT_ID = {{ patient_id|tojson }};
     // Import classes from modules
     import AnalysisViewer from '{{ request.script_root }}/static/js/viewer/AnalysisViewer.js';
     import { initBootstrapComponents } from '{{ request.script_root }}/static/js/utils.js';

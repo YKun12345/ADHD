@@ -16,6 +16,7 @@ from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole
 from backend.app.schemas.cognitive import (
     CognitiveProfileResponse,
+    CognitiveProtocolProfile,
     CognitiveTestReportItem,
     CognitiveTestResponse,
     CognitiveTestSubmitRequest,
@@ -41,7 +42,9 @@ from backend.app.services.security_service import (
 from backend.app.services.cognitive_contract import (
     CANONICAL_COGNITIVE_TYPES,
     CONTINUOUS_PROTOCOL_ID,
-    canonical_test_type,
+    result_test_type,
+    protocol_metadata,
+    cognitive_series_id,
     normalize_result_json,
 )
 
@@ -283,14 +286,39 @@ def _extract_latest_cognitive_profile(
         .where(CognitiveTest.patient_id == patient_id)
         .order_by(CognitiveTest.created_at.desc(), CognitiveTest.id.desc())
     ).all()
-
-    if not records:
+    grouped: dict[str, list[CognitiveTest]] = {}
+    for record in records:
+        try:
+            result_test_type(record.test_type, record.result_json or {})
+            metadata = protocol_metadata(record.test_type, record.result_json or {})
+        except (AttributeError, ValueError, TypeError):
+            continue
+        grouped.setdefault(metadata["protocol_key"], []).append(record)
+    if not grouped:
         return None
+    profiles = [_build_cognitive_protocol_profile(group) for group in grouped.values()]
+    active = profiles[0]
+    latest_tests = sorted(
+        [item for profile in profiles for item in profile.latest_tests],
+        key=lambda item: CANONICAL_COGNITIVE_TYPES.index(item.test_type),
+    )
+    summary = active.summary
+    if len(profiles) > 1:
+        summary += f"共 {len(profiles)} 个来源或协议组，分组独立展示；综合分仅来自最近协议组，不能跨协议直接比较。"
+    return CognitiveProfileResponse(
+        radar_scores=active.radar_scores,
+        summary=summary,
+        latest_tests=latest_tests,
+        active_protocol_key=active.protocol_key,
+        protocol_profiles=profiles,
+    )
 
+
+def _build_cognitive_protocol_profile(records: list[CognitiveTest]) -> CognitiveProtocolProfile:
     latest_by_type: dict[str, CognitiveTest] = {}
     for record in records:
         try:
-            normalized_type = canonical_test_type(record.test_type)
+            normalized_type = result_test_type(record.test_type, record.result_json or {})
         except (AttributeError, ValueError):
             continue
         if normalized_type not in latest_by_type:
@@ -318,7 +346,8 @@ def _extract_latest_cognitive_profile(
     nback_raw = raw_result(nback)
     digit_raw = raw_result(digit)
     reaction_speed_raw = simple_reaction_raw or reaction_raw
-    extended_trail = bool(trail and (trail.result_json or {}).get("protocol_id") == CONTINUOUS_PROTOCOL_ID)
+    metadata = protocol_metadata(records[0].test_type, records[0].result_json or {})
+    extended_trail = metadata["protocol_id"] == CONTINUOUS_PROTOCOL_ID
 
     reaction_speed = _clamp_score(
         (
@@ -335,7 +364,7 @@ def _extract_latest_cognitive_profile(
             + _accuracy_score(_extract_float(flanker_raw, "accuracy")) * 0.35
             + (0 if extended_trail else (
                 _inverse_time_score(_extract_float(trail_raw, "elapsed_ms"), 6000, 40000) * 0.5
-                + _clamp_score(20 - (_extract_float(trail_raw, "errors") or 0) * 4) * 0.5
+                + (0 if not trail_raw else _clamp_score(20 - (_extract_float(trail_raw, "errors") or 0) * 4)) * 0.5
             ) * 0.25)
         ) / (0.75 if extended_trail else 1)
     )
@@ -344,7 +373,7 @@ def _extract_latest_cognitive_profile(
         (
             _accuracy_score(_extract_float(stroop_raw, "accuracy")) * 0.45
             + _accuracy_score(_extract_float(flanker_raw, "accuracy")) * 0.45
-            + _clamp_score(20 - (_extract_float(reaction_raw, "false_starts") or 0) * 4) * 0.1
+            + (0 if not reaction_raw else _clamp_score(20 - (_extract_float(reaction_raw, "false_starts") or 0) * 4)) * 0.1
         )
     )
 
@@ -376,6 +405,9 @@ def _extract_latest_cognitive_profile(
         f"工作记忆 {working_memory}/20。平台判定为“{level_text}”。"
         "这些分值用于项目内长期追踪，不替代医生诊断。"
     )
+    summary = f"{metadata['protocol_label']}（版本 {metadata['protocol_schema_version']}，年龄组 {metadata['age_group']}）： " + summary
+    if metadata["protocol_id"] == "legacy-unversioned":
+        summary += "历史记录未标注完整协议，来源未知，仅保留原有项目分值供查阅，不能与已标注协议直接比较。"
     if extended_trail:
         summary += (
             "连线采用连续版协议 continuous-mobile-v4（A 30节点、B 30节点），仅展示客观用时和错误，"
@@ -395,7 +427,7 @@ def _extract_latest_cognitive_profile(
                 parsed_finished_at = datetime.fromisoformat(finished_at.replace("Z", "+00:00"))
             except ValueError:
                 parsed_finished_at = None
-        normalized_type = canonical_test_type(record.test_type)
+        normalized_type = result_test_type(record.test_type, record.result_json or {})
         status_text = result_json.get("status_text") or "已记录"
         if normalized_type == "trail" and result_json.get("protocol_id") == CONTINUOUS_PROTOCOL_ID:
             raw = result_json.get("raw_result") or {}
@@ -414,12 +446,20 @@ def _extract_latest_cognitive_profile(
                         f"错误 {stage.get('errors', '--')} 次，{stage.get('nodeCount', '--')}节点"
                     )
             status_text = f"{status_text} · 客观记录 · {CONTINUOUS_PROTOCOL_ID}"
+        item_metadata = protocol_metadata(record.test_type, record.result_json or {})
+        source_label = {"patient_web": "网页", "miniprogram": "小程序", "unknown": "来源未知"}.get(item_metadata["source"], item_metadata["source"])
+        status_text += f" · {source_label} · {item_metadata['protocol_label']} v{item_metadata['protocol_schema_version']} · {item_metadata['age_group']}"
+        if item_metadata["protocol_inferred"]:
+            status_text += " · 历史特征推断"
         return CognitiveTestReportItem(
             test_type=normalized_type,
-            test_name=result_json.get("test_name") or normalized_type,
+            test_name=("简单反应时" if normalized_type == "simple_reaction" else result_json.get("test_name") or normalized_type),
             status_text=status_text,
             key_metric=str(key_metric),
             finished_at=parsed_finished_at,
+            stored_test_type=record.test_type,
+            series_id=cognitive_series_id(record.test_type, record.result_json or {}),
+            **item_metadata,
         )
 
     latest_tests = [
@@ -431,7 +471,8 @@ def _extract_latest_cognitive_profile(
         if item is not None
     ]
 
-    return CognitiveProfileResponse(
+    return CognitiveProtocolProfile(
+        **{key: value for key, value in metadata.items() if key != "protocol_inferred"},
         radar_scores=radar_scores,
         summary=summary,
         latest_tests=latest_tests,

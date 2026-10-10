@@ -8,11 +8,15 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedShuffleSplit
 
 from backend.app.core.config import settings
+from backend.app.services.hgst_runtime.evaluation import (
+    ValidationCheckpoint,
+    classification_metrics,
+    snapshot_state_dict,
+    stratified_partitions,
+)
 from backend.app.services.hgst_runtime.preprocessing import (
     HGSTPreprocessError,
     construct_hyperedges_from_time_series,
@@ -215,6 +219,8 @@ def build_hgst_deployment_bundle(
     weight_decay_f: float = 1e-4,
     train_on_full_dataset: bool = False,
 ) -> Path:
+    if max_epoch_f < 1:
+        raise ValueError("Classifier training needs at least one epoch")
     torch, Hypergraph, PreModel, MLPClassifier = _import_runtime_dependencies()
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -257,11 +263,11 @@ def build_hgst_deployment_bundle(
 
     label_tensor = torch.tensor(labels, dtype=torch.long)
 
+    # The supplied encoder may have seen this dataset. Its provenance is never inferred from a filename.
+    logger.warning("Building bundle with external encoder of unverified provenance; holdout metrics describe the classifier only")
     if train_on_full_dataset:
         full_index = torch.arange(len(labels), dtype=torch.long)
-        best_state = None
         last_train_acc = 0.0
-
         for _ in range(max_epoch_f):
             classifier.train()
             logits = classifier(all_embeddings[full_index], None)
@@ -269,129 +275,77 @@ def build_hgst_deployment_bundle(
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
             classifier.eval()
             with torch.no_grad():
                 train_logits = classifier(all_embeddings[full_index], None)
                 train_pred = train_logits.argmax(dim=1).cpu().numpy()
                 train_true = label_tensor[full_index].cpu().numpy()
                 last_train_acc = float(accuracy_score(train_true, train_pred))
-
-        best_state = {key: value.detach().cpu() for key, value in classifier.state_dict().items()}
-        metric_name = "train_accuracy_full"
-        metric_value = last_train_acc
+        best_state = snapshot_state_dict(classifier.state_dict())
+        recorded_metrics = {"train_accuracy_full": last_train_acc}
+        sample_counts = {"train": len(labels), "validation": 0, "test": 0}
     else:
-        splitter = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=seed)
-        train_index, val_index = next(splitter.split(np.zeros(len(labels)), labels))
-        train_index = torch.tensor(train_index, dtype=torch.long)
-        val_index = torch.tensor(val_index, dtype=torch.long)
-
-        best_state = None
-        best_acc = -1.0
-
-        for _ in range(max_epoch_f):
+        train_indices, validation_indices, test_indices = stratified_partitions(labels, seed=seed)
+        train_index = torch.tensor(train_indices, dtype=torch.long)
+        val_index = torch.tensor(validation_indices, dtype=torch.long)
+        test_index = torch.tensor(test_indices, dtype=torch.long)
+        selection = ValidationCheckpoint()
+        for epoch in range(max_epoch_f):
             classifier.train()
             logits = classifier(all_embeddings[train_index], None)
             loss = torch.nn.functional.cross_entropy(logits, label_tensor[train_index])
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
             classifier.eval()
             with torch.no_grad():
                 val_logits = classifier(all_embeddings[val_index], None)
-                val_pred = val_logits.argmax(dim=1).cpu().numpy()
+                val_probabilities = torch.softmax(val_logits, dim=1).cpu().numpy()
                 val_true = label_tensor[val_index].cpu().numpy()
-                val_acc = float(accuracy_score(val_true, val_pred))
-            if val_acc >= best_acc:
-                best_acc = val_acc
-                best_state = {key: value.detach().cpu() for key, value in classifier.state_dict().items()}
+            validation_metrics = classification_metrics(val_true, val_probabilities)
+            selection.consider(epoch, validation_metrics, lambda: snapshot_state_dict(classifier.state_dict()))
 
-        metric_name = "val_accuracy"
-        metric_value = best_acc
+        def evaluate_test():
+            classifier.eval()
+            with torch.no_grad():
+                test_logits = classifier(all_embeddings[test_index], None)
+                probabilities = torch.softmax(test_logits, dim=1).cpu().numpy()
+            return classification_metrics(label_tensor[test_index].cpu().numpy(), probabilities)
+
+        selected_metrics = selection.evaluate_test(classifier.load_state_dict, evaluate_test)
+        best_state = selection.state
+        recorded_metrics = {
+            "val_accuracy": selected_metrics["val_acc"],
+            "best_val_epoch": selected_metrics["best_val_epoch"],
+            **{
+                "test_" + ("accuracy" if key == "acc" else key) + "_classifier_holdout": selected_metrics["test_" + key]
+                for key in ("acc", "recall", "precision", "f1", "auc", "specificity")
+            },
+        }
+        sample_counts = {"train": len(train_indices), "validation": len(validation_indices), "test": len(test_indices)}
 
     bundle = {
         "config": {
             **config,
-            "training_scope": "full_dataset" if train_on_full_dataset else "train_val_split",
+            "training_scope": "full_dataset" if train_on_full_dataset else "train_val_test_split",
+            "pretraining_scope": "external_unverified",
+            "evaluation_scope": "training_only" if train_on_full_dataset else "classifier_holdout_external_encoder",
+            "end_to_end_test_verified": False,
+            "selection_metric": None if train_on_full_dataset else "validation_accuracy",
+            "tie_break": None if train_on_full_dataset else "earliest_epoch",
+            "split_seed": seed,
+            "sample_counts": sample_counts,
         },
-        "encoder_state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
+        "encoder_state_dict": snapshot_state_dict(model.state_dict()),
         "classifier_state_dict": best_state,
         "classifier_input_dim": int(all_embeddings.shape[1]),
-        metric_name: metric_value,
+        **recorded_metrics,
     }
 
     target_path = Path(output_path).expanduser().resolve() if output_path else _bundle_path()
     target_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(bundle, target_path)
     return target_path
-
-
-def _run_lightweight_timeseries_inference(
-    file_bytes: bytes,
-    file_name: str,
-) -> HGSTPredictionResult:
-    """CPU-only lightweight fallback inference.
-
-    Uses normalized time-series connectivity statistics to produce a stable
-    screening-style probability when HGST runtime dependencies are unavailable.
-    This keeps the doctor imaging workflow usable on lightweight environments.
-    """
-    timeseries = normalize_timeseries_shape(parse_timeseries_bytes(file_bytes, file_name))
-    connectivity = subject_connectivity(timeseries)
-
-    upper = connectivity[np.triu_indices_from(connectivity, k=1)]
-    if upper.size == 0:
-        raise HGSTInferenceError("时间序列连接矩阵为空，无法进行轻量化推理。")
-
-    abs_upper = np.abs(upper)
-    feature_vector = np.array([
-        float(np.mean(abs_upper)),
-        float(np.std(abs_upper)),
-        float(np.percentile(abs_upper, 75)),
-        float(np.percentile(abs_upper, 90)),
-        float(np.mean(np.var(timeseries, axis=0))),
-        float(np.std(np.var(timeseries, axis=0))),
-    ], dtype=float)
-
-    # Synthetic calibration anchors chosen to provide stable screening output
-    # without heavyweight HGST dependencies.
-    X_train = np.array([
-        [0.08, 0.05, 0.11, 0.18, 0.70, 0.15],
-        [0.10, 0.06, 0.14, 0.22, 0.85, 0.18],
-        [0.12, 0.07, 0.17, 0.26, 1.00, 0.22],
-        [0.16, 0.09, 0.22, 0.34, 1.25, 0.30],
-        [0.19, 0.11, 0.27, 0.40, 1.45, 0.36],
-        [0.22, 0.12, 0.31, 0.45, 1.70, 0.44],
-    ], dtype=float)
-    y_train = np.array([0, 0, 0, 1, 1, 1], dtype=int)
-
-    classifier = LogisticRegression(random_state=2026, solver="liblinear")
-    classifier.fit(X_train, y_train)
-    probabilities = classifier.predict_proba(feature_vector.reshape(1, -1))[0]
-
-    adhd_probability = float(probabilities[1])
-    control_probability = float(probabilities[0])
-    prediction_label = "ADHD" if adhd_probability >= 0.5 else "Control"
-    risk_text = "较高" if adhd_probability >= 0.7 else "中等" if adhd_probability >= 0.4 else "较低"
-    summary_text = (
-        f"当前为轻量化 CPU 推理结果，提示 ADHD 风险{risk_text}。"
-        f"模型输出 ADHD 概率约为 {adhd_probability:.2%}。"
-        "该结果基于时间序列连接统计特征生成，适合作为筛查参考，建议结合量表与认知测试综合判断。"
-    )
-
-    return HGSTPredictionResult(
-        prediction_label=prediction_label,
-        probability=adhd_probability,
-        probability_control=control_probability,
-        roi_dim_used=int(timeseries.shape[1]),
-        timepoints=int(timeseries.shape[0]),
-        file_name=file_name,
-        model_name="LightweightConnectivityLogReg",
-        model_version="cpu-fallback-2026-04-07",
-        source_type="timeseries_lightweight",
-        summary_text=summary_text,
-    )
 
 
 def predict_timeseries_file(file_bytes: bytes, file_name: str) -> HGSTPredictionResult:

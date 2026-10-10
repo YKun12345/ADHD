@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.patient import Patient
@@ -24,7 +25,10 @@ class AIChatLog(Base):
     session_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     scope: Mapped[str] = mapped_column(String(32), nullable=False, default="general")
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    provider: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    model_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    content: Mapped[str] = mapped_column(EncryptedValue("ai_chat_logs.content", "text"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

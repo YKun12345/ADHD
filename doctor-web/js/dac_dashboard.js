@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         auditCountValue: document.getElementById('auditCountValue'),
         patientCountValue: document.getElementById('patientCountValue'),
         auditPatientSelect: document.getElementById('auditPatientSelect'),
+        auditGroupSelect: document.getElementById("auditGroupSelect"),
+        spatialAuditGroupSelect: document.getElementById("spatialAuditGroupSelect"),
         auditSourceTypeSelect: document.getElementById('auditSourceTypeSelect'),
         auditResultBox: document.getElementById('auditResultBox'),
         cipherRecordStatusBox: document.getElementById('cipherRecordStatusBox'),
@@ -38,6 +40,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const actionLabels = {
         system_init: '系统初始化',
+        data_read: '读取记录',
+        data_write: '更新记录',
+        access_denied: '权限拦截',
+        evidence_append: '追加证据版本',
         key_provision: '密钥分发',
         patient_route_assigned: '患者分配链建立',
         temporal_audit_requested: '发起时间审计',
@@ -47,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const statusLabels = {
+        denied: '已拦截',
         success: '成功',
         failed: '失败',
         completed: '已完成',
@@ -65,14 +72,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const metricLabels = {
         mood_value: '情绪评分',
         focus_minutes: '专注时长（分钟）',
-        test_score_scaled: '追踪测验得分',
-        total_score: '量表总分',
-        risk_score: '风险指数',
-        attention_control: '注意控制指数',
-        hyperactivity: '多动冲动指数',
+        test_score_scaled: '追踪测验得分（×100）',
+        total_score: '量表总分（×10）',
+        risk_score: '风险编码（低100/中200/高300）',
+        attention_control: '注意控制指数（×10）',
+        hyperactivity: '多动冲动指数（×10）',
         performance_score: '综合表现指数',
-        accuracy_score: '任务准确率指数',
-        latency_score: '反应时指标',
+        accuracy_score: '任务准确率（%）',
+        latency_score: '反应时（毫秒）',
     };
 
     let patientItems = [];
@@ -95,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function percent(value, maxValue) {
         if (!maxValue || maxValue <= 0) return 0;
-        return Math.max(6, Math.min(100, (Number(value || 0) / maxValue) * 100));
+        return Math.max(0, Math.min(100, (Number(value || 0) / maxValue) * 100));
     }
 
     function patientNameById(patientId) {
@@ -117,10 +124,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function hasSourceData(patient, sourceType) {
-        if (sourceType === 'tracking') return Number(patient.completed_tracking_days || 0) > 0;
-        if (sourceType === 'scale') return Boolean(patient.latest_scale_type);
-        if (sourceType === 'cognitive') return Number(patient.cognitive_test_count || 0) > 0;
-        return false;
+        const groups = patient.security_overview?.audit_groups?.[sourceType] || [];
+        const selected = el.spatialAuditGroupSelect?.value;
+        return groups.length > 0 && (!selected || groups.includes(selected));
+    }
+
+    function groupLabel(value) {
+        if (value === 'tracking:v1') return '14天追踪';
+        if (value.startsWith('scale:')) return value.slice(6).toUpperCase() + ' 量表';
+        const parts = value.replace('cognitive:', '').split('|');
+        const names = {reaction:'Go/No-Go',simple_reaction:'简单反应时',trail:'连线',digit:'数字广度',stroop:'Stroop',flanker:'Flanker',nback:'2-back'};
+        const sources = {patient_web:'网页',miniprogram:'小程序',unknown:'历史协议未知'};
+        const ages = {adult:'成人',child:'儿童',unspecified:'未指定年龄',unknown:'年龄未知'};
+        return [names[parts[0]] || parts[0], sources[parts[1]] || parts[1], '版本 ' + (parts[3] || '0'), ages[parts[4]] || parts[4]].join(' · ');
+    }
+
+    function renderGroupOptions(select, groups) {
+        const old = select.value;
+        select.replaceChildren();
+        [...new Set(groups)].forEach(group => {
+            const option = document.createElement('option');
+            option.value = group; option.textContent = groupLabel(group); select.appendChild(option);
+        });
+        if (!select.options.length) { const empty=document.createElement('option'); empty.value=''; empty.textContent='暂无同协议数据'; select.appendChild(empty); }
+        if ([...select.options].some(option => option.value === old)) select.value = old;
+    }
+
+    function updateTemporalGroups() {
+        const patient=patientItems.find(item => Number(item.patient_id)===Number(el.auditPatientSelect.value));
+        renderGroupOptions(el.auditGroupSelect,patient?.security_overview?.audit_groups?.[el.auditSourceTypeSelect.value] || []);
+    }
+
+    function updateSpatialGroups() {
+        renderGroupOptions(el.spatialAuditGroupSelect,patientItems.flatMap(item => item.security_overview?.audit_groups?.[el.spatialSourceTypeSelect.value] || []));
+        renderSpatialPatientList();
     }
 
     function patientSourceHint(patient, sourceType) {
@@ -152,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `
                 <div class="result-stat">
                     <label>${metricLabel(key)}</label>
-                    <strong>群体均值 ${value.average}</strong>
+                    <strong>记录均值 ${value.average}</strong>
                     <div class="result-stat-meta">
                         <span>聚合总和 ${value.sum}</span>
                         <span>波动方差 ${value.variance}</span>
@@ -179,8 +216,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function buildVerificationSummaryList(result) {
         const details = result.verification_details || {};
         const items = [
+            `审计协议：${groupLabel(details.audit_group || result.decrypted_stats?.audit_group || "历史协议未知")}`,
             `本地 MCS 节点：${result.mcs_node_id || details.mcs_node_id || '--'}`,
             `参与记录总数：${details.record_count ?? result.decrypted_stats?.record_count ?? 0}`,
+            `原记录与证据版本：${details.source_binding_verified ? "通过" : "未通过"}`,
             `完整性校验：${details.integrity_verified ? '通过' : '未通过'}`,
             `聚合一致性校验：${details.aggregate_verified ? '通过' : '未通过'}`,
             `密文校验通过记录：${Array.isArray(details.verified_record_ids) ? details.verified_record_ids.length : 0} 条`,
@@ -316,7 +355,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        renderSpatialPatientList();
+        updateTemporalGroups();
+        updateSpatialGroups();
     }
 
     function renderSpatialPatientList() {
@@ -365,7 +405,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = `
                 <td>${item.id}</td>
                 <td>${item.time_bucket}</td>
-                <td>${sourceLabel(item.source_type)}</td>
+                <td>${sourceLabel(item.source_type)} · v${item.metadata?.evidence_version || "历史"}</td>
                 <td>${item.mcs_node_id || '--'}</td>
             `;
             el.cipherRecordTableBody.appendChild(row);
@@ -606,6 +646,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const result = await window.API.Security.runTemporalAudit({
                 patient_id: patientId,
                 source_type: sourceType,
+                audit_group: el.auditGroupSelect.value || null,
             });
             el.auditResultBox.innerHTML = buildAuditCard(result, '时间聚合审计');
             await Promise.all([loadRecentAudits(), loadAuditLogs(), loadCipherRecords(), loadSystemStatus()]);
@@ -631,6 +672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const result = await window.API.Security.runSpatialAudit({
                 patient_ids: patientIds,
                 source_type: sourceType,
+                audit_group: el.spatialAuditGroupSelect.value || null,
             });
             el.spatialAuditResultBox.innerHTML = buildAuditCard(result, '空间聚合审计');
             await Promise.all([loadRecentAudits(), loadAuditLogs(), loadSystemStatus()]);
@@ -641,9 +683,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    el.auditPatientSelect?.addEventListener('change', loadCipherRecords);
-    el.auditSourceTypeSelect?.addEventListener('change', loadCipherRecords);
-    el.spatialSourceTypeSelect?.addEventListener('change', renderSpatialPatientList);
+    el.auditPatientSelect?.addEventListener('change', () => {updateTemporalGroups();loadCipherRecords();});
+    el.auditSourceTypeSelect?.addEventListener('change', () => {updateTemporalGroups();loadCipherRecords();});
+    el.spatialSourceTypeSelect?.addEventListener('change', updateSpatialGroups);
+    el.spatialAuditGroupSelect?.addEventListener('change', renderSpatialPatientList);
 
     await refreshAll();
 });

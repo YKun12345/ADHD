@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../../workspaceRequest.js';
 // TimeSeriesFileManager.js
 // Manages the time series file DOM elements
 import { API_ENDPOINTS } from '../../constants/APIEndpoints.js';
@@ -149,7 +150,7 @@ class TimeSeriesFileManager {
         formData.append('file_index', fileIndex);
 
         try {
-            const response = await fetch(
+            const response = await workspaceFetch(
                 API_ENDPOINTS.UPLOAD.HEADER, 
                 { method: 'POST', body: formData }
             );

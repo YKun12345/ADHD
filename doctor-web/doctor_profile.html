@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医生个人中心 | 知行合“医”</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/patient.css">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="css/account-profile.css?v=20261010c">
+</head>
+<body class="bg-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <ion-icon name="analytics"></ion-icon>
+                <span>知行合“医”</span>
+            </div>
+            <ul class="nav-links"><li><a href="doctor_analysis.html">首页</a></li><li><a href="doctor_patients.html">就诊者工作台</a></li></ul>
+            <div class="nav-actions">
+
+                <div class="user-profile">
+                    <ion-icon name="person-circle" style="color: var(--primary-blue);"></ion-icon>
+                    <a href="doctor_profile.html" style="color: var(--primary-blue); text-decoration: none; font-weight: 700;"><span id="userName">个人中心</span></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="info-block account-main">
+        <div class="info-container">
+            <h1 class="account-title">医生个人中心</h1>
+            <section class="account-layout" id="accountProfile" data-account-role="researcher">
+                <div class="todo-widget account-card account-identity">
+                    <ion-icon name="person-circle" class="account-avatar"></ion-icon>
+                    <h3 id="accountName">正在加载</h3>
+                    <p id="accountUid" class="account-uid">UID: —</p>
+                    <button type="button" id="accountLogout" class="btn-outline account-logout"><ion-icon name="log-out-outline"></ion-icon>退出登录</button>
+                </div>
+                <div class="todo-widget account-card">
+                    <div class="todo-header account-header"><h3>账号信息与系统授权</h3></div>
+                    <dl class="account-details">
+                        <dt>登录邮箱</dt><dd id="accountEmail">—</dd>
+                        <dt>账号身份</dt><dd id="accountRole">—</dd>
+                        <dt>工号</dt><dd id="accountStaffId">—</dd>
+                        <dt>协议确认</dt><dd id="accountConsent">—</dd>
+                    </dl>
+                    <p id="accountScope" class="account-scope"></p>
+                    <div class="account-actions">
+                        <a href="doctor_patients.html" class="btn-outline">返回就诊者工作台</a>
+                        <a href="dac_dashboard.html" id="accountAuditLink" class="btn-outline" hidden>进入 DAC 审计台</a>
+                        <button type="button" id="accountRetry" class="btn-outline" hidden>重新加载</button>
+                    </div>
+                    <p id="accountStatus" class="account-status" role="status" aria-live="polite"></p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Simple sticky footer -->
+    <footer class="app-footer" style="padding: 2rem 0; margin-top: auto;">
+        <div class="footer-container" style="justify-content: center;">
+            <span>知行合“医” - 专注每刻 © 2026</span>
+        </div>
+    </footer>
+    <script src="js/api.js?v=20261010c"></script>
+    <script src="js/account.js?v=20261010c"></script>
+</body>
+</html>

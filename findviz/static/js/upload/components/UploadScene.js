@@ -1,3 +1,4 @@
+import { workspaceFetch } from '../../workspaceRequest.js';
 // Upload scene file (.pkl file)
 import { API_ENDPOINTS } from '../../constants/APIEndpoints.js';
 import Spinner from '../../Spinner.js';
@@ -52,7 +53,7 @@ class UploadScene {
             const formData = new FormData();
             formData.append('scene_file', sceneFile);
             // send form data to server
-            const response = await fetch(API_ENDPOINTS.UPLOAD.SCENE, {
+            const response = await workspaceFetch(API_ENDPOINTS.UPLOAD.SCENE, {
                 method: 'POST',
                 body: formData
             });

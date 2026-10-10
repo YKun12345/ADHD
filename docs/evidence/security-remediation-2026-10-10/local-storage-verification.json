@@ -1,0 +1,92 @@
+{
+  "sensitive_values_preserved": true,
+  "row_counts_preserved": true,
+  "remaining_plaintext_sensitive_values": 0,
+  "migration_first_run": {
+    "encrypted_values": 0,
+    "encrypted_files": 0
+  },
+  "idempotent_second_run": {
+    "encrypted_values": 0,
+    "encrypted_files": 0
+  },
+  "row_counts": {
+    "security_log_chain_head": 1,
+    "security_mcs_nodes": 1,
+    "users": 14,
+    "patients": 11,
+    "security_system_configs": 0,
+    "ai_chat_logs": 52,
+    "cognitive_tests": 62,
+    "imaging_visualizations": 4,
+    "patient_tasks": 0,
+    "scale_results": 10,
+    "security_patient_assignments": 0,
+    "security_user_keys": 0,
+    "tracking_logs": 30,
+    "uploads": 0,
+    "care_messages": 6,
+    "model_predictions": 2,
+    "security_audit_tasks": 0,
+    "security_cipher_records": 0,
+    "security_audit_logs": 25
+  },
+  "verified_encrypted_backups": [
+    {
+      "directory": "20261010T080018212820Z",
+      "restored_components": 1,
+      "database_integrity": "ok",
+      "manifest_added_after_authenticated_completeness_check": true,
+      "legacy_plaintext_backup_encrypted": true,
+      "original_row_counts": {
+        "security_mcs_nodes": 1,
+        "users": 14,
+        "patients": 11,
+        "security_system_configs": 0,
+        "ai_chat_logs": 52,
+        "cognitive_tests": 62,
+        "imaging_visualizations": 4,
+        "patient_tasks": 0,
+        "scale_results": 10,
+        "security_user_keys": 0,
+        "security_patient_assignments": 0,
+        "tracking_logs": 30,
+        "uploads": 0,
+        "care_messages": 6,
+        "model_predictions": 2,
+        "security_cipher_records": 0,
+        "security_audit_tasks": 0,
+        "security_audit_logs": 0,
+        "security_log_chain_head": 0
+      }
+    },
+    {
+      "directory": "20261010T094210442888Z",
+      "restored_components": 1,
+      "database_integrity": "ok",
+      "manifest_added_after_authenticated_completeness_check": false,
+      "legacy_plaintext_backup_encrypted": false,
+      "original_row_counts": {
+        "security_mcs_nodes": 1,
+        "users": 14,
+        "patients": 11,
+        "security_system_configs": 0,
+        "ai_chat_logs": 52,
+        "cognitive_tests": 62,
+        "imaging_visualizations": 4,
+        "patient_tasks": 0,
+        "scale_results": 10,
+        "security_user_keys": 0,
+        "security_patient_assignments": 0,
+        "tracking_logs": 30,
+        "uploads": 0,
+        "care_messages": 6,
+        "model_predictions": 2,
+        "security_cipher_records": 0,
+        "security_audit_tasks": 0,
+        "security_audit_logs": 25,
+        "security_log_chain_head": 1
+      }
+    }
+  ]
+}

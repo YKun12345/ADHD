@@ -247,6 +247,7 @@ function normalizeLocalCognitive(value) {
     const quality = isObject(resultJson.quality) ? resultJson.quality : null
     cards.push({
       id: definition.id,
+      ...cognitiveIdentity(definition.id, resultJson),
       title: definition.title,
       ...metrics,
       qualityLabel: quality && quality.valid === false ? '数据质量需关注' : '数据质量正常',
@@ -267,36 +268,48 @@ function normalizeLocalCognitive(value) {
   }
 }
 
+function cognitiveIdentity(testType, result) {
+  const protocolId = cleanText(result.protocol_id, 'legacy-unversioned')
+  const source = cleanText(result.source, protocolId === 'continuous-mobile-v4'
+    ? 'miniprogram' : protocolId === 'patient-web-preview-v1' ? 'patient_web' : 'unknown')
+  const version = Number.isInteger(result.protocol_schema_version) ? result.protocol_schema_version : 0
+  const ageGroup = cleanText(result.age_group, protocolId === 'patient-web-preview-v1' ? 'unspecified' : 'unknown')
+  const protocolKey = [source, protocolId, version, ageGroup].join('|')
+  const sourceLabel = { patient_web: '网页', miniprogram: '小程序', unknown: '来源未知' }[source] || source
+  const ageLabel = { adult: '成人', child: '儿童', unspecified: '未区分年龄', unknown: '年龄组未知' }[ageGroup] || ageGroup
+  const protocolLabel = cleanText(result.protocol_label, protocolId === 'legacy-unversioned' ? '历史未标注协议' : protocolId)
+  return {
+    seriesId: testType + '|' + protocolKey, protocolKey, testType,
+    protocolText: sourceLabel + ' · ' + protocolLabel + ' v' + version + ' · ' + ageLabel
+  }
+}
+
+function cognitiveCount(cards) {
+  return new Set(cards.filter(card => COGNITIVE_DEFINITIONS.some(def => def.id === card.id)).map(card => card.id)).size
+}
+
 function normalizeServerCognitive(value) {
-  if (!isObject(value) || !Array.isArray(value.latest_tests)) {
-    return emptyCognitive()
-  }
-
+  if (!isObject(value) || !Array.isArray(value.latest_tests)) return emptyCognitive()
+  const definitions = [...COGNITIVE_DEFINITIONS, { id: 'simple_reaction', title: '简单反应时', metric: 'accuracy' }]
   const cards = []
-  for (const definition of COGNITIVE_DEFINITIONS) {
-    const item = value.latest_tests.find((candidate) => (
-      isObject(candidate) && candidate.test_type === definition.id
-    ))
-    if (!item || !cleanText(item.key_metric)) continue
-
-    cards.push({
-      id: definition.id,
-      title: cleanText(item.test_name, definition.title),
-      primaryMetric: cleanText(item.key_metric),
-      secondaryMetric: cleanText(item.status_text, '已记录'),
-      qualityLabel: '服务器已记录',
-      finishedAt: cleanText(item.finished_at)
-    })
+  for (const definition of definitions) {
+    for (const item of value.latest_tests.filter(candidate => isObject(candidate) && candidate.test_type === definition.id)) {
+      if (!cleanText(item.key_metric)) continue
+      const identity = cognitiveIdentity(definition.id, item)
+      cards.push({
+        id: definition.id, ...identity,
+        title: cleanText(item.test_name, definition.title),
+        primaryMetric: cleanText(item.key_metric),
+        secondaryMetric: cleanText(item.status_text, '已记录').split(' · ')[0],
+        qualityLabel: '服务器已记录', finishedAt: cleanText(item.finished_at)
+      })
+    }
   }
-
   if (!cards.length) return emptyCognitive()
   return {
-    hasData: true,
-    source: 'server',
-    completedCount: cards.length,
+    hasData: true, source: 'server', completedCount: cognitiveCount(cards),
     totalCount: COGNITIVE_DEFINITIONS.length,
-    summary: cleanText(value.summary, '已生成认知测试摘要。'),
-    cards
+    summary: cleanText(value.summary, '已生成认知测试摘要。'), cards
   }
 }
 
@@ -305,19 +318,16 @@ function mergeCognitive(localCognitive, serverCognitive) {
   const server = isObject(serverCognitive) ? serverCognitive : emptyCognitive()
   if (!local.hasData) return server
   if (!server.hasData) return local
-  const localById = new Map(local.cards.map((card) => [card.id, card]))
-  const serverById = new Map(server.cards.map((card) => [card.id, card]))
-  const cards = COGNITIVE_DEFINITIONS
-    .map((definition) => serverById.get(definition.id) || localById.get(definition.id))
-    .filter(Boolean)
+  const bySeries = new Map(local.cards.map(card => [card.seriesId || card.id, card]))
+  server.cards.forEach(card => bySeries.set(card.seriesId || card.id, card))
+  const cards = Array.from(bySeries.values()).sort((a, b) =>
+    COGNITIVE_DEFINITIONS.findIndex(def => def.id === a.id) - COGNITIVE_DEFINITIONS.findIndex(def => def.id === b.id))
+  const completedCount = cognitiveCount(cards)
   return {
-    hasData: cards.length > 0,
-    source: 'mixed',
-    completedCount: cards.length,
+    hasData: cards.length > 0, source: 'mixed', completedCount,
     totalCount: COGNITIVE_DEFINITIONS.length,
-    summary: server.summary || (cards.length === COGNITIVE_DEFINITIONS.length
-      ? '六项认知任务均已完成。'
-      : `已完成 ${cards.length}/${COGNITIVE_DEFINITIONS.length} 项认知任务。`),
+    summary: server.summary || (completedCount === COGNITIVE_DEFINITIONS.length
+      ? '六项认知任务均已完成。' : '已完成 ' + completedCount + '/' + COGNITIVE_DEFINITIONS.length + ' 项认知任务。'),
     cards
   }
 }

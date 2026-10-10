@@ -147,7 +147,9 @@ def test_valid_upload_is_persisted_and_linked_to_real_prediction(client, monkeyp
     stored_path = Path(upload.stored_path).resolve()
     assert stored_path.exists()
     assert stored_path.name != "subject.csv"
-    assert stored_path.read_bytes() == b"1,2,3\n4,5,6"
+    from backend.app.services.upload_storage import read_stored_upload
+    assert stored_path.read_bytes() != b"1,2,3\n4,5,6"
+    assert read_stored_upload(stored_path) == b"1,2,3\n4,5,6"
 
     predictions = prediction_rows()
     assert len(predictions) == 1

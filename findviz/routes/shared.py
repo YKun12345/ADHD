@@ -1,17 +1,5 @@
-"""
-Shared resources for the application.
-"""
-from findviz.logger_config import setup_logger
-
-logger = setup_logger(__name__)
-
+"""Resolve viewer state from the current request, never at module import time."""
+from werkzeug.local import LocalProxy
 from findviz.viz.viewer.data_manager import DataManager
 
-# Create the single shared instance
-try:
-    data_manager = DataManager()
-except Exception as e:
-    logger.error("Error initializing data manager: %s", str(e), exc_info=True)
-    raise
-
-
+data_manager = LocalProxy(DataManager)

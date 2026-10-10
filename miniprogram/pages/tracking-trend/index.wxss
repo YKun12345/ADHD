@@ -154,17 +154,21 @@ page {
   text-align: center;
 }
 
-.trend-canvas {
+.chart-plot {
+  position: relative;
   width: 100%;
   height: 440rpx;
-  margin-top: 8rpx;
+  margin-top: 16rpx;
+  overflow: hidden;
 }
 
-.axis-labels {
-  display: flex;
-  justify-content: space-between;
-  color: #506b75;
-  font-size: 21rpx;
+.trend-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .gap-tip {

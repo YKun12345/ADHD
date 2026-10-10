@@ -67,6 +67,11 @@ export class LogDisplay {
 
     fetchLogs() {
         this.refreshElements();
+        if (window.FINDVIZ_PATIENT_ID) {
+            if (this.logContent) this.logContent.textContent = '患者工作区不提供平台共享日志，请向管理员反馈当前页面的错误提示。';
+            if (this.logStatus) this.logStatus.classList.add('d-none');
+            return;
+        }
         if (!this.logStatus || !this.logContent) {
             return;
         }

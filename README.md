@@ -56,13 +56,19 @@ pip install -r requirements-dev.txt
 
 ## 3. 配置
 
-唯一环境模板是根目录 `.env.example`。把它复制为 `backend/.env`：
+本地开发的权威环境模板是根目录 `.env.example`；Docker 部署使用 `deploy/.env.production.example`，详见 [部署说明](deploy/README.md)。把它复制为 `backend/.env`：
 
 ```powershell
 Copy-Item .env.example backend/.env
 ```
 
-Linux/macOS 可使用 `cp .env.example backend/.env`。开发默认值使用 `sqlite:///./backend/app.db`；生产环境必须设置 `APP_ENV=production`、非占位 `SECRET_KEY` 和显式 `DATABASE_URL`。不要提交 `backend/.env`、数据库、上传文件、权重或真实患者资料。
+Linux/macOS 可使用 `cp .env.example backend/.env`。开发默认值使用 `sqlite:///./backend/app.db`；生产环境必须设置 `APP_ENV=production`、至少32字符的非占位 `SECRET_KEY`、显式 `DATABASE_URL` 与有效的数据加密密钥，数据库口令也不得使用模板占位值。不要提交 `backend/.env`、数据库、上传文件、权重或真实患者资料。
+
+敏感 JSON、文本、上传文件与私钥采用 AES-GCM 认证加密；选定数值继续使用 Paillier 同态统计。开发环境未设置 `DATA_ENCRYPTION_KEY` 时，会在 `backend/.keys/data_encryption.key` 生成密钥，`SECURITY_MASTER_KEY_PATH` 可覆盖位置。生产需配置 base64url 编码32字节的 `DATA_ENCRYPTION_KEY`，或提供已存在的有效密钥文件。密钥需与数据库和文件备份分开保管，不能随交付包发布。
+
+初始化会幂等迁移历史敏感内容。SQLite 迁移前数据库、上传文件和 MySQL 原始值快照以 AES-GCM 加密副本保存在 `backend/migration-backups/<timestamp>/`（`.enc`）；MySQL 正式升级前仍需独立完整备份。恢复时使用同一独立密钥执行 `python -m backend.app.db.encryption_migration --restore <备份目录> --destination <新的空目录>`，确认后再按受控流程恢复业务库。备份还包含受认证的完整文件清单，恢复前会检查缺失、额外或篡改组件，全部通过后才写入新目录。审计身份使用患者代号，授权医生仍可按绑定关系查看必要信息；一致性校验不证明最初填写的数据真实。
+
+影像可视化入口需通过 `/api/v1/imaging/session` 建立短期患者会话，动态请求逐次检查账户和医生绑定关系；影像状态与 AES-GCM 缓存按用户、患者隔离。`FINDVIZ_MAX_UPLOAD_BYTES` 默认64 MiB（请求总大小），影像 multipart 文件仅在内存解析；预测时间序列上传仍使用10 MiB的 `UPLOAD_MAX_BYTES`。
 
 ## 4. SQLite 快速启动
 
@@ -97,6 +103,8 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 3. 开发阶段按团队规范决定是否临时关闭合法域名校验；正式发布必须配置 HTTPS、request 合法域名、证书和备案。
 4. 使用种子脚本输出的患者演示账号检查登录、量表、六类认知任务、14 天追踪、报告、关怀路径和 AI 页面。小程序不再提供“简单反应时”，后端仍保留历史 `simple_reaction` 记录的识别与报告兼容。
 
+当前小程序认知协议为 `continuous-mobile-v4`（协议结构版本 6）：六项任务各有独立的 3 秒阅读说明，正式测试连续完成；2-back 为 24 次呈现、22 次计分；连线 A 为 30 个数字，B 为 15 组/30 个节点。结果重试使用运行 ID 去重。14 天趋势采用独立绘图区和统一坐标，缺失日期不计为 0、不跨缺失连线。详见 [接口契约](docs/evidence/api-contract.md) 与 [验收清单](docs/evidence/manual-acceptance.md)。
+
 仓库不代填正式 AppID、生产域名、证书、数据库口令或医院配置。
 
 ## 7. 模型与演示 Mock 边界
@@ -109,7 +117,7 @@ uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 - `POST /api/v1/model/predict_mock`：无需真实上传的显式演示端点（确定性假结果，`is_demo=true`），联调用。响应含演示免责，不得作为医学诊断。
 
 模型加载校验与自检见 `backend/scripts/verify_model.py`（快捷命令 `python scripts/verify_model.py`）。真实权重放 `backend/models/`，说明见 `backend/models/README.md`。
-`QWEN_API_KEY` 为空时，AI 文本能力会使用明确的模板降级路径；这同样不是临床结论。
+`DEEPSEEK_API_KEY` 为空时，AI 文本能力会使用明确的模板降级路径；这同样不是临床结论。
 
 ## 8. 自动测试
 

@@ -16,6 +16,7 @@ def sqlite_database_path(tmp_path: Path) -> Path:
 def client(monkeypatch: pytest.MonkeyPatch, sqlite_database_path: Path):
     database_url = f"sqlite:///{sqlite_database_path.as_posix()}"
     monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.setenv("DATA_ENCRYPTION_KEY", "dGVzdC1rZXktMzItYnl0ZXMtaXNvbGF0ZWQtMDAwMDE=")
     monkeypatch.setenv("DATABASE_URL", database_url)
     monkeypatch.setenv("SECRET_KEY", "test-only-secret")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "")

@@ -2,7 +2,9 @@ from contextlib import asynccontextmanager
 from logging import getLogger
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from starlette.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -43,8 +45,40 @@ class LazyFindvizMount:
         return self._app
 
     async def __call__(self, scope, receive, send):
-        app = self._ensure_app()
-        await app(scope, receive, send)
+        from backend.app.services.findviz_access import authorize_scope
+        from findviz.workspace import workspace_context
+        from findviz.request_security import bounded_wsgi_body, UploadBodyTooLarge, upload_limit_error
+        path = scope["path"]
+        root_path = scope.get("root_path", "")
+        relative_path = path[len(root_path):] if root_path and path.startswith(root_path) else path
+        workspace = None
+        if not relative_path.startswith("/static/"):
+            try:
+                workspace = await run_in_threadpool(authorize_scope, scope)
+            except HTTPException as exc:
+                response = JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+                await response(scope, receive, send)
+                return
+            except Exception:
+                startup_logger.exception("Imaging workspace authorization/audit failed")
+                response = JSONResponse(status_code=503, content={"detail": "影像授权服务暂不可用。"})
+                await response(scope, receive, send)
+                return
+        try:
+            buffered_request = await bounded_wsgi_body(scope, receive)
+        except UploadBodyTooLarge:
+            response = JSONResponse(status_code=413, content=upload_limit_error())
+            await response(scope, receive, send)
+            return
+        if buffered_request is None:
+            return
+        wsgi_scope, replay = buffered_request
+        if workspace is None:
+            await self._ensure_app()(wsgi_scope, replay, send)
+            return
+        with workspace_context(workspace.namespace, workspace.patient_id):
+            await self._ensure_app()(wsgi_scope, replay, send)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +92,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from backend.app.services.access_audit import access_audit_middleware
+app.middleware("http")(access_audit_middleware)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Ensure BASE_DIR is available

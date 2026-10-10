@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "ordinary_account_menu": true,
+  "dac_account_menu": true,
+  "imaging_initialization": true,
+  "nifti_upload_view_save": true,
+  "gifti_upload_view_save": true,
+  "logout_cookie_cleared": true,
+  "uncaught_errors": [],
+  "failed_local_requests": []
+}

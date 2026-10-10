@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.model_prediction import ModelPrediction
@@ -34,13 +35,13 @@ class Upload(Base):
         index=True,
         nullable=False,
     )
-    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_name: Mapped[str] = mapped_column(EncryptedValue("uploads.file_name", "text"), nullable=False)
     source_type: Mapped[str] = mapped_column(String(32), nullable=False, default="fMRI_1D")
     file_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     file_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="uploaded")
     stored_path: Mapped[str] = mapped_column(String(1024), nullable=False)
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[str | None] = mapped_column(EncryptedValue("uploads.note", "text"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/patient.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="../doctor-web/css/account-profile.css?v=20261010c">
 </head>
 <body class="bg-page">
     <nav class="navbar">
@@ -38,29 +39,33 @@
         </div>
     </nav>
 
-    <main class="info-block" style="padding-top: 120px; min-height: 80vh;">
+    <main class="info-block account-main">
         <div class="info-container">
-            <h1 style="font-size: 2.5rem; color: #0F172A; margin-bottom: 2rem; text-align: center;">个人健康档案中心</h1>
-            
-            <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2.5fr; gap: 2rem;">
-                <!-- Left Sidebar Settings -->
-                <div class="todo-widget" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; height: fit-content;">
-                    <ion-icon name="person-circle" style="font-size: 6rem; color: #94A3B8; margin-bottom: 1rem;"></ion-icon>
-                    <h3 style="margin-bottom: 0.5rem; color: #1E293B;">当前就诊者</h3>
-                    <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 2rem;">UID: PT-410029</p>
-                    <a href="login.html" class="btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; color: #EF4444; border-color: #FECACA; background: #FEF2F2;"><ion-icon name="log-out-outline"></ion-icon> 退出登录</a>
+            <h1 class="account-title">个人健康档案中心</h1>
+            <section class="account-layout" id="accountProfile" data-account-role="patient">
+                <div class="todo-widget account-card account-identity">
+                    <ion-icon name="person-circle" class="account-avatar"></ion-icon>
+                    <h3 id="accountName">正在加载</h3>
+                    <p id="accountUid" class="account-uid">UID: —</p>
+                    <button type="button" id="accountLogout" class="btn-outline account-logout"><ion-icon name="log-out-outline"></ion-icon>退出登录</button>
                 </div>
-                
-                <!-- Main Content Set -->
-                <div class="todo-widget" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-                    <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1rem; margin-bottom: 1.5rem;">
-                        <h3>账号设置与系统授权</h3>
+                <div class="todo-widget account-card">
+                    <div class="todo-header account-header"><h3>账号信息与系统授权</h3></div>
+                    <dl class="account-details">
+                        <dt>登录邮箱</dt><dd id="accountEmail">—</dd>
+                        <dt>账号身份</dt><dd id="accountRole">—</dd>
+
+                        <dt>协议确认</dt><dd id="accountConsent">—</dd>
+                    </dl>
+                    <p id="accountScope" class="account-scope"></p>
+                    <div class="account-actions">
+                        <a href="patient_home.html" class="btn-outline">返回首页</a>
+                        <a href="patient_report.html" class="btn-outline">查看我的报告</a>
+                        <button type="button" id="accountRetry" class="btn-outline" hidden>重新加载</button>
                     </div>
-                    <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: #94A3B8; background: #F8FAFC; border: 2px dashed #CBD5E1; border-radius: 12px;">
-                        <p style="font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;"><ion-icon name="construct-outline"></ion-icon> 账号设置面板与主治医生授权系统开发中...</p>
-                    </div>
+                    <p id="accountStatus" class="account-status" role="status" aria-live="polite"></p>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
@@ -70,5 +75,7 @@
             <span>知行合“医” - 专注每刻 © 2026</span>
         </div>
     </footer>
+    <script src="js/api.js?v=20261010c"></script>
+    <script src="../doctor-web/js/account.js?v=20261010c"></script>
 </body>
 </html>

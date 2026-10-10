@@ -347,12 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const patientId = button.dataset.patientId;
                 localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(patientId));
                 let baseUrl = '';
-                let authParams = '';
                 if (window.location.protocol === 'file:') {
                     baseUrl = 'http://127.0.0.1:8000/doctor-web/';
-                    authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
                 }
-                window.location.href = `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}`;
+                window.location.href = `${baseUrl}doctor_visualization.html?patient_id=${patientId}`;
             });
         });
 

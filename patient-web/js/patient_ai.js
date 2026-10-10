@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadStatus() {
         try {
             const status = await window.API.AI.getStatus();
-            statusBadge.textContent = status.configured ? '千问已连接' : 'AI网关已接入';
+            statusBadge.textContent = status.configured ? '外部 AI 已配置' : '模板回答模式';
             statusBadge.classList.toggle('degraded', !status.configured);
             statusText.textContent = status.message;
         } catch (error) {

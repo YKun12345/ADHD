@@ -62,12 +62,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reportUrl = patientId ? `doctor_report.html?patient_id=${patientId}` : 'doctor_patients.html';
         const imagingUrl = patientId ? `doctor_imaging.html?patient_id=${patientId}` : 'doctor_imaging.html';
         let baseUrl = '';
-        let authParams = '';
         if (window.location.protocol === 'file:') {
             baseUrl = 'http://127.0.0.1:8000/doctor-web/';
-            authParams = `&_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
         }
-        const visualizationUrl = patientId ? `${baseUrl}doctor_visualization.html?patient_id=${patientId}${authParams}` : `${baseUrl}doctor_visualization.html?_token=${localStorage.getItem('smartbrain_token') || ''}&_user=${encodeURIComponent(localStorage.getItem('smartbrain_user') || '')}`;
+        const visualizationUrl = patientId ? `${baseUrl}doctor_visualization.html?patient_id=${encodeURIComponent(patientId)}` : `${baseUrl}doctor_visualization.html`;
 
         if (backToWorkspaceLink) backToWorkspaceLink.href = workspaceUrl;
         if (openPatientReportLink) openPatientReportLink.href = reportUrl;

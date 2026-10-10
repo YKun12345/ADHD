@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
-from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
+from backend.app.core.data_encryption import EncryptedValue
 
 if TYPE_CHECKING:
     from backend.app.models.patient import Patient
@@ -38,18 +38,18 @@ class ImagingVisualization(Base):
     right_mesh_file_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     slice_screenshot_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     slice_screenshot_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(LONGTEXT, "mysql"),
+        EncryptedValue("imaging_visualizations.slice_screenshot_data"),
         nullable=True,
     )
     surface_screenshot_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     surface_screenshot_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(LONGTEXT, "mysql"),
+        EncryptedValue("imaging_visualizations.surface_screenshot_data"),
         nullable=True,
     )
-    slice_interpretation: Mapped[str | None] = mapped_column(Text, nullable=True)
-    surface_interpretation: Mapped[str | None] = mapped_column(Text, nullable=True)
-    summary_text: Mapped[str] = mapped_column(Text, nullable=False)
-    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    slice_interpretation: Mapped[str | None] = mapped_column(EncryptedValue("imaging_visualizations.slice_interpretation", "text"), nullable=True)
+    surface_interpretation: Mapped[str | None] = mapped_column(EncryptedValue("imaging_visualizations.surface_interpretation", "text"), nullable=True)
+    summary_text: Mapped[str] = mapped_column(EncryptedValue("imaging_visualizations.summary_text", "text"), nullable=False)
+    notes: Mapped[str | None] = mapped_column(EncryptedValue("imaging_visualizations.notes", "text"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
