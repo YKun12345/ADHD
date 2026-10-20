@@ -159,7 +159,7 @@ assert.throws(() => assertExactRoutes(expectedRoutes.slice(1)), /路由集合/)
 assertExactRoutes(routedRoutes)
 
 assert.equal(app.window.navigationStyle, 'custom')
-assert.equal(app.window.navigationBarTitleText, 'ADHD智慧辅助')
+assert.equal(app.window.navigationBarTitleText, '星伴智察')
 assert.match(appWxss, /\.ai-copilot-safe-space\.ai-copilot-safe-space\s*\{[^}]*padding-bottom\s*:\s*28rpx[^}]*constant\(safe-area-inset-bottom\)[^}]*env\(safe-area-inset-bottom\)/s)
 
 for (const route of routedRoutes) {

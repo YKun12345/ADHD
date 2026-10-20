@@ -1,6 +1,6 @@
 <onboarding-guide role="patient" bind:visibilitychange="onOnboardingVisibilityChange" />
 <ai-copilot id="page-companion" wx:if="{{!onboardingVisible}}" page-key="home" bottom-inset="{{60}}" />
-<ui-nav title="ADHD智慧辅助" showBack="{{false}}" />
+<ui-nav title="星伴智察" showBack="{{false}}" />
 <view class="home-page ui-page ai-copilot-safe-space">
   <view class="welcome-section"><image class="welcome-landscape" src="/assets/product/mist-landscape.png" mode="aspectFit" aria-hidden="{{true}}" /><view class="welcome-copy"><text class="welcome-eyebrow">星仔陪你 · 今天的一小步</text><text class="welcome-text">你好，{{userName}}</text><text class="welcome-subtitle">按照自己的节奏，先完成眼前这一小步</text></view></view>
   <view class="home-bottom-wave" aria-hidden="{{true}}"></view>

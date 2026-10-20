@@ -231,7 +231,7 @@ behaviorComponent.methods.handleRightTap.call({
 assert.deepEqual(eventCalls, ['righttap'], '右侧动作必须且只能触发一次 righttap')
 
 const homeWxml = read('pages', 'home', 'index.wxml')
-assert.match(homeWxml, /<ui-nav\s+title="ADHD智慧辅助"\s+showBack="\{\{false\}\}"\s*\/>/)
+assert.match(homeWxml, /<ui-nav\s+title="星伴智察"\s+showBack="\{\{false\}\}"\s*\/>/)
 
 const registerWxml = read('pages', 'register', 'index.wxml')
 assert.match(registerWxml, /^<ui-nav title="患者注册" fallbackUrl="\/pages\/login\/index" \/>/)

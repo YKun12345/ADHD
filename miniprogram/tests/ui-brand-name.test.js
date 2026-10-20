@@ -11,13 +11,13 @@ const homeWxml = read('pages/home/index.wxml')
 
 assert.equal(
   app.window.navigationBarTitleText,
-  'ADHD智慧辅助',
+  '星伴智察',
   '全局备用导航标题必须使用新品牌名'
 )
 assert.match(
   loginWxml,
-  /<text class="title">ADHD智慧辅助<\/text>/,
-  '登录页主品牌标题必须更新为 ADHD智慧辅助'
+  /<text class="title">星伴智察<\/text>/,
+  '登录页主品牌标题必须更新为星伴智察'
 )
 assert.match(
   loginWxml,
@@ -31,7 +31,7 @@ assert.doesNotMatch(
 )
 assert.match(
   homeWxml,
-  /<ui-nav\s+title="ADHD智慧辅助"\s+showBack="\{\{false\}\}"\s*\/>/,
+  /<ui-nav\s+title="星伴智察"\s+showBack="\{\{false\}\}"\s*\/>/,
   '首页导航必须使用新品牌名'
 )
 assert.doesNotMatch(
