@@ -119,7 +119,7 @@ registerPatientPage({
   },
 
   openAi() {
-    wx.navigateTo({ url: '/pages/ai-chat/index' })
+    wx.navigateTo({ url: '/pages/agent-chat/index' })
   },
 
   openEducation() {

@@ -1,0 +1,20 @@
+<ui-nav title="影像分析报告" showBack="{{true}}" fallbackUrl="{{doctor ? '/pages/doctor-patient/index?patient_id=' + patientId : '/pages/report/index'}}" />
+<ai-copilot page-key="imaging-reports" patient-id="{{patientId}}" />
+<view class="page product-page product-form-page"><text class="heading">已生成的影像分析报告</text><text class="note">读取实际来源、报告版本和审核状态。原始影像查看与处理在医生网页完成。</text>
+<button bindtap="reload" disabled="{{busy}}">重新读取</button><text class="error">{{errorText}}</text><text>{{statusText}}</text>
+<view wx:if="{{pendingId}}"><text>有待核对的原发布请求</text><button bindtap="queryPending" disabled="{{busy}}">按原编号查询</button><button bindtap="openRecovery">查看原件恢复</button></view>
+<view wx:for="{{reports}}" wx:key="id" class="card"><text class="title">影像报告 · 第 {{item.version}} 版</text><text>{{item.originLabel}}</text><text class="warning">{{item.purposeLabel}}</text>
+<text>模型：{{item.source.model_name}} · {{item.source.model_version}}</text><text>实际来源：分析 {{item.prediction_id}}；ROI {{item.source.roi_dim_used}}，时点 {{item.source.timepoints}}</text><text>{{item.body}}</text><text>局限：{{item.limitations}}</text>
+<button wx:if="{{doctor}}" data-id="{{item.id}}" bindtap="review" disabled="{{busy || pendingId}}">核对实际来源并审核</button></view>
+<view wx:if="{{!busy && !errorText && !reports.length}}" class="card empty-report">
+  <text class="title">当前档案还没有影像分析报告</text>
+  <text class="note">完成量表、认知测试或查看影像，不会自动生成这份模型分析报告。</text>
+  <block wx:if="{{doctor}}">
+    <text class="empty-step">1. 在电脑医生端选择这位用户，进入综合分析页，点击“进入影像分析”。</text>
+    <text class="empty-step">2. 上传由原始影像预处理得到的 ROI 时间序列（.csv 或 .1D，AAL90 / AAL116），等待模型分析完成。</text>
+    <text class="empty-step">3. 分析成功并保存后，系统会生成报告。回到这里点“重新读取”；医生审核意见需要另行核对发布。</text>
+  </block>
+  <text wx:else class="empty-step">请联系负责医生，在电脑医生端为当前档案完成影像分析。系统报告保存后，回到这里点“重新读取”查看；医生审核版本会另外标明。</text>
+  <text class="note">如果只有原始 MRI 文件，需要先完成符合模型要求的预处理；这里用于查看已有报告。</text>
+</view>
+<view wx:if="{{selected}}" class="card"><text class="title">新医生审核版本</text><textarea value="{{body}}" data-field="body" bindinput="onInput" maxlength="8000" placeholder="本人核对后的实际意见"/><textarea value="{{limitations}}" data-field="limitations" bindinput="onInput" maxlength="4000" placeholder="必须说明局限"/><button bindtap="publish" disabled="{{busy || pendingId}}">明确发布新版本</button></view></view>

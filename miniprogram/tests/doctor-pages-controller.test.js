@@ -87,7 +87,7 @@ async function run() {
       }
     }
     if (options.url === '/care/doctor/patient/8/summary') return { unread_message_count: 2, pending_task_count: 1 }
-    if (options.url === '/doctor/bind_patient') return { patient_id: 8 }
+    if (options.url === '/care/relationships/invitations') return { id: 9, status: 'pending', revision: 1 }
     throw new Error(`unexpected request: ${options.url}`)
   }
 
@@ -99,6 +99,11 @@ async function run() {
   assert.equal(home.data.careTotals.unread, 2)
   assert.equal(home.data.careTotals.pending, 1)
 
+  home.onHide()
+  assert.equal(home.data.doctorName, '')
+  await home.onShow()
+  assert.equal(home.data.doctorName, '李医生', '重新显示工作台应恢复当前医生姓名')
+
   home.openPatient({ currentTarget: { dataset: { id: 8 } } })
   assert.deepEqual(calls.navigateTo, [{
     url: '/pages/doctor-patient/index?patient_id=8'
@@ -106,12 +111,12 @@ async function run() {
 
   home.setData({ bindEmail: ' PATIENT@EXAMPLE.COM ' })
   await home.bindPatient()
-  const bindRequest = calls.requests.find((item) => item.url === '/doctor/bind_patient')
-  assert.deepEqual(bindRequest, {
-    url: '/doctor/bind_patient',
-    method: 'POST',
-    data: { patient_email: 'patient@example.com' }
-  })
+  const bindRequest = calls.requests.find((item) => item.url === '/care/relationships/invitations')
+  assert.equal(bindRequest.method, 'POST')
+  assert.equal(bindRequest.data.target_email, 'patient@example.com')
+  assert.deepEqual(bindRequest.data.scope, ['profile', 'assessment', 'tracking', 'care', 'imaging'])
+  assert.equal(bindRequest.data.purpose, 'clinical_sharing')
+  assert.ok(Number.isFinite(Date.parse(bindRequest.data.expires_at)))
   assert.equal(home.data.bindEmail, '')
 
   require('../pages/doctor-patient/index')
@@ -149,14 +154,13 @@ async function run() {
   assert.equal(patient.data.report.patientName, '患者甲')
   assert.equal(patient.data.messages.length, 0)
   assert.equal(patient.data.tasks.length, 0)
-  assert.equal(patient.data.aiLogs.length, 1)
+  assert.equal(patient.data.aiLogs.length, 0)
+  assert.equal(calls.requests.some(item => item.url.endsWith('/ai_logs')), false)
   patient.setData({ messageInput: '  请一周后复测  ' })
   await patient.sendMessage()
-  const messageRequest = calls.requests.find((item) => item.url === '/care/doctor/patient/8/messages' && item.method === 'POST')
-  assert.match(messageRequest.data.client_message_id, /^wx-/)
-  assert.equal(patient.data.messages.length, 1)
-  assert.equal(patient.data.messages[0].content, '请一周后复测')
-  assert.equal(patient.data.messageInput, '')
+  assert.equal(calls.requests.some(item => item.url.includes('/messages')), false)
+  assert.equal(calls.navigateTo.at(-1).url, '/pages/shared-messages/index?patient_id=8')
+  assert.equal(patient.data.messages.length, 0)
 
   patient.setData({ taskType: 'tracking', taskTitle: '每日记录', taskDescription: '连续记录', taskDueDate: '2026-09-08' })
   await patient.createTask()

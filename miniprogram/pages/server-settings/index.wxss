@@ -32,3 +32,6 @@ page { min-height: 100%; color: #17324d; background: #f2f7f8; }
 .notice-item__mark { width: 10rpx; height: 10rpx; flex: none; margin: 14rpx 14rpx 0 0; border: 3rpx solid #4c8990; border-radius: 50%; }
 .back-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 14rpx; border-radius: 20rpx; color: #245f68; font-size: 23rpx; font-weight: 600; }
 .settings-control--pressed { opacity: .75; background: #e8f2f3; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

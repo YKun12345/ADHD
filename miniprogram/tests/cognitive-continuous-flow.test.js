@@ -55,7 +55,8 @@ async function run() {
     assert.equal(payload.result_json.actual_trials, 24)
     assert.equal(payload.result_json.raw_result.total_trials, 22)
     assert.equal(payload.result_json.raw_result.accuracy, 100)
-    assert.equal(payload.result_json.trials.length, 22)
+    assert.equal(payload.result_json.trials.length, 24)
+    assert.ok(payload.result_json.trials.slice(0, 2).every(trial => trial.scored === false && trial.outcome === 'warmup' && trial.correct === null && trial.answeredMatch === null && trial.responseTimeMs >= 60000))
     assert.ok(payload.result_json.test_run_id)
     const requestCount = h.requests.length
     nback._completeTest()

@@ -8,15 +8,27 @@ from backend.app.services.cognitive_contract import (
     validate_protocol_metadata,
     normalize_result_json,
     validate_test_run_id,
+    reject_legacy_assessment_claims,
+    canonical_digest,
 )
 
 
 class CognitiveTestSubmitRequest(BaseModel):
+    patient_id: int | None = Field(default=None,gt=0,strict=True)
     test_type: str = Field(min_length=1, max_length=64)
     result_json: dict[str, Any]
 
+    @model_validator(mode="before")
+    @classmethod
+    def no_new_context(cls,value):
+        reject_legacy_assessment_claims(value)
+        if isinstance(value,dict):
+            reject_legacy_assessment_claims(value.get("result_json"))
+        return value
+
     @model_validator(mode="after")
     def normalize_cognitive_payload(self) -> "CognitiveTestSubmitRequest":
+        canonical_digest(self.result_json)
         if "test_run_id" in self.result_json:
             validate_test_run_id(self.result_json["test_run_id"])
         validate_protocol_metadata(self.result_json)
@@ -30,6 +42,11 @@ class CognitiveTestResponse(BaseModel):
     test_type: str
     result_json: dict[str, Any]
     created_at: datetime
+    assessment_id: int | None = None
+    assessment_item_id: int | None = None
+    task_attempt_id: int | None = None
+    legacy: bool = True
+    storage_integrity: dict | None = None
 
 
 class CognitiveTestReportItem(BaseModel):
@@ -47,6 +64,11 @@ class CognitiveTestReportItem(BaseModel):
     protocol_inferred: bool = False
     protocol_key: str = ""
     series_id: str = ""
+    assessment_id: int | None = None
+    assessment_item_id: int | None = None
+    task_attempt_id: int | None = None
+    legacy: bool = True
+    storage_integrity: dict | None = None
 
 
 class CognitiveProtocolProfile(BaseModel):

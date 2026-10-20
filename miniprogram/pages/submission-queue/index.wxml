@@ -1,0 +1,23 @@
+<ai-copilot wx:if="{{!busy}}" page-key="submission-queue" />
+<ui-nav title="待同步记录" showBack="{{true}}" fallbackUrl="{{fallbackUrl}}" />
+<view class="queue-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">本机尚未确认的记录</text>
+    <text class="note">每份记录分别确认。尚未同步的内容只在本机；退出账号会清除，退出前请先核对。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text>
+    <text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{busy}}" bindtap="refresh">刷新本机状态</button>
+  </view>
+  <view wx:if="{{!entries.length && !errorText}}" class="sheet"><text class="note">当前没有待同步内容。</text></view>
+  <view wx:for="{{entries}}" wx:key="id" class="sheet">
+    <text class="title">{{item.title}}</text><text class="note">{{item.sourceLabel}} · {{item.statusLabel}}</text>
+    <text class="note">原编号：{{item.id}}</text>
+    <button wx:if="{{item.canRetry}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="retry">按原记录重试</button>
+    <button wx:if="{{item.canQuery}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="queryStatus">查询服务器确认</button>
+    <button wx:if="{{item.canArchive}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="archive">保留原件并重新核对</button>
+    <button wx:if="{{item.canViewOriginal}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="viewOriginal">查看本机原件</button>
+    <button wx:if="{{item.researchRoute}}" disabled="{{busy}}" data-id="{{item.id}}" bindtap="openResearch">重新读取此项目当前授权</button>
+  </view>
+  <view wx:if="{{originalText}}" class="sheet"><text class="title">保留的本机原件</text><text class="original" selectable="{{true}}">{{originalText}}</text></view>
+  <view class="sheet"><text class="note">授权失效或内容冲突时，旧记录会保留，不能自动改到另一档案或任务。</text><button bindtap="openPrivacy">核对账号与隐私</button></view>
+</view>

@@ -1,0 +1,22 @@
+<ui-nav title="医生计划" showBack="{{true}}" fallbackUrl="/pages/doctor-home/index" />
+<ai-copilot id="xingzai-companion" page-key="doctor-plan" patient-id="{{patientId}}" assessment-id="{{assessmentId}}" />
+<view class="review-page product-page product-form-page">
+  <view class="sheet"><text class="title">第 {{assessmentId}} 轮计划</text><text class="note">依据已发布意见安排真实日期记录。收到、实际记录和医生复核分别保存。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <text wx:if="{{plan}}" class="note">{{plan.statusLabel}} · {{plan.suspension_reason ? '原授权或责任不可用，历史保留，不自动恢复。' : ''}}</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新实际计划</button><button bindtap="openRecovery">查看本机待确认原件</button>
+    <button wx:if="{{pendingId}}" disabled="{{busy}}" bindtap="queryPending">按原编号查询确认</button>
+  </view>
+  <view wx:if="{{canPublish}}" class="sheet"><text wx:if="{{adoptionId}}" class="note">已带入本人核对的助手草稿；请核对实际日期后明确发布。正文改写请回助手保存编辑记录。</text><text class="title">{{plan ? '确认未来修订' : '确认首版计划'}}</text>
+    <input value="{{title}}" data-field="title" bindinput="onTextInput" maxlength="120" disabled="{{busy || !!pendingId || !!adoptionId}}" placeholder="实际计划标题" />
+    <textarea value="{{instructions}}" data-field="instructions" bindinput="onTextInput" maxlength="4000" disabled="{{busy || !!pendingId || !!adoptionId}}" placeholder="本人核对后的实际安排与记录说明" />
+    <picker mode="date" value="{{startDate}}" data-field="startDate" bindchange="onDateInput" disabled="{{busy || !!pendingId}}"><view class="note">生效日期：{{startDate}}</view></picker>
+    <picker mode="date" value="{{endDate}}" data-field="endDate" bindchange="onDateInput" disabled="{{busy || !!pendingId}}"><view class="note">结束日期：{{endDate}}</view></picker>
+    <button disabled="{{busy || !!pendingId}}" bindtap="publish">核对并发布计划新版本</button>
+  </view>
+  <view wx:for="{{versions}}" wx:key="id" class="sheet"><text class="title">第 {{item.version}} 版 · {{item.title}}</text><text class="note">{{item.start_date}} 至 {{item.end_date}} · 实际医生账号 {{item.actor_user_id}}</text>
+    <text selectable="true">{{item.instructions}}</text><text wx:if="{{item.demonstration_only}}" class="note">合成资料演示计划。</text><button data-id="{{item.cycle_id}}" disabled="{{busy}}" bindtap="openCycle">查看这一版实际周期记录</button><button data-id="{{item.cycle_id}}" disabled="{{busy}}" bindtap="openStageReview">阶段复核与下一轮</button>
+  </view>
+  <view wx:for="{{tasks}}" wx:key="id" class="sheet"><text>{{item.record_date}} · {{item.statusLabel}}</text><text class="note">{{item.instructions}}</text></view>
+  <view wx:for="{{records}}" wx:key="record_id" class="sheet"><text>{{item.record_date}} · 修订 {{item.revision}}</text><text selectable="true" class="note">{{item.actualText}}</text></view>
+</view>

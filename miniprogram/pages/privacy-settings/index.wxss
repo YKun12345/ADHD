@@ -26,3 +26,6 @@ page { min-height: 100%; color: #17324d; background: #f2f7f8; }
 .guide-setting-copy { flex: 1; min-width: 0; }
 .guide-setting-title { display: block; color: #17324d; font-size: 28rpx; font-weight: 700; }
 .guide-button { width: 100%; margin-top: 18rpx; display: flex; align-items: center; justify-content: center; color: #27758a; background: rgba(224, 242, 239, 0.84); }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

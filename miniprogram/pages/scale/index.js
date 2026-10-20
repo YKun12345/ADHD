@@ -6,6 +6,8 @@ const {
 } = require('../../utils/session-privacy')
 const asrsScale = require('../../utils/asrs-scale')
 const snapScale = require('../../utils/snap-scale')
+const execution = require('../../utils/assessment-execution')
+const submissionQueue = require('../../utils/submission-queue')
 const {
   SCALE_LATEST_RESULT_KEY,
   isReportableScaleResult
@@ -72,10 +74,16 @@ registerPatientPage({
     submitting: false,
     showResult: false,
     result: null,
-    resultRiskLabel: ''
+    resultRiskLabel: '', formalExecution: false, formalQueued: false, formalCommitted: false, formalStatus: '',
+    draftStatus: '答案自动保存在本机'
   },
 
-  onLoad() {
+  onLoad(query = {}) {
+    this._scaleActive = true
+    if (['assessment_id', 'item_id', 'attempt_id'].some(key => query[key] !== undefined)) {
+      this._formalQuery = query
+      return this._loadFormalScale()
+    }
     const user = wx.getStorageSync('current_user') || {}
     const patientProfile = user.patient_profile || {}
     const patientType = String(
@@ -122,8 +130,42 @@ registerPatientPage({
     })
   },
 
+  async _loadFormalScale() {
+    const epoch = this._scaleEpoch = (this._scaleEpoch || 0) + 1, lease = capturePatientSessionLease()
+    this.setData({ formalExecution: true, patientSupported: false, unsupportedMessage: '正在核对本轮量表与填写者…' })
+    try {
+      const context = await execution.loadExecution(this._formalQuery, 'scale')
+      if (!this._scaleActive || this._scaleEpoch !== epoch || !isPatientSessionLeaseCurrent(lease)) return false
+      const model = SCALE_MODELS[context.attempt.age_group], config = context.attempt.config_snapshot
+      if (!model || config.scaleType !== model.config.scaleType || config.respondentType !== model.config.respondentType ||
+        config.maxScore !== model.config.maxScore || JSON.stringify(config.questions) !== JSON.stringify(model.config.questions) ||
+        JSON.stringify(config.options) !== JSON.stringify(model.config.options) || context.item.recall_window !== 'P6M') throw new Error('当前客户端量表内容与服务器冻结版本不一致，请更新后重新进入。')
+      this._execution = context
+      this.scaleModel = model
+      const queued = submissionQueue.pendingEntries().find(row => row.kind === 'assessment' && row.payload.attempt_id === context.attempt.id)
+      this._formalSubmission = queued && queued.payload
+      const answers = model.normalizeDraftAnswers(queued ? queued.payload.content.answers : execution.readScaleDraft(context))
+      this.setData({ patientSupported: true, unsupportedMessage: '', title: config.title, instructions: model.instructions,
+        scaleKicker: model.scaleKicker, estimatedMinutes: config.estimatedMinutes, options: config.options, answers,
+        formalQueued: Boolean(queued), formalCommitted: false, formalStatus: queued ? '本次原始提交尚未确认，可以原样重试。' : '',
+        ...model.getQuestionState(Math.min(answers.length, config.questions.length - 1), answers) })
+      return true
+    } catch (error) {
+      if (this._scaleActive && this._scaleEpoch === epoch && isPatientSessionLeaseCurrent(lease)) this.setData({ patientSupported: false, unsupportedMessage: error.message || '量表读取失败，请返回本轮评估重试。' })
+      return false
+    }
+  },
+  onShow() { if (this._formalQuery && !this._scaleActive) { this._scaleActive = true; return this._loadFormalScale() } },
+  onHide() {
+    if (!this._formalQuery) return
+    this._scaleActive = false; this._scaleEpoch = (this._scaleEpoch || 0) + 1
+    this._execution = null; this._formalSubmission = null
+    this.setData({ answers: [], result: null, showResult: false, formalCommitted: false, formalQueued: false, patientSupported: false, submitting: false })
+  },
+  onUnload() { this.onHide() },
+
   selectOption(event) {
-    if (this.data.submitting) return
+    if (this.data.submitting || this.data.formalQueued || this.data.formalCommitted) return
 
     const value = Number(event.currentTarget.dataset.value)
     if (!this.scaleModel) {
@@ -140,7 +182,6 @@ registerPatientPage({
       return
     }
 
-    wx.setStorageSync(this.draftKey, answers)
     this.setData({
       answers,
       ...this.scaleModel.getQuestionState(
@@ -148,6 +189,11 @@ registerPatientPage({
         answers
       )
     })
+    try {
+      if (this._execution) execution.saveScaleDraft(this._execution, answers)
+      else wx.setStorageSync(this.draftKey, answers)
+      this.setData({ draftStatus: '答案已保存在本机' })
+    } catch (_) { this.setData({ draftStatus: '答案尚未保存，请保留页面并重试。' }) }
   },
 
   goPrevious() {
@@ -221,6 +267,8 @@ registerPatientPage({
       return
     }
 
+    if (this._execution) return this._submitFormalScale(payload)
+
     this.setData({
       submitting: true
     })
@@ -260,6 +308,39 @@ registerPatientPage({
         icon: 'none',
         duration: 2500
       })
+    }
+  },
+
+  async _submitFormalScale(payload) {
+    const lease = capturePatientSessionLease(), epoch = this._scaleEpoch
+    const current = () => this._scaleActive && this._scaleEpoch === epoch && isPatientSessionLeaseCurrent(lease)
+    this.setData({ submitting: true, formalStatus: '正在保存原始提交…' })
+    try {
+      const original = this._formalSubmission || execution.buildSubmission(this._execution, { scale_type: payload.scale_type,
+        answers: payload.answers, recall_window: 'P6M', content_digest: this._execution.item.content_digest })
+      submissionQueue.enqueue({ id: original.submission_id, kind: 'assessment', route: '/care/submissions', payload: original })
+      this._formalSubmission = original
+      this.setData({ formalQueued: true, formalStatus: '已保存在本机，正在请求服务器确认…' })
+      const ack = await submissionQueue.syncQueuedAcknowledgement(original.submission_id)
+      if (!current()) return false
+      if (!ack) {
+        const pending = submissionQueue.pendingEntries().find(row => row.id === original.submission_id)
+        this.setData({ submitting: false, formalStatus: pending && pending.status === 'authorization_blocked' ? '授权已失效，尚未提交，请核对授权。'
+          : pending && pending.status === 'conflict_blocked' ? '提交内容冲突，请核对服务器记录。' : '尚未取得服务器确认，原始答案已保留，可原样重试。' })
+        return false
+      }
+      this.setData({ formalQueued: false, formalCommitted: true, formalStatus: `服务器已确认提交 · ${ack.quality_status === 'valid' ? '质量有效' : '质量待核对'} · ${ack.acceptance_status === 'pending_review' ? '待医生验收' : '无需医生验收'}` })
+      try { execution.clearScaleDraft(this._execution) } catch (_) { /* The committed server receipt is authoritative. */ }
+      const evidence = await request({ url: `/care/submissions/${encodeURIComponent(original.submission_id)}/evidence` })
+      if (!current()) return true
+      if (!evidence || evidence.submission_id !== original.submission_id || !evidence.server_result || evidence.server_result.id !== ack.result.id ||
+        evidence.server_result.kind !== 'scale' || evidence.server_result.legacy !== false || !evidence.context ||
+        ['patient_id', 'assessment_id', 'assessment_item_id', 'attempt_id', 'run_id'].some(key => evidence.context[key] !== original[key])) throw new Error('已提交，结果读取尚未核对成功，请返回本轮评估重读。')
+      this.setData({ result: evidence.server_result, resultRiskLabel: RISK_LABELS[evidence.server_result.risk_level] || '待核对', submitting: false })
+      return true
+    } catch (error) {
+      if (current()) this.setData({ submitting: false, formalStatus: this.data.formalCommitted ? '已提交，结果读取暂未完成，请返回本轮评估重读。' : error.message || '本机保存失败，请保留页面并重试。' })
+      return false
     }
   },
 

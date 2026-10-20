@@ -1,6 +1,6 @@
 <ai-copilot page-key="scale" />
 <ui-nav title="{{title}}" />
-<view class="scale-page ai-copilot-safe-space">
+<view class="scale-page ai-copilot-safe-space product-page">
   <view class="scale-header">
     <view class="scale-hero-icon">
       <ui-icon name="scale" shape="sheet" decorative="{{true}}" />
@@ -17,6 +17,14 @@
     <text class="unsupported-title">当前量表不适用于该患者</text>
     <text class="unsupported-message">{{unsupportedMessage}}</text>
     <button class="back-button ui-button ui-button--primary" hover-class="ui-button--pressed" bindtap="goBack">返回患者首页</button>
+  </view>
+
+  <view class="result-card glass-surface" wx:elif="{{formalCommitted}}">
+    <text class="result-title">本次量表已提交</text>
+    <text class="result-summary">{{formalStatus}}</text>
+    <view wx:if="{{result}}" class="result-summary-row"><text>总分：{{result.total_score}}</text><text>风险等级：{{resultRiskLabel}}</text></view>
+    <text class="medical-tip">结果用于了解注意状态，具体情况可与医生讨论。</text>
+    <button class="back-button ui-button ui-button--primary" bindtap="goBack">返回本轮评估</button>
   </view>
 
   <view class="result-card glass-surface" wx:elif="{{showResult}}">
@@ -55,7 +63,7 @@
       <text class="scale-progress-text">
         {{questionNumber}} / {{totalQuestions}}
       </text>
-      <text class="draft-label">答案自动保存在本机</text>
+      <text class="draft-label">{{draftStatus}}</text>
     </view>
 
     <view class="scale-progress-track">
@@ -76,7 +84,7 @@
         wx:for="{{options}}"
         wx:key="value"
         data-value="{{item.value}}"
-        disabled="{{submitting}}"
+        disabled="{{submitting || formalQueued}}"
         aria-pressed="{{selectedValue === item.value}}"
         hover-class="{{submitting ? 'none' : 'ui-clickable--pressed'}}"
         bindtap="selectOption"
@@ -104,6 +112,7 @@
     </view>
   </view>
 
+  <text wx:if="{{formalExecution && formalStatus}}" class="medical-tip">{{formalStatus}}</text>
   <text class="medical-tip">
     本量表结果仅用于辅助筛查，不替代专业医生诊断
   </text>

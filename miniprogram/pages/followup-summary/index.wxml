@@ -1,0 +1,9 @@
+<ai-copilot page-key="followup-summary" patient-id="{{patientId}}" />
+<view class="page product-page product-form-page"><view class="card"><text class="title">实际随访与长期总结</text><text>按真实日期、原始评估及计划版本汇总。缺失和未知不按0计算。</text><button bindtap="reload" disabled="{{busy}}">{{busy ? '正在读取…' : '重新读取'}}</button><text wx:if="{{errorText}}">{{errorText}}</text></view>
+<block wx:if="{{summary}}"><view class="card"><text>截至 {{summary.asOfDate}}</text><text>{{summary.coverageText}}</text><text wx:if="{{summary.truncatedText}}">{{summary.truncatedText}}</text></view>
+<view class="card" wx:for="{{summary.cycles}}" wx:key="cycle_id"><text class="title">{{item.title}}</text><text>{{item.stateText}} · {{item.coverageText}}</text><text>{{item.metricsText}}</text><text>{{item.limitationsText}}</text><button bindtap="openSource" data-type="cycle" data-index="{{index}}">查看本周期原始记录</button></view>
+<view class="card" wx:for="{{summary.measurements}}" wx:key="submission_id"><text class="title">{{item.label}}</text><text>{{item.valueText}}</text><text>{{item.sourceText}}</text><button bindtap="openSource" data-type="measurement" data-index="{{index}}">核对本轮评估原件</button></view>
+<view class="card" wx:for="{{summary.comparisons}}" wx:key="index"><text class="title">{{item.label}} · {{item.status_label}}</text><text>{{item.reasonText}}</text><text>{{item.interpretation}}</text></view>
+<view class="card" wx:for="{{summary.events}}" wx:key="record_id"><text class="title">{{item.record_date}} · 原始自报</text><text>{{item.text}}</text><text>修订 {{item.revision}} · 周期 {{item.cycle_id}}</text></view>
+<view class="card"><text class="title">下一步</text><button wx:for="{{summary.nextSteps}}" wx:key="index" bindtap="openStep" data-index="{{index}}">{{item.label}}</button><text wx:if="{{!summary.nextSteps.length}}">暂无需要处理的下一步。</text></view>
+<view class="card"><text class="title">资料局限</text><text wx:for="{{summary.limitations}}" wx:key="*this">{{item}}</text></view></block></view>

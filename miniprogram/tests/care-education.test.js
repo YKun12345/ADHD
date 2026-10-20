@@ -76,7 +76,7 @@ assert.deepEqual(
     '',
     '/pages/scale/index',
     '/pages/cognitive-center/index',
-    '/pages/tracking/index',
+    '/pages/care-cycles/index',
     '/pages/report/index'
   ]
 )

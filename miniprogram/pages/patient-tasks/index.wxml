@@ -1,6 +1,6 @@
 <ai-copilot page-key="patient-tasks" />
 <ui-nav title="我的任务" />
-<view class="care-page ai-copilot-safe-space">
+<view class="care-page ai-copilot-safe-space product-page">
   <view class="source-note"><text class="source-tag">医生安排</text><text>这里不同于关怀路径中的系统建议。</text></view>
   <view wx:if="{{loading}}" class="state-card">正在加载任务…</view>
   <view wx:elif="{{errorText}}" class="state-card"><text>{{errorText}}</text><button bindtap="retryLoad">重新加载</button></view>

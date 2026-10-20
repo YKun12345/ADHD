@@ -422,3 +422,6 @@ page {
   line-height: 1.6;
   text-align: center;
 }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

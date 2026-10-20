@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return mapping[level] || '待评估';
     }
 
+    const hasScope = (item, scope) => !Array.isArray(item.allowed_scope) || item.allowed_scope.includes(scope);
+    const subjectName = item => item.patient_name || `共享档案 #${item.patient_id}`;
+
     function pickPriorityPatient(items) {
         if (!items.length) {
             return null;
@@ -64,11 +67,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const score = (item) => {
             let total = 0;
-            if (!item.latest_scale_type) total += 6;
-            if ((item.cognitive_test_count || 0) === 0) total += 5;
-            if ((item.completed_tracking_days || 0) < 7) total += 4;
-            if (!item.has_imaging) total += 3;
-            if (item.latest_scale_risk_level === 'high') total += 2;
+            if (hasScope(item, 'assessment') && !item.latest_scale_type) total += 6;
+            if (hasScope(item, 'assessment') && (item.cognitive_test_count || 0) === 0) total += 5;
+            if (hasScope(item, 'tracking') && (item.completed_tracking_days || 0) < 7) total += 4;
+            if (hasScope(item, 'imaging') && !item.has_imaging) total += 3;
+            if (hasScope(item, 'assessment') && item.latest_scale_risk_level === 'high') total += 2;
             return total;
         };
 
@@ -97,26 +100,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(patient.patient_id));
-
-        focusPatientName.textContent = `${patient.patient_name} 是当前更适合优先推进分析的患者`;
-        focusPatientHint.textContent = patient.next_step_text || '建议先进入综合分析页，联动查看量表、追踪与影像证据。';
+        focusPatientName.textContent = `${subjectName(patient)} 是当前更适合优先推进的档案`;
+        focusPatientHint.textContent = patient.next_step_text || '按已确认的共享范围查看资料或处理随访。';
         [
-            `${formatPatientType(patient.patient_type)}患者`,
-            `${patient.completed_tracking_days || 0}/14 天追踪`,
-            `${patient.cognitive_test_count || 0} 项认知结果`,
-            `量表风险：${formatRiskLevel(patient.latest_scale_risk_level)}`,
-            patient.has_imaging ? '已补充影像证据' : '待补充影像分析'
+            hasScope(patient, 'profile') ? `${formatPatientType(patient.patient_type)}患者` : '基础资料未共享',
+            hasScope(patient, 'tracking') ? `${patient.completed_tracking_days || 0}/14 天追踪` : '跟踪未共享',
+            hasScope(patient, 'assessment') ? `${patient.cognitive_test_count || 0} 项认知结果` : '认知评估未共享',
+            hasScope(patient, 'assessment') ? `量表风险：${formatRiskLevel(patient.latest_scale_risk_level)}` : '评估未共享',
+            hasScope(patient, 'imaging') ? (patient.has_imaging ? '已补充影像证据' : '待补充影像分析') : '影像未共享'
         ].forEach((text) => focusPatientMeta.appendChild(createMetaChip(text)));
 
-        focusPatientReportBtn.href = `doctor_report.html?patient_id=${patient.patient_id}`;
-        focusPatientReportBtn.textContent = '查看患者综合分析';
+        const reportShared = ['profile', 'assessment', 'tracking', 'imaging'].some(scope => hasScope(patient, scope));
+        focusPatientReportBtn.href = reportShared ? `doctor_report.html?patient_id=${patient.patient_id}` : `doctor_patients.html?focus_patient_id=${patient.patient_id}&care=1`;
+        focusPatientReportBtn.textContent = reportShared ? '查看已共享报告' : '处理已共享随访';
         let baseUrl = '';
         if (window.location.protocol === 'file:') {
             baseUrl = 'http://127.0.0.1:8000/doctor-web/';
         }
-        focusPatientVizBtn.href = `${baseUrl}doctor_visualization.html?patient_id=${patient.patient_id}`;
-        focusPatientVizBtn.textContent = '继续影像可视化';
+        focusPatientVizBtn.href = hasScope(patient, 'imaging') ? `${baseUrl}doctor_visualization.html?patient_id=${patient.patient_id}` : `doctor_patients.html?focus_patient_id=${patient.patient_id}`;
+        focusPatientVizBtn.textContent = hasScope(patient, 'imaging') ? '继续影像可视化' : '影像未共享';
     }
 
     function openModal() {
@@ -137,8 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const stats = await window.API.Doctor.getDashboardStats();
             if (patientCount) patientCount.textContent = String(stats.patient_count || 0);
-            if (pendingImagingCount) pendingImagingCount.textContent = String(stats.pending_imaging_count || 0);
-            if (weeklyReportCount) weeklyReportCount.textContent = String(stats.weekly_report_count || 0);
+            if (pendingImagingCount) pendingImagingCount.textContent = stats.pending_imaging_count === null ? '未共享' : String(stats.pending_imaging_count || 0);
+            if (weeklyReportCount) weeklyReportCount.textContent = stats.weekly_report_count === null ? '未共享' : String(stats.weekly_report_count || 0);
         } catch (error) {
             console.error('Failed to load dashboard stats:', error);
             if (patientCount) patientCount.textContent = '--';
@@ -211,13 +213,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         setFeedback('');
 
         try {
-            const result = await window.API.Doctor.bindPatientByEmail({ patient_email: email });
-            localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(result.patient_id));
-            setFeedback(`已添加患者：${result.patient_name}，正在进入综合分析页...`, 'success');
-
-            setTimeout(() => {
-                window.location.href = `doctor_report.html?patient_id=${result.patient_id}`;
-            }, 600);
+            await window.API.Authorization.invite({ target_email: email,
+                scope: ['profile', 'assessment', 'tracking', 'care', 'imaging'], purpose: 'clinical_sharing',
+                expires_at: new Date(Date.now() + 90 * 86400000).toISOString() });
+            setFeedback('邀请已发出，等待对方确认。', 'success');
+            resetConfirmButton();
+            await loadDashboardStats();
+            await loadPriorityPatient();
         } catch (error) {
             setFeedback(error.message || '添加失败，请稍后再试。', 'error');
             resetConfirmButton();

@@ -768,8 +768,11 @@
         </div>
     </footer>
 
-    <script src="js/api.js"></script>
-    <script src="js/patient_copilot.js"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261014-w02"></script>
+    <script src="js/patient_copilot.js?v=20261017-unified"></script>
     <script>
     (function() {
         // ============================================
@@ -1014,7 +1017,7 @@
                 document.getElementById('calloutDesc').textContent = activeStep.desc;
                 const btn = document.getElementById('calloutBtn');
                 btn.href = activeStep.actionUrl;
-                btn.innerHTML = `${activeStep.actionLabel} <ion-icon name="arrow-forward"></ion-icon>`;
+                btn.replaceChildren(SafeRender.html`${activeStep.actionLabel} <ion-icon name="arrow-forward"></ion-icon>`);
             }
 
             // Completion banner
@@ -1041,56 +1044,71 @@
             };
             const s = statusMap[step.status] || statusMap.pending;
 
-            const chipColors = ['', 'chip-green', 'chip-purple', 'chip-orange'];
-            const chipsHtml = (step.chipData || []).map((c, ci) =>
-                `<span class="pathway-chip ${chipColors[ci % chipColors.length]}"><ion-icon name="checkmark-outline"></ion-icon> ${c}</span>`
-            ).join('');
-
-            let progressHtml = '';
-            if (step.hasProgress && step.progress !== undefined) {
-                const fillColor = step.progress >= 100 ? 'fill-green' : step.progress > 0 ? 'fill-purple' : 'fill-blue';
-                progressHtml = `
-                    <div class="pathway-mini-progress">
-                        <div class="pathway-mini-progress-label">
-                            <span>追踪进度</span>
-                            <span>${step.progress}%</span>
-                        </div>
-                        <div class="pathway-mini-track">
-                            <div class="pathway-mini-fill ${fillColor}" style="width: ${step.progress}%;"></div>
-                        </div>
-                    </div>`;
-            }
-
-            const isPending = step.status === 'pending';
-            const actionBtn = isPending
-                ? `<span style="font-size:0.82rem; color:#94A3B8;">完成前序步骤后解锁</span>`
-                : `<a href="${step.actionUrl}" class="pathway-btn-primary ${step.status === 'active' ? 'purple' : ''}">${step.actionLabel} <ion-icon name="arrow-forward-outline"></ion-icon></a>`;
-
             const item = document.createElement('div');
             item.className = 'pathway-item';
-            item.innerHTML = `
+            item.appendChild(SafeRender.html`
                 <div class="pathway-step-col">
-                    <div class="pathway-step-badge ${s.badgeClass}">
-                        <ion-icon name="${step.icon}"></ion-icon>
+                    <div class="pathway-step-badge">
+                        <ion-icon></ion-icon>
                         <span class="pathway-step-num">${idx + 1}</span>
                     </div>
                 </div>
-                <div class="pathway-card ${s.cardClass}">
+                <div class="pathway-card">
                     <div class="pathway-card-top">
                         <div class="pathway-card-title-wrap">
                             <h3>${step.title}</h3>
                             <span class="pathway-card-subtitle">${step.subtitle}</span>
                         </div>
-                        <span class="pathway-status-pill ${s.pillClass}">${s.pillText}</span>
+                        <span class="pathway-status-pill">${s.pillText}</span>
                     </div>
-                    ${chipsHtml ? `<div class="pathway-data-chips">${chipsHtml}</div>` : ''}
                     <p class="pathway-card-desc">${step.desc}</p>
-                    ${progressHtml}
-                    <div class="pathway-card-actions">
-                        ${actionBtn}
-                        ${step.status === 'done' ? `<a href="${step.actionUrl}" class="pathway-btn-outline">查看详情 <ion-icon name="eye-outline"></ion-icon></a>` : ''}
-                    </div>
-                </div>`;
+                    <div class="pathway-card-actions"></div>
+                </div>`);
+            item.querySelector('.pathway-step-badge').classList.add(s.badgeClass);
+            item.querySelector('.pathway-step-badge ion-icon').setAttribute('name', step.icon);
+            item.querySelector('.pathway-card').classList.add(s.cardClass);
+            item.querySelector('.pathway-status-pill').classList.add(s.pillClass);
+
+            if (step.chipData?.length) {
+                const chips = document.createElement('div');
+                chips.className = 'pathway-data-chips';
+                const chipColors = ['', 'chip-green', 'chip-purple', 'chip-orange'];
+                step.chipData.forEach((text, index) => {
+                    const chip = document.createElement('span');
+                    chip.className = `pathway-chip ${chipColors[index % chipColors.length]}`.trim();
+                    chip.appendChild(SafeRender.html`<ion-icon name="checkmark-outline"></ion-icon> ${text}`);
+                    chips.appendChild(chip);
+                });
+                item.querySelector('.pathway-card-top').after(chips);
+            }
+            if (step.hasProgress && step.progress !== undefined) {
+                const progress = SafeRender.html`
+                    <div class="pathway-mini-progress">
+                        <div class="pathway-mini-progress-label"><span>追踪进度</span><span>${step.progress}%</span></div>
+                        <div class="pathway-mini-track"><div class="pathway-mini-fill"></div></div>
+                    </div>`;
+                const fill = progress.querySelector('.pathway-mini-fill');
+                fill.classList.add(step.progress >= 100 ? 'fill-green' : step.progress > 0 ? 'fill-purple' : 'fill-blue');
+                fill.style.width = `${Math.max(0, Math.min(100, Number(step.progress) || 0))}%`;
+                item.querySelector('.pathway-card-desc').after(progress);
+            }
+            const actions = item.querySelector('.pathway-card-actions');
+            if (step.status === 'pending') {
+                actions.appendChild(SafeRender.html`<span style="font-size:0.82rem; color:#94A3B8;">完成前序步骤后解锁</span>`);
+            } else {
+                const action = document.createElement('a');
+                action.href = SafeRender.navigationUrl(step.actionUrl) || '#';
+                action.className = `pathway-btn-primary${step.status === 'active' ? ' purple' : ''}`;
+                action.appendChild(SafeRender.html`${step.actionLabel} <ion-icon name="arrow-forward-outline"></ion-icon>`);
+                actions.appendChild(action);
+            }
+            if (step.status === 'done') {
+                const detail = document.createElement('a');
+                detail.href = SafeRender.navigationUrl(step.actionUrl) || '#';
+                detail.className = 'pathway-btn-outline';
+                detail.appendChild(SafeRender.html`查看详情 <ion-icon name="eye-outline"></ion-icon>`);
+                actions.appendChild(detail);
+            }
             return item;
         }
 

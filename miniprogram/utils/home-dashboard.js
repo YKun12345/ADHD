@@ -90,7 +90,7 @@ function getTrackingAvailability(patientType) {
     return {
       available: true,
       statusLabel: '开始记录',
-      url: '/pages/tracking/index'
+      url: '/pages/care-cycles/index'
     }
   }
   return { available: false, statusLabel: '按计划开发' }
@@ -112,7 +112,7 @@ function getAiAvailability(patientType) {
     return {
       available: true,
       statusLabel: '开始咨询',
-      url: '/pages/ai-chat/index'
+      url: '/pages/agent-chat/index'
     }
   }
   return { available: false, statusLabel: '按计划开发' }
@@ -185,7 +185,7 @@ function buildQuickEntries(patientType = '') {
   const aiAvailability = getAiAvailability(patientType)
   const pathwayAvailability = getPathwayAvailability(patientType)
   const educationAvailability = getEducationAvailability(patientType)
-  const messageAvailability = getCareAvailability(patientType, '/pages/patient-messages/index')
+  const messageAvailability = getCareAvailability(patientType, '/pages/shared-messages/index')
   const taskAvailability = getCareAvailability(patientType, '/pages/patient-tasks/index')
 
   return [
@@ -216,7 +216,7 @@ function buildQuickEntries(patientType = '') {
     {
       id: 'ai',
       icon: '问',
-      title: 'AI助手',
+      title: '星仔助手',
       ...aiAvailability
     },
     {

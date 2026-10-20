@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ui-nav": "/components/ui-nav/index",
+    "ai-copilot": "/components/ai-copilot/index"
+  }
+}

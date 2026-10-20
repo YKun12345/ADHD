@@ -22,7 +22,8 @@ function createViewportBounds(info = {}) {
   const minX = HORIZONTAL_MARGIN
   const maxX = Math.max(minX, width - TRIGGER_SIZE - HORIZONTAL_MARGIN)
   const minY = Math.min(height - TRIGGER_SIZE, safeTop + NAV_BAR_HEIGHT + TOP_MARGIN)
-  const maxY = Math.max(minY, safeBottom - TRIGGER_SIZE - BOTTOM_MARGIN)
+  const reservedBottom = Math.max(0, finiteNumber(info.bottomReserved, 0))
+  const maxY = Math.max(minY, safeBottom - TRIGGER_SIZE - BOTTOM_MARGIN - reservedBottom)
 
   return {
     minX: Math.round(minX),

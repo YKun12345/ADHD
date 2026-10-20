@@ -2,6 +2,7 @@
   "navigationBarTitleText": "服务器设置",
   "usingComponents": {
     "ui-nav": "/components/ui-nav/index",
-    "ui-icon": "/components/ui-icon/index"
+    "ui-icon": "/components/ui-icon/index",
+    "ai-copilot": "/components/ai-copilot/index"
   }
 }

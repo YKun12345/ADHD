@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>评估发布 | 知行合医</title>
+<link rel="stylesheet" href="css/assessment-page.css"></head>
+<body data-assessment-role="researcher"><main id="assessmentShell" class="assessment-shell">
+<a href="doctor_patients.html">返回患者工作台</a>
+<section class="assessment-sheet"><h1 id="assessmentSubject">患者评估</h1><p class="assessment-note">选择已获准的模板创建草稿，核对后发布给当前共享患者。私人对话不在本页读取。</p>
+<p id="assessmentMessage" role="status"></p><button id="refreshAssessmentsButton" type="button">刷新本轮资料</button></section>
+<section class="assessment-sheet"><h2>新建一轮评估</h2><p id="assessmentAdmission" class="assessment-note"></p>
+<select id="assessmentTemplate" aria-label="评估模板"></select><div id="assessmentBackground"></div>
+<button id="createAssessmentButton" type="button" disabled>保存评估草稿</button></section>
+<section class="assessment-sheet"><h2>已有评估</h2><div id="assessmentList"></div></section>
+<section class="assessment-sheet"><input id="assessmentAssisted" type="checkbox" hidden><div id="assessmentDetails"></div></section>
+</main><script src="js/session-guard.js?v=20261013-w01"></script><script src="js/api.js?v=20261014-w03"></script>
+<script src="js/assessment-page.js?v=20261017-complete"></script></body></html>

@@ -1,0 +1,40 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!busy}}" page-key="service-coverage" />
+<ui-nav title="服务覆盖" showBack="{{true}}" fallbackUrl="/pages/doctor-guide-settings/index" />
+<view class="coverage-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">实际服务时间与响应窗口</text>
+    <text class="note">配置由有权限的机构审核人员确认。工作窗口不表示全天响应，配置记录也不表示真实机构上线准入已核验。紧急情况按机构已批准的现实流程处理。</text>
+    <text wx:if="{{currentText}}" class="note">{{currentText}}</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text>
+    <text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新实际范围</button>
+    <button disabled="{{busy}}" bindtap="openPending">查看本机待确认记录</button>
+  </view>
+  <view wx:if="{{canConfigure}}" class="sheet">
+    <text class="title">本机构可配置医生</text>
+    <picker range="{{doctors}}" range-key="label" value="{{doctorIndex}}" disabled="{{busy}}" bindchange="selectDoctor"><view class="picker-field">{{doctorLabel}}</view></picker>
+    <text wx:if="{{!doctors.length}}" class="note">当前机构范围没有可配置的已核验医生。</text>
+  </view>
+  <view wx:if="{{canConfigure && doctorId}}" class="sheet">
+    <text class="title">新版本配置（北京时间）</text>
+    <text class="note">每行一个真实工作时段，例如“周一 09:00-12:00”。午休分成两个时段；没有填写的时段不计入工作窗口。</text>
+    <textarea value="{{periodsText}}" maxlength="1200" disabled="{{busy || !!pendingId}}" data-field="periodsText" bindinput="onFieldInput" placeholder="逐行填写已确认的工作日和时间" />
+    <text class="note">期望响应窗口（工作分钟）</text>
+    <input value="{{responseMinutes}}" type="number" disabled="{{busy || !!pendingId}}" data-field="responseMinutes" bindinput="onFieldInput" placeholder="填写实际批准窗口" />
+    <text class="note">机构批准流程引用</text>
+    <input value="{{processReference}}" maxlength="255" disabled="{{busy || !!pendingId}}" data-field="processReference" bindinput="onFieldInput" placeholder="填写已有流程的真实引用" />
+    <text class="note">现实处理及超时升级说明</text>
+    <textarea value="{{instructions}}" maxlength="4000" disabled="{{busy || !!pendingId}}" data-field="instructions" bindinput="onFieldInput" placeholder="填写已批准流程原说明，不补造电话或替班人" />
+    <button disabled="{{busy || !!pendingId}}" bindtap="saveVersion">核对并确认新版本</button>
+    <button wx:if="{{pendingId}}" disabled="{{busy}}" bindtap="queryPending">按原编号查询确认</button>
+    <button wx:if="{{canArchivePending}}" disabled="{{busy}}" bindtap="archivePending">保留原配置并重新核对</button>
+  </view>
+  <view wx:for="{{history}}" wx:key="id" class="sheet">
+    <text class="title">版本 {{item.version}} · 医生账号 {{item.doctor_user_id}}</text>
+    <text class="note">保存人：账号 {{item.reviewer_user_id}} · 生效时间 {{item.effective_from}}（UTC）</text>
+    <text class="note">{{item.periodsLabel}}</text>
+    <text class="note">窗口：{{item.expected_response_working_minutes}} 个工作分钟 · {{item.timezone}}</text>
+    <text class="note">流程引用：{{item.approved_process_reference}}</text>
+    <text class="note">{{item.escalation_instructions}}</text>
+  </view>
+</view>

@@ -9,6 +9,9 @@ const SESSION_KEYS = [
 ]
 
 const PATIENT_DATA_KEYS = [
+  'submission_queue_v1',
+  'assessment_execution_v1',
+  'assessment_scale_drafts_v1',
   'patient_dashboard_cache',
   'scale_draft_asrs',
   'scale_draft_snap_iv',
@@ -380,10 +383,16 @@ function hasValidPatientSession(readStorage = defaultReadStorage) {
 
 function summarizePatientData(readStorage = defaultReadStorage) {
   const read = storageReader(readStorage)
+  const currentUser = safeRead(read, 'current_user')
+  const formalDrafts = safeRead(read, 'assessment_scale_drafts_v1')
+  const ownedFormalDrafts = formalDrafts && formalDrafts.version === 1 && formalDrafts.owner &&
+    currentUser && currentUser.role === 'patient' && formalDrafts.owner.user_id === currentUser.id && formalDrafts.owner.role === currentUser.role &&
+    formalDrafts.owner.api_origin === resolveApiBaseUrl(safeRead(read, API_BASE_URL_KEY)) && formalDrafts.drafts && typeof formalDrafts.drafts === 'object'
+    ? Object.values(formalDrafts.drafts).filter(draft => draft && Array.isArray(draft.answers) && draft.answers.length > 0).length : 0
   const draftCount = [
     'scale_draft_asrs',
     'scale_draft_snap_iv'
-  ].filter((key) => hasValidContent(safeRead(read, key))).length
+  ].filter((key) => hasValidContent(safeRead(read, key))).length + ownedFormalDrafts
 
   const resultCount = (
     hasValidContent(safeRead(read, 'scale_latest_result')) ? 1 : 0
@@ -394,7 +403,12 @@ function summarizePatientData(readStorage = defaultReadStorage) {
     ? trackingLogs.filter(hasValidContent).length
     : 0
 
-  const pendingCount = [
+  const queue = safeRead(read, 'submission_queue_v1')
+  const ownedQueueCount = queue && queue.version === 1 && queue.owner && Array.isArray(queue.entries) &&
+    currentUser && ['patient', 'researcher'].includes(currentUser.role) && queue.owner.user_id === currentUser.id && queue.owner.role === currentUser.role &&
+    queue.owner.api_base_url === resolveApiBaseUrl(safeRead(read, API_BASE_URL_KEY))
+    ? queue.entries.filter(entry => entry && (currentUser.role === 'patient' || ['shared_message', 'attention_action', 'service_coverage', 'transfer_decision', 'transfer_work_action', 'review_draft', 'review_publication', 'review_question', 'clarification_reply', 'plan_publication', 'plan_received', 'agent_run', 'cycle_review', 'artifact_decision', 'imaging_report'].includes(entry.kind))).length : 0
+  const pendingCount = ownedQueueCount + [
     'pending_cognitive_result',
     'pending_stroop_result',
     'pending_simple_reaction_result',
@@ -429,6 +443,7 @@ function clearPatientData(removeStorage = defaultRemoveStorage) {
 }
 
 function endPatientSession(options = {}) {
+  require('./companion-transfer').clear()
   const settings = options && typeof options === 'object'
     ? options
     : {}
@@ -467,6 +482,14 @@ function replacePatientSession(result, options = {}) {
   const settings = options && typeof options === 'object'
     ? options
     : {}
+  const read = storageReader(settings.readStorage)
+  const previousUser = safeRead(read, 'current_user')
+  const pendingQueue = safeRead(read, 'submission_queue_v1')
+  const sameActor = previousUser && result.user && previousUser.id === result.user.id && previousUser.role === result.user.role
+  const origin = resolveApiBaseUrl(safeRead(read, API_BASE_URL_KEY))
+  const executionStores = ['assessment_execution_v1', 'assessment_scale_drafts_v1'].map(key => safeRead(read, key))
+  const sameOrigin = (!pendingQueue || !pendingQueue.owner || typeof pendingQueue.owner.api_base_url !== 'string' || pendingQueue.owner.api_base_url === origin) &&
+    executionStores.every(store => !store || !store.owner || typeof store.owner.api_origin !== 'string' || store.owner.api_origin === origin)
   const endOptions = {
     includePatientData: false,
     removeStorage: settings.removeStorage,
@@ -477,6 +500,14 @@ function replacePatientSession(result, options = {}) {
     ? settings.setLoggedIn
     : defaultSetLoggedIn
   const preparationResult = endPatientSession(endOptions)
+  if (!sameActor || !sameOrigin) {
+    for (const key of ['submission_queue_v1', 'assessment_execution_v1', 'assessment_scale_drafts_v1']) {
+      if (!safeRemove(storageRemover(settings.removeStorage), key)) {
+        preparationResult.ok = false
+        preparationResult.failedKeys.push(key)
+      }
+    }
+  }
 
   if (!preparationResult.ok) {
     const preparationError = new Error('旧登录凭证清理失败，请重试')

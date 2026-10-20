@@ -1,0 +1,56 @@
+<view class="authorization-panel">
+  <text class="panel-title">身份与共享授权</text>
+  <text class="panel-note" wx:if="{{demonstrationOnly}}">当前连接测试环境，资料与正式账号分开保存。</text>
+  <text class="panel-note" wx:if="{{role === 'researcher'}}">医生资格：{{doctorStatus}}。研究与审计身份不自动获得临床访问。</text>
+  <view wx:for="{{patients}}" wx:key="patient_id" class="authorization-row"><text>当前档案：{{item.display_name}} · {{item.access_kind === 'guardian' ? '监护访问' : '本人访问'}}</text></view>
+  <view wx:for="{{guardians}}" wx:key="id" class="authorization-row">
+    <text>监护关系：{{item.statusLabel}}</text><text class="panel-note">关系编号 {{item.id}} · 版本 {{item.revision}}。由主要监护人确认，暂停或失效后停止访问。</text>
+    <input wx:if="{{item.canConfirm}}" class="panel-input" type="number" value="{{item.ageInput}}" data-id="{{item.id}}" bindinput="onGuardianAge" placeholder="监护人实际年龄（18至120岁）" disabled="{{busy}}" />
+    <button wx:if="{{item.canConfirm}}" class="panel-button" data-id="{{item.id}}" bindtap="confirmGuardianRelationship" disabled="{{busy || loading}}">确认我是主要监护人并开始使用</button>
+    <button wx:if="{{item.canSuspend}}" class="panel-button" data-id="{{item.id}}" data-action="suspend" bindtap="manageGuardian" disabled="{{busy || loading}}">暂停监护访问</button>
+    <button wx:if="{{item.canRestore}}" class="panel-button" data-id="{{item.id}}" data-action="restore" bindtap="manageGuardian" disabled="{{busy || loading}}">恢复本人监护访问</button>
+    <view wx:for="{{item.successor_confirmations}}" wx:for-item="confirmation" wx:key="id"><text class="panel-note">账号 {{confirmation.user_id}} 已确认{{confirmation.purpose === 'transfer' ? '接任监护' : '成人本人身份'}}</text><button class="panel-button" data-id="{{item.id}}" data-confirmation="{{confirmation.id}}" bindtap="acceptGuardianSuccessor" disabled="{{busy || loading}}">确认双方交接</button></view>
+  </view>
+  <text class="panel-error" wx:if="{{errorText}}">{{errorText}}</text>
+  <text class="panel-note" wx:if="{{statusText}}">{{statusText}}</text>
+  <button class="panel-button" disabled="{{loading || busy}}" bindtap="reloadAuthorization">{{loading ? '读取授权中…' : '刷新授权状态'}}</button>
+  <view wx:if="{{!loading && !errorText && canInvite}}">
+    <text class="panel-heading">邀请共享</text>
+    <input class="panel-input" value="{{targetEmail}}" disabled="{{busy}}" bindinput="onTargetEmailInput" placeholder="{{role === 'patient' ? '医生注册邮箱' : '本人或监护人注册邮箱'}}" />
+    <checkbox-group class="scope-options" bindchange="onScopeChange">
+      <label wx:for="{{scopeOptions}}" wx:key="value"><checkbox value="{{item.value}}" checked="{{item.checked}}" disabled="{{busy}}" />{{item.label}}</label>
+    </checkbox-group>
+    <button class="panel-button" disabled="{{busy}}" bindtap="inviteRelationship">发出邀请，等待确认</button>
+  </view>
+  <text class="panel-heading">医患关系</text>
+  <text wx:if="{{!loading && !relationships.length}}" class="panel-note">暂无共享关系。旧邮箱绑定不代表已接受新的共享。</text>
+  <view wx:for="{{relationships}}" wx:key="id" class="authorization-row">
+    <text>{{role === 'patient' ? (item.doctor_name || item.counterparty_email || '受邀医生') : (item.patient_name || '共享档案 #' + item.patient_id)}} · {{item.statusLabel}}</text>
+    <text class="panel-note">{{item.scopeLabel}} · {{item.expires_at || '期限以确认条款为准'}}</text>
+    <button wx:if="{{item.canAccept}}" class="panel-button" data-id="{{item.id}}" disabled="{{busy || loading}}" bindtap="acceptRelationship">确认共享范围</button>
+    <button wx:if="{{item.canRevoke}}" class="panel-button" data-id="{{item.id}}" disabled="{{busy || loading}}" bindtap="revokeRelationship">撤回共享</button>
+  </view>
+  <view wx:if="{{role === 'patient'}}">
+    <button class="panel-button" disabled="{{busy || loading}}" bindtap="toggleIdentityConfirmation">监护交接或成年本人接管</button>
+    <view wx:if="{{identityConfirmationVisible}}">
+      <text class="panel-note">由原监护人提供关系编号和版本。新监护人或成年本人使用自己的账号确认，再由原监护人同意交接；不会自动继承原有用途同意。</text>
+      <radio-group bindchange="onIdentityPurpose"><label><radio value="transfer" checked="{{identityPurpose === 'transfer'}}" />新监护人</label><label><radio value="adult_conversion" checked="{{identityPurpose === 'adult_conversion'}}" />成年本人</label></radio-group>
+      <input class="panel-input" type="number" value="{{identityRelationshipId}}" data-field="identityRelationshipId" bindinput="onIdentityInput" placeholder="原监护关系编号" />
+      <input class="panel-input" type="number" value="{{identityRevision}}" data-field="identityRevision" bindinput="onIdentityInput" placeholder="当前关系版本" />
+      <input class="panel-input" type="number" value="{{identityAge}}" data-field="identityAge" bindinput="onIdentityInput" placeholder="本人年龄（18至120岁）" />
+      <input class="panel-input" value="{{identityProof}}" data-field="identityProof" bindinput="onIdentityInput" placeholder="说明此次监护交接或本人接管，勿填证件全文" />
+      <button class="panel-button" disabled="{{busy || loading}}" bindtap="confirmNewIdentity">本人确认并通知原监护人</button>
+    </view>
+  </view>
+  <view wx:if="{{role === 'patient' && patientId}}">
+    <text class="panel-heading">用途同意</text>
+    <text class="panel-note">基本使用、临床共享、外部AI、具体研究分别记录。未同意外部AI或研究仍可做日常评估。</text>
+    <view wx:for="{{consents}}" wx:key="id" class="authorization-row">
+      <text>{{item.purposeLabel}} · {{item.statusLabel}} · 条款{{item.terms_version}}</text>
+      <text wx:if="{{item.project_id}}" class="panel-note">具体研究项目：{{item.project_id}}</text>
+      <button wx:if="{{item.canWithdraw}}" class="panel-button" data-id="{{item.id}}" disabled="{{busy || loading}}" bindtap="withdrawConsent">撤回此用途</button>
+    </view>
+    <button wx:if="{{canGrantBasic}}" class="panel-button" disabled="{{busy || loading}}" bindtap="grantBasicUse">以当前身份确认基本使用</button>
+    <button class="panel-button" disabled="{{busy || loading}}" bindtap="grantExternalAi">单独查看并确认外部AI用途</button>
+  </view>
+</view>

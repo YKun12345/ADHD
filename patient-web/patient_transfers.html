@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>我的责任交接记录</title><link rel="stylesheet" href="../doctor-web/css/care-workbench.css"></head>
+<body><nav class="care-nav"><a href="patient_care.html">返回关注与日期记录</a></nav>
+<main id="transferShell" class="care-shell" data-role="patient"><h1>我的责任交接记录</h1>
+<p class="care-intro">查看本人或当前合法监护档案的具体交接清单、实际接收医生及处理历史。请在小程序中明确选择范围、提出或撤销交接。</p>
+<div class="care-controls"><label for="transferPatient">当前获准档案</label><select id="transferPatient"><option value="">请选择档案</option></select><button id="transferRefresh" type="button">重新读取</button></div><p id="transferMessage" role="status" aria-live="polite"></p>
+<section><h2>具体交接记录</h2><div id="transferRequests"></div></section><section><h2>已接受的继任事项</h2><div id="transferWork"></div></section><section id="transferDetail" class="care-detail" aria-label="原件及实际处理历史"></section></main>
+<script src="js/session-guard.js?v=20261016-w05"></script><script src="js/api.js?v=20261016-transfer"></script><script src="../doctor-web/js/transfer-view.js?v=20261016-transfer"></script></body></html>

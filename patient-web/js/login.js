@@ -33,6 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmPasswordInput = document.getElementById('confirmPasswordInput');
     const patientTypeInput = document.getElementById('patientTypeInput');
     const patientTypeSection = document.getElementById('patientTypeSection');
+    const ageInput = document.getElementById('ageInput');
+    const guardianSection = document.getElementById('guardianSection');
+    const guardianNameInput = document.getElementById('guardianNameInput');
+    const guardianAgeInput = document.getElementById('guardianAgeInput');
+    const guardianRelationInput = document.getElementById('guardianRelationInput');
+    const proofReferenceInput = document.getElementById('proofReferenceInput');
+    const guardianConfirmedInput = document.getElementById('guardianConfirmedInput');
     const passwordRules = document.getElementById('passwordRules');
     const togglePasswordBtn = document.getElementById('togglePasswordBtn');
     const toRegisterBtn = document.getElementById('toRegisterBtn');
@@ -94,7 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setFeedback(message, type = 'error') {
-        formFeedback.innerHTML = `<ion-icon name="${type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'}"></ion-icon> ${message}`;
+        const icon = document.createElement('ion-icon');
+        icon.setAttribute('name', type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline');
+        formFeedback.replaceChildren(icon, document.createTextNode(` ${message}`));
         formFeedback.className = `form-feedback ${type === 'success' ? 'feedback-success' : 'feedback-error'}`;
     }
 
@@ -114,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
         emailInput.required = isRegisterMode() || currentRole === 'patient';
         patientTypeSection.style.display =
             isRegisterMode() && currentRole === 'patient' ? 'block' : 'none';
+        const forPatient = isRegisterMode() && currentRole === 'patient';
+        const forChild = forPatient && patientTypeInput.value === 'child';
+        if (ageInput) ageInput.required = forPatient;
+        if (guardianSection) guardianSection.hidden = !forChild;
+        [guardianNameInput, guardianAgeInput, proofReferenceInput].forEach(input => { if (input) input.required = forChild; });
 
         validateForm();
     }
@@ -149,6 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const hasPatientType = currentRole !== 'patient' || patientTypeInput.value.trim().length > 0;
             const passwordPassedRules = isPasswordStrongEnough(password);
             valid = valid && email.length > 0 && hasFullName && hasMatchedPassword && hasPatientType && passwordPassedRules;
+            if (currentRole === 'patient') {
+                const age = Number(ageInput?.value);
+                const forChild = patientTypeInput.value === 'child';
+                valid = valid && Number.isInteger(age) && age >= (forChild ? 1 : 18) && age <= (forChild ? 17 : 120);
+                if (forChild) {
+                    const guardianAge = Number(guardianAgeInput?.value);
+                    valid = valid && guardianNameInput?.value.trim().length >= 2 && Number.isInteger(guardianAge)
+                        && guardianAge >= 18 && guardianAge <= 120 && proofReferenceInput?.value.trim().length > 0 && guardianConfirmedInput?.checked;
+                }
+            }
         }
 
         submitBtn.classList.toggle('disabled', !valid);
@@ -156,13 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveSession(result) {
-        localStorage.setItem('smartbrain_token', result.access_token);
-        localStorage.setItem('smartbrain_user', JSON.stringify(result.user));
+        window.SessionGuard.establishSession(result.access_token, result.user, window.SessionGuard.captureSession());
     }
 
     function clearSession() {
-        localStorage.removeItem('smartbrain_token');
-        localStorage.removeItem('smartbrain_user');
+        window.SessionGuard.clearLoginSession(window.SessionGuard.captureSession());
     }
 
     async function redirectAfterAuth(role, user) {
@@ -279,9 +301,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     consent_agreed: getConsentChecked(),
                     patient_profile:
                         currentRole === 'patient'
-                            ? { patient_type: patientTypeInput.value || 'adult' }
+                            ? { patient_type: patientTypeInput.value || 'adult', age: Number(ageInput.value) }
                             : null,
                 };
+                if (currentRole === 'patient' && patientTypeInput.value === 'child') {
+                    payload.full_name = guardianNameInput.value.trim();
+                    payload.patient_profile.display_name = fullNameInput.value.trim();
+                    payload.guardian = { age: Number(guardianAgeInput.value), relation: guardianRelationInput.value,
+                        proof_reference: proofReferenceInput.value.trim(), confirmed: guardianConfirmedInput.checked === true };
+                }
                 await window.API.Auth.register(payload);
                 handleRegisterSuccess();
             } else {
@@ -307,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    [emailInput, fullNameInput, staffIdInput, passwordInput, confirmPasswordInput, patientTypeInput].forEach((input) => {
+    [emailInput, fullNameInput, staffIdInput, passwordInput, confirmPasswordInput, patientTypeInput, ageInput, guardianNameInput, guardianAgeInput, proofReferenceInput].forEach((input) => {
         input?.addEventListener('input', () => {
             clearFeedback();
             updatePasswordRules();
@@ -316,9 +344,12 @@ document.addEventListener('DOMContentLoaded', () => {
         input?.addEventListener('change', () => {
             clearFeedback();
             updatePasswordRules();
-            validateForm();
+            syncRoleUI();
         });
     });
+
+    patientTypeInput.addEventListener('change', syncRoleUI);
+    guardianConfirmedInput?.addEventListener('change', validateForm);
 
     patientConsentCheckbox.addEventListener('change', () => {
         clearFeedback();

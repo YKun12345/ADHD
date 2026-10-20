@@ -66,12 +66,17 @@ async def access_audit_middleware(request: Request, call_next):
                 path,
                 response.status_code,
             )
-        except Exception:
+        except Exception as exc:
             from logging import getLogger
 
             getLogger("uvicorn.error").error(
-                "Authenticated access audit failed; request_id/path=%s", path
+                "Authenticated access audit failed; request_id/path=%s; type=%s; storage_code=%s",
+                path, type(exc).__name__, getattr(getattr(exc, "orig", None), "sqlite_errorname", "unavailable")
             )
+            if request.method != "GET" and getattr(request.state,"transactional_audit_committed",False):
+                # The critical audit belongs to the already committed business
+                # transaction. A second observation cannot erase that fact.
+                return response
             return JSONResponse(
                 status_code=503,
                 content={

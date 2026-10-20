@@ -1,68 +1,54 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
-const { normalizePatientMessages, validateCareMessage, createClientMessageId } = require('../../utils/patient-care')
+const { normalizePatientMessages } = require('../../utils/patient-care')
+const { capturePatientSessionLease, isPatientSessionLeaseCurrent } = require('../../utils/session-privacy')
 
 registerPatientPage({
   data: { messages: [], input: '', inputFocused: false, loading: false, sending: false, errorText: '' },
-  onShow() { return this.loadMessages() },
-  onUnload() { this._loadVersion = (this._loadVersion || 0) + 1 },
+  onLoad() { this._hasCurrentSession() },
+  onShow() { this._hidden = false; return this.loadMessages() },
+  _clearHistory() {
+    this._loadVersion = (this._loadVersion || 0) + 1
+    this._draftClientMessageId = ''
+    this.setData({ messages: [], input: '', inputFocused: false, loading: false, sending: false, errorText: '' })
+  },
+  _hasCurrentSession() {
+    let user
+    try { user = wx.getStorageSync('current_user') } catch (_) { user = null }
+    if (!this._entryLease) {
+      this._entryLease = capturePatientSessionLease()
+      this._entryActorId = user && user.id
+    }
+    const valid = !this._hidden && !this._ended && user && user.role === 'patient' &&
+      Number.isInteger(user.id) && user.id > 0 && user.id === this._entryActorId && isPatientSessionLeaseCurrent(this._entryLease)
+    if (!valid) this._clearHistory()
+    return Boolean(valid)
+  },
+  onHide() { this._hidden = true; this._clearHistory() },
+  onUnload() { this._ended = true; this._clearHistory() },
+  onPatientSessionEnded() { this._ended = true; this._clearHistory() },
   async loadMessages() {
-    if (this.data.loading) return
+    if (!this._hasCurrentSession() || this.data.loading) return
     const version = (this._loadVersion || 0) + 1
     this._loadVersion = version
     this.setData({ loading: true, errorText: '' })
     try {
+      // Legacy history is only the authenticated person's history, never current relationship evidence.
       const payload = await request({ url: '/care/patient/messages' })
-      if (this._loadVersion !== version) return
-      this.setData({ loading: false, messages: normalizePatientMessages(payload) })
-      request({ url: '/care/patient/messages/read', method: 'POST' }).catch(() => {})
+      if (!this._hasCurrentSession() || this._loadVersion !== version) return
+      this.setData({ loading: false, messages: normalizePatientMessages(payload, this._entryActorId) })
     } catch (error) {
-      if (this._loadVersion !== version) return
-      this.setData({ loading: false, errorText: error.message || '消息加载失败' })
+      if (!this._hasCurrentSession() || this._loadVersion !== version) return
+      this.setData({ loading: false, errorText: error.message || '历史消息加载失败' })
     }
   },
-  onInput(event) {
-    if (this.data.sending) return
-    const input = event.detail.value
-    if (input !== this.data.input) this._draftClientMessageId = ''
-    this.setData({ input })
+  openSharedMessages() {
+    if (!this._hasCurrentSession()) return
+    wx.navigateTo({ url: '/pages/shared-messages/index' })
   },
-  onInputFocus() { this.setData({ inputFocused: true }) },
-  onInputBlur() { this.setData({ inputFocused: false }) },
-  async sendMessage() {
-    if (this.data.sending) return
-    const validation = validateCareMessage(this.data.input)
-    if (!validation.ok) return wx.showToast({ title: validation.message, icon: 'none' })
-    const clientMessageId = this._draftClientMessageId || createClientMessageId()
-    this._draftClientMessageId = clientMessageId
-    return this._sendContent(validation.content, '', clientMessageId)
-  },
-  async _sendContent(content, failedId = '', clientMessageId = '') {
-    const stableClientMessageId = clientMessageId || createClientMessageId()
-    this.setData({ sending: true })
-    try {
-      const created = await request({
-        url: '/care/patient/messages',
-        method: 'POST',
-        data: { content, client_message_id: stableClientMessageId }
-      })
-      const next = this.data.messages.filter((item) => item.id !== failedId).concat(normalizePatientMessages([created]))
-      const updates = { sending: false, messages: next }
-      if (this._draftClientMessageId === stableClientMessageId) {
-        this._draftClientMessageId = ''
-        updates.input = ''
-      }
-      this.setData(updates)
-    } catch (error) {
-      const id = failedId || `failed-${Date.now()}`
-      const failed = { id, isMine: true, senderName: '我', content, clientMessageId: stableClientMessageId, createdAt: '刚刚', status: 'failed' }
-      this.setData({ sending: false, messages: this.data.messages.filter((item) => item.id !== id).concat(failed) })
-    }
-  },
-  retryMessage(event) {
-    const id = event.currentTarget.dataset.id
-    const message = this.data.messages.find((item) => item.id === id && item.status === 'failed')
-    if (message) return this._sendContent(message.content, id, message.clientMessageId)
-  },
+  // Retained callable names cannot send or retry the retired unscoped protocol.
+  sendMessage() { return this.openSharedMessages() },
+  _sendContent() { return this.openSharedMessages() },
+  retryMessage() { return this.openSharedMessages() },
   retryLoad() { return this.loadMessages() }
 })

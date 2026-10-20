@@ -214,5 +214,7 @@ registerPatientPage({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
-  }
+  },
+  openNotifications() { if (hasValidPatientSession() && !this.data.acting) wx.navigateTo({ url: '/pages/notifications/index' }) },
+  openResearchConsent() { if (hasValidPatientSession() && !this.data.acting) wx.navigateTo({ url: '/pages/research-consent/index' }) }
 })

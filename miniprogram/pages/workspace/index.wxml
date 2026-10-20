@@ -1,0 +1,20 @@
+<ui-nav title="{{title}}" showBack="{{false}}" />
+<ai-copilot id="page-companion" page-key="{{companionPageKey}}" patient-id="{{patientId}}" bottom-inset="{{60}}" />
+<view class="workspace-page workspace-page--{{section}}">
+  <view class="section-intro"><text class="section-title product-visually-hidden">{{title}}</text><text class="section-note">{{section === 'assessments' ? '选好本轮，按顺序完成；已发布的意见也在对应轮次中。' : section === 'records' ? '按实际日期记录，随时回看自己的变化。' : section === 'communication' ? '消息、交办事项和补问，集中在这里。' : '管理自己的账号、隐私和提醒。'}}</text></view>
+  <text wx:if="{{loading}}" class="state-note">正在读取…</text>
+  <view wx:if="{{errorText}}" class="error-card"><text>{{errorText}}</text><button bindtap="reload" disabled="{{loading || busy}}">重试</button></view>
+  <block wx:if="{{section !== 'account'}}">
+    <picker wx:if="{{profiles.length > 1}}" range="{{profiles}}" range-key="label" value="{{profileIndex < 0 ? 0 : profileIndex}}" bindchange="selectProfile" disabled="{{loading || busy}}"><view class="profile-choice">{{profileIndex >= 0 ? profiles[profileIndex].label : '请选择当前档案'}}<text>切换 ›</text></view></picker>
+    <view wx:elif="{{profiles.length === 1}}" class="profile-card"><ui-icon name="account" shape="line" decorative="{{true}}" /><text class="profile-name">{{profiles[0].label}}</text></view>
+    <text wx:elif="{{!loading && !errorText}}" class="state-note">{{role === 'researcher' ? '目前没有已确认共享的用户，请到“用户”查看或发出邀请。' : '暂未读取到可用的本人或儿童档案。'}}</text>
+  </block>
+  <view wx:else class="account-card"><view class="account-avatar"><ui-icon name="account" shape="line" decorative="{{true}}" /></view><view class="account-copy"><text class="account-name">{{accountName}}</text><text>{{accountEmail}}</text><text wx:if="{{pendingCount > 0}}">本机还有 {{pendingCount}} 项待确认，请到“发送与恢复”核对。</text></view></view>
+  <view wx:if="{{summary}}" class="summary-row"><text>{{summary.unread === null ? '未读状态暂不可用' : '未读消息 ' + summary.unread}}</text><text>{{summary.pending === null ? '待办状态暂不可用' : '交办事项 ' + summary.pending}}</text></view>
+  <view class="entry-list entry-list--{{section}}"><view wx:for="{{entryItems}}" wx:key="key" class="entry entry--{{item.tone}} entry--{{item.layout}}" data-key="{{item.key}}" bindtap="openEntry" disabled="{{loading || busy}}" aria-role="button"><view class="entry-main"><view class="entry-icon"><ui-icon name="{{item.icon}}" shape="line" tone="{{item.tone === 'focus' ? 'inverse' : 'primary'}}" decorative="{{true}}" /></view><view class="entry-copy"><text class="entry-title">{{item.title}}</text><text class="entry-note">{{item.subtitle}}</text></view><ui-data-preview wx:if="{{item.preview === 'ring'}}" kind="ring" tone="inverse" /><text class="entry-arrow">›</text></view><view wx:if="{{item.preview === 'chart'}}" class="entry-chart"><ui-data-preview kind="chart" /></view></view></view>
+  <view wx:if="{{assessments.length}}" class="actual-list"><text class="list-title">实际评估轮次</text><view wx:for="{{assessments}}" wx:key="id" class="actual-row" data-id="{{item.id}}" bindtap="openAssessment" disabled="{{loading || busy}}" aria-role="button"><text>评估 {{item.id}}</text><text>{{item.statusText}} ›</text></view></view>
+  <view wx:if="{{cycles.length}}" class="actual-list"><text class="list-title">实际日期周期</text><view wx:for="{{cycles}}" wx:key="id" class="actual-row" data-id="{{item.id}}" bindtap="openCycle" disabled="{{loading || busy}}" aria-role="button"><view><text>{{item.start_date}} — {{item.end_date}}</text><text class="entry-note">{{item.cycle_type === 'professional' ? '医生计划周期' : '自助记录周期'}}</text></view><text>{{item.statusText}} ›</text></view></view>
+  <view wx:if="{{questionActions.length}}" class="actual-list"><text class="list-title">医生希望你补充</text><view wx:for="{{questionActions}}" wx:key="id" class="actual-row" data-id="{{item.id}}" bindtap="openQuestion" disabled="{{loading || busy}}" aria-role="button"><text>{{item.title}}</text><text>填写 ›</text></view></view>
+  <button wx:if="{{section === 'account'}}" class="logout-button" bindtap="logout" disabled="{{loading || busy}}">退出登录</button>
+</view>
+<role-nav id="primary-role-nav" active-key="{{section}}" />

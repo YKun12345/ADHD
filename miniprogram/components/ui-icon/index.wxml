@@ -1,5 +1,5 @@
 <view
-  class="ui-icon ui-icon--{{name}} ui-icon--shape-{{shape}}"
+  class="ui-icon ui-icon--{{name}} ui-icon--shape-{{shape}} ui-icon--tone-{{tone}}"
   aria-role="{{decorative ? 'none' : 'img'}}"
   aria-label="{{label}}"
   aria-hidden="{{decorative}}"

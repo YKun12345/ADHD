@@ -1033,6 +1033,7 @@
         }
     </style>
     <link rel="stylesheet" href="css/account-profile.css?v=20261010c">
+    <link rel="stylesheet" href="css/authorization-panel.css?v=20261014-w02">
 </head>
 <body class="researcher-page">
     <nav class="navbar">
@@ -1044,6 +1045,10 @@
             <ul class="nav-links">
                 <li><a href="doctor_analysis.html">首页</a></li>
                 <li><a href="doctor_patients.html" class="active">就诊者工作台</a></li>
+                <li><a href="doctor_care.html">原负责关注队列</a></li>
+                <li><a href="doctor_agent.html">星仔助手</a></li>
+                <li><a href="model_registry.html">模型候选与版本</a></li>
+                <li><a href="doctor_messages.html">共享消息</a></li>
             </ul>
             <div class="nav-actions">
                 <div class="user-profile">
@@ -1083,11 +1088,11 @@
                             </div>
                             <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
                                 <span style="display:block; font-size:1.8rem; font-weight:800; color:#FDE68A; line-height:1;" id="statPending">--</span>
-                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">待补冲任务</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">共享资料待补</span>
                             </div>
                             <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
                                 <span style="display:block; font-size:1.8rem; font-weight:800; color:#6EE7B7; line-height:1;" id="statComplete">--</span>
-                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">山路完整</span>
+                                <span style="display:block; font-size:0.75rem; color:rgba(255,255,255,0.75); margin-top:0.3rem;">共享资料齐备</span>
                             </div>
                             <div style="background:rgba(255,255,255,0.12); border-radius:14px; padding:0.85rem; text-align:center;">
                                 <span style="display:block; font-size:1.8rem; font-weight:800; color:white; line-height:1;" id="statTotal">--</span>
@@ -1113,14 +1118,14 @@
             <div class="toolbar-card">
                 <div class="toolbar-header">
                     <div>
-                        <h2>添加就诊者档案</h2>
-                        <p>输入就诊者注册邮箱后即可把他纳入你的工作台，后续综合分析、影像分析和影像可视化都会自动带上这位就诊者的上下文。</p>
+                        <h2>邀请医患共享</h2>
+                        <p>向本人或获准监护人邀请共享基础资料、评估、记录、任务消息及已有影像分析，有效期90天。需要双方确认；旧绑定不自动生效。</p>
                     </div>
                     <span class="mini-pill" id="patientListCount">当前 0 人</span>
                 </div>
                 <div class="bind-patient-row">
                     <input id="patientEmailInput" class="bind-patient-input" type="email" placeholder="请输入就诊者注册邮箱，例如 patient@example.com" />
-                    <button id="bindPatientBtn" class="bind-patient-btn" type="button">添加就诊者档案</button>
+                    <button id="bindPatientBtn" class="bind-patient-btn" type="button">发出共享邀请</button>
                 </div>
                 <div id="bindFeedback" class="bind-feedback"></div>
             </div>
@@ -1141,9 +1146,11 @@
                 </div>
             </div>
 
-            <div id="patientEmptyState" class="patient-empty">还没有就诊者进入工作台。先通过上方“添加就诊者档案”把就诊者纳入研究端工作流。</div>
+            <div id="patientEmptyState" class="patient-empty">暂无有效共享就诊者。请邀请并等待本人或获准监护人确认。</div>
             <div id="myPatientList" class="patient-workspace-list"></div>
         </section>
+        <section data-authorization-panel data-authorization-role="researcher" aria-label="身份与共享授权"></section>
+        <section data-research-entry aria-label="已获准的合成研究" hidden></section>
     </main>
 
     <div class="floating-ai" id="doctorCareBubble">
@@ -1197,13 +1204,11 @@
 
                     <div id="doctorCareEmpty" class="doctor-care-empty">请选择一位就诊者后开始查看通知或 AI 交流记录。</div>
 
-                    <form id="doctorCareMessageForm" class="doctor-care-form">
-                        <textarea id="doctorCareMessageInput" placeholder="给当前就诊者发一条通知，比如提醒补做量表、继续14天追踪，或者让他查看最新报告。"></textarea>
-                        <div class="doctor-care-form-actions">
-                            <div id="doctorCareFeedback" class="doctor-care-feedback"></div>
-                            <button id="doctorCareSendBtn" class="doctor-care-send-btn" type="submit">发送通知</button>
-                        </div>
-                    </form>
+                    <div id="doctorCareMessageForm" class="doctor-care-form">
+                        <a id="doctorCareScopedLink" href="doctor_messages.html">核对具体关系并查看共享消息</a>
+                        <p>发送与重试请在医生小程序的共享消息中确认。</p>
+                        <div id="doctorCareFeedback" class="doctor-care-feedback"></div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -1224,9 +1229,13 @@
         </div>
     </div>
 
-    <script src="js/api.js?v=20261010c"></script>
-    <script src="js/account.js?v=20261010c"></script>
-    <script src="js/doctor_patients.js?v=20261010b"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261016-messages"></script>
+    <script src="js/account.js?v=20261014-w02"></script>
+    <script src="js/doctor_patients.js?v=20261016-messages"></script>
+    <script src="js/authorization-panel.js?v=20261014-w02"></script>
+    <script src="js/research-entry.js?v=20261018-w11"></script>
     <script>
     // 研究人员 AI 助手逻辑
     document.addEventListener('DOMContentLoaded', () => initAiAssistant());
@@ -1258,23 +1267,27 @@
         patients.forEach(p => {
             const risk = p.latest_scale_risk_level;
             const scaleType = p.latest_scale_type;
-            const trackingDays = p.tracking_completed_days || 0;
+            const shared = scope => !Array.isArray(p.allowed_scope) || p.allowed_scope.includes(scope);
+            const trackingDays = p.completed_tracking_days ?? p.tracking_completed_days ?? 0;
+            const assessmentShared = shared('assessment'), trackingShared = shared('tracking');
 
-            if (risk === 'high' || risk === '高风险') highRisk++;
+            if (assessmentShared && (risk === 'high' || risk === '高风险')) highRisk++;
 
             // 就诊者待补充任务评估
-            const needsScale = !scaleType;
-            const needsCognitive = !p.has_cognitive;
-            const needsTracking = trackingDays < 14;
+            const needsScale = assessmentShared && !scaleType;
+            const needsCognitive = assessmentShared && !(p.cognitive_test_count ?? (p.has_cognitive ? 1 : 0));
+            const needsTracking = trackingShared && trackingDays < 14;
             const hasPending = needsScale || needsCognitive || needsTracking;
             if (hasPending) pending++;
 
             // 山路完整就诊者
-            if (!needsScale && !needsCognitive && !needsTracking) complete++;
+            if (assessmentShared && trackingShared && !needsScale && !needsCognitive && !needsTracking) complete++;
 
             // 构建优先量：高风险=3，待补充=+1
-            const priority = (risk === 'high' ? 3 : risk === 'medium' ? 2 : 1) + (hasPending ? 1 : 0);
-            priorityList.push({ ...p, priority, needsScale, needsCognitive, needsTracking });
+            const priority = (assessmentShared ? (risk === 'high' ? 3 : risk === 'medium' ? 2 : 1) : 0) + (hasPending ? 1 : 0);
+            priorityList.push({ ...p, priority, needsScale, needsCognitive, needsTracking, trackingDays,
+                assessmentShared, trackingShared, pathShared: assessmentShared && trackingShared,
+                subjectName: p.patient_name || `共享档案 #${p.patient_id}` });
         });
 
         // 排序
@@ -1283,7 +1296,12 @@
         // 更新仓表数据
         ['statHighRisk','statPending','statComplete','statTotal'].forEach((id, idx) => {
             const el = document.getElementById(id);
-            if (el) el.textContent = [highRisk, pending, complete, total][idx];
+            const values = [
+                total && !priorityList.some(p => p.assessmentShared) ? '未共享' : highRisk,
+                total && !priorityList.some(p => p.assessmentShared || p.trackingShared) ? '未共享' : pending,
+                total && !priorityList.some(p => p.pathShared) ? '未共享' : complete, total
+            ];
+            if (el) el.textContent = values[idx];
         });
 
         // 生成 AI 建议文案
@@ -1292,18 +1310,20 @@
         if (!topPatient) {
             suggestion = '当前工作台尚无就诊者。建议先添加就诊者档案，再开始犳期工作。';
         } else if (highRisk > 0) {
-            suggestion = `目前有 ${highRisk} 位高风险就诊者，建议优先查看 ${topPatient.patient_name}。${
-                topPatient.needsTracking ? '该就诊者追踪天数不足，建议推送追踪提醒。' :
-                topPatient.needsCognitive ? '该就诊者尚未完成认知测试，建议推送认知测试任务。' :
-                '建议查阅完整报告并安排复诊。'
+            suggestion = `已共享评估中有 ${highRisk} 位显示高风险，建议优先查看 ${topPatient.subjectName}。${
+                topPatient.needsTracking ? '已共享追踪资料尚未完整，可核对随访安排。' :
+                topPatient.needsCognitive ? '已共享认知资料尚未完整，可核对评估安排。' :
+                '可查看已共享报告。'
             }`;
         } else if (pending > 0) {
-            suggestion = `有 ${pending} 位就诊者有待完成的任务。建议先查看 ${topPatient.patient_name}（${
+            suggestion = `已共享范围内有 ${pending} 位资料待补充。可先查看 ${topPatient.subjectName}（${
                 topPatient.needsScale ? '需补量表' :
-                topPatient.needsCognitive ? '需补认知测试' : `追踪还差 ${14 - (topPatient.tracking_completed_days||0)} 天`
+                topPatient.needsCognitive ? '需补认知测试' : `追踪还差 ${14 - topPatient.trackingDays} 天`
             }）。`;
+        } else if (complete === total) {
+            suggestion = `已共享评估与追踪资料中，${complete} 位的基础资料已齐，可继续查看授权范围内的报告。`;
         } else {
-            suggestion = `所有 ${complete} 位就诊者已完成基础评估路径！建议安排營像分析和综合报告解读。`;
+            suggestion = '当前仅展示已共享资料；未共享评估或追踪时无法判断完整路径，可处理已确认范围内的业务。';
         }
         document.getElementById('aiAssistantSuggestion').textContent = suggestion;
 
@@ -1313,7 +1333,8 @@
             if (priorityList.length === 0) {
                 priorityListEl.innerHTML = '<p style="color:#64748B; text-align:center;">暂无就诊者数据。</p>';
             } else {
-                priorityListEl.innerHTML = priorityList.slice(0, 8).map((p, idx) => {
+                priorityListEl.replaceChildren();
+                priorityList.slice(0, 8).forEach((p, idx) => {
                     const riskColor = p.latest_scale_risk_level === 'high' ? '#B91C1C' :
                                       p.latest_scale_risk_level === 'medium' ? '#B45309' : '#15803D';
                     const riskBg = p.latest_scale_risk_level === 'high' ? '#FEE2E2' :
@@ -1321,29 +1342,49 @@
                     const tasks = [
                         p.needsScale && '补 量表',
                         p.needsCognitive && '补 认知测试',
-                        p.needsTracking && `追踪还差 ${14 - (p.tracking_completed_days||0)} 天`
+                        p.needsTracking && `追踪还差 ${14 - p.trackingDays} 天`
                     ].filter(Boolean);
 
-                    return `
-                    <div style="display:flex; align-items:flex-start; gap:0.85rem; padding:1rem;
+                    const row = document.createElement('div');
+                    row.style.cssText = `display:flex; align-items:flex-start; gap:0.85rem; padding:1rem;
                         border-radius:18px; background:${idx === 0 ? 'linear-gradient(135deg,#EFF6FF,#F5F3FF)' : '#F8FAFC'};
-                        border:1.5px solid ${idx === 0 ? '#BFDBFE' : '#E2E8F0'};">
-                        <div style="width:32px; height:32px; background:${idx < 3 ? '#1E3A8A' : '#CBD5E1'};
+                        border:1.5px solid ${idx === 0 ? '#BFDBFE' : '#E2E8F0'};`;
+                    row.appendChild(SafeRender.html`
+                        <div class="priority-rank" style="width:32px; height:32px;
                             border-radius:50%; display:flex; align-items:center; justify-content:center;
                             color:white; font-weight:800; font-size:0.82rem; flex-shrink:0;">#${idx+1}</div>
                         <div style="flex:1; min-width:0;">
                             <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.3rem;">
-                                <strong style="font-size:0.94rem; color:#0F172A;">${p.patient_name}</strong>
-                                ${p.latest_scale_risk_level ? `<span style="padding:0.18rem 0.52rem; border-radius:999px; background:${riskBg}; color:${riskColor}; font-size:0.74rem; font-weight:700;">${p.latest_scale_risk_level}</span>` : ''}
+                                <strong style="font-size:0.94rem; color:#0F172A;">${p.subjectName}</strong>
+                                <span class="priority-risk" style="padding:0.18rem 0.52rem; border-radius:999px; font-size:0.74rem; font-weight:700;"></span>
                             </div>
                             <p style="font-size:0.8rem; color:#64748B; margin:0 0 0.5rem; line-height:1.5;">${p.patient_email}</p>
-                            ${tasks.length ? `<div style="display:flex; flex-wrap:wrap; gap:0.4rem;">${tasks.map(t => `<span style="padding:0.2rem 0.55rem; border-radius:8px; background:#DBEAFE; color:#1D4ED8; font-size:0.75rem; font-weight:700;">${t}</span>`).join('')}</div>` : '<span style="font-size:0.8rem; color:#15803D;">&#10003; 基础评估完整</span>'}
+                            <div class="priority-tasks" style="display:flex; flex-wrap:wrap; gap:0.4rem;"></div>
                         </div>
-                        <a href="doctor_patients.html?focus_patient_id=${p.patient_id}" style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.5rem 0.85rem; border-radius:10px; background:#1E3A8A; color:white; font-size:0.8rem; font-weight:700; text-decoration:none; flex-shrink:0;">
+                        <a style="display:inline-flex; align-items:center; gap:0.3rem; padding:0.5rem 0.85rem; border-radius:10px; background:#1E3A8A; color:white; font-size:0.8rem; font-weight:700; text-decoration:none; flex-shrink:0;">
                             进入 <ion-icon name="chevron-forward"></ion-icon>
                         </a>
-                    </div>`;
-                }).join('');
+                    `);
+                    row.querySelector('.priority-rank').style.background = idx < 3 ? '#1E3A8A' : '#CBD5E1';
+                    const risk = row.querySelector('.priority-risk');
+                    risk.textContent = p.latest_scale_risk_level || '';
+                    risk.style.background = riskBg;
+                    risk.style.color = riskColor;
+                    risk.hidden = !p.latest_scale_risk_level;
+                    const taskList = row.querySelector('.priority-tasks');
+                    tasks.forEach(task => {
+                        const pill = document.createElement('span');
+                        pill.style.cssText = 'padding:0.2rem 0.55rem; border-radius:8px; background:#DBEAFE; color:#1D4ED8; font-size:0.75rem; font-weight:700;';
+                        pill.textContent = task;
+                        taskList.appendChild(pill);
+                    });
+                    if (!tasks.length) {
+                        taskList.style.cssText = 'font-size:0.8rem; color:#15803D;';
+                        taskList.textContent = p.pathShared ? '✓ 已共享基础资料完整' : '评估或跟踪未共享';
+                    }
+                    row.querySelector('a').href = `doctor_patients.html?focus_patient_id=${encodeURIComponent(String(p.patient_id))}`;
+                    priorityListEl.appendChild(row);
+                });
             }
         }
     }

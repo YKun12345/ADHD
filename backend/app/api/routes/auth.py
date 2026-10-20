@@ -1,3 +1,4 @@
+from backend.app.services.identity_access import publish_authority
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -13,14 +14,19 @@ from backend.app.models.patient import Patient, PatientType
 from backend.app.models.user import User, UserRole, UserSubrole
 from backend.app.schemas.auth import TokenResponse, UserLogin, UserRegister, UserRead
 from backend.app.services.security_service import provision_security_materials_for_user
+from backend.app.models.identity import PatientAccess, GuardianRelationship, ConsentRecord
+from backend.app.services.identity_access import readable_user, record_authenticated_actor
+from backend.app.services.guardian_service import append_history
+from backend.app.services import authorization_ledger as ledger
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-def build_auth_response(user: User) -> TokenResponse:
+def build_auth_response(user: User, db: Session) -> TokenResponse:
+    record_authenticated_actor(db,user)
     access_token = create_access_token(subject=str(user.id), role=user.role.value)
-    return TokenResponse(access_token=access_token, user=user)
+    return TokenResponse(access_token=access_token, user=readable_user(db,user))
 
 
 def enforce_password_policy(password: str) -> None:
@@ -49,7 +55,7 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)) -> Token
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Patients must agree to informed consent before registering.",
             )
-        if payload.patient_profile is None or payload.patient_profile.patient_type is None:
+        if not payload.account_only and (payload.patient_profile is None or payload.patient_profile.patient_type is None):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Patient registration requires a patient profile.",
@@ -86,17 +92,42 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)) -> Token
     if payload.role == "patient" and payload.patient_profile is not None:
         patient = Patient(
             user_id=user.id,
+            display_name=payload.patient_profile.display_name or payload.full_name,
             age=payload.patient_profile.age,
             gender=payload.patient_profile.gender,
             patient_type=PatientType(payload.patient_profile.patient_type),
         )
         db.add(patient)
+        db.flush()
+        guardian = None
+        if patient.patient_type == PatientType.CHILD:
+            guardian = GuardianRelationship(patient_id=patient.id, guardian_user_id=user.id, guardian_age=payload.guardian.age, relation=payload.guardian.relation, proof_reference=payload.guardian.proof_reference, confirmed=True, status="confirmed")
+            db.add(guardian)
+            db.flush()
+            ledger.reserve(guardian)
+            from backend.app.services.identity_access import GUARDIAN_DECLARATION_VERSION
+            append_history(db,guardian,user.id,"registered","guardian_self_declaration",{"relation":guardian.relation,"proof_reference":guardian.proof_reference,"declaration_version":GUARDIAN_DECLARATION_VERSION,"confirmed_by_user_id":user.id})
+        patient_access = PatientAccess(patient_id=patient.id,user_id=user.id,access_kind="guardian" if guardian else "self",guardian_relationship_id=guardian.id if guardian else None,status="active")
+        db.add(patient_access)
+        db.flush()
+        ledger.reserve(patient_access)
+    else:
+        patient_access = None
 
     db.commit()
     db.refresh(user)
+    if patient_access and patient_access.guardian_relationship_id:
+        publish_authority(db,guardian)
+    if patient_access and patient_access.status == "active":
+        publish_authority(db,patient_access)
     provision_security_materials_for_user(db, user)
+    if patient_access and patient_access.status == "active" and payload.consent_agreed:
+        from backend.app.services.consent_service import prepare_grant
+        basic = prepare_grant(db,patient_id=patient_access.patient_id,actor_id=user.id,purpose="basic_use",scope=["profile","assessment","tracking","care","imaging"])
+        db.commit()
+        publish_authority(db,basic)
 
-    return build_auth_response(user)
+    return build_auth_response(user,db)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -128,7 +159,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)) -> TokenRespon
             detail="This account has been disabled.",
         )
 
-    return build_auth_response(user)
+    return build_auth_response(user,db)
 
 
 @router.get("/me", response_model=UserRead)
@@ -137,4 +168,4 @@ def get_me(
     db: Session = Depends(get_db),
 ) -> UserRead:
     db.refresh(current_user)
-    return current_user
+    return readable_user(db,current_user)

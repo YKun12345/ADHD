@@ -43,6 +43,7 @@ def test_current_question_is_not_duplicated_into_system_messages() -> None:
 
 def test_chat_reasoning_mode_matches_scope(monkeypatch) -> None:
     from backend.app.services import ai_service
+    monkeypatch.setattr(ai_service,"provider_allowed",lambda:True)
 
     calls: list[dict[str, object]] = []
 
@@ -77,6 +78,7 @@ def test_chat_reasoning_mode_matches_scope(monkeypatch) -> None:
 
 def test_deepseek_client_serializes_thinking_options(monkeypatch) -> None:
     from backend.app.services import ai_service
+    monkeypatch.setattr(ai_service,"provider_allowed",lambda:True)
 
     payloads: list[dict[str, object]] = []
 
@@ -123,6 +125,7 @@ def test_deepseek_client_serializes_thinking_options(monkeypatch) -> None:
 
 def test_chat_fallback_is_logged_without_user_content(monkeypatch, caplog) -> None:
     from backend.app.services import ai_service
+    monkeypatch.setattr(ai_service,"provider_allowed",lambda:True)
 
     private_question = "这是不应出现在日志里的用户问题"
 
@@ -165,6 +168,7 @@ def test_response_provider_distinguishes_deepseek_and_local() -> None:
 
 def test_provider_reminder_uses_dedicated_system_prompt(monkeypatch) -> None:
     from backend.app.services import ai_service
+    monkeypatch.setattr(ai_service,"provider_allowed",lambda:True)
 
     captured: dict[str, object] = {}
 
@@ -224,6 +228,7 @@ def test_natural_language_patient_search_resolves_model_dependencies() -> None:
 
     patient = SimpleNamespace(
         id=1,
+        display_name="Test Patient",
         user_id=2,
         patient_type=SimpleNamespace(value="adult"),
         age=20,

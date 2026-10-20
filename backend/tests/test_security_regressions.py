@@ -18,6 +18,8 @@ def actors(client):
         db.add(p); db.commit()
         result={u.full_name.split('-')[0]: {'id':u.id,'headers':{'Authorization':'Bearer '+create_access_token(str(u.id),u.role.value)}} for u in users}
         result['patient_id']=p.id
+    from backend.tests.w02_helpers import grant_synthetic_patient_authority
+    grant_synthetic_patient_authority(result['patient_id'], result['doctor']['id'])
     return result
 
 def initialize(client,actors):
@@ -106,7 +108,7 @@ def test_database_and_upload_are_encrypted(client,actors,tmp_path):
     assert read_stored_upload(stored.stored_path)==content
     with engine.connect() as conn:
         raw=conn.execute(text('select score_json,total_score from scale_results where id=:id'),{'id':source_id}).first()
-        assert 'private-clinical-payload' not in str(raw) and 'aesgcm:v1:' in str(raw)
+        assert 'private-clinical-payload' not in str(raw) and 'aesgcm:v2:' in str(raw)
         secret=conn.execute(text('select secret_params_json from security_system_configs')).scalar()
         assert 'aesgcm:v1:' in str(secret) and 'lambda' not in str(secret)
     with SessionLocal() as db:

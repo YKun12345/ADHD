@@ -1,0 +1,1 @@
+<view class="data-preview data-preview--{{kind}} data-preview--{{tone}}" aria-hidden="{{true}}"><view wx:if="{{kind === 'chart'}}" class="data-preview__axes"></view><text>--</text></view>

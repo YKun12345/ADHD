@@ -549,7 +549,7 @@ class InterventionService:
             raise ValueError("Patient not found")
 
         user = self.db.get(User, patient.user_id)
-        patient_name = user.full_name if user else "患者"
+        patient_name = patient.display_name or user.full_name if user else "患者"
 
         # 获取患者当前状态
         profile = self._analyze_patient_profile(patient_id)

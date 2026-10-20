@@ -1,0 +1,25 @@
+<ai-copilot wx:if="{{!busy}}" page-key="notifications" />
+<ui-nav title="通知设置" />
+<view class="notifications-page product-page">
+  <view class="settings-card">
+    <text class="section-title">微信提醒</text>
+    <text class="settings-copy">共享消息、报告、随访计划和待办响应窗口有更新时，使用固定模板提醒您返回小程序查看。</text>
+    <view class="status-row"><text>{{bound ? '当前微信已绑定' : '当前微信未绑定'}}</text><text>可用一次提醒 {{availablePermissions}}</text></view>
+    <text wx:if="{{blockerText}}" class="status-note">{{blockerText}}</text>
+    <button class="primary-button" loading="{{busy}}" disabled="{{busy || loading || !canBind}}" bindtap="bindWechat">{{bound ? '核对当前微信绑定' : '绑定当前微信'}}</button>
+    <button class="subscribe-button" disabled="{{busy || loading || !canSubscribe}}" bindtap="subscribeOnce">申请一次微信提醒</button>
+    <view wx:if="{{bound}}" class="pause-action" aria-role="button" aria-disabled="{{busy}}" bindtap="revoke">暂停并撤回本服务提醒</view>
+    <text class="settings-hint">每次申请由您点击并确认。22:00至次日8:00保持安静，每日最多3次；未授权或投递失败时，站内业务和待办继续保留。暂停只停止本服务，微信内的订阅选择可在微信设置中管理。</text>
+  </view>
+
+  <view wx:if="{{errorText}}" class="error-message">{{errorText}}</view>
+  <view class="list-heading"><text class="section-title">提醒记录</text><view class="refresh-action" aria-role="button" bindtap="refresh">刷新</view></view>
+  <view wx:if="{{loading}}" class="empty-state">正在核对提醒状态…</view>
+  <view wx:elif="{{!items.length}}" class="empty-state">暂无新的提醒记录。业务详情仍可在原页面查看。</view>
+  <view wx:for="{{items}}" wx:key="id" class="notification-row">
+    <view class="notification-main"><text class="notification-title">{{item.title}}</text><text class="notification-state">{{item.statusText}}</text></view>
+    <text wx:if="{{item.reasonText}}" class="notification-reason">{{item.reasonText}}</text>
+    <view class="business-action" aria-role="button" data-id="{{item.id}}" bindtap="openBusiness">查看站内业务</view>
+  </view>
+  <text class="footer-note">微信已受理不表示已经阅读或处理。结果不明的提醒会保留记录，并停止自动重发。</text>
+</view>

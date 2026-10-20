@@ -1,0 +1,30 @@
+/* Real browser entry; no injected credentials or API configuration, no training. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),puppeteer=require('puppeteer-core');
+const root=path.resolve(__dirname,'../..'),origin=process.env.W11_PREVIEW_ORIGIN||'http://127.0.0.1:8767';
+assert.match(origin,/^http:\/\/127\.0\.0\.1:\d+$/);
+(async()=>{let browser,page,stage='entry';const errors=[],posts=[];try{
+ browser=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,userDataDir:fs.mkdtempSync(path.join(root,'.codex-tmp/w11-human-preview-')),args:['--no-first-run','--disable-background-networking']});
+ page=await browser.newPage();await page.setViewport({width:1280,height:900});
+ page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.method()==='POST')posts.push(new URL(r.url()).pathname);});
+ await page.goto(origin+'/__synthetic__/research-preview',{waitUntil:'domcontentloaded'});
+ assert.match(await page.$eval('main',el=>el.innerText),/训练关闭/);
+ await page.click('#enter');stage='workbench';
+ await page.waitForFunction(()=>location.pathname==='/__synthetic__/research-workbench'&&document.querySelector('[data-experiment-create] select')&&!document.querySelector('#clinicalShell')?.hasAttribute('aria-busy'),{timeout:60000});
+ assert.equal(await page.evaluate(()=>resolveApiBaseUrl()),origin+'/api/v1');
+ assert.equal(await page.$eval('[aria-label="实验保护模式"]',el=>el.options.length),2);
+ assert.equal(await page.$$eval('.research-experiments details',els=>els.filter(el=>el.open).length),0,'Technical details should start collapsed');
+ stage='signed-heartbeats';await page.click('#previewHeartbeats');
+ await page.waitForFunction(()=>document.querySelector('#previewHeartbeatStatus')?.textContent.includes('三个节点已返回有效签名')&&!document.querySelector('#clinicalShell')?.hasAttribute('aria-busy'),{timeout:60000});
+ assert.equal(await page.$eval('#previewHeartbeats',el=>el.disabled),false,'Refreshing business state must leave the node refresh control usable');
+ const actual=await page.evaluate(async()=>{const token=localStorage.getItem('smartbrain_token');
+  const mode=await (await fetch('/api/v1/__synthetic__/research-preview-mode')).json();
+  const list=await (await fetch('/api/v1/federated/projects',{headers:{Authorization:'Bearer '+token}})).json();
+  const project=await (await fetch('/api/v1/federated/projects/'+list.projects[0].id,{headers:{Authorization:'Bearer '+token}})).json();
+  return {training_enabled:mode.training_enabled,synthetic_only:mode.synthetic_only,online_nodes:project.nodes.filter(v=>v.identity_verified).length,role:JSON.parse(localStorage.getItem('smartbrain_user')).role};
+ });
+ assert.equal(actual.training_enabled,false);assert.equal(actual.synthetic_only,true);assert.equal(actual.online_nodes,3);assert.equal(actual.role,'researcher');
+ assert.equal(posts.filter(p=>p.includes('/federated/experiments/')&&p.endsWith('/start')).length,0);assert.deepEqual(errors,[]);
+ await page.screenshot({path:path.join(root,'docs/evidence/w11-human-preview-page.png'),fullPage:true});
+ const receipt={actual_browser:true,actual_http:true,credentials_injected_by_test:false,api_base_injected_by_test:false,same_origin_api:true,manual_entry:true,signed_nodes_online:actual.online_nodes,training_enabled:false,training_start_requests:0,technical_details_collapsed:true,errors};
+ fs.writeFileSync(path.join(root,'docs/evidence/w11-human-preview-receipt.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify(receipt));
+}catch(error){console.log(JSON.stringify({stage,diagnostic:await page?.evaluate(()=>({url:location.pathname,status:document.querySelector('#clinicalStatus')?.textContent,entry:document.querySelector('#status')?.textContent,heartbeat:document.querySelector('#previewHeartbeatStatus')?.textContent})).catch(()=>null)}));throw error;}finally{await browser?.close();}})().catch(error=>{console.error(error);process.exitCode=1;});

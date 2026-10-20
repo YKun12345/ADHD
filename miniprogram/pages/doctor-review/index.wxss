@@ -1,0 +1,13 @@
+page { background: #edf7fa; color: #17324d; }
+.review-page { padding: 24rpx 28rpx calc(72rpx + env(safe-area-inset-bottom)); }
+.sheet { padding: 28rpx; margin: 22rpx 0; border: 1rpx solid #d7e6ed; border-radius: 28rpx; background: #fff; overflow-wrap: anywhere; }
+.title { display: block; font-size: 32rpx; font-weight: 700; }
+.note, .original { display: block; font-size: 26rpx; color: #536d85; line-height: 1.8; margin: 16rpx 0; white-space: pre-wrap; }
+.original { max-height: 600rpx; overflow: auto; background: #f5f8fb; padding: 18rpx; }
+.error { display: block; color: #a93434; font-size: 26rpx; }
+textarea { box-sizing: border-box; width: 100%; min-height: 220rpx; padding: 18rpx; border-radius: 16rpx; background: #f2f6fb; font-size: 27rpx; }
+button { margin-top: 18rpx; font-size: 27rpx; color: #17324d; border-radius: 18rpx; background: #e8f0fc; }
+label { display: block; margin: 16rpx 0; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

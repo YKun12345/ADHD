@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>关注与真实日期记录 | 知行合医</title><link rel="stylesheet" href="../doctor-web/css/care-workbench.css"></head>
+<body>
+<nav class="care-nav" aria-label="主导航"><a href="patient_home.html">返回首页</a><a href="patient_assessments.html">本轮评估列表</a><a href="patient_care.html" aria-current="page">关注与日期记录</a><a href="patient_transfers.html">责任交接记录</a></nav>
+<main id="careShell" class="care-shell" data-care-role="patient">
+<h1>关注与真实日期记录</h1>
+<p class="care-intro">查看当前获准档案的关注事项、原提交材料，以及按实际日期保存的自助周期与修订历史。执行、质量与验收状态分别展示；筛查结果不等同于临床诊断。</p>
+<div class="care-controls"><label for="carePatient">当前获准档案</label><select id="carePatient"><option value="">正在读取…</option></select><button id="careRefresh" type="button">重新读取</button></div>
+<p id="careMessage" class="care-status" role="status" aria-live="polite">正在读取当前获准资料…</p><p id="careCoverage" class="care-coverage"></p>
+<div class="care-grid"><section class="care-section" aria-labelledby="attentionTitle"><h2 id="attentionTitle">关注事项</h2><div id="careAttention"></div></section><section class="care-section" aria-labelledby="cyclesTitle"><h2 id="cyclesTitle">真实日期自助周期</h2><p>查看服务器覆盖率、缺失日期和每次修订；原记录时间未知时保留未知。</p><div id="careCycles"></div></section></div>
+<section aria-label="原提交材料" id="careEvidence" class="care-detail"></section><section aria-label="周期日期与覆盖率" id="careCycleDetails" class="care-detail"></section><section aria-label="日期修订历史" id="careHistory" class="care-detail"></section>
+</main>
+<script src="js/session-guard.js?v=20261016-w05"></script><script src="js/api.js?v=20261016-transfer"></script><script src="../doctor-web/js/care-workbench.js?v=20261016-transfer"></script>
+</body></html>

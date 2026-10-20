@@ -1,6 +1,6 @@
 <ai-copilot page-key="education" />
 <ui-nav title="健康教育" />
-<view class="education-page ai-copilot-safe-space">
+<view class="education-page ai-copilot-safe-space product-page">
   <view class="education-header">
     <view class="education-header__mark"><ui-icon name="education" shape="book" decorative="true" /></view>
     <view class="education-header__copy">

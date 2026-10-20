@@ -1,0 +1,23 @@
+.agent-card { margin:22rpx 0 0;padding:28rpx;border:1rpx solid transparent;border-radius:var(--ui-radius-lg,32rpx);background:var(--ui-focus,linear-gradient(120deg,#117888,#287b9b));color:#fff;overflow:hidden;box-sizing:border-box;box-shadow:var(--ui-shadow-focus); }
+.agent-header { display:flex;align-items:center;justify-content:space-between;gap:12rpx; }
+.agent-title { font-size:30rpx;font-weight:600;line-height:1.5; }
+.agent-page { color:#e6f5fa;font-size:21rpx;white-space:nowrap; }
+.agent-note,.agent-error { display:block;margin:14rpx 0;font-size:24rpx;line-height:1.65;color:#e5f4f8; }
+.agent-error { color:#ffecd3; }
+.agent-slides { height:254rpx;margin-top:12rpx; }
+.agent-action { height:100%;padding:8rpx 0;box-sizing:border-box; }
+.action-title { display:block;font-size:31rpx;font-weight:600;line-height:1.5;color:#fff; }
+.action-reason { height:76rpx;margin:8rpx 0 16rpx;overflow:hidden; }
+.agent-primary { display:inline-flex;align-items:center;justify-content:center;min-width:190rpx;min-height:68rpx;margin:0;padding:0 30rpx;font-size:26rpx;font-weight:600;color:#117888;background:#fff;border-radius:999rpx;line-height:1.6; }
+.agent-primary::after,.agent-chat-link::after,.agent-refresh::after { border:0; }
+.agent-button--disabled { opacity:.5; }
+.agent-footer { display:flex;align-items:center;justify-content:space-between;gap:18rpx;border-top:1rpx solid rgba(255,255,255,.17);margin-top:18rpx;padding-top:14rpx; }
+.agent-chat-link,.agent-refresh { display:flex;align-items:center;justify-content:center;margin:0;padding:12rpx 20rpx;min-height:60rpx;box-sizing:border-box;border-radius:999rpx;background:rgba(255,255,255,.12);color:#fff;font-size:24rpx;font-weight:400;line-height:1.5; }
+.agent-chat-link { background:#fff;color:#117888;font-weight:600; }
+.agent-card--plain { background:#fff;color:var(--ui-ink,#183747);border-color:var(--ui-line,#e7eef3);box-shadow:var(--ui-shadow-soft); }
+.agent-card--plain .agent-page,.agent-card--plain .agent-note { color:var(--ui-text,#607583); }
+.agent-card--plain .action-title { color:var(--ui-ink,#183747); }
+.agent-card--plain .agent-error { color:#a14f43; }
+.agent-card--plain .agent-primary,.agent-card--plain .agent-chat-link { color:#fff;background:var(--ui-primary,#159ca8); }
+.agent-card--plain .agent-footer { border-top-color:var(--ui-line,#e7eef3); }
+.agent-card--plain .agent-refresh { color:var(--ui-primary,#159ca8);background:#edf7fa; }

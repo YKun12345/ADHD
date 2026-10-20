@@ -1,0 +1,373 @@
+/* Business surfaces share the approved cool-white / mist-blue palette.
+ * Runtime cognitive views never receive product-page. product-task-shell is
+ * present only during intro/result; stimulus, response and timing styles stay local.
+ */
+.product-page.product-page,
+.product-task-shell.product-task-shell {
+  color: var(--ui-ink);
+  background: var(--ui-page-background);
+}
+
+.product-page.ai-copilot-safe-space,
+.product-page.product-form-page,
+.product-page.login-page,
+.product-page.register-page,
+.product-page.settings-page,
+.product-page.notifications-page {
+  padding-bottom: 180rpx;
+  padding-bottom: calc(180rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
+}
+
+.product-page .glass-surface,
+.product-page .sheet,
+.product-page .card,
+.product-page .settings-card,
+.product-page .setting-sheet,
+.product-page .register-form,
+.product-page .state-card,
+.product-page .report-card,
+.product-page .message-card,
+.product-page .task-card,
+.product-page .battery-card,
+.product-page .test-card,
+.product-page .support-card,
+.product-page .chat-tools,
+.product-page .writing-sheet,
+.product-task-shell .instruction-card,
+.product-task-shell .result-card,
+.product-task-shell .task-card {
+  border-color: var(--ui-line);
+  border-radius: var(--ui-radius-lg);
+  background: #fff;
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.product-page .glass-surface::before,
+.product-task-shell .glass-surface::before {
+  background: transparent;
+}
+
+.product-page .title,
+.product-page .heading,
+.product-page .page-title,
+.product-page .card-title,
+.product-page .section-title,
+.product-page .settings-title,
+.product-page .privacy-title,
+.product-page .register-title,
+.product-page .scale-title,
+.product-page .question-text,
+.product-page .article-header__title,
+.product-page .article-section__heading,
+.product-page .report-header__title,
+.product-page .pathway-header__title,
+.product-page .education-header__title,
+.product-page .guide-setting-title,
+.product-task-shell .page-title,
+.product-task-shell .task-title,
+.product-task-shell .section-title,
+.product-task-shell .result-title {
+  color: var(--ui-ink);
+}
+
+.product-page .note,
+.product-page .original,
+.product-page .subtitle,
+.product-page .page-subtitle,
+.product-page .card-subtitle,
+.product-page .card-description,
+.product-page .card-copy,
+.product-page .empty-copy,
+.product-page .settings-subtitle,
+.product-page .privacy-subtitle,
+.product-page .register-subtitle,
+.product-page .scale-subtitle,
+.product-page .field-help,
+.product-page .section-description,
+.product-page .medical-tip,
+.product-page .medical-disclaimer,
+.product-page .settings-copy,
+.product-page .settings-hint,
+.product-page .footer-note,
+.product-page .quiet-text,
+.product-page .summary-text,
+.product-page .composer-pet-status,
+.product-task-shell .page-subtitle,
+.product-task-shell .task-subtitle,
+.product-task-shell .instruction,
+.product-task-shell .instruction-text,
+.product-task-shell .section-description,
+.product-task-shell .rule-description,
+.product-task-shell .result-highlight-label,
+.product-task-shell .medical-tip {
+  color: var(--ui-text);
+}
+
+.product-page .ui-input,
+.product-page .address-input,
+.product-page .task-input,
+.product-page .message-input,
+.product-page .note-input,
+.product-page .password-control,
+.product-page .date-picker,
+.product-page .picker-field,
+.product-page .writing-input,
+.product-page .writing-textarea,
+.product-page .writing-reason,
+.product-form-page input,
+.product-form-page textarea {
+  box-sizing: border-box;
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+  border-radius: 22rpx;
+  background: #f6f9fc;
+  box-shadow: none;
+}
+
+.product-page .password-input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* These are ordinary business forms; no task page has this class. */
+.product-form-page button {
+  color: #177e8c;
+  border-radius: 22rpx;
+  background: #e8f5f8;
+}
+
+.product-form-page button::after {
+  border: 0;
+}
+
+.product-page .ui-button--primary,
+.product-page .primary-button,
+.product-page .primary,
+.product-page .navigation-button--primary,
+.product-page .back-button,
+.product-page .battery-button,
+.product-page .task-button,
+.product-page .step-action,
+.product-page .send-button,
+.product-page .action-button,
+.product-task-shell .primary-button {
+  color: #fff;
+  border-color: transparent;
+  border-radius: 22rpx;
+  background: var(--ui-focus);
+  box-shadow: 0 6rpx 18rpx rgba(21, 156, 168, .12);
+}
+
+.product-page .ui-button--secondary,
+.product-page .navigation-button--secondary,
+.product-page .task-button--secondary,
+.product-page .step-action--secondary,
+.product-page .subscribe-button,
+.product-page .settings-button,
+.product-page .guide-button,
+.product-page .retry-button,
+.product-page .source-button,
+.product-page .detail-toggle,
+.product-page .prompt-button,
+.product-page .pet-touch-button,
+.product-page .context-choice,
+.product-task-shell .secondary-button {
+  color: #177e8c;
+  border-color: #d7edf1;
+  border-radius: 22rpx;
+  background: #e8f5f8;
+  box-shadow: none;
+}
+
+.product-page .ui-button--disabled,
+.product-page .primary-button[disabled],
+.product-page .subscribe-button[disabled],
+.product-page .send-button[disabled],
+.product-form-page button[disabled],
+.product-task-shell .ui-button--disabled {
+  color: #8395a1;
+  background: #edf2f6;
+  border-color: var(--ui-line);
+  box-shadow: none;
+}
+
+.product-page .choice-card--active,
+.product-page .gender-option--active,
+.product-page .option-button--selected,
+.product-page .choice-button--active,
+.product-page .day-chip--active,
+.product-page .metric-tab--active,
+.product-page .category-tab--active,
+.product-page .context-choice--selected {
+  color: #177e8c;
+  border-color: #81c9d0;
+  background: #e8f6f9;
+  box-shadow: inset 0 0 0 1rpx rgba(21, 156, 168, .12);
+}
+
+.product-page .role-option--active {
+  color: #177e8c;
+  border-color: #d7edf1;
+  background: #fff;
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.product-page .task-type-chip--active,
+.product-page .activity-tag--active,
+.product-page .check-box--active,
+.product-page .option-button--selected .option-marker,
+.product-page .option-button--selected .option-check {
+  color: #fff;
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+}
+
+.product-page .progress-value,
+.product-page .scale-progress-value,
+.product-page .coverage-bar__value {
+  background: linear-gradient(90deg, #159ca8, #54b8d0);
+}
+
+.product-page .summary-progress-value {
+  background: #a2e7ef;
+}
+
+.product-page .result-icon,
+.product-task-shell .result-icon {
+  background: var(--ui-primary);
+}
+
+.product-page .demo-badge,
+.product-page .group-count,
+.product-page .source-badge,
+.product-page .report-card__tag,
+.product-page .environment-badge,
+.product-page .task-type-chip,
+.product-page .pathway-step--partial .pathway-step__status {
+  color: #177e8c;
+  border-color: #d7edf1;
+  background: #e8f5f8;
+}
+
+.product-page .task-type-chip--active {
+  color: #fff;
+  background: var(--ui-primary);
+}
+
+.product-page .source-note,
+.product-page .professional-note,
+.product-page .notice-card,
+.product-page .article-disclaimer,
+.product-page .professional-disclaimer,
+.product-page .delivery-note {
+  color: var(--ui-text);
+  border-color: #f0e5d8;
+  border-radius: 26rpx;
+  background: #fff8ee;
+  box-shadow: none;
+}
+
+.product-page .professional-card,
+.product-page .demo-card {
+  background: #fffaf3;
+}
+
+.product-page .summary-item,
+.product-page .metric-item,
+.product-page .test-row,
+.product-page .doctor-task-item,
+.product-page .ai-log-item,
+.product-page .detail-section,
+.product-page .writing-preview,
+.product-page .result-stat,
+.product-task-shell .result-stat,
+.product-task-shell .result-highlight {
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+  border-radius: 22rpx;
+  background: #f3f8fc;
+}
+
+.product-page .card-label,
+.product-page .score-text,
+.product-page .tracking-progress,
+.product-page .action-label,
+.product-page .composer-pet-name,
+.product-page .tools-title,
+.product-page .next-step-title,
+.product-page .working-text,
+.product-page .text-button,
+.product-page .smart-button,
+.product-page .back-link,
+.product-page .source-note__title {
+  color: #177e8c;
+}
+
+.product-page .bullet-dot,
+.product-page .recommendation-item__dot {
+  background: var(--ui-primary);
+}
+
+.product-page .report-card {
+  border-left-color: #d7edf1;
+}
+
+.product-page .patient-hero,
+.product-page.cognitive-center-page .summary-card,
+.product-page .pathway-summary {
+  color: #fff;
+  border-color: transparent;
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-focus);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.product-page .pathway-summary .source-badge {
+  color: #fff;
+  background: rgba(255, 255, 255, .14);
+}
+
+.product-page .pathway-summary .sync-message {
+  color: #fff;
+}
+
+.product-page.report-page .medical-tip {
+  border-left-color: #b8dce6;
+  background: #e8f5f8;
+}
+
+.product-page .ambient-orb--violet {
+  background: radial-gradient(circle, rgba(108, 184, 218, .08), rgba(108, 184, 218, 0) 70%);
+}
+
+.product-page .bubble--user,
+.product-page .message-row--mine .message-bubble {
+  color: var(--ui-ink);
+  background: #e4f3f8;
+}
+
+.product-page .bubble--assistant {
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow-soft);
+}
+
+.product-chat-composer.product-chat-composer {
+  background: rgba(248, 252, 255, .98);
+  border-top-color: var(--ui-line);
+}
+
+.product-page .composer-input {
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+}
+
+/* Intro/result-only selectors intentionally exclude task stimulus classes. */
+.product-task-shell .page-kicker,
+.product-task-shell .task-kicker,
+.product-task-shell .result-highlight-value,
+.product-task-shell .result-value,
+.product-task-shell .result-stat-value {
+  color: #177e8c;
+}

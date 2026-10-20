@@ -26,7 +26,7 @@ const professional = normalizeProfessionalData({
 assert.equal(professional.hasData, true)
 assert.equal(professional.adhdProbabilityText, '82.0%')
 assert.equal(professional.controlProbabilityText, '18.0%')
-assert.equal(professional.confidenceLabel, '中等置信')
+assert.equal(professional.confidenceLabel, '未提供校准置信度')
 assert.match(professional.disclaimer, /不可独立用于诊断/)
 
 function scaleResult(scaleType = 'ASRS') {

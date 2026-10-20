@@ -26,7 +26,8 @@ const COPILOT_PAGE_KEYS = Object.freeze([
   'doctor-home',
   'doctor-patient',
   'doctor-guide-settings',
-  'ai-chat'
+  'ai-chat', 'assessments', 'doctor-review', 'review-questions', 'care-reports', 'doctor-plan', 'patient-plan',
+  'care-cycles', 'cycle-review', 'shared-messages', 'followup-summary', 'imaging-reports'
 ])
 
 const GENERAL_CONFIG = Object.freeze({
@@ -39,9 +40,9 @@ const GENERAL_CONFIG = Object.freeze({
 const PAGE_CONFIGS = Object.freeze({
   home: {
     pageKey: 'home',
-    title: '患者首页',
+    title: '用户首页',
     advice: '按当天任务顺序完成量表、测试和追踪。',
-    helpPrompt: '请介绍患者首页的任务、进度和快捷入口应该怎样使用。'
+    helpPrompt: '请陪我看看用户首页，现在应该先做哪一步？'
   },
   scale: {
     pageKey: 'scale',
@@ -108,7 +109,18 @@ const PAGE_CONFIGS = Object.freeze({
     title: '账号与隐私',
     advice: '可以在这里管理医生端页面介绍并重新查看功能总览。',
     helpPrompt: '请说明医生端引导设置和账号隐私边界。'
-  }
+  },
+  assessments: { pageKey: 'assessments', title: '本轮评估', advice: '我们一次只做一个项目，背景资料可以跳过。', helpPrompt: '请一步一步带我开始这轮评估。' },
+  'doctor-review': { pageKey: 'doctor-review', title: '医生审核', advice: '先看材料，再补问或发布意见。', helpPrompt: '这轮材料如何审核，哪些需要补问或重测？' },
+  'review-questions': { pageKey: 'review-questions', title: '补问与答复', advice: '针对医生的问题按实际情况回复，不知道也可以说明。', helpPrompt: '医生的补问应该在哪里回答？不知道怎么办？' },
+  'care-reports': { pageKey: 'care-reports', title: '已发布意见', advice: '看不懂意见可以问我，专业判断由医生解释。', helpPrompt: '怎样查看本轮医生已经发布的意见？' },
+  'doctor-plan': { pageKey: 'doctor-plan', title: '医生计划', advice: '核对已发布意见，再确认具体日期与安排。', helpPrompt: '请带我看看如何制定并发布这一轮计划。' },
+  'patient-plan': { pageKey: 'patient-plan', title: '医生的安排', advice: '先读安排，再告诉医生是否收到、哪里有困难。', helpPrompt: '请带我看看医生计划，接下来怎么执行？' },
+  'care-cycles': { pageKey: 'care-cycles', title: '今天的记录', advice: '选择真实日期，只填写实际情况。', helpPrompt: '今天应该怎么记录？哪些内容可以留空？' },
+  'cycle-review': { pageKey: 'cycle-review', title: '阶段回顾', advice: '一起看看这段时间，再确认下一步。', helpPrompt: '这个周期结束了，接下来该怎么办？' },
+  'shared-messages': { pageKey: 'shared-messages', title: '医患沟通', advice: '先确认发送对象，再说说实际遇到的困难。', helpPrompt: '我想向医生反馈困难，在哪里发消息？' },
+  'followup-summary': { pageKey: 'followup-summary', title: '随访回顾', advice: '缺失记录不算零，先看实际完成情况。', helpPrompt: '如何看懂这段时间的随访记录和缺失？' },
+  'imaging-reports': { pageKey: 'imaging-reports', title: '已有影像报告', advice: '查看已有分析和医生审核版本，原始影像在医生网页。', helpPrompt: '请告诉我这份影像报告应该怎么看。' }
 })
 
 function getCopilotConfig(pageKey) {
@@ -123,7 +135,7 @@ function getCopilotConfig(pageKey) {
 }
 
 function buildAiChatUrl(pageKey, mode = 'free') {
-  const baseUrl = '/pages/ai-chat/index?scope=general'
+  const baseUrl = '/pages/agent-chat/index?scope=general'
   if (mode !== 'help') return baseUrl
 
   const prompt = getCopilotConfig(pageKey).helpPrompt.slice(

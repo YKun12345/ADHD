@@ -21,6 +21,9 @@
             <ul class="nav-links">
                 <li><a href="patient_home.html" class="active">首页</a></li>
                 <li><a href="patient_scale.html">行为量表</a></li>
+                <li><a href="patient_assessments.html">本轮评估</a></li>
+                <li><a href="patient_care.html">关注与日期记录</a></li>
+                <li><a href="patient_messages.html">共享消息</a></li>
                 <li><a href="patient_test.html">认知测试</a></li>
                 <li><a href="patient_tracking.html">14天追踪</a></li>
                 <li><a href="patient_report.html">我的报告</a></li>
@@ -349,11 +352,14 @@
         </div>
     </footer>
 
-    <script src="js/api.js"></script>
-    <script src="js/achievement.js"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261014-w02"></script>
+    <script src="js/achievement.js?v=20261013-w01"></script>
     <script src="js/orchestrator.js"></script>
     <script src="js/patient.js"></script>
-    <script src="js/patient_copilot.js"></script>
+    <script src="js/patient_copilot.js?v=20261017-unified"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // 渲染连续天数 widget

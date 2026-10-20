@@ -227,7 +227,6 @@ def test_retry_of_same_run_returns_original_record_without_overwriting(client) -
         "/api/v1/patient/submit_cognitive_test", headers=headers,
         json={"test_type": "gonogo", "result_json": result},
     )
-    result["raw_result"]["accuracy"] = 1
     retry = client.post(
         "/api/v1/patient/submit_cognitive_test", headers=headers,
         json={"test_type": "reaction", "result_json": result},
@@ -235,6 +234,56 @@ def test_retry_of_same_run_returns_original_record_without_overwriting(client) -
     assert first.status_code == retry.status_code == 201
     assert retry.json()["id"] == first.json()["id"]
     assert retry.json()["result_json"]["raw_result"]["accuracy"] == 92
+
+
+@pytest.mark.parametrize("change", ["content", "protocol", "trial"])
+def test_same_run_changed_evidence_is_conflict(client, change):
+    from copy import deepcopy
+    headers = register_patient(client)
+    result = canonical_result("reaction")
+    result.update(test_run_id="w04-conflict", source="miniprogram", protocol_id="continuous-mobile-v4", protocol_schema_version=6)
+    result["trials"] = [{"trial": 1, "responseTimeMs": 400}]
+    first = client.post("/api/v1/patient/submit_cognitive_test", headers=headers, json={"test_type":"reaction", "result_json":result})
+    assert first.status_code == 201, first.text
+    changed = deepcopy(result)
+    if change == "content":
+        changed["raw_result"]["accuracy"] = 1
+    elif change == "protocol":
+        changed["protocol_schema_version"] = 5
+    else:
+        changed["trials"][0]["responseTimeMs"] = 401
+    conflict = client.post("/api/v1/patient/submit_cognitive_test", headers=headers, json={"test_type":"gonogo", "result_json":changed})
+    assert conflict.status_code == 409, conflict.text
+
+
+def test_equivalent_legacy_numeric_alias_retry(client):
+    headers = register_patient(client)
+    first = client.post("/api/v1/patient/submit_cognitive_test", headers=headers, json={"test_type":"gonogo", "result_json":{"test_run_id":"w04-alias", "avg_reaction_ms":455, "correct_rate":0.91, "false_starts":2}})
+    retry = client.post("/api/v1/patient/submit_cognitive_test", headers=headers, json={"test_type":"reaction", "result_json":{"test_run_id":"w04-alias", "average_reaction_time_ms":455.0, "accuracy":91, "false_starts":2.0}})
+    assert first.status_code == retry.status_code == 201
+    assert first.json()["id"] == retry.json()["id"]
+
+
+def test_conflicting_numeric_aliases_are_rejected(client):
+    headers = register_patient(client)
+    response = client.post("/api/v1/patient/submit_cognitive_test", headers=headers, json={"test_type":"reaction", "result_json":{"test_run_id":"w04-bad-alias", "avg_reaction_ms":455, "average_reaction_time_ms":456, "accuracy":91}})
+    assert response.status_code == 422, response.text
+
+
+@pytest.mark.parametrize("route,payload", [
+    ("submit_cognitive_test", {"test_type":"reaction", "result_json":canonical_result("reaction")}),
+    ("submit_scale", {"scale_type":"ASRS", "answers":[0]*18, "respondent_type":"self"}),
+])
+def test_legacy_explicit_patient_target_cannot_be_reassigned(client, route, payload):
+    from backend.tests.w02_helpers import register
+    data, headers = register(client,"w04-explicit-target@example.com")
+    data_b, _ = register(client,"w04-other-target@example.com")
+    own_id = data["user"]["patient_profile"]["id"]
+    other_id = data_b["user"]["patient_profile"]["id"]
+    good = client.post("/api/v1/patient/"+route,headers=headers,json={**payload,"patient_id":own_id})
+    wrong = client.post("/api/v1/patient/"+route,headers=headers,json={**payload,"patient_id":other_id})
+    assert good.status_code == 201, good.text
+    assert wrong.status_code in {403,409}, wrong.text
 
 
 def test_concurrent_retries_insert_one_run(client) -> None:

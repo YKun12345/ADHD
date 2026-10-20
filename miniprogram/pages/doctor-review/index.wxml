@@ -1,0 +1,46 @@
+<ui-nav title="医生审核与报告" showBack="{{true}}" fallbackUrl="/pages/doctor-home/index" />
+<ai-copilot page-key="doctor-review" patient-id="{{patientId}}" assessment-id="{{assessmentId}}" />
+<view class="review-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">第 {{assessmentId}} 轮 · 档案 {{patientId}}</text>
+    <text class="note">系统原始结果、私人审核草稿和已发布医生意见分别保存。助手草稿须由本人核对、编辑或拒绝；模型辅助证据仍未准入。</text>
+    <text wx:if="{{context.demonstrationOnly}}" class="note">本轮是演示资料，不能发布临床评估或诊断。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{loading || busy}}" bindtap="reload">重新读取当前材料与历史</button>
+    <button disabled="{{busy}}" bindtap="openRecovery">查看本机待确认原件</button>
+    <button disabled="{{busy}}" bindtap="openQuestions">具体补问与实际答复</button>
+    <button disabled="{{busy}}" bindtap="openPlan">发布或修订医生计划</button>
+    <button wx:if="{{pendingId}}" disabled="{{busy}}" bindtap="queryPending">按原编号查询服务器确认</button>
+    <text wx:if="{{pendingId}}" class="note">待确认：{{pendingId}}。原件保留，新操作暂不提交；版本冲突时可到待确认原件逐件核对归档。</text>
+  </view>
+  <view wx:if="{{context}}" class="sheet">
+    <text class="title">全部实际尝试与材料</text><text class="note">{{items.length}} 项 · {{attempts.length}} 次实际尝试 · {{submissions.length}} 份已保存提交</text>
+    <text class="note">{{backgroundText}}</text>
+    <text wx:for="{{attempts}}" wx:key="attempt_id" class="note">尝试 {{item.attempt_id}} · 项目 {{item.assessment_item_id}} · {{item.execution_status}} · 实际账号 {{item.actor_user_id}} · 被评估档案 {{item.performer_patient_id || '由指定填写者填写'}}</text>
+    <text class="note">没有提交的尝试仍是缺失材料，不按零分或有效结果计算。所有已保存原件均供核对，保留质量局限。</text>
+  </view>
+  <view wx:for="{{submissions}}" wx:key="submission_id" class="sheet">
+    <text class="title">原提交 {{item.submission_id}}</text><text class="note">质量：{{item.qualityLabel}} · 原提交验收：{{item.acceptanceLabel}}</text>
+    <text class="note">质量规则：{{item.quality_rule_version}} · {{item.quality_reasons}}</text>
+    <text selectable="true" class="original">{{item.originalText}}</text>
+    <radio-group data-id="{{item.submission_id}}" bindchange="onDecisionChange">
+      <label><radio value="accepted" disabled="{{busy || !!pendingId || !!selectedDraft || item.quality_status === 'invalid'}}" checked="{{item.decision === 'accepted'}}" />采纳本份证据</label>
+      <label><radio value="needs_repeat" disabled="{{busy || !!pendingId || !!selectedDraft}}" checked="{{item.decision === 'needs_repeat'}}" />需要新尝试</label>
+      <label><radio value="rejected" disabled="{{busy || !!pendingId || !!selectedDraft}}" checked="{{item.decision === 'rejected'}}" />退回并说明原因</label>
+    </radio-group>
+    <textarea value="{{item.reason}}" data-id="{{item.submission_id}}" bindinput="onDecisionReason" maxlength="2000" disabled="{{busy || !!pendingId || !!selectedDraft}}" placeholder="填写对这份原件的实际核对理由" />
+  </view>
+  <view wx:if="{{context || selectedDraft}}" class="sheet">
+    <text class="title">{{selectedDraft ? '已保存私人草稿' : '本次医生审核草稿'}}</text>
+    <radio-group bindchange="onCategoryChange"><label wx:for="{{categories}}" wx:key="value"><radio value="{{item.value}}" checked="{{category === item.value}}" disabled="{{busy || !!pendingId || !!selectedDraft}}" />{{item.label}}</label></radio-group>
+    <text wx:if="{{adoptionId}}" class="note">已带入本人核对的助手摘要；请逐份决定证据并填写局限。正文改写请回助手保存新的编辑记录。</text><textarea value="{{body}}" data-field="body" bindinput="onFieldInput" maxlength="12000" disabled="{{busy || !!pendingId || !!selectedDraft || !!adoptionId}}" placeholder="填写本人核对后的正文" />
+    <text class="note">局限、缺失材料与适用范围</text>
+    <textarea value="{{limitations}}" data-field="limitations" bindinput="onFieldInput" maxlength="4000" disabled="{{busy || !!pendingId || !!selectedDraft}}" placeholder="如实说明局限，不把缺失资料写成没有相关情况" />
+    <button wx:if="{{!selectedDraft}}" disabled="{{busy || !!pendingId}}" bindtap="saveDraft">核对并保存私人草稿</button>
+    <button wx:if="{{selectedDraft}}" disabled="{{busy || !!pendingId}}" bindtap="publish">重新核对版本并确认发布</button>
+    <text class="note">材料审核或筛查意见不等于诊断。已保存草稿不能原地改写；修改须重新读取材料并建立新草稿。</text>
+  </view>
+  <view class="sheet"><text class="title">本人已保存草稿</text><button wx:for="{{drafts}}" wx:key="id" disabled="{{busy || !!pendingId}}" data-id="{{item.id}}" bindtap="openDraft">草稿 {{item.id}} · {{item.created_at}}</button></view>
+  <view class="sheet"><text class="title">已发布版本</text><text wx:if="{{!reports.length}}" class="note">尚未有已发布医生意见。</text><button wx:for="{{reports}}" wx:key="id" disabled="{{busy}}" data-id="{{item.id}}" bindtap="openReport">版本 {{item.version}} · 医生账号 {{item.actor_user_id}} · {{item.published_at}}</button></view>
+  <view wx:if="{{selectedReport}}" class="sheet"><text class="title">已发布版本 {{selectedReport.version}}</text><text class="note">{{selectedReport.demonstration_only ? '演示资料' : '医生已发布意见'}} · {{selectedReport.published_at}}</text><text selectable="true" class="note">{{selectedReport.body}}</text><text class="note">局限：{{selectedReport.limitations}}</text><text class="note">输入版本：{{selectedReport.input_digest}}</text></view>
+</view>

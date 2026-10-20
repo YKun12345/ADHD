@@ -1,7 +1,7 @@
 <onboarding-guide id="account-onboarding" role="patient" bind:visibilitychange="onOnboardingVisibilityChange" />
 <ai-copilot wx:if="{{!onboardingVisible}}" page-key="privacy-settings" />
 <ui-nav title="账号与隐私" />
-<view class="privacy-page ai-copilot-safe-space">
+<view class="privacy-page ai-copilot-safe-space product-page">
   <view class="privacy-header">
     <view class="privacy-header__mark"><ui-icon name="report" shape="sheet" decorative="true" /></view>
     <view class="privacy-header__copy">
@@ -58,6 +58,10 @@
     <button class="guide-button ui-button" bindtap="restorePageGuides">恢复页面自动介绍</button>
     <button class="guide-button ui-button" bindtap="reopenOnboarding">重新查看功能总介绍</button>
   </view>
+
+  <authorization-panel role="patient" />
+  <view class="privacy-card setting-sheet glass-surface"><text class="card-title">具体研究授权与撤回</text><text class="card-description">仅在你参与具体项目时，分别核对用途、范围和同意内容；可在这里撤回后续处理。</text><button class="guide-button ui-button" bindtap="openResearchConsent" disabled="{{acting}}">管理具体项目同意或撤回</button></view>
+  <view class="privacy-card setting-sheet glass-surface"><text class="card-title">微信提醒</text><text class="card-description">管理订阅许可、暂停提醒和查看投递状态。站内待办一直可用。</text><button class="guide-button ui-button" bindtap="openNotifications" disabled="{{acting}}">管理提醒</button></view>
 
   <view class="danger-card setting-sheet glass-surface">
     <text class="card-title">危险操作</text>

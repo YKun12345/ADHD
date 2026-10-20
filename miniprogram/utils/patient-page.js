@@ -35,7 +35,7 @@ function protectPatientPage(definition, guard = ensurePatientSession) {
   const originalOnLoad = definition.onLoad
   const originalOnShow = definition.onShow
 
-  return Object.assign({}, definition, {
+  return require('./assistant-draft-guard').protectAssistantDraft(Object.assign({}, definition, {
     onLoad(...args) {
       const allowed = checkPatientSession(this, guard)
 
@@ -59,7 +59,7 @@ function protectPatientPage(definition, guard = ensurePatientSession) {
 
       return originalOnShow.apply(this, args)
     }
-  })
+  }))
 }
 
 function registerPatientPage(definition) {

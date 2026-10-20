@@ -1,0 +1,32 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!busy}}" page-key="transferred-work" patient-id="{{patientId}}" />
+<ui-nav title="继任事项" showBack="{{true}}" fallbackUrl="{{fallbackUrl}}" />
+<view class="transfer-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">已接受的继任事项</text><text class="note">每项都保留用户授权清单、实际接收医生、原来源和新的处理记录。查看或确认关注不等同于完成处理或专业验收。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新</button><button disabled="{{busy || loading}}" bindtap="openTransfers">查看或提出责任交接</button>
+  </view>
+  <view wx:if="{{pendingId}}" class="sheet"><text class="note">待核对原处理：{{pendingId}}</text>
+    <button disabled="{{busy || loading}}" bindtap="queryPending">按原编号查询确认</button><button disabled="{{busy || loading}}" bindtap="openRecovery">查看待确认原件</button>
+    <button wx:if="{{canArchivePending}}" disabled="{{busy || loading}}" bindtap="archivePending">保留原件并重新核对</button>
+  </view>
+  <view wx:if="{{!loading && !items.length}}" class="sheet"><text class="note">当前没有可查看的已接受继任事项。</text></view>
+  <view wx:for="{{items}}" wx:key="id" class="sheet">
+    <text class="title">继任事项 {{item.id}} · {{item.statusLabel}}</text>
+    <text class="note">原关注 {{item.original_attention_id}} · 原医生账号 {{item.from_doctor_user_id}} → 实际负责医生账号 {{item.responsible_doctor_id}}</text>
+    <text class="note">实际接受时间：{{item.acceptedText}}</text><text class="note">接受时服务覆盖：{{item.coverageText}}</text>
+    <text class="note">本事项原期望截止：{{item.deadlineText}}</text><text wx:if="{{item.suspensionText}}" class="note">{{item.suspensionText}}</text><text wx:if="{{item.overdueText}}" class="note">{{item.overdueText}}</text>
+    <button disabled="{{busy || loading}}" data-id="{{item.id}}" bindtap="openWork">查看原件和实际处理历史</button>
+  </view>
+  <view wx:if="{{detail}}" class="sheet">
+    <text class="title">事项 {{detail.work.id}} · {{detail.work.statusLabel}}</text><text class="note">{{evidenceText}}</text>
+    <text wx:if="{{detail.original_evidence.evidence}}" class="note">原结果编号：{{detail.original_evidence.evidence.submission_id}} · 质量：{{detail.original_evidence.evidence.quality_status}}。原件保持，未代替医生专业意见。</text>
+    <text wx:if="{{resultText}}" class="note">{{resultText}}</text>
+    <view wx:for="{{trials}}" wx:key="key" class="history-row"><text class="note">原试次 {{item.number}} · {{item.outcomeText}} · {{item.timeText}}</text></view>
+    <textarea wx:if="{{detail.actions.length}}" value="{{reason}}" disabled="{{busy || !!pendingId}}" maxlength="2000" bindinput="onReasonInput" placeholder="填写实际处理说明；解决或关闭必须说明原因" />
+    <button wx:for="{{detail.actions}}" wx:key="action" disabled="{{busy || !!pendingId}}" data-action="{{item.action}}" bindtap="act">{{item.label}}</button>
+    <text wx:if="{{!detail.actions.length}}" class="note">当前只读；已暂停或已完成的事项不会自动恢复。</text>
+    <text class="title">实际处理历史</text><text wx:if="{{!history.length}}" class="note">尚无成功读取的处理记录。</text>
+    <view wx:for="{{history}}" wx:key="action_id" class="history-row"><text class="note">实际账号 {{item.actor_user_id}} · {{item.actionLabel}} · {{item.timeText}}</text><text wx:if="{{item.reason}}" class="note">{{item.reason}}</text></view>
+  </view>
+</view>

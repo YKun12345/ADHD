@@ -85,7 +85,7 @@ function patientStorage() {
       id: 7,
       role: 'patient',
       full_name: 'Integration Patient',
-      patient_profile: { patient_type: 'adult' }
+      patient_profile: { id: 8, patient_type: 'adult' }
     }
   }
 }
@@ -96,8 +96,7 @@ async function run() {
     const cognitivePage = loadPage(cognitiveModulePath)
     const payload = {
       test_type: 'go_no_go',
-      raw_data: { records: [] },
-      metrics: { total_trials: 12 }
+      result_json: { test_run_id: 'integration-fixed-run', trials: [], raw_result: { total_trials: 12 } }
     }
     const cognitiveSync = cognitivePage._syncResult(payload)
     const writesBeforeResponse = writes.length
@@ -119,6 +118,7 @@ async function run() {
       writes.slice(writesBeforeResponse).some(([key]) => key === 'pending_cognitive_result'),
       false
     )
+    assert.equal(storage.submission_queue_v1, undefined, 'a real 401 also clears the multi-entry queue without restoring it')
 
     configureBoundary(Object.assign(patientStorage(), {
       [ASRS_DRAFT_KEY]: Array(18).fill(2)

@@ -290,7 +290,9 @@ def _require_patient_access(db: Session, patient_id: int, current_user: User) ->
         )
         allowed = assignment is not None
     else:
-        allowed = patient.assigned_researcher_id == current_user.id
+        from backend.app.services.identity_access import require_patient_access
+        require_patient_access(db,current_user,patient_id,["profile","assessment","tracking"])
+        allowed = True
     if not allowed:
         raise HTTPException(
             status_code=403, detail="Patient access is outside your assignment."

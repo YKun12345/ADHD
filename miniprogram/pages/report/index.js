@@ -100,7 +100,12 @@ registerPatientPage({
     trendStatusMessage: ''
   },
 
+  openImagingReports() { wx.navigateTo({ url: '/pages/imaging-reports/index' }) },
+
   onLoad() {
+    this._active = true
+    this._pageLease = capturePatientSessionLease()
+    this._readVersion = 0
     this._canvasDisposed = false
     this._chartRenderToken = 0
     const localReport = this._readLocalReport()
@@ -109,7 +114,19 @@ registerPatientPage({
   },
 
   onShow() {
+    if (this._ended || !isPatientSessionLeaseCurrent(this._pageLease)) return false
+    this._active = true
+    this._canvasDisposed = false
     return this.refreshReport()
+  },
+
+  onHide() {
+    this._active = false
+    this._readVersion = (this._readVersion || 0) + 1
+    this._canvasDisposed = true
+    this._chartRenderToken = (this._chartRenderToken || 0) + 1
+    this._localReport = null
+    this.setData({ ...buildLocalReport(), loading: false, professionalExpanded: false, statusMessage: '', radarStatusMessage: '', trendStatusMessage: '' })
   },
 
   _readLocalReport() {
@@ -122,7 +139,10 @@ registerPatientPage({
   },
 
   async refreshReport() {
-    if (this.data.loading) return
+    if (!this._active || this._ended || !isPatientSessionLeaseCurrent(this._pageLease) || this.data.loading) return
+    const operation = (this._readVersion || 0) + 1
+    this._readVersion = operation
+    const current = () => this._active && !this._ended && operation === this._readVersion && isPatientSessionLeaseCurrent(this._pageLease)
 
     const localReport = this._readLocalReport()
     this._localReport = localReport
@@ -138,7 +158,7 @@ registerPatientPage({
         url: '/patient/comprehensive_report',
         method: 'GET'
       })
-      if (!isPatientSessionLeaseCurrent(lease)) return
+      if (!current() || !isPatientSessionLeaseCurrent(lease)) return
       const report = mergeReport(localReport, response)
       this.setData({
         ...report,
@@ -147,7 +167,7 @@ registerPatientPage({
       }, () => this._scheduleDraw())
     } catch (error) {
       if (
-        isPatientSessionError(error) ||
+        !current() || isPatientSessionError(error) ||
         !isPatientSessionLeaseCurrent(lease)
       ) {
         return
@@ -161,13 +181,13 @@ registerPatientPage({
   },
 
   onPatientSessionEnded() {
-    this._localReport = null
-    this._chartRenderToken = (this._chartRenderToken || 0) + 1
+    this._ended = true
+    this.onHide()
   },
 
   onUnload() {
-    this._canvasDisposed = true
-    this._chartRenderToken += 1
+    this._ended = true
+    this.onHide()
   },
 
   _scheduleDraw() {
@@ -402,6 +422,7 @@ registerPatientPage({
   },
 
   toggleProfessional() {
+    if (!this._active || this._ended || !isPatientSessionLeaseCurrent(this._pageLease)) return false
     this.setData({ professionalExpanded: !this.data.professionalExpanded })
   },
 

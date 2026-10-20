@@ -52,9 +52,12 @@ for (const snippet of requiredWxmlSnippets) {
 
 assert.equal(
   (wxml.match(/class="register-card\s[^"']*"/g) || []).length,
-  2,
-  '注册页必须恰好包含患者信息和账号安全两个卡片'
+  3,
+  '注册页包含患者信息、条件显示的监护人及账号安全卡片'
 )
+assert.match(wxml, /wx:if="\{\{patientType === 'child'\}\}"/)
+assert.match(wxml, /data-field="guardianName"/)
+assert.match(wxml, /bindchange="onGuardianConfirmation"/)
 assert.equal(
   wxml.includes('注册表单将在下一步填写'),
   false,

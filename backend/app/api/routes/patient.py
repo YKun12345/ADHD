@@ -1,3 +1,4 @@
+from backend.app.services.identity_access import resolve_patient
 from datetime import datetime
 from statistics import mean
 
@@ -10,10 +11,12 @@ from backend.app.api.deps import get_db, require_roles
 from backend.app.models.cognitive_test import CognitiveTest
 from backend.app.models.imaging_visualization import ImagingVisualization
 from backend.app.models.model_prediction import ModelPrediction
+from backend.app.services.imaging_storage_service import read_imaging_history
 from backend.app.models.patient import Patient
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole
+from backend.app.core.record_provenance import record_storage_info
 from backend.app.schemas.cognitive import (
     CognitiveProfileResponse,
     CognitiveProtocolProfile,
@@ -46,10 +49,27 @@ from backend.app.services.cognitive_contract import (
     protocol_metadata,
     cognitive_series_id,
     normalize_result_json,
+    legacy_cognitive_digest,
+    canonical_digest,
 )
 
 
 router = APIRouter(prefix="/patient", tags=["patient"])
+
+
+def _legacy_result_transaction(db, user, patient, record, kind, digest):
+    from backend.app.services.event_service import append_care_event, append_submission_audit
+    append_care_event(db,patient_id=patient.id,actor_user_id=user.id,
+        event_type="legacy_result_committed",aggregate_type=kind,aggregate_id=record.id,
+        revision=1,payload={"result_kind":kind,"result_id":record.id,"legacy":True,"canonical_digest":digest},
+        dedupe_key=f"legacy:{kind}:{record.id}")
+    append_submission_audit(db,patient_id=patient.id,actor_user_id=user.id,
+        result_kind=kind,result_id=record.id,digest=digest)
+
+
+def _mark_result_committed(db):
+    from backend.app.services.event_service import mark_transaction_audit_committed
+    mark_transaction_audit_committed(db)
 
 
 ASRS_PART_A_THRESHOLDS = {0: 2, 1: 2, 2: 2, 3: 3, 4: 2, 5: 3}
@@ -178,6 +198,11 @@ def _to_scale_response(scale_result: ScaleResult) -> ScaleResultResponse:
         summary=score_json.get("summary", ""),
         recommendations=score_json.get("recommendations", []),
         created_at=scale_result.created_at,
+        assessment_id=scale_result.assessment_id,
+        assessment_item_id=scale_result.assessment_item_id,
+        task_attempt_id=scale_result.task_attempt_id,
+        legacy=scale_result.legacy,
+        storage_integrity=record_storage_info(scale_result),
     )
 
 
@@ -187,6 +212,8 @@ def _to_imaging_response(record: ImagingVisualization | None) -> ImagingVisualiz
 
     return ImagingVisualizationResponse(
         id=record.id,
+        storage_integrity=record_storage_info(record),
+        storage_context=record.storage_context,
         visualization_type=record.visualization_type,
         func_file_name=record.func_file_name,
         anat_file_name=record.anat_file_name,
@@ -212,8 +239,6 @@ def _to_model_prediction_response(record: ModelPrediction | None) -> ModelPredic
         return None
 
     probability_control = record.probability_control
-    if probability_control is None:
-        probability_control = round(max(0.0, min(1.0, 1 - float(record.probability or 0))), 4)
 
     summary_text = record.summary_text
     if not summary_text:
@@ -224,6 +249,8 @@ def _to_model_prediction_response(record: ModelPrediction | None) -> ModelPredic
 
     return ModelPredictionReportResponse(
         prediction_id=record.id,
+        storage_integrity=record_storage_info(record),
+        storage_context=record.storage_context,
         upload_id=record.upload_id,
         file_name=record.file_name,
         prediction_label=record.prediction_label,
@@ -236,6 +263,8 @@ def _to_model_prediction_response(record: ModelPrediction | None) -> ModelPredic
         model_version=record.model_version,
         summary_text=summary_text,
         is_demo=record.source_type == "mock",
+        source_admission_status=('demonstration_only' if record.source_type == 'mock' else
+            ((record.storage_context or {}).get('input') or {}).get('model_registration_status', 'not_recorded')),
         disclaimer=(
             "Demonstration output only; not a medical diagnosis."
             if record.source_type == "mock"
@@ -459,6 +488,11 @@ def _build_cognitive_protocol_profile(records: list[CognitiveTest]) -> Cognitive
             finished_at=parsed_finished_at,
             stored_test_type=record.test_type,
             series_id=cognitive_series_id(record.test_type, record.result_json or {}),
+            assessment_id=record.assessment_id,
+            assessment_item_id=record.assessment_item_id,
+            task_attempt_id=record.task_attempt_id,
+            legacy=record.legacy,
+            storage_integrity=record_storage_info(record),
             **item_metadata,
         )
 
@@ -541,7 +575,9 @@ def submit_scale(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> ScaleResultResponse:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db, current_user, "assessment")
+    if payload.patient_id is not None and payload.patient_id != patient.id:
+        raise HTTPException(409,"The immutable submission target differs from the current authorized patient profile.")
     if patient is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -575,10 +611,12 @@ def submit_scale(
         risk_level=risk_level,
     )
     db.add(scale_result)
-    db.commit()
-    db.refresh(scale_result)
+    db.flush()
     capture_scale_result_cipher(db, patient, scale_result)
+    _legacy_result_transaction(db,current_user,patient,scale_result,"scale_result",canonical_digest({"patient_id":patient.id,"scale_type":payload.scale_type,"answers":payload.answers,"respondent_type":payload.respondent_type}))
     db.commit()
+    _mark_result_committed(db)
+    db.refresh(scale_result)
 
     return _to_scale_response(scale_result)
 
@@ -593,7 +631,9 @@ def submit_cognitive_test(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> CognitiveTestResponse:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db, current_user, "assessment")
+    if payload.patient_id is not None and payload.patient_id != patient.id:
+        raise HTTPException(409,"The immutable submission target differs from the current authorized patient profile.")
     if patient is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -601,6 +641,10 @@ def submit_cognitive_test(
         )
 
     run_id = payload.result_json.get("test_run_id")
+    if run_id is not None:
+        from backend.app.models.assessment import TaskAttempt
+        if db.scalar(select(TaskAttempt.id).where(TaskAttempt.run_id == run_id)) is not None:
+            raise HTTPException(409, "服务器评估尝试必须使用新版提交事务，旧接口不能占用或重绑定其run。")
     patient_id = patient.id
     existing_query = select(CognitiveTest).where(
         CognitiveTest.patient_id == patient_id,
@@ -608,10 +652,17 @@ def submit_cognitive_test(
         CognitiveTest.test_run_id == run_id,
     )
     existing = db.scalar(existing_query) if run_id is not None else None
+    def validate_retry(record):
+        if legacy_cognitive_digest(patient_id,record.test_type,record.result_json) != legacy_cognitive_digest(patient_id,payload.test_type,payload.result_json):
+            raise HTTPException(409,"The run already contains different immutable content or protocol.")
     if existing is not None:
+        validate_retry(existing)
         return CognitiveTestResponse(
             id=existing.id, test_type=existing.test_type,
             result_json=existing.result_json, created_at=existing.created_at,
+            assessment_id=existing.assessment_id, assessment_item_id=existing.assessment_item_id,
+            task_attempt_id=existing.task_attempt_id, legacy=existing.legacy,
+            storage_integrity=record_storage_info(existing),
         )
 
     record = CognitiveTest(
@@ -624,13 +675,16 @@ def submit_cognitive_test(
     try:
         db.flush()
         capture_cognitive_test_cipher(db, patient, record)
+        _legacy_result_transaction(db,current_user,patient,record,"cognitive_test",legacy_cognitive_digest(patient.id,record.test_type,record.result_json))
         db.commit()
+        _mark_result_committed(db)
     except IntegrityError:
         db.rollback()
         # Another request may have committed this run after our initial lookup.
         existing = db.scalar(existing_query) if run_id is not None else None
         if existing is None:
             raise
+        validate_retry(existing)
         record = existing
     db.refresh(record)
 
@@ -639,6 +693,9 @@ def submit_cognitive_test(
         test_type=record.test_type,
         result_json=record.result_json,
         created_at=record.created_at,
+        assessment_id=record.assessment_id, assessment_item_id=record.assessment_item_id,
+        task_attempt_id=record.task_attempt_id, legacy=record.legacy,
+        storage_integrity=record_storage_info(record),
     )
 
 
@@ -647,7 +704,7 @@ def get_dashboard_status(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> DashboardStatusResponse:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db, current_user, "tracking")
     if patient is None:
         raise HTTPException(status_code=400, detail="未找到患者档案")
 
@@ -674,7 +731,7 @@ def submit_daily_log(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> TrackingLogResponse:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db, current_user, "tracking")
     if patient is None:
         raise HTTPException(status_code=400, detail="未找到患者档案")
 
@@ -747,7 +804,7 @@ def get_comprehensive_report(
     current_user: User = Depends(require_roles(UserRole.PATIENT)),
     db: Session = Depends(get_db),
 ) -> PatientReportResponse:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db, current_user, ["profile","assessment","tracking","imaging"])
 
     latest_scale = None
     latest_imaging = None
@@ -755,6 +812,7 @@ def get_comprehensive_report(
     cognitive_profile = None
     tracking_summary = None
     patient_type = None
+    imaging_state = 'no_records'
     if patient is not None:
         patient_type = patient.patient_type.value
         latest_scale = db.scalar(
@@ -762,21 +820,13 @@ def get_comprehensive_report(
             .where(ScaleResult.patient_id == patient.id)
             .order_by(ScaleResult.created_at.desc(), ScaleResult.id.desc())
         )
-        latest_imaging = db.scalar(
-            select(ImagingVisualization)
-            .where(ImagingVisualization.patient_id == patient.id)
-            .order_by(ImagingVisualization.created_at.desc(), ImagingVisualization.id.desc())
-        )
-        latest_model_prediction = db.scalar(
-            select(ModelPrediction)
-            .where(ModelPrediction.patient_id == patient.id)
-            .order_by(ModelPrediction.created_at.desc(), ModelPrediction.id.desc())
-        )
+        latest_imaging,latest_model_prediction,imaging_state = read_imaging_history(db,patient.id)
         cognitive_profile = _extract_latest_cognitive_profile(db, patient.id)
         tracking_summary = _extract_tracking_summary(db, patient.id)
 
     return PatientReportResponse(
-        patient_name=current_user.full_name,
+        imaging_history_status=imaging_state,
+        patient_name=patient.display_name or current_user.full_name,
         patient_type=patient_type,
         latest_scale=_to_scale_response(latest_scale) if latest_scale else None,
         cognitive_profile=cognitive_profile,

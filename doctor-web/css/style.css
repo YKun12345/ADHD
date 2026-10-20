@@ -442,9 +442,11 @@ p {
 
 .percentage {
     fill: var(--text-heading);
-    font-size: 0.6rem;
+    /* SVG viewBox units keep the longest value inside the ring at any zoom. */
+    font-size: 6px;
     font-weight: 700;
     text-anchor: middle;
+    dominant-baseline: central;
 }
 
 .meter-label {

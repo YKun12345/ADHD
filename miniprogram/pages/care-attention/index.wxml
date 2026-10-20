@@ -1,0 +1,58 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!busy}}" page-key="care-attention" patient-id="{{patientId}}" />
+<ui-nav title="{{title}}" showBack="{{true}}" fallbackUrl="{{fallbackUrl}}" />
+<view class="attention-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">{{title}}</text>
+    <text wx:if="{{coverageText}}" class="note">{{coverageText}}</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text>
+    <text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <text wx:if="{{loading}}" class="note">正在读取服务器记录…</text>
+    <button disabled="{{loading || busy}}" bindtap="reload">刷新</button>
+    <button disabled="{{loading || busy}}" bindtap="openRecovery">查看本机待确认记录</button>
+    <button disabled="{{loading || busy}}" bindtap="openTransfers">责任交接</button>
+    <button disabled="{{loading || busy}}" bindtap="openTransferredWork">查看已接受的继任事项</button>
+  </view>
+  <view wx:if="{{!loading && !errorText && !items.length}}" class="sheet"><text class="note">当前没有可查看的关注事项。</text></view>
+  <view wx:for="{{items}}" wx:key="id" class="sheet">
+    <text class="title">{{item.title}}</text><text class="note">{{item.statusLabel}}</text>
+    <text wx:if="{{item.reasonText}}" class="note">{{item.reasonText}}</text>
+    <text class="note">创建时覆盖：{{item.coverageText}}</text>
+    <text class="note">原期望处理截止：{{item.deadlineText}}</text>
+    <text wx:if="{{item.currentCoverageText}}" class="note">当前配置（不改写原窗口）：{{item.currentCoverageText}}</text>
+    <text wx:if="{{item.status === 'suspended' && item.suspension_reason === 'responsibility_transferred'}}" class="note">此事项责任已交接，原来源和负责医生保留。请在继任事项查看新的实际处理。</text>
+    <text wx:elif="{{item.status === 'suspended'}}" class="note">原授权或身份关系已失效，本轮已暂停。重新授权不会自动恢复旧安排。</text>
+    <text wx:if="{{item.suspensionObservationText}}" class="note">{{item.suspensionObservationText}}</text>
+    <text wx:if="{{item.overdueText}}" class="note">{{item.overdueText}}</text>
+    <button wx:if="{{item.canReadEvidence}}" disabled="{{loading || busy}}" data-id="{{item.id}}" bindtap="readEvidence">查看已保存结果</button>
+    <button disabled="{{loading || busy}}" data-id="{{item.id}}" bindtap="openAssessment">查看本轮评估</button>
+    <button disabled="{{loading || busy}}" data-id="{{item.id}}" bindtap="openProcessing">查看处理与历史</button>
+  </view>
+  <view wx:if="{{processing}}" class="sheet">
+    <text class="title">事项 {{processing.id}} · {{processing.statusLabel}}</text>
+    <text class="note">服务器版本 {{processing.version}}。确认关注、解决事项和医生专业验收分别记录。</text>
+    <text wx:if="{{processing.readOnly}}" class="note">当前只可查看历史，没有可执行的处理动作。暂停或已关闭事项不会自动恢复。</text>
+    <textarea wx:if="{{!processing.readOnly || pendingId}}" value="{{processingReason}}" maxlength="2000" disabled="{{busy || !!pendingId}}" bindinput="onReasonInput" placeholder="填写实际处理说明；解决或关闭必须说明原因" />
+    <button wx:if="{{processing.canAcknowledge}}" disabled="{{busy || !!pendingId}}" data-id="{{processing.id}}" data-action="acknowledge" bindtap="submitAction">确认关注</button>
+    <button wx:if="{{processing.canResolve}}" disabled="{{busy || !!pendingId}}" data-id="{{processing.id}}" data-action="resolve" bindtap="submitAction">说明原因并标记已解决</button>
+    <button wx:if="{{processing.canClose}}" disabled="{{busy || !!pendingId}}" data-id="{{processing.id}}" data-action="close_with_reason" bindtap="submitAction">说明原因并关闭</button>
+    <block wx:if="{{pendingId}}">
+      <text class="note">待核对记录：{{pendingId}}。原件和说明保存在本机。</text>
+      <button disabled="{{busy}}" bindtap="queryAction">按原编号查询服务器确认</button>
+      <button disabled="{{busy || pendingStatus === 'authorization_blocked' || pendingStatus === 'conflict_blocked'}}" bindtap="retryAction">原样重试待确认处理</button>
+      <button wx:if="{{canArchivePending}}" disabled="{{busy}}" bindtap="archivePending">保留原处理并重新核对</button>
+    </block>
+    <text class="title">实际处理历史</text>
+    <text wx:if="{{!actionHistory.length}}" class="note">服务器尚无处理记录；查看或收到通知不算解决。</text>
+    <view wx:for="{{actionHistory}}" wx:key="action_id" class="history-row">
+      <text class="note">{{item.actorLabel}} · {{item.actionLabel}} · {{item.timeLabel}}</text>
+      <text wx:if="{{item.reason}}" class="note">{{item.reason}}</text>
+      <text class="note">原版本 {{item.expected_version}} → 版本 {{item.version}}</text>
+    </view>
+  </view>
+  <view wx:if="{{evidence}}" class="sheet">
+    <text class="title">已保存结果</text><text class="note">{{evidence.scoreText}}</text>
+    <text class="note">质量：{{evidence.qualityLabel}} · 验收：{{evidence.acceptanceLabel}}</text>
+    <text wx:if="{{evidence.trialCount !== null}}" class="note">已保存原始试次：{{evidence.trialCount}} 条</text>
+    <text class="note">系统计分与医生专业意见分别保留，结果不等同于诊断。</text>
+  </view>
+</view>

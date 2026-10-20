@@ -42,7 +42,9 @@ const validChildForm = {
   fullName: '李小明',
   email: 'child@example.com',
   patientType: 'child',
-  age: '10'
+  age: '10',
+  guardianName: '合成监护人', guardianAge: '35', guardianRelation: 'parent',
+  proofReference: 'test-reference', guardianConfirmed: true
 }
 
 function expectError(changes, expectedMessage) {

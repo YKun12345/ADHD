@@ -1,0 +1,421 @@
+{
+  "format": "W03-legacy-engineering-registry-1",
+  "scales": [
+    {
+      "scale_type": "ASRS",
+      "age_group": "adult",
+      "questions": 18,
+      "content_sha256": "f115213d741ed4759d72de4aa6514e7fb8411faa41339c76c1eb21d92409949d",
+      "web_mobile_content_match": true,
+      "recall_window": "P6M",
+      "source_status": "project_legacy_unverified",
+      "license_status": "not_verified",
+      "professional_approval": null,
+      "clinical_age_approval": null,
+      "official_version_equivalence": "not_verified",
+      "config": {
+        "title": "ASRS 成人自评量表",
+        "scaleType": "ASRS",
+        "respondentType": "self",
+        "maxScore": 4,
+        "estimatedMinutes": 5,
+        "options": [
+          {
+            "label": "从不",
+            "value": 0
+          },
+          {
+            "label": "很少",
+            "value": 1
+          },
+          {
+            "label": "有时",
+            "value": 2
+          },
+          {
+            "label": "经常",
+            "value": 3
+          },
+          {
+            "label": "非常频繁",
+            "value": 4
+          }
+        ],
+        "questions": [
+          "你是否经常在任务临近结束时，难以把最后的细节收尾完善？",
+          "当事情需要按步骤规划时，你是否经常难以把安排整理清楚？",
+          "你是否经常忘记预约、截止时间或已经答应别人的事情？",
+          "面对需要长时间动脑的任务时，你是否常常拖延开始？",
+          "当你需要长时间坐着时，是否常常不自觉地扭动或坐立不安？",
+          "你是否常常感到自己像被什么推动着一样，很难真正慢下来？",
+          "在阅读、开会或上课时，你是否很容易被周围声音或想法打断？",
+          "你是否经常同时开始很多事，但难以把它们完整收尾？",
+          "你是否常常把钥匙、手机、证件或其他必需品放错地方？",
+          "当事情需要持续投入一段时间时，你是否很难一直保持注意力？",
+          "你是否常常因为分心而在做事中途切换到别的事情？",
+          "你是否经常把需要完成的事情拖到最后一刻才动手？",
+          "你是否在本该安静的场合仍然会不自觉说很多话或动个不停？",
+          "你是否常常在需要排队或等待时感到特别难熬？",
+          "别人还没说完时，你是否经常急着插话或先把答案说出来？",
+          "你是否常因一时冲动答应、购买或决定一些事，之后再后悔？",
+          "当任务枯燥但重要时，你是否很难启动并坚持到底？",
+          "你是否觉得自己经常“知道该做什么”，但就是很难真正去做？"
+        ]
+      }
+    },
+    {
+      "scale_type": "SNAP_IV",
+      "age_group": "child",
+      "questions": 26,
+      "content_sha256": "72048dc6282fb9099da93813729764dfdc03a50f06122aefbf822d69c17c6fca",
+      "web_mobile_content_match": true,
+      "recall_window": "P6M",
+      "source_status": "project_legacy_unverified",
+      "license_status": "not_verified",
+      "professional_approval": null,
+      "clinical_age_approval": null,
+      "official_version_equivalence": "not_verified",
+      "config": {
+        "title": "SNAP-IV 儿童行为量表",
+        "scaleType": "SNAP_IV",
+        "respondentType": "parent",
+        "maxScore": 3,
+        "estimatedMinutes": 6,
+        "instructions": "请由熟悉孩子日常表现的家长，根据近 6 个月情况作答",
+        "options": [
+          {
+            "label": "从不",
+            "value": 0
+          },
+          {
+            "label": "偶尔",
+            "value": 1
+          },
+          {
+            "label": "经常",
+            "value": 2
+          },
+          {
+            "label": "非常频繁",
+            "value": 3
+          }
+        ],
+        "questions": [
+          "孩子做作业或完成任务时是否经常不注意细节、容易出错？",
+          "孩子在课堂、游戏或活动中是否常常难以持续保持注意力？",
+          "别人直接和孩子说话时，孩子是否经常像没在听一样？",
+          "孩子是否常常无法按照指令把事情做完整？",
+          "孩子是否经常难以整理学习用品、任务顺序或生活安排？",
+          "孩子是否经常回避需要持续动脑的学习任务？",
+          "孩子是否常把文具、作业本或生活用品弄丢？",
+          "孩子是否容易被周围无关刺激吸引而分心？",
+          "孩子是否经常忘记本来该做的事情？",
+          "孩子是否经常手脚不停，坐着时也扭来扭去？",
+          "在需要坐好的场合，孩子是否常常离开座位？",
+          "孩子是否常常在不合适的场合跑来跑去或爬上爬下？",
+          "孩子是否很难安静地参加游戏或休闲活动？",
+          "孩子是否经常像停不下来一样，总在活动？",
+          "孩子是否说话特别多，难以停下来？",
+          "别人问题还没说完时，孩子是否经常抢着回答？",
+          "孩子是否很难等待轮到自己？",
+          "孩子是否经常打断别人或插入他人的活动？",
+          "孩子被提醒时是否经常发脾气或顶嘴？",
+          "孩子是否经常与成人争辩？",
+          "孩子是否常常故意不配合规则或要求？",
+          "孩子是否故意做让别人烦恼的事？",
+          "孩子是否常常把自己的错误归咎于别人？",
+          "孩子是否容易因为小事就被激怒？",
+          "孩子是否经常处于生气、怨恨的状态？",
+          "孩子是否表现出明显记仇或报复倾向？"
+        ]
+      }
+    }
+  ],
+  "cognitive_configs": [
+    {
+      "task_id": "reaction",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "155325cce5c254eaba0b994b1a0184ea250872a259b94b76c385aacdde41169d",
+      "config": {
+        "practiceTrials": 5,
+        "responseWindowMs": 800,
+        "goRatio": 0.8,
+        "formalTrials": 25,
+        "blockSize": 25,
+        "taskId": "reaction",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "stroop",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "5b936261e4f8b8de3621c21116c6585c3fe09471981ef02583ce3bae96d0739d",
+      "config": {
+        "practiceTrials": 8,
+        "responseWindowMs": 2500,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "congruentRatio": 0.75,
+        "taskId": "stroop",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "flanker",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "8a77c7eb2df88605e174a15978bad0c110c5ef0206fa50e3e353681884f30ec5",
+      "config": {
+        "practiceTrials": 8,
+        "responseWindowMs": 1800,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "taskId": "flanker",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "nback",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "e35138dc66d84c0ca9e3802858a27e6b0f8bf4b27e1ed9e39f21df1469b704e7",
+      "config": {
+        "practiceTrials": 6,
+        "responseWindowMs": 2000,
+        "targetRatio": 0.3333333333333333,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "taskId": "nback",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "trail",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "fe74b42e52d7532f71174828327d3022da767c56885581b863485185009626ba",
+      "config": {
+        "practiceNodes": 4,
+        "partANodes": 30,
+        "partBPairs": 15,
+        "taskId": "trail",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "digit",
+      "age_group": "adult",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "94fd7b772ea03eaa09a6e24ca12fba1971b3bda4102788989dd231a6827a50aa",
+      "config": {
+        "minSpan": 3,
+        "trialsPerSpan": 2,
+        "digitDurationMs": 800,
+        "gapMs": 250,
+        "maxSpan": 8,
+        "taskId": "digit",
+        "ageGroup": "adult",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "reaction",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "77638cdbcbf7af6518e0d37eb1250c9fc266cae4b87a0acd1d7d8cdfe54cd931",
+      "config": {
+        "practiceTrials": 5,
+        "responseWindowMs": 800,
+        "goRatio": 0.8,
+        "formalTrials": 25,
+        "blockSize": 25,
+        "taskId": "reaction",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "stroop",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "efb4c25b3c5a098dfe0eafa0e2d889a64d0cadeb886c6b480d5bf5fbd2a8caa9",
+      "config": {
+        "practiceTrials": 8,
+        "responseWindowMs": 2500,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "congruentRatio": 0.6666666666666666,
+        "taskId": "stroop",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "flanker",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "174e5187af3da4798d5734ffa580ed6580df7efdf5b874a0fcb35f5869f4ed80",
+      "config": {
+        "practiceTrials": 8,
+        "responseWindowMs": 1800,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "taskId": "flanker",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "nback",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "6b8b8172cb79a3cc24b54fb5569b469011f2edfb6e5653669e1aef7db7d1d810",
+      "config": {
+        "practiceTrials": 6,
+        "responseWindowMs": 2000,
+        "targetRatio": 0.3333333333333333,
+        "formalTrials": 24,
+        "blockSize": 24,
+        "taskId": "nback",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "trail",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "75eb1644eb25187c9feda31b085fe294ca8a919ddd00eaf36df681c728589452",
+      "config": {
+        "practiceNodes": 4,
+        "partANodes": 30,
+        "partBPairs": 15,
+        "taskId": "trail",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    },
+    {
+      "task_id": "digit",
+      "age_group": "child",
+      "protocol_id": "continuous-mobile-v4",
+      "schema_version": 6,
+      "project_config_sha256": "d1237bedc01d06802c31a9d0402fd56f23db17bb599b3713cfc82af6252a75fc",
+      "config": {
+        "minSpan": 3,
+        "trialsPerSpan": 2,
+        "digitDurationMs": 800,
+        "gapMs": 250,
+        "maxSpan": 7,
+        "taskId": "digit",
+        "ageGroup": "child",
+        "schemaVersion": 6,
+        "protocolId": "continuous-mobile-v4",
+        "protocolLabel": "连续移动筛查版",
+        "practicePassPercent": 75,
+        "maxPracticeAttempts": 3
+      },
+      "clinical_age_approval": null,
+      "device_equivalence": "not_verified"
+    }
+  ],
+  "sources": [
+    {
+      "path": "miniprogram/utils/asrs-scale.js",
+      "sha256": "fa6fa6bf60c14c7eea62ae98cea035ef83bfad43941c96f0fa4cfa9eaa9e15b4"
+    },
+    {
+      "path": "miniprogram/utils/snap-scale.js",
+      "sha256": "77ad767d4dd42ad1b0fdec83e18106fdacd41f3ea2341cd7b4876e5e4d756ea4"
+    },
+    {
+      "path": "miniprogram/utils/cognitive-config.js",
+      "sha256": "793eaa5f58be334db79def7a2322519bb64cdd984f577a4784ded55049acd0a2"
+    }
+  ],
+  "exclusions": "No external question copying, real clinical data, model loading or professional age/validity approval"
+}

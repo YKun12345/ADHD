@@ -1,5 +1,6 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { request } = require('../../utils/request')
+const { sectionUrl } = require('../../utils/workspace-navigation')
 const {
   capturePatientSessionLease,
   isPatientSessionLeaseCurrent
@@ -33,8 +34,9 @@ function decorateHomeItems(items = []) {
 
 registerPatientPage({
   data: {
+    showLegacyProgress: false,
     onboardingVisible: true,
-    userName: '患者',
+    userName: '用户',
     currentDay: 1,
     totalDays: 14,
     completedDays: [],
@@ -167,6 +169,20 @@ registerPatientPage({
       url: '/pages/server-settings/index'
     })
   },
+
+  openSection(event) {
+    const url = sectionUrl('patient', event.currentTarget.dataset.section)
+    if (url && (wx.getStorageSync('current_user') || {}).role === 'patient') wx.reLaunch({ url })
+  },
+
+  openAssessments() {
+    wx.navigateTo({ url: '/pages/assessments/index' })
+  },
+
+  openSubmissionQueue() { wx.navigateTo({ url: '/pages/submission-queue/index' }) },
+  openCareAttention() { wx.navigateTo({ url: '/pages/care-attention/index' }) },
+  openCareCycles() { wx.navigateTo({ url: '/pages/care-cycles/index' }) },
+  toggleLegacyProgress() { this.setData({ showLegacyProgress: !this.data.showLegacyProgress }) },
 
   openPrivacySettings() {
     wx.navigateTo({

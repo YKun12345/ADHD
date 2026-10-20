@@ -70,11 +70,12 @@ async function run() {
     for (let index = 0; index < 25; index++) { h.advance(WAITING_DELAYS[index % 4]); if (offline._trials[index] === 'go') offline.handleTestTap(); else h.advance(800); h.advance(450) }
     await h.flush()
     assert.equal(offline.data.syncStatus, '待同步')
-    const pending = h.storage.pending_cognitive_result
-    assert.equal(pending, offline._lastPayload)
-    h.setRequest(async () => ({ id: 2 }))
+    const queue = require('../utils/submission-queue')
+    const pending = queue.pendingEntries().find(item => item.payload.test_type === 'reaction').payload
+    assert.deepEqual(pending, offline._lastPayload)
+    h.setRequest(async options => ({ id: 2, legacy: true, test_type: options.data.test_type, result_json: options.data.result_json }))
     await offline.retrySync()
-    assert.equal(h.storage.pending_cognitive_result, undefined)
+    assert.equal(queue.pendingEntries().some(item => item.payload.result_json.test_run_id === pending.result_json.test_run_id), false)
     assert.equal(h.requests.at(-1).data.result_json.test_run_id, pending.result_json.test_run_id)
     offline.onUnload()
 

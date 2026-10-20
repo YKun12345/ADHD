@@ -31,7 +31,8 @@ const expectedKeys = [
   'doctor-home',
   'doctor-patient',
   'doctor-guide-settings',
-  'ai-chat'
+  'ai-chat', 'assessments', 'doctor-review', 'review-questions', 'care-reports', 'doctor-plan', 'patient-plan',
+  'care-cycles', 'cycle-review', 'shared-messages', 'followup-summary', 'imaging-reports'
 ]
 
 assert.deepEqual(COPILOT_PAGE_KEYS, expectedKeys)
@@ -45,7 +46,7 @@ for (const pageKey of expectedKeys) {
   assert.equal(config.helpPrompt.length <= 4000, true)
 
   const url = buildAiChatUrl(pageKey, 'help')
-  assert.match(url, /^\/pages\/ai-chat\/index\?scope=general&prompt=/)
+  assert.match(url, /^\/pages\/agent-chat\/index\?scope=general&prompt=/)
   const promptParameter = url.split('prompt=')[1]
   assert.equal(normalizeInitialPrompt(promptParameter), config.helpPrompt)
   assert.equal(
@@ -57,11 +58,11 @@ for (const pageKey of expectedKeys) {
 assert.equal(getCopilotConfig('unknown').pageKey, 'general')
 assert.equal(
   buildAiChatUrl('home', 'free'),
-  '/pages/ai-chat/index?scope=general'
+  '/pages/agent-chat/index?scope=general'
 )
 assert.equal(
   buildAiChatUrl('home', 'invalid'),
-  '/pages/ai-chat/index?scope=general'
+  '/pages/agent-chat/index?scope=general'
 )
 assert.match(buildAiChatUrl('scale', 'help'), /copilot-v1%3A/)
 

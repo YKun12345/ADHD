@@ -10,3 +10,5 @@ page { background: linear-gradient(160deg, #fbf9ff 0%, #f2effb 56%, #edf6fb 100%
 .trail-transition { text-align: center; }
 .trail-stage-summary { display: flex; flex-direction: column; gap: 10rpx; margin-top: 20rpx; padding: 20rpx; border-radius: 18rpx; color: #506b75; background: #eff6f7; font-size: 23rpx; }
 .trail-stage-summary__title { color: #17324d; font-weight: 650; }
+
+@import "../../styles/product-page.wxss";

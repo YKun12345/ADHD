@@ -184,3 +184,11 @@ page {
 .empty-title { margin-bottom: 10rpx; color: #294d59; font-size: 28rpx; font-weight: 700; }
 .medical-tip { margin-top: 24rpx; color: #506b75; font-size: 21rpx; line-height: 1.6; text-align: center; }
 .trend-control--pressed { opacity: 0.78; transform: scale(0.985); }
+.followup-section { padding: 28rpx; margin-bottom: 28rpx; border-radius: 24rpx; }
+.followup-item { padding: 20rpx 0; border-bottom: 1rpx solid #d6e2e5; }
+.followup-title { display: block; font-size: 28rpx; font-weight: 600; line-height: 1.7; }
+.followup-line { display: block; font-size: 26rpx; line-height: 1.8; overflow-wrap: anywhere; }
+.followup-picker { padding: 18rpx 0; color: #236b80; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

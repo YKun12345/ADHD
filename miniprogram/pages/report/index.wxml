@@ -1,6 +1,6 @@
 <ai-copilot page-key="report" />
 <ui-nav title="综合报告" />
-<view class="report-page ai-copilot-safe-space">
+<view class="report-page ai-copilot-safe-space product-page">
   <view class="report-header">
     <view class="report-header__mark" aria-hidden="true">
       <ui-icon name="report" shape="sheet" decorative="true" />
@@ -29,6 +29,8 @@
     <text class="summary-card__hint">已完成 {{coverage.completedCount}} / {{coverage.totalCount}} 类患者端数据</text>
     <text wx:if="{{statusMessage}}" class="status-message">{{statusMessage}}</text>
   </view>
+
+  <button bindtap="openImagingReports">已生成影像报告与实际审核版本</button>
 
   <view wx:if="{{loading}}" class="loading-panel">正在同步报告数据…</view>
 
@@ -196,7 +198,7 @@
 
   <view class="report-card professional-card glass-surface">
     <view class="professional-header" aria-role="button" aria-expanded="{{professionalExpanded}}" bindtap="toggleProfessional">
-      <view><text class="report-card__title">专业评估结果</text><text class="report-card__subtitle">默认折叠，按需查看影像和辅助模型摘要</text></view>
+      <view><text class="report-card__title">影像与模型记录</text><text class="report-card__subtitle">默认折叠，按需查看已保存的影像和模型摘要</text></view>
       <text class="professional-toggle">{{professionalExpanded ? '收起' : '展开'}}</text>
     </view>
     <block wx:if="{{professionalExpanded}}">
@@ -204,7 +206,9 @@
         <image wx:if="{{professional.screenshotData}}" class="professional-image" mode="widthFix" src="{{professional.screenshotData}}" />
         <view class="professional-row"><text>影像记录</text><text>{{professional.hasImaging ? '已有记录 · ' + professional.imagingType : '暂无影像记录'}}</text></view>
         <text wx:if="{{professional.imagingSummary}}" class="professional-copy">{{professional.imagingSummary}}</text>
-        <text wx:if="{{professional.doctorInterpretation}}" class="professional-copy">医生影像解释：{{professional.doctorInterpretation}}</text>
+        <text wx:if="{{professional.hasImaging}}" class="professional-copy">影像记录创建时间：{{professional.imagingGeneratedAt}}</text>
+        <text wx:if="{{professional.modelSummary}}" class="professional-copy">模型原摘要：{{professional.modelSummary}}</text>
+        <text wx:if="{{professional.doctorInterpretation}}" class="professional-copy">保存的影像解释：{{professional.doctorInterpretation}}</text>
         <view wx:if="{{professional.predictionLabel}}" class="professional-probability">
           <text>模型输出：{{professional.predictionLabel}} · {{professional.confidenceLabel}}</text>
           <text>ADHD 概率 {{professional.adhdProbabilityText}} · 对照概率 {{professional.controlProbabilityText}}</text>
@@ -212,9 +216,10 @@
           <text>生成时间：{{professional.generatedAt}}</text>
           <text>数据来源：{{professional.dataSource}}</text>
         </view>
-        <text wx:if="{{professional.doctorNotes}}" class="professional-copy">医生补充说明：{{professional.doctorNotes}}</text>
+        <text wx:if="{{professional.doctorNotes}}" class="professional-copy">保存的补充说明：{{professional.doctorNotes}}</text>
+        <text class="professional-copy">{{professional.sourceStatusText}}；{{professional.reviewStatusText}}；{{professional.versionStatusText}}</text>
       </view>
-      <view wx:else class="empty-panel empty-panel--plain"><text>暂无专业评估记录</text></view>
+      <view wx:else class="empty-panel empty-panel--plain"><text>{{professional.historyStatusText || '暂无可显示的影像或模型记录'}}</text></view>
     </block>
     <text class="professional-disclaimer">本结果来自辅助分析模型，仅供专业人员结合其他资料参考，不可独立用于诊断。</text>
   </view>

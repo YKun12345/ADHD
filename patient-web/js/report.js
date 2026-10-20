@@ -24,10 +24,10 @@ function createChip(text) {
 function createMetaChip(label, value) {
     const chip = document.createElement('div');
     chip.className = 'report-meta-chip';
-    chip.innerHTML = `
+    chip.appendChild(SafeRender.html`
         <span class="report-meta-chip-label">${label}</span>
         <span class="report-meta-chip-value">${value}</span>
-    `;
+    `);
     return chip;
 }
 
@@ -70,22 +70,18 @@ function formatDateTime(value) {
 }
 
 function formatPercent(value) {
-    return `${(Number(value || 0) * 100).toFixed(1)}%`;
+    return value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? '--' : `${(Number(value) * 100).toFixed(1)}%`;
 }
 
 function getConfidenceLevel(probability) {
-    const score = Number(probability || 0);
-    if (score >= 0.9) return '高置信';
-    if (score >= 0.75) return '中等置信';
-    return '低置信';
+    return '未提供校准置信度';
 }
 
 function getControlProbability(prediction) {
-    const value = Number(prediction?.probability_control);
-    if (Number.isFinite(value)) {
-        return Math.max(0, Math.min(1, value));
-    }
-    return Math.max(0, Math.min(1, 1 - Number(prediction?.probability || 0)));
+    const supplied = prediction?.probability_control;
+    if (supplied === null || supplied === undefined || supplied === '') return null;
+    const value = Number(supplied);
+    return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
 }
 
 function showEmptyState(options = {}) {
@@ -255,7 +251,7 @@ function renderScaleSummary(report) {
     (scale.recommendations || []).forEach((item) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; gap:0.7rem; align-items:flex-start; color:#475569; line-height:1.7;';
-        row.innerHTML = `<ion-icon name="checkmark-circle-outline" style="color:#10B981; font-size:1.05rem; margin-top:0.2rem;"></ion-icon><span>${item}</span>`;
+        row.appendChild(SafeRender.html`<ion-icon name="checkmark-circle-outline" style="color:#10B981; font-size:1.05rem; margin-top:0.2rem;"></ion-icon><span>${item}</span>`);
         recommendations.appendChild(row);
     });
 
@@ -263,10 +259,33 @@ function renderScaleSummary(report) {
     initRadarChart('reportRadar', scale.radar_scores || {}, REPORT_RADAR_LABELS);
 }
 
+function renderImagingHistory(report) {
+    const status = report.imaging_history_status || '';
+    const message = {
+        storage_upgrade_required: '影像存储待升级，暂不能读取已有记录。',
+        conversion_required: '影像旧记录待审核转换，暂不能读取。',
+        not_authorized: '影像与模型资料未共享'
+    }[status] || (status && !['ready', 'no_records'].includes(status) ? '影像记录状态待核对，暂不能读取。' : '');
+    const notice = document.getElementById('imagingHistoryStatus');
+    if (notice) {
+        notice.textContent = message;
+        notice.classList.toggle('hidden', !message);
+    }
+    const readable = !status || status === 'ready';
+    renderImagingSummary(readable ? report.latest_imaging_visualization : null);
+    renderModelPredictionSummary(readable ? report.latest_model_prediction : null);
+}
+
 function renderImagingSummary(imaging) {
     const section = document.getElementById('imagingSection');
     if (!imaging) {
         section.classList.add('hidden');
+        ['imagingBadge', 'imagingSummary', 'imagingInterpretation', 'imagingMeta', 'imagingFiles'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.textContent = '';
+        });
+        ['imagingSlicePreview', 'imagingSurfacePreview'].forEach(id => {
+            const node = document.getElementById(id); if (node) SafeRender.setImage(node, null);
+        });
         return;
     }
 
@@ -292,16 +311,14 @@ function renderImagingSummary(imaging) {
 
     const slicePreview = document.getElementById('imagingSlicePreview');
     if (slicePreview) {
-        slicePreview.innerHTML = imaging.slice_screenshot_data
-            ? `<img src="${imaging.slice_screenshot_data}" alt="${imaging.slice_screenshot_name || '脑剖面截图'}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
-            : '研究人员上传脑剖面截图后，这里会显示在报告摘要中。';
+        SafeRender.setImage(slicePreview, imaging.slice_screenshot_data, imaging.slice_screenshot_name || '脑剖面截图',
+            '研究人员上传脑剖面截图后，这里会显示在报告摘要中。', 'width:100%;height:100%;object-fit:contain;border-radius:12px;');
     }
 
     const surfacePreview = document.getElementById('imagingSurfacePreview');
     if (surfacePreview) {
-        surfacePreview.innerHTML = imaging.surface_screenshot_data
-            ? `<img src="${imaging.surface_screenshot_data}" alt="${imaging.surface_screenshot_name || '3D表面截图'}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
-            : '研究人员上传 3D 表面截图后，这里会显示在报告摘要中。';
+        SafeRender.setImage(surfacePreview, imaging.surface_screenshot_data, imaging.surface_screenshot_name || '3D表面截图',
+            '研究人员上传 3D 表面截图后，这里会显示在报告摘要中。', 'width:100%;height:100%;object-fit:contain;border-radius:12px;');
     }
 
     const meta = document.getElementById('imagingMeta');
@@ -332,13 +349,21 @@ function renderModelPredictionSummary(prediction) {
 
     if (!prediction) {
         section.classList.add('hidden');
+        ['modelPredictionBadge', 'modelPredictionLabel', 'modelPredictionConfidence', 'modelPredictionSummary',
+            'modelPredictionMeta', 'modelPredictionAdhdValue', 'modelPredictionControlValue', 'modelPredictionDemoNotice'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.textContent = '';
+        });
+        ['modelPredictionAdhdBar', 'modelPredictionControlBar'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.style.width = '0%';
+        });
         return;
     }
 
     section.classList.remove('hidden');
     const controlProbability = getControlProbability(prediction);
 
-    document.getElementById('modelPredictionBadge').textContent = `${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
+    const demo = prediction.is_demo === true || prediction.source_type === 'mock';
+    document.getElementById('modelPredictionBadge').textContent = `${demo ? '演示 · ' : ''}${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
     document.getElementById('modelPredictionLabel').textContent = prediction.prediction_label || '--';
     document.getElementById('modelPredictionConfidence').textContent = getConfidenceLevel(prediction.probability);
     document.getElementById('modelPredictionSummary').textContent =
@@ -349,6 +374,9 @@ function renderModelPredictionSummary(prediction) {
     meta.innerHTML = '';
     [
         `生成时间：${formatDateTime(prediction.created_at)}`,
+        demo ? '演示结果，不用于临床' : prediction.source_admission_status === 'legacy_accepted' ? '沿用原有HGST权重，训练来源未重新核验' : !prediction.source_admission_status || prediction.source_admission_status === 'not_recorded' ? '历史来源准入状态未记录' : '来源准入状态待核对',
+        !prediction.professional_review_status || prediction.professional_review_status === 'not_recorded' ? '专业审核状态未记录' : '专业审核状态待核对',
+        !prediction.version_status || prediction.version_status === 'legacy_unversioned' ? '尚未绑定不可变报告版本' : '报告版本待核对',
         prediction.file_name ? `文件：${prediction.file_name}` : null,
         prediction.source_type ? `来源：${String(prediction.source_type).toUpperCase()}` : null,
         prediction.model_name ? `模型：${prediction.model_name}` : null,
@@ -362,6 +390,7 @@ function renderModelPredictionSummary(prediction) {
     document.getElementById('modelPredictionControlValue').textContent = formatPercent(controlProbability);
     document.getElementById('modelPredictionAdhdBar').style.width = `${Math.max(0, Math.min(100, Number(prediction.probability || 0) * 100))}%`;
     document.getElementById('modelPredictionControlBar').style.width = `${Math.max(0, Math.min(100, controlProbability * 100))}%`;
+    document.getElementById('modelPredictionControlBar').style.visibility = controlProbability === null ? 'hidden' : '';
 }
 
 function renderCognitiveSummary(profile) {
@@ -539,10 +568,6 @@ function renderPatientCareSection() {
     const taskEmpty = document.getElementById('patientTaskEmpty');
     const messageList = document.getElementById('patientMessageList');
     const messageEmpty = document.getElementById('patientMessageEmpty');
-    const messageForm = document.getElementById('patientMessageForm');
-    const messageInput = document.getElementById('patientMessageInput');
-    const messageFeedback = document.getElementById('patientMessageFeedback');
-    const sendMessageBtn = document.getElementById('patientSendMessageBtn');
 
     if (!section || !taskList || !taskEmpty || !messageList || !messageEmpty) return;
     section.classList.remove('hidden');
@@ -560,10 +585,10 @@ function renderPatientCareSection() {
             row.className = `care-message-row ${item.sender_role === 'patient' ? 'patient' : 'researcher'}`;
             const bubble = document.createElement('div');
             bubble.className = 'care-message-bubble';
-            bubble.innerHTML = `
+            bubble.appendChild(SafeRender.html`
                 <div>${item.content}</div>
                 <span class="care-message-meta">${item.sender_role === 'patient' ? '患者' : '研究人员'} · ${formatDateTime(item.created_at)}</span>
-            `;
+            `);
             row.appendChild(bubble);
             messageList.appendChild(row);
         });
@@ -584,19 +609,20 @@ function renderPatientCareSection() {
             tasks.forEach((task) => {
                 const row = document.createElement('div');
                 row.className = 'care-mini-row';
-                row.innerHTML = `
+                row.appendChild(SafeRender.html`
                     <strong>${task.task_title}</strong><br>
                     ${task.task_description || '研究人员为你安排了下一步任务。'}<br>
                     <span style="color:#64748B;">${task.task_type} · ${task.status === 'completed' ? '已完成' : '待完成'}</span>
-                `;
+                `);
 
                 if (task.status !== 'completed') {
                     const actions = document.createElement('div');
                     actions.className = 'care-mini-actions';
 
-                    if (task.target_page) {
+                    const targetUrl = SafeRender.navigationUrl(task.target_page);
+                    if (targetUrl) {
                         const link = document.createElement('a');
-                        link.href = task.target_page;
+                        link.href = targetUrl;
                         link.className = 'btn-outline';
                         link.style.textDecoration = 'none';
                         link.style.padding = '0.62rem 0.9rem';
@@ -632,33 +658,6 @@ function renderPatientCareSection() {
         renderMessageThread((messageData.items || []).slice(-8));
     }
 
-    messageForm?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const content = messageInput.value.trim();
-        if (!content) {
-            messageFeedback.textContent = '请输入要发送给研究人员的内容。';
-            messageFeedback.className = 'care-feedback error';
-            return;
-        }
-
-        sendMessageBtn.disabled = true;
-        messageFeedback.textContent = '正在发送...';
-        messageFeedback.className = 'care-feedback';
-
-        try {
-            await window.API.Care.sendPatientMessage({ content });
-            messageInput.value = '';
-            messageFeedback.textContent = '消息已发送。';
-            messageFeedback.className = 'care-feedback success';
-            await refreshCare();
-        } catch (error) {
-            messageFeedback.textContent = error.message || '消息发送失败，请稍后重试。';
-            messageFeedback.className = 'care-feedback error';
-        } finally {
-            sendMessageBtn.disabled = false;
-        }
-    });
-
     refreshCare().catch((error) => {
         console.error('Failed to load patient care data:', error);
     });
@@ -670,7 +669,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const reportPdfTitle = document.getElementById('reportPdfTitle');
     const reportPdfSubtitle = document.getElementById('reportPdfSubtitle');
     const reportAiDeepLink = document.getElementById('reportAiDeepLink');
-    const patientMessageForm = document.getElementById('patientMessageForm');
     if (userName && storedUser?.full_name) {
         userName.textContent = storedUser.full_name;
     }
@@ -690,7 +688,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             !report.latest_imaging_visualization &&
             !report.latest_model_prediction &&
             !report.cognitive_profile &&
-            !report.tracking_summary
+            !report.tracking_summary &&
+            (!report.imaging_history_status || ['ready', 'no_records'].includes(report.imaging_history_status))
         ) {
             showEmptyState({
                 title: '还没有生成报告内容',
@@ -704,8 +703,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         content.classList.remove('hidden');
         renderScaleSummary(report);
         renderTrackingSection(report, dashboardStatus);
-        renderImagingSummary(report.latest_imaging_visualization);
-        renderModelPredictionSummary(report.latest_model_prediction);
+        renderImagingHistory(report);
         renderCognitiveSummary(report.cognitive_profile);
         renderPatientCareSection();
     } catch (error) {

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>具体研究授权 | 知行合医</title>
+<link rel="stylesheet" href="../doctor-web/css/assessment-page.css">
+<style>label{display:block;margin:15px 0}input,select{font:inherit;max-width:100%;box-sizing:border-box}input:not([type=checkbox]){padding:10px;border:1px solid #cedbea;border-radius:8px;width:100%}p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7}article{border-top:1px solid #dce6f1;padding:18px 0}.warning{color:#805014}fieldset{border:1px solid #dce6f1;border-radius:12px;margin:20px 0}a{display:inline-block;margin:8px 14px 8px 0}</style></head>
+<body><main id="clinicalShell" class="assessment-shell"><a href="patient_profile.html">返回个人档案与隐私</a><h1>具体研究授权</h1>
+<p>注册协议不代表参加全部研究。请选择你本人或实际监护的档案，输入机构提供的具体项目编号，核对用途后自行选择资料范围。</p>
+<p class="warning">撤回阻止后续处理，不能抹掉已发布模型的全部影响。首期仅运行合成数据；记录授权不表示已经启动真实患者训练。</p>
+<p id="clinicalStatus" role="status" aria-live="polite"></p><button id="clinicalRefresh" type="button">重新读取身份与当前有效状态</button>
+<div id="clinicalPending"></div><section id="clinicalInputs" class="assessment-sheet" aria-label="选择实际档案和具体项目"></section><section id="clinicalHistory" class="assessment-sheet" aria-label="当前研究说明与授权"></section>
+</main><script src="js/session-guard.js?v=20261017"></script><script src="js/api.js?v=20261017"></script><script src="../doctor-web/js/clinical-business.js?v=20261017-federated"></script><script src="../doctor-web/js/research-consent-page.js?v=20261017"></script></body></html>

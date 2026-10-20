@@ -1,0 +1,29 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!busy}}" page-key="research-consent" patient-id="{{patientId}}" />
+<ui-nav title="具体研究授权" />
+<view class="page product-page product-form-page">
+  <text class="heading">由你决定是否参加这项研究</text>
+  <text class="note">注册协议不代表参加全部研究。项目编号由机构提供，也可从你原有的研究授权中进入。</text>
+  <button bindtap="reload" disabled="{{busy}}">重新读取本人身份与当前状态</button>
+  <text class="error" role="alert">{{errorText}}</text><text role="status">{{statusText}}</text>
+  <picker range="{{patients}}" range-key="label" value="{{patientIndex}}" bindchange="onPatientChange" disabled="{{busy}}"><view class="card">所选档案：{{patientName || '请选择本人或实际监护的档案'}} ▾</view></picker>
+  <view class="card" wx:if="{{patientId}}">
+    <text>机构提供的研究项目编号</text><input type="number" value="{{projectInput}}" bindinput="onProjectInput" disabled="{{busy}}" placeholder="填写具体项目编号" />
+    <button bindtap="readProject" disabled="{{busy}}">读取此项目说明与授权状态</button>
+    <view wx:for="{{previousProjects}}" wx:key="id"><button data-id="{{item.id}}" bindtap="usePrevious" disabled="{{busy}}">查看原授权项目 {{item.id}}</button></view>
+  </view>
+  <view class="card warning" wx:if="{{pendingId}}"><text>此档案和项目有待核对原件：{{pendingId}}</text><button bindtap="queryPending" disabled="{{busy}}">按原编号查询接收结果</button><button bindtap="openRecovery">查看、重试或核对原件</button></view>
+  <view class="card" wx:if="{{project}}">
+    <text class="title">{{project.name}} · {{project.id}}</text><text>具体用途：{{project.purpose}}</text><text>项目状态：{{project.status}} · 审批版本 {{project.revision}}</text><text>模式：{{project.mode === 'synthetic' ? '合成研究，当前不开放真实患者训练' : project.mode}}</text><text>项目到期：{{project.expires_at || '未单独指定'}}</text>
+    <text class="warning">{{notice}}</text><text class="warning">撤回阻止后续处理，不能抹掉已发布模型的全部影响。首期只运行合成数据；此处授权不表示已启动真实患者训练。</text>
+    <text class="title">当前授权记录</text><text wx:if="{{!records.length}}">此项目暂无你的授权记录。</text>
+    <view class="record" wx:for="{{records}}" wx:key="id"><text>授权 {{item.id}} · 第 {{item.revision}} 版 · {{item.statusLabel}}</text><text>范围：{{item.scopeLabel}}</text><text>到期：{{item.expiryLabel}}</text><button wx:if="{{item.canWithdraw}}" data-id="{{item.id}}" bindtap="withdraw" disabled="{{busy || pendingId}}">撤回这份原授权</button></view>
+    <view wx:if="{{project.status === 'active'}}">
+      <text class="title">明确选择本次授权的资料范围</text>
+      <checkbox-group bindchange="onScopeChange"><label wx:for="{{scopeOptions}}" wx:key="value"><checkbox value="{{item.value}}" checked="{{item.checked}}" disabled="{{busy || pendingId}}" />{{item.label}}</label></checkbox-group>
+      <text>本次授权到期时间（可留空，仍受项目和身份有效期限制）</text><input value="{{expiry}}" bindinput="onExpiryInput" placeholder="例如 2027-01-01T00:00:00+08:00" disabled="{{busy || pendingId}}" />
+      <checkbox-group bindchange="onAcknowledged"><label><checkbox value="read" checked="{{acknowledged}}" disabled="{{busy || pendingId}}" />我已阅读该具体用途、所选范围、到期及撤回影响</label></checkbox-group>
+      <button bindtap="grant" disabled="{{busy || pendingId || !scopes.length || !acknowledged}}">明确授权这个项目和所选范围</button>
+    </view><text wx:else class="note">项目尚未有效或已经撤销；不能新增授权。原授权仍可按当前状态撤回。</text>
+  </view>
+  <button bindtap="openRecovery">查看待同步与原件恢复</button>
+</view>

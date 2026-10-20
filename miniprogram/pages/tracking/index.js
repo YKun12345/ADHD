@@ -100,6 +100,8 @@ registerPatientPage({
     })
   },
 
+  openDateCycles() { wx.navigateTo({ url: '/pages/care-cycles/index' }) },
+
   selectDay(event) {
     const day = Number(event.currentTarget.dataset.day)
     const logs = wx.getStorageSync(TRACKING_LOGS_KEY) || []

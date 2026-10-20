@@ -1,6 +1,6 @@
 @import "../cognitive-task.wxss";
-page { background: linear-gradient(160deg, #f8f7ff 0%, #eeeffa 56%, #edf5fb 100%); }
-.theme-cosmos { background: radial-gradient(circle at 12% 10%, rgba(112, 105, 196, .2) 0, rgba(112, 105, 196, 0) 30%), linear-gradient(160deg, rgba(248,247,255,.96), rgba(238,239,250,.94) 56%, rgba(237,245,251,.94)); }
+page { background: linear-gradient(160deg, #f8fcff 0%, #edf5fc 65%, #fff4ec 100%); }
+.theme-cosmos { background: radial-gradient(circle at 12% 10%, rgba(92,188,226,.18) 0, rgba(92,188,226,0) 30%), linear-gradient(160deg,#f8fcff,#edf5fc 65%,#fff4ec); }
 .task-content { padding-bottom: calc(54rpx + env(safe-area-inset-bottom)); }
 .nback-grid { width: 510rpx; height: 510rpx; display: flex; flex-wrap: wrap; gap: 15rpx; margin: 28rpx auto; }
 .nback-cell { width: 160rpx; height: 160rpx; box-sizing: border-box; border: 2rpx solid #d8e5e8; border-radius: 22rpx; background: #eef4f5; }
@@ -9,3 +9,5 @@ page { background: linear-gradient(160deg, #f8f7ff 0%, #eeeffa 56%, #edf5fb 100%
 .memory-prompt { display: block; color: #75520f; font-size: 27rpx; line-height: 1.6; text-align: center; }
 .answer-row { display: flex; gap: 20rpx; }
 .answer-row button { min-height: 92rpx; flex: 1; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 22rpx; color: #fff; background: #5750a8; font-size: 27rpx; line-height: 1.3; }
+
+@import "../../styles/product-page.wxss";

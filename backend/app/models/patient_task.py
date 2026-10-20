@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
@@ -26,12 +26,16 @@ class PatientTaskStatus(str, Enum):
     PENDING = "pending"
     COMPLETED = "completed"
     DISMISSED = "dismissed"
+    SUSPENDED = "suspended"
 
 
 class PatientTask(Base):
     __tablename__ = "patient_tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    assessment_id: Mapped[int | None] = mapped_column(ForeignKey("assessment_sessions.id"), nullable=True)
+    assessment_item_id: Mapped[int | None] = mapped_column(ForeignKey("assessment_items.id"), nullable=True, unique=True)
+    legacy: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="1")
     patient_id: Mapped[int] = mapped_column(
         ForeignKey("patients.id", ondelete="CASCADE"),
         index=True,
@@ -65,6 +69,7 @@ class PatientTask(Base):
         nullable=False,
     )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    suspension_reason: Mapped[str | None] = mapped_column(String(64),nullable=True)
 
     patient: Mapped["Patient"] = relationship(back_populates="patient_tasks")
     researcher: Mapped["User"] = relationship(foreign_keys=[researcher_id])

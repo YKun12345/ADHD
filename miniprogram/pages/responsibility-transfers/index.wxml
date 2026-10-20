@@ -1,0 +1,49 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!busy}}" page-key="responsibility-transfers" patient-id="{{patientId}}" />
+<ui-nav title="责任交接" showBack="{{true}}" fallbackUrl="{{fallbackUrl}}" />
+<view class="transfer-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">责任交接</text>
+    <text class="note">请选择具体临床关注和接收医生。用户明确授权、接收医生实际接受后才生成新待办；旧评估和计划保持原记录。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新</button>
+    <button disabled="{{busy || loading}}" bindtap="openWork">查看已接受的继任事项</button>
+  </view>
+  <view wx:if="{{role === 'patient' && !loading}}" class="sheet">
+    <text class="title">明确本次交接范围</text>
+    <text wx:if="{{!sources.length}}" class="note">当前没有可交接的临床关注，或已有待处理的交接请求。</text>
+    <checkbox-group bindchange="selectSources">
+      <label wx:for="{{sources}}" wx:key="key" class="choice"><checkbox value="{{item.key}}" disabled="{{busy || !!pendingId}}" />{{item.label}}</label>
+    </checkbox-group>
+    <text class="note">接收医生</text>
+    <picker range="{{receivers}}" range-key="label" value="{{receiverIndex}}" disabled="{{busy || !!pendingId}}" bindchange="selectReceiver">
+      <view class="picker-field">{{receiverIndex >= 0 ? receivers[receiverIndex].label : '请选择接收医生'}}</view>
+    </picker>
+    <text wx:if="{{!receivers.length}}" class="note">请先确认接收医生的有效临床共享关系；关系邀请本身不等于交接。</text>
+    <textarea value="{{reason}}" disabled="{{busy || !!pendingId}}" maxlength="2000" bindinput="onReasonInput" placeholder="交接说明（可选）" />
+    <button disabled="{{busy || !!pendingId || !selectedSources.length || receiverIndex < 0}}" bindtap="propose">核对清单并提出交接</button>
+  </view>
+  <view wx:if="{{pendingId}}" class="sheet">
+    <text class="note">原提交：{{pendingId}}。尚未核对前保留原件。</text>
+    <button disabled="{{busy || loading}}" bindtap="queryPending">按原编号查询确认</button>
+    <button wx:if="{{canArchivePending}}" disabled="{{busy || loading}}" bindtap="archivePending">保留原件并重新核对</button>
+    <button disabled="{{busy || loading}}" bindtap="openRecovery">查看待确认原件</button>
+  </view>
+  <view class="sheet">
+    <text class="title">实际交接记录</text>
+    <text wx:if="{{!loading && !requests.length}}" class="note">当前没有可查看的交接请求。</text>
+    <view wx:for="{{requests}}" wx:key="id" class="history-row">
+      <text class="note">交接 {{item.id}} · 档案 {{item.patientId}} · {{item.count}} 项 · {{item.statusLabel}}</text>
+      <text class="note">接收医生账号 {{item.doctorId}} · {{item.timeText}}</text>
+      <button disabled="{{busy || loading}}" data-id="{{item.id}}" bindtap="openRequest">核对对象清单和实际决定</button>
+    </view>
+  </view>
+  <view wx:if="{{detail}}" class="sheet">
+    <text class="title">交接 {{detail.request.id}} · {{detail.statusLabel}}</text>
+    <text class="note">接收医生账号 {{detail.request.receiver_doctor_user_id}}</text>
+    <text class="note">{{detail.sourcesText}}</text><text wx:if="{{detail.request.reason}}" class="note">交接说明：{{detail.request.reason}}</text>
+    <text wx:if="{{detail.decisionText}}" class="note">{{detail.decisionText}}</text>
+    <text wx:if="{{!detail.actions.length}}" class="note">当前没有可执行的决定。已接受、已拒绝或已撤销的原记录不变。</text>
+    <textarea wx:if="{{detail.actions.length}}" value="{{reason}}" disabled="{{busy || !!pendingId}}" maxlength="2000" bindinput="onReasonInput" placeholder="填写实际决定说明；拒绝或撤销必须说明原因" />
+    <button wx:for="{{detail.actions}}" wx:key="action" disabled="{{busy || !!pendingId}}" data-action="{{item.action}}" bindtap="decide">{{item.label}}</button>
+  </view>
+</view>

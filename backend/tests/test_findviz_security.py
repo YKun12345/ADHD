@@ -32,6 +32,9 @@ def imaging_actors(client, monkeypatch, tmp_path):
             db.flush()
             actors[name]['patient_id'] = patient.id
         db.commit()
+    from backend.tests.w02_helpers import grant_synthetic_patient_authority
+    for name in ['patient1','patient2']:
+        grant_synthetic_patient_authority(actors[name]['patient_id'],actors['doctor']['id'])
     return actors
 
 
@@ -78,7 +81,12 @@ def test_findviz_revalidates_active_user_and_binding(client, imaging_actors, cha
         if change == 'inactive':
             db.get(User, imaging_actors['doctor']['id']).is_active = False
         else:
-            db.get(Patient, imaging_actors['patient1']['patient_id']).assigned_researcher_id = None
+            from sqlalchemy import select
+            from backend.app.models.identity import CareRelationship
+            from backend.app.services import authorization_ledger as ledger
+            relationship = db.scalar(select(CareRelationship).where(CareRelationship.patient_id == imaging_actors['patient1']['patient_id']))
+            ledger.deny(relationship)
+            relationship.status = 'revoked'
         db.commit()
     response = client.get('/findviz/check_cache')
     assert response.status_code in (401,403), response.text[:300]

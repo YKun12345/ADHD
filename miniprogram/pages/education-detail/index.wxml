@@ -1,6 +1,6 @@
 <ai-copilot page-key="education-detail" />
 <ui-nav title="科普详情" />
-<view class="article-page ai-copilot-safe-space" wx:if="{{validArticle}}">
+<view class="article-page ai-copilot-safe-space product-page" wx:if="{{validArticle}}">
   <view class="article-header">
     <view class="article-header__mark"><ui-icon name="education" shape="book" decorative="true" /></view>
     <text class="article-header__title">{{article.title}}</text>

@@ -612,19 +612,13 @@ class MultimodalAnalysisService:
         return np.mean(all_scores) if all_scores else 0.5
 
     def _compute_imaging_score(self, patient_id: int) -> float | None:
-        """计算fMRI影像评分（如果有）"""
-        from backend.app.models.model_prediction import ModelPrediction
+        """Unavailable until each result has verified model/input/use admission.
 
-        latest_prediction = self.db.scalar(
-            select(ModelPrediction)
-            .where(ModelPrediction.patient_id == patient_id)
-            .order_by(ModelPrediction.created_at.desc())
-            .limit(1)
-        )
-
-        if latest_prediction and latest_prediction.probability is not None:
-            return float(latest_prediction.probability)
-
+        Storage authentication does not establish a validated risk scale. The
+        current registry is not configured, so mock and legacy probabilities
+        cannot contribute to a composite score. Keep the missing modality
+        missing; do not invent a neutral score or query an unupgraded table.
+        """
         return None
 
     def _classify_adhd_subtype(

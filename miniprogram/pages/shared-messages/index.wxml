@@ -1,0 +1,40 @@
+<ui-nav title="共享消息" showBack="{{true}}" fallbackUrl="{{fallbackUrl}}" />
+<ai-copilot page-key="shared-messages" patient-id="{{patientId}}" />
+<view class="shared-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">共享消息</text>
+    <text class="note">选择档案和具体接收关系后查看、发送。每段关系分别保留消息。</text>
+    <picker range="{{patients}}" range-key="label" value="{{patientIndex < 0 ? 0 : patientIndex}}" disabled="{{loading || busy || !patients.length || !!adoptionId}}" bindchange="selectPatient">
+      <view class="picker"><text>档案</text><text>{{patientLabel}}</text></view>
+    </picker>
+    <picker range="{{relationships}}" range-key="label" value="{{relationshipIndex < 0 ? 0 : relationshipIndex}}" disabled="{{loading || busy || !relationships.length}}" bindchange="selectRelationship">
+      <view class="picker"><text>接收关系</text><text>{{relationshipLabel}}</text></view>
+    </picker>
+    <text wx:if="{{loading}}" class="note">正在读取服务器消息…</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text>
+    <text wx:if="{{statusText}}" class="note status">{{statusText}}</text>
+    <button disabled="{{loading || busy}}" bindtap="reload">刷新服务器记录</button>
+    <button wx:if="{{role === 'patient'}}" disabled="{{loading || busy}}" bindtap="openLegacy">查看旧版本人历史</button>
+    <text wx:if="{{role === 'patient'}}" class="note">旧版历史单独查看，不并入当前接收关系。</text>
+  </view>
+  <view wx:if="{{!loading && !errorText && !patients.length}}" class="sheet"><text class="note">当前没有可读取的档案。</text></view>
+  <view wx:elif="{{!loading && !errorText && patientId && !relationships.length}}" class="sheet"><text class="note">该档案当前没有可读取的共享关系。</text></view>
+  <view wx:elif="{{!loading && !errorText && relationshipId && !messages.length}}" class="sheet"><text class="note">这段关系还没有服务器确认的消息。</text></view>
+  <view wx:for="{{messages}}" wx:key="message_id" class="sheet message">
+    <text class="sender">{{item.senderLabel}}</text>
+    <text class="note time">{{item.timeLabel}}</text>
+    <text class="content" selectable="{{true}}">{{item.content}}</text>
+    <text class="note">{{item.readLabel}}</text>
+    <button wx:if="{{!item.viewer_read_at}}" data-id="{{item.message_id}}" disabled="{{loading || busy}}" bindtap="markRead">确认我已查看</button>
+  </view>
+  <view wx:if="{{relationshipId}}" class="sheet">
+    <text class="title">发送给这段关系的对方</text>
+    <text class="note">{{patientLabel}} · {{relationshipLabel}}</text>
+    <text wx:if="{{!canSend}}" class="note">这段关系目前仅可查看历史，不能新发消息。</text>
+    <text wx:if="{{adoptionId}}" class="note">已带入本人核对的助手回复；请明确选择并核对接收关系，再确认发送。正文修改请回助手保存新编辑记录。</text><textarea wx:if="{{canSend || pendingId}}" class="composer" value="{{content}}" maxlength="2000" disabled="{{loading || busy || !!pendingId || !!adoptionId}}" placeholder="填写你本人确认要共享的内容" bindinput="onContentInput" />
+    <text wx:if="{{pendingId}}" class="note">原件等待服务器核对期间，内容和接收关系已固定。切换关系不会更改这份原件。</text>
+    <button wx:if="{{canSend || pendingId}}" class="primary" disabled="{{loading || busy || (!pendingId && !content.length) || pendingStatus === 'authorization_blocked' || pendingStatus === 'conflict_blocked'}}" bindtap="sendMessage">{{pendingId ? '重试已确认的原件' : '确认内容和接收关系并发送'}}</button>
+    <button wx:if="{{pendingId}}" disabled="{{loading || busy}}" bindtap="queryPending">核对服务器是否已确认</button>
+    <text class="note">医生值守时间暂未配置，不代表全天响应。查看消息只表示当前账号已查看，不代表专业处理或事项解决。</text>
+  </view>
+</view>

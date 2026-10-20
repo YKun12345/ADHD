@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>影像分析 | 知行合“医”</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20261020-ring">
     <link rel="stylesheet" href="css/patient.css">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
@@ -262,6 +262,11 @@
             <div id="timeseriesPatientMeta" class="selected-patient-meta"></div>
         </div>
 
+        <div class="context-card" role="status" aria-live="polite">
+            <h3>模型使用状态</h3>
+            <p id="modelAdmissionStatus">正在核对模型来源与用途，暂不能开始新分析。</p>
+        </div>
+
         <div class="dashboard-grid">
             <section class="card slide-up" id="upload" style="animation-delay: 0.1s;">
                 <div class="card-header">
@@ -332,7 +337,7 @@
                                 a 15.9155 15.9155 0 0 1 0 31.831
                                 a 15.9155 15.9155 0 0 1 0 -31.831"
                             />
-                            <text x="18" y="20.35" class="percentage" id="riskText">--</text>
+                            <text x="18" y="18" class="percentage" id="riskText">--</text>
                         </svg>
                     </div>
                     <p class="meter-label" id="predictionLabelText">等待开始推理</p>
@@ -352,7 +357,7 @@
                         <strong>提示：</strong> 当前还没有推理结果。上传时间序列文件后，系统会返回分类标签、概率和简短解释。
                     </div>
 
-                    <button class="btn btn-accent full-width" id="generateReportBtn">
+                    <button class="btn btn-accent full-width" id="generateReportBtn" disabled>
                         开始分类推理
                     </button>
                 </div>
@@ -360,8 +365,10 @@
         </div>
     </main>
 
-    <script src="js/api.js?v=20261010c"></script>
-    <script src="js/account.js?v=20261010c"></script>
-    <script src="js/main.js?v=20261010b"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261016-w09-p0"></script>
+    <script src="js/account.js?v=20261014-w02"></script>
+    <script src="js/main.js?v=20261016-w09-p0"></script>
 </body>
 </html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>本轮评估 | 知行合医</title>
+<link rel="stylesheet" href="../doctor-web/css/assessment-page.css"></head>
+<body data-assessment-role="patient"><main id="assessmentShell" class="assessment-shell">
+<a href="patient_home.html">返回用户首页</a>
+<section class="assessment-sheet"><h1 id="assessmentSubject">本轮评估</h1><p class="assessment-note">自助评估与医生评估分别保留。背景可以全部跳过，不会被记为无相关情况。</p>
+<p id="assessmentMessage" role="status"></p><button id="refreshAssessmentsButton" type="button">刷新本轮资料</button></section>
+<section class="assessment-sheet"><h2>新建一轮评估</h2><p id="assessmentAdmission" class="assessment-note"></p>
+<select id="assessmentTemplate" aria-label="评估模板"></select><div id="assessmentBackground"></div>
+<button id="createAssessmentButton" type="button" disabled>确认背景并创建本轮</button></section>
+<section class="assessment-sheet"><h2>已有评估</h2><div id="assessmentList"></div></section>
+<section class="assessment-sheet"><label><input id="assessmentAssisted" type="checkbox"> 本次有人协助操作</label><div id="assessmentDetails"></div></section>
+</main><script src="js/session-guard.js?v=20261013-w01"></script><script src="js/api.js?v=20261014-w03"></script>
+<script src="../doctor-web/js/assessment-page.js?v=20261017-complete"></script></body></html>

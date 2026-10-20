@@ -199,15 +199,17 @@ function resetResultCard() {
 }
 
 function renderResultCard(result) {
+    window.SessionGuard.assertCurrentSession();
     $('resultCard').classList.add('visible');
-    $('resultStatus').innerHTML = `<ion-icon name="checkmark-circle-outline"></ion-icon>${result.statusText}`;
+    $('resultStatus').textContent = result.statusText;
     $('resultSummary').textContent = result.summary;
-    $('resultMetrics').innerHTML = result.metrics.map((item) => `
-        <div class="metric-item">
-            <span class="metric-label">${item.label}</span>
-            <span class="metric-value">${item.value}</span>
-        </div>
-    `).join('');
+    $('resultMetrics').replaceChildren();
+    result.metrics.forEach(item => {
+        const metric = document.createElement('div'); metric.className = 'metric-item';
+        const label = document.createElement('span'); label.className = 'metric-label'; label.textContent = item.label;
+        const value = document.createElement('span'); value.className = 'metric-value'; value.textContent = item.value;
+        metric.append(label, value); $('resultMetrics').appendChild(metric);
+    });
     $('submitStatus').textContent = '结果已生成，正在保存本次测试记录。';
     $('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -217,6 +219,7 @@ function webResultMetadata() {
 }
 
 function persistResultLocally(result) {
+    window.SessionGuard.assertCurrentSession();
     const latest = {
         ...webResultMetadata(),
         test_key: result.testKey,
@@ -228,10 +231,12 @@ function persistResultLocally(result) {
         finished_at: result.finishedAt
     };
 
-    localStorage.setItem('smartbrain_latest_cognitive_test', JSON.stringify(latest));
-    const history = JSON.parse(localStorage.getItem('smartbrain_cognitive_test_history') || '[]');
+    const context = { kind: 'cognitive_preview_history', mode: 'legacy_self', assessmentId: null,
+        itemId: null, taskId: null, attemptId: null, protocolId: 'patient-web-preview-v1',
+        protocolVersion: 1, respondent: 'self', performer: 'self' };
+    const history = window.OwnedCache.read(context) || [];
     history.unshift(latest);
-    localStorage.setItem('smartbrain_cognitive_test_history', JSON.stringify(history.slice(0, 12)));
+    window.OwnedCache.write(context, history.slice(0, 12));
 }
 
 async function syncResultIfPossible(result) {
@@ -419,6 +424,7 @@ function buildPartialResult() {
 }
 
 async function finalizeTestSession(result) {
+    window.SessionGuard.assertCurrentSession();
     clearSessionTimers();
     setCanvasHandler(null);
     sessionState.running = false;
@@ -427,7 +433,11 @@ async function finalizeTestSession(result) {
     $('startTestBtn').textContent = '重新开始测试';
 
     renderResultCard(sessionState.finalResult);
-    persistResultLocally(sessionState.finalResult);
+    try { persistResultLocally(sessionState.finalResult); }
+    catch (error) {
+        $('submitStatus').textContent = error.message;
+        return;
+    }
     
     // Set achievement trigger for patient_test.html
     const achPayload = {
@@ -437,7 +447,8 @@ async function finalizeTestSession(result) {
         nback_accuracy: result.testKey === 'nback' ? (result.rawResult?.accuracy / 100) : undefined,
         summary: result.summary
     };
-    sessionStorage.setItem('achievement_trigger', JSON.stringify(achPayload));
+    try { window.OwnedCache.write(window.OwnedCache.achievementContext, achPayload); }
+    catch (error) { $('submitStatus').textContent = error.message; }
 
     await syncResultIfPossible(sessionState.finalResult);
 }
@@ -1234,6 +1245,7 @@ function startNBackTest() {
 }
 
 function startTest() {
+    window.SessionGuard.assertCurrentSession();
     clearSessionTimers();
     setCanvasHandler(null);
     sessionState.running = true;

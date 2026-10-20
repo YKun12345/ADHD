@@ -1,117 +1,16 @@
 <onboarding-guide role="patient" bind:visibilitychange="onOnboardingVisibilityChange" />
-<ai-copilot wx:if="{{!onboardingVisible}}" page-key="home" />
-  <ui-nav title="ADHD智慧辅助" showBack="{{false}}" />
+<ai-copilot id="page-companion" wx:if="{{!onboardingVisible}}" page-key="home" bottom-inset="{{60}}" />
+<ui-nav title="ADHD智慧辅助" showBack="{{false}}" />
 <view class="home-page ui-page ai-copilot-safe-space">
-  <view class="welcome-section">
-    <view class="welcome-copy">
-      <text class="welcome-eyebrow">TODAY · DAY {{currentDay}}</text>
-      <text class="welcome-text">你好，{{userName}}</text>
-      <text class="welcome-subtitle">今天也按照自己的节奏，完成一小步</text>
-    </view>
+  <view class="welcome-section"><image class="welcome-landscape" src="/assets/product/mist-landscape.png" mode="aspectFit" aria-hidden="{{true}}" /><view class="welcome-copy"><text class="welcome-eyebrow">星仔陪你 · 今天的一小步</text><text class="welcome-text">你好，{{userName}}</text><text class="welcome-subtitle">按照自己的节奏，先完成眼前这一小步</text></view></view>
+  <view class="home-bottom-wave" aria-hidden="{{true}}"></view>
+  <agent-actions id="home-next-actions" />
+  <view class="section-header"><text class="section-title">常用功能</text></view>
+  <view class="home-sections glass-surface">
+    <view class="home-section" data-section="assessments" bindtap="openSection" aria-role="button"><ui-icon name="scale" shape="line" decorative="{{true}}" /><view><text>继续评估</text><text class="home-section-note">量表、测试与本轮医生意见</text></view><text class="home-section-arrow">›</text></view>
+    <view class="home-section" data-section="records" bindtap="openSection" aria-role="button"><ui-icon name="tracking" shape="line" decorative="{{true}}" /><view><text>记录与回顾</text><text class="home-section-note">按真实日期填写，看看自己的变化</text></view><text class="home-section-arrow">›</text></view>
+    <view class="home-section" data-section="communication" bindtap="openSection" aria-role="button"><ui-icon name="ai" shape="line" decorative="{{true}}" /><view><text>和医生沟通</text><text class="home-section-note">消息、交办事项与需要补充的问题</text></view><text class="home-section-arrow">›</text></view>
   </view>
-
-  <view class="progress-card glass-surface">
-    <view class="card-header">
-      <text class="card-title">14天任务进度</text>
-      <view class="progress-meta">
-        <text class="progress-number">
-          {{completedCount}} / {{totalDays}} 天
-        </text>
-        <view class="dashboard-source">
-          {{sourceLabel}}
-        </view>
-      </view>
-    </view>
-
-    <view class="progress-track">
-      <view
-        class="progress-value"
-        style="{{'width: ' + progressPercent + '%;'}}"
-      ></view>
-    </view>
-
-    <text class="progress-tip">
-      坚持完成每日任务，有助于获得更完整的评估结果
-    </text>
-
-    <text
-      class="dashboard-message"
-      wx:if="{{statusMessage}}"
-    >{{statusMessage}}</text>
-  </view>
-
-  <view class="section-header">
-    <text class="section-title">今日任务</text>
-    <text class="section-extra">第{{currentDay}}天</text>
-  </view>
-
-  <view class="task-list glass-surface">
-    <view
-      class="task-item {{item.available ? '' : 'task-item--disabled'}}"
-      wx:for="{{tasks}}"
-      wx:key="id"
-      data-id="{{item.id}}"
-      hover-class="{{item.available ? 'task-item--pressed' : 'none'}}"
-      aria-role="button"
-      aria-disabled="{{!item.available}}"
-      bindtap="handleTaskTap"
-    >
-      <view class="task-icon">
-        <ui-icon name="{{item.iconName}}" shape="{{item.iconShape}}" decorative="{{true}}" />
-      </view>
-
-      <view class="task-content">
-        <text class="task-title">{{item.title}}</text>
-        <text class="task-description">{{item.description}}</text>
-      </view>
-
-      <view class="task-tail">
-        <text class="task-status">{{item.statusLabel}}</text>
-        <view class="task-arrow"></view>
-      </view>
-    </view>
-  </view>
-
-  <view class="section-header quick-header">
-    <text class="section-title">快捷入口</text>
-  </view>
-
-  <view class="quick-grid glass-surface">
-    <view
-      class="quick-item {{item.available ? '' : 'quick-item--disabled'}}"
-      wx:for="{{quickEntries}}"
-      wx:key="id"
-      data-id="{{item.id}}"
-      hover-class="{{item.available ? 'quick-item--pressed' : 'none'}}"
-      aria-role="button"
-      aria-disabled="{{!item.available}}"
-      bindtap="handleEntryTap"
-    >
-      <view class="quick-icon">
-        <ui-icon name="{{item.iconName}}" shape="{{item.iconShape}}" decorative="{{true}}" />
-      </view>
-      <view class="quick-content">
-        <text class="quick-title">{{item.title}}</text>
-        <text class="entry-status">{{item.statusLabel}}</text>
-      </view>
-      <text wx:if="{{item.id === 'messages' && unreadMessageCount > 0}}" class="care-badge">{{unreadMessageCount}}</text>
-      <text wx:if="{{item.id === 'doctor-tasks' && pendingTaskCount > 0}}" class="care-badge">{{pendingTaskCount}}</text>
-    </view>
-  </view>
-
-  <text class="medical-tip">
-    本平台仅用于辅助筛查，不替代专业医生诊断
-  </text>
-
-  <view class="footer-actions">
-  <view class="privacy-settings-entry" hover-class="footer-entry--pressed" aria-role="button" bindtap="openPrivacySettings">
-    账号与隐私
-  </view>
-
-  <view class="footer-separator"></view>
-
-  <view class="server-settings-entry" hover-class="footer-entry--pressed" aria-role="button" bindtap="openServerSettings">
-    服务器设置
-  </view>
-  </view>
+  <text class="medical-tip">本平台用于辅助筛查，专业意见和计划由医生确认</text>
 </view>
+<role-nav id="primary-role-nav" active-key="home" />

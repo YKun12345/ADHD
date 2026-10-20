@@ -37,7 +37,7 @@ const RESPONDENT_LABELS = Object.freeze({
   guardian: '监护人填写',
   teacher: '教师填写'
 })
-const PROFESSIONAL_DATA_MESSAGE = '影像与模型结果尚未接入患者端'
+const PROFESSIONAL_DATA_MESSAGE = '暂无已共享的影像或模型记录'
 const PROFESSIONAL_DISCLAIMER = '本结果来自辅助分析模型，仅供专业人员结合其他资料参考，不可独立用于诊断。'
 
 function isObject(value) {
@@ -356,36 +356,61 @@ function probabilityText(value) {
 
 function normalizeProfessionalData(payload) {
   const source = isObject(payload) ? payload : {}
-  const imaging = isObject(source.latest_imaging_visualization)
+  const historyStatus = cleanText(source.imaging_history_status)
+  const historyStatusText = {
+    storage_upgrade_required: '影像存储待升级，暂不能读取已有记录。',
+    conversion_required: '影像旧记录待审核转换，暂不能读取。',
+    not_authorized: '影像与模型资料未共享',
+    no_records: '暂无可显示的影像或模型记录'
+  }[historyStatus] || (historyStatus && historyStatus !== 'ready' ? '影像记录状态待核对，暂不能读取。' : '')
+  const historyBlocked = Boolean(historyStatus && historyStatus !== 'ready' && historyStatus !== 'no_records')
+  const readable = !historyStatus || historyStatus === 'ready'
+  const imaging = readable && isObject(source.latest_imaging_visualization)
     ? source.latest_imaging_visualization
     : null
-  const prediction = isObject(source.latest_model_prediction)
+  const prediction = readable && isObject(source.latest_model_prediction)
     ? source.latest_model_prediction
     : null
   const probability = prediction ? finiteNumber(prediction.probability) : null
-  const control = prediction
-    ? (finiteNumber(prediction.probability_control) ?? (probability === null ? null : 1 - probability))
-    : null
-  const confidence = probability === null ? null : Math.max(probability, control === null ? 0 : control)
+  const control = prediction ? finiteNumber(prediction.probability_control) : null
+  const demo = prediction && (prediction.is_demo === true || prediction.source_type === 'mock')
+  const reviews = [imaging && imaging.professional_review_status, prediction && prediction.professional_review_status].filter(Boolean)
+  const versions = [imaging && imaging.version_status, prediction && prediction.version_status].filter(Boolean)
   return {
+    historyStatus, historyStatusText, historyBlocked,
     hasData: Boolean(imaging || prediction),
     hasImaging: Boolean(imaging),
-    screenshotData: cleanText(imaging && (imaging.slice_screenshot_data || imaging.surface_screenshot_data)),
+    hasModelPrediction: Boolean(prediction),
+    screenshotData: safeReportRaster(imaging && imaging.slice_screenshot_data) || safeReportRaster(imaging && imaging.surface_screenshot_data),
     imagingType: cleanText(imaging && imaging.visualization_type).toUpperCase(),
     imagingSummary: cleanText(imaging && imaging.summary_text),
+    modelSummary: cleanText(prediction && prediction.summary_text),
     doctorInterpretation: cleanText(imaging && (imaging.slice_interpretation || imaging.surface_interpretation)),
     doctorNotes: cleanText(imaging && imaging.notes),
     predictionLabel: cleanText(prediction && prediction.prediction_label),
     adhdProbabilityText: probabilityText(probability),
     controlProbabilityText: probabilityText(control),
-    confidenceLabel: confidence === null ? '暂无置信信息' : confidence >= 0.85 ? '较高置信' : confidence >= 0.7 ? '中等置信' : '有限置信',
+    confidenceLabel: '未提供校准置信度',
+    sourceStatusText: demo ? '演示结果，不用于临床' : prediction && prediction.source_admission_status === 'legacy_accepted'
+      ? '沿用原有HGST权重，训练来源未重新核验' : !prediction || !prediction.source_admission_status || prediction.source_admission_status === 'not_recorded'
+      ? '历史来源准入状态未记录' : '来源准入状态待核对',
+    reviewStatusText: reviews.every(status => status === 'not_recorded') ? '专业审核状态未记录' : '专业审核状态待核对',
+    versionStatusText: versions.every(status => ['legacy_mutable_record', 'legacy_unversioned'].includes(status)) ? '尚未绑定不可变报告版本' : '报告版本待核对',
+    imagingGeneratedAt: cleanText(imaging && imaging.created_at, '未记录'),
+    modelGeneratedAt: cleanText(prediction && prediction.created_at, '未记录'),
     modelLabel: prediction
       ? [cleanText(prediction.model_name, '辅助分析模型'), cleanText(prediction.model_version)].filter(Boolean).join(' · ')
       : '',
-    generatedAt: cleanText(prediction && prediction.created_at, cleanText(imaging && imaging.created_at)),
-    dataSource: prediction ? (prediction.is_demo === true ? '演示数据' : cleanText(prediction.source_type, '专业分析')) : '影像记录',
+    generatedAt: cleanText(prediction && prediction.created_at, cleanText(imaging && imaging.created_at, '未记录')),
+    dataSource: prediction ? (demo ? '演示数据' : cleanText(prediction.source_type, '未记录')) : '影像记录',
     disclaimer: PROFESSIONAL_DISCLAIMER
   }
+}
+
+function safeReportRaster(value) {
+  const text = cleanText(value)
+  const match = /^data:image\/(?:png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/.exec(text)
+  return match && match[1].length % 4 === 0 ? text : ''
 }
 
 function normalizeLocalTracking(logs) {
@@ -494,7 +519,7 @@ function assembleReport({
     tracking,
     coverage,
     professional,
-    professionalData: professional.hasData ? '已有专业评估记录' : PROFESSIONAL_DATA_MESSAGE
+    professionalData: professional.hasData ? '已有影像或模型记录' : professional.historyStatusText || PROFESSIONAL_DATA_MESSAGE
   }
 }
 
@@ -538,7 +563,7 @@ function mergeReport(localReport, serverPayload) {
   const cognitive = mergeCognitive(local.cognitive, serverCognitive)
   const useServerCognitive = serverCognitive.hasData
   const useServerTracking = !local.tracking.hasData && serverTracking.hasData
-  const serverUsed = useServerScale || useServerCognitive || useServerTracking || professional.hasData
+  const serverUsed = useServerScale || useServerCognitive || useServerTracking || professional.hasData || Boolean(professional.historyStatus)
   const localPatientType = normalizePatientType(local.patientType)
   const serverPatientType = normalizePatientType(server.patient_type)
   const localPatientName = cleanText(local.patientName)

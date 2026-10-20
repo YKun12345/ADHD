@@ -1,14 +1,51 @@
 <ai-copilot page-key="tracking-trend" />
-<ui-nav title="14天趋势" />
-<view class="trend-page ai-copilot-safe-space">
+<ui-nav title="阶段记录与趋势" />
+<view class="trend-page ai-copilot-safe-space product-page">
   <view class="trend-content">
+    <view class="followup-section glass-surface">
+      <text class="empty-title">真实日期阶段总结</text>
+      <picker wx:if="{{summaryProfiles.length > 1}}" range="{{summaryProfiles}}" range-key="label" value="{{summaryProfileIndex}}" bindchange="selectSummaryProfile">
+        <view class="followup-picker">当前档案：{{summaryProfiles[summaryProfileIndex].label}} · 点击切换</view>
+      </picker>
+      <text wx:if="{{summaryLoading}}" class="followup-line">正在读取当前授权范围内的原始资料…</text>
+      <text wx:if="{{summaryError}}" class="followup-line">{{summaryError}}</text>
+      <button size="mini" bindtap="reloadSummary" loading="{{summaryLoading}}" disabled="{{summaryLoading}}">刷新阶段总结</button>
+      <block wx:if="{{summary}}">
+        <text class="followup-line">截至 {{summary.asOfDate}} · {{summary.coverageText}}</text>
+        <text class="gap-tip">缺失与未知不按0计算；阶段差异不等同治疗效果。</text>
+        <view class="followup-item" wx:for="{{summary.cycles}}" wx:key="cycle_id">
+          <text class="followup-title">{{item.title}} · {{item.stateText}}</text>
+          <text class="followup-line">{{item.coverageText}}；{{item.limitationsText}}</text>
+          <text class="followup-line">{{item.metricsText}}</text>
+          <text class="gap-tip">来源：周期{{item.cycle_id}}<text wx:if="{{item.plan_version_id}}"> / 计划版本{{item.plan_version_id}}</text></text>
+        </view>
+        <text wx:if="{{!summary.cycles.length}}" class="followup-line">当前授权范围内暂无真实日期周期。</text>
+        <view class="followup-item" wx:for="{{summary.measurements}}" wx:key="submission_id">
+          <text class="followup-title">{{item.label}}</text>
+          <text class="followup-line">{{item.valueText}}</text>
+          <text class="gap-tip">{{item.sourceText}}</text>
+        </view>
+        <view class="followup-item" wx:for="{{summary.comparisons}}" wx:key="index">
+          <text class="followup-title">{{item.label}} · {{item.status_label}}</text>
+          <text class="followup-line">{{item.reasonText}}</text>
+        </view>
+        <view class="followup-item" wx:for="{{summary.events}}" wx:key="record_id">
+          <text class="followup-title">{{item.record_date}} · 原始自报</text>
+          <text class="followup-line">{{item.text}}</text>
+          <text class="gap-tip">来源：周期{{item.cycle_id}} / 日记录{{item.record_id}} / 修订{{item.revision}}</text>
+        </view>
+        <button wx:for="{{summary.nextSteps}}" wx:key="index" data-index="{{index}}" bindtap="openSummaryStep">{{item.label}}</button>
+        <text wx:for="{{summary.limitations}}" wx:key="*this" class="gap-tip">{{item}}</text>
+        <text wx:if="{{summary.truncatedText}}" class="gap-tip">{{summary.truncatedText}}</text>
+      </block>
+    </view>
     <view class="trend-heading">
       <view class="trend-heading__mark" aria-hidden="true">
         <ui-icon name="tracking" shape="lens" decorative="true" />
       </view>
       <view>
-        <text class="page-title">状态变化趋势</text>
-        <text class="page-subtitle">已记录 {{completedCount}} / 14 天</text>
+        <text class="page-title">历史追踪天数趋势</text>
+        <text class="page-subtitle">已记录 {{completedCount}} / 14 天 · 不补成真实日期</text>
       </view>
     </view>
     <text class="demo-badge" wx:if="{{demoMode}}">本地演示数据</text>

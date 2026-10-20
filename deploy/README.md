@@ -63,3 +63,9 @@ DOMAIN=api.example.com EMAIL=ops@example.com bash deploy/deploy.sh
 真实 HGST 推理须补齐依赖、有效权重和数据标签，并设置 `USE_MOCK_MODEL=false`。缺依赖或权重时返回错误，不会默默当作真实结果。Mock 输出始终属于演示数据。
 
 上线前仍需验收 HTTPS、角色与患者范围、数据迁移、备份恢复、真实模型及小程序域名配置。本机未执行 Docker 实机部署或公网证书签发；自动回归只验证配置传递和隔离的脚本行为。
+
+## 非联邦正式运行候选（尚未部署）
+
+新增 `docker-compose.nonfederated.production.yml` 是独立候选，配合 `nonfederated.production.env.example`，避免沿用演示启动中的自动建表与播种。它只启动API，密钥与数据库必须显式配置，授权账本独立保存，worker默认关闭。此文件只做了YAML/启动内容检查，没有执行镜像构建或启动。
+
+发布前可在仓库根运行 `tools/nonfederated-release-readiness.py --env-file <明确配置文件>` 只读预检；返回2表示条件未满足。预检不会交换微信令牌、投递通知、连接默认数据库或加载权重。实际迁移/恢复、微信许可与真机、模型准入、部署和worker开启仍需受审条件及另行授权。具体剩余条件见 `docs/evidence/通知模型与上线剩余条件-2026-10-18.md`。

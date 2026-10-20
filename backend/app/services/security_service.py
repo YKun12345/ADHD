@@ -690,11 +690,13 @@ def _extract_tracking_dimensions(log: TrackingLog) -> dict[str, int]:
 
 def _extract_cognitive_dimensions(record: CognitiveTest) -> dict[str, int]:
     payload = record.result_json or {}
-    metrics = {
-        **payload,
-        **(payload.get("raw_result") or {}),
-        **(payload.get("metrics") or {}),
-    }
+    metrics = dict(payload)
+    for field in ("raw_result", "metrics"):
+        values = payload.get(field)
+        # Clients also send display-only metric lists with labels and strings.
+        # Audit values must come from explicit numeric fields, not those lists.
+        if isinstance(values, dict):
+            metrics.update(values)
 
     def number(names):
         for name in names:
@@ -1186,6 +1188,12 @@ def list_recent_audit_logs(
                     SecurityPatientAssignment.assignment_status == "active",
                 )
             )
+        )
+        # A private companion baseline belongs to its actual observer; a DAC
+        # assignment does not make another actor's displayed-state snapshot shared.
+        .where(
+            (SecurityAuditLog.action != 'agent_companion_observed')
+            | (SecurityAuditLog.actor_user_id == actor.id)
         )
         .order_by(SecurityAuditLog.created_at.desc(), SecurityAuditLog.id.desc())
         .limit(limit)

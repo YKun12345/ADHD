@@ -97,7 +97,7 @@ assert.equal(
   '/pages/cognitive-center/index'
 )
 assert.equal(adultTasks.find((item) => item.id === 'tracking').available, true)
-assert.equal(adultTasks.find((item) => item.id === 'tracking').url, '/pages/tracking/index')
+assert.equal(adultTasks.find((item) => item.id === 'tracking').url, '/pages/care-cycles/index')
 
 const adultEntries = buildQuickEntries('adult')
 const adultScaleEntry = adultEntries.find(
@@ -116,7 +116,7 @@ assert.equal(adultReportEntry.url, '/pages/report/index')
 const adultAiEntry = adultEntries.find((item) => item.id === 'ai')
 assert.equal(adultAiEntry.available, true)
 assert.equal(adultAiEntry.statusLabel, '开始咨询')
-assert.equal(adultAiEntry.url, '/pages/ai-chat/index')
+assert.equal(adultAiEntry.url, '/pages/agent-chat/index')
 assert.equal(adultTasks.some((item) => item.id === 'ai'), false)
 const adultPathwayEntry = adultEntries.find((item) => item.id === 'pathway')
 assert.equal(adultPathwayEntry.available, true)
@@ -144,7 +144,7 @@ assert.equal(childCognitiveEntry.statusLabel, '开始测试')
 assert.equal(childCognitiveEntry.url, '/pages/cognitive-center/index')
 assert.equal(
   buildQuickEntries('child').find((item) => item.id === 'tracking').url,
-  '/pages/tracking/index'
+  '/pages/care-cycles/index'
 )
 const childReportEntry = buildQuickEntries('child').find(
   (item) => item.id === 'report'
@@ -157,7 +157,7 @@ const childAiEntry = buildQuickEntries('child').find(
 )
 assert.equal(childAiEntry.available, true)
 assert.equal(childAiEntry.statusLabel, '开始咨询')
-assert.equal(childAiEntry.url, '/pages/ai-chat/index')
+assert.equal(childAiEntry.url, '/pages/agent-chat/index')
 assert.equal(
   buildQuickEntries('child').find((item) => item.id === 'pathway').url,
   '/pages/care-pathway/index'

@@ -1,0 +1,13 @@
+page { background: #f3f6fb; color: #17324d; }
+.assessment-page { padding: 24rpx 28rpx 72rpx; padding-bottom: calc(72rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(72rpx + env(safe-area-inset-bottom)); }
+.sheet { margin: 22rpx 0; padding: 28rpx; border-radius: 28rpx; background: rgba(255,255,255,.88); border: 1rpx solid #dbe6f2; }
+.heading { display: block; font-size: 34rpx; font-weight: 700; margin-bottom: 14rpx; }
+.note { display: block; font-size: 25rpx; color: #536d85; line-height: 1.75; margin: 12rpx 0; }
+.error { display: block; color: #a93434; line-height: 1.7; margin: 16rpx 0; }
+.template, .background, .item { border-top: 1rpx solid #e0e8f1; padding: 22rpx 0; }
+button { margin-top: 20rpx; font-size: 28rpx; color: #17324d; background: #e8f0fc; border-radius: 18rpx; }
+label { margin-right: 18rpx; font-size: 25rpx; line-height: 1.9; }
+textarea { box-sizing: border-box; width: 100%; padding: 20rpx; background: #f2f6fb; border-radius: 16rpx; margin-top: 14rpx; font-size: 26rpx; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

@@ -33,10 +33,10 @@ function createHeaderChip(text) {
 function createMetaChip(label, value) {
     const chip = document.createElement('div');
     chip.className = 'report-meta-chip';
-    chip.innerHTML = `
+    chip.appendChild(SafeRender.html`
         <span class="report-meta-chip-label">${label}</span>
         <span class="report-meta-chip-value">${value}</span>
-    `;
+    `);
     return chip;
 }
 
@@ -79,22 +79,18 @@ function formatDateTime(value) {
 }
 
 function formatPercent(value) {
-    return `${(Number(value || 0) * 100).toFixed(1)}%`;
+    return value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? '--' : `${(Number(value) * 100).toFixed(1)}%`;
 }
 
 function getConfidenceLevel(probability) {
-    const score = Number(probability || 0);
-    if (score >= 0.9) return '高置信';
-    if (score >= 0.75) return '中等置信';
-    return '低置信';
+    return '未提供校准置信度';
 }
 
 function getControlProbability(prediction) {
-    const value = Number(prediction?.probability_control);
-    if (Number.isFinite(value)) {
-        return Math.max(0, Math.min(1, value));
-    }
-    return Math.max(0, Math.min(1, 1 - Number(prediction?.probability || 0)));
+    const supplied = prediction?.probability_control;
+    if (supplied === null || supplied === undefined || supplied === '') return null;
+    const value = Number(supplied);
+    return Number.isFinite(value) && value >= 0 && value <= 1 ? value : null;
 }
 
 function showEmptyState(options = {}) {
@@ -315,16 +311,22 @@ function initTrackingCharts(logs = [], totalDays = 14) {
     attachResizeHandler(donutDom, donutChart, '__trackingDonutResizeHandler');
 }
 
+const reportHasScope = (report, scope) => !Array.isArray(report.allowed_scope) || report.allowed_scope.includes(scope);
+
 function renderHeader(report) {
-    document.getElementById('patientTitle').textContent = `${report.patient_name} 的综合报告`;
-    document.getElementById('patientSubTitle').textContent = `${report.patient_email} · ${mapPatientType(report.patient_type)}患者 · 与患者端报告内容实时同步`;
+    document.getElementById('patientTitle').textContent = `${report.patient_name || `共享档案 #${report.patient_id}`} 的综合报告`;
+    document.getElementById('patientSubTitle').textContent = reportHasScope(report, 'profile')
+        ? `${report.patient_email || '--'} · ${mapPatientType(report.patient_type)}患者 · 按已确认的共享范围同步`
+        : '基础资料未共享 · 按已确认的共享范围同步';
 
     const metaRow = document.getElementById('metaRow');
     metaRow.innerHTML = '';
     [
         `患者 ID：${report.patient_id}`,
-        `患者类型：${mapPatientType(report.patient_type)}`,
-        report.latest_scale ? `最新量表：${report.latest_scale.scale_type}` : '最新量表：暂无',
+        reportHasScope(report, 'profile') ? `患者类型：${mapPatientType(report.patient_type)}` : '基础资料未共享',
+        reportHasScope(report, 'assessment') ? (report.latest_scale ? `最新量表：${report.latest_scale.scale_type}` : '最新量表：暂无') : '评估未共享',
+        reportHasScope(report, 'tracking') ? null : '跟踪未共享',
+        reportHasScope(report, 'imaging') ? null : '影像未共享',
         report.latest_scale ? `风险等级：${mapRiskLevel(report.latest_scale.risk_level)}` : null,
         report.latest_scale ? `总分：${report.latest_scale.total_score}` : null
     ].filter(Boolean).forEach((text) => metaRow.appendChild(createHeaderChip(text)));
@@ -359,7 +361,7 @@ function renderSecurityOverview(overview) {
                 ? '最近时间审计未通过'
                 : overview.latest_temporal_audit_status || '时间审计进行中';
 
-    grid.innerHTML = `
+    grid.replaceChildren(SafeRender.html`
         <div class="security-audit-item">
             <span>安全状态</span>
             <strong>${overview.security_stage || '--'}</strong>
@@ -392,7 +394,7 @@ function renderSecurityOverview(overview) {
             <span>时间审计任务ID</span>
             <strong>${overview.latest_temporal_audit_id || '--'}</strong>
         </div>
-    `;
+    `);
 
     card.classList.remove('hidden');
 }
@@ -407,9 +409,10 @@ function renderScaleSummary(report) {
     const disclaimer = document.getElementById('reportDisclaimer');
 
     if (!scale) {
-        reportBadge.textContent = '暂无量表';
-        reportScaleTitle.textContent = '还没有最新量表结果';
-        reportSummary.textContent = '当前患者还没有完成可用于综合解读的量表，建议先完成行为量表后再回来查看。';
+        const shared = reportHasScope(report, 'assessment');
+        reportBadge.textContent = shared ? '暂无量表' : '评估未共享';
+        reportScaleTitle.textContent = shared ? '还没有最新量表结果' : '评估与认知结果未共享';
+        reportSummary.textContent = shared ? '当前共享资料中还没有最新量表结果。' : '当前共享范围不含评估结果，无法判断是否已有量表或认知记录。';
         reportMeta.innerHTML = '';
         recommendations.innerHTML = '';
         disclaimer.innerHTML = '<strong>提示：</strong> 当前报告内容仅供辅助参考，不替代医生诊断。';
@@ -434,7 +437,7 @@ function renderScaleSummary(report) {
     (scale.recommendations || []).forEach((item) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; gap:0.7rem; align-items:flex-start; color:#475569; line-height:1.7;';
-        row.innerHTML = `<ion-icon name="checkmark-circle-outline" style="color:#10B981; font-size:1.05rem; margin-top:0.2rem;"></ion-icon><span>${item}</span>`;
+        row.appendChild(SafeRender.html`<ion-icon name="checkmark-circle-outline" style="color:#10B981; font-size:1.05rem; margin-top:0.2rem;"></ion-icon><span>${item}</span>`);
         recommendations.appendChild(row);
     });
 
@@ -467,12 +470,35 @@ function renderTrackingSection(report) {
     initTrackingCharts(report.tracking_logs || [], tracking.total_days || 14);
 }
 
+function renderImagingHistory(report) {
+    const status = reportHasScope(report, 'imaging') ? report.imaging_history_status || '' : 'not_authorized';
+    const message = {
+        storage_upgrade_required: '影像存储待升级，暂不能读取已有记录。',
+        conversion_required: '影像旧记录待审核转换，暂不能读取。',
+        not_authorized: '影像与模型资料未共享'
+    }[status] || (status && !['ready', 'no_records'].includes(status) ? '影像记录状态待核对，暂不能读取。' : '');
+    const notice = document.getElementById('imagingHistoryStatus');
+    if (notice) {
+        notice.textContent = message;
+        notice.classList.toggle('hidden', !message);
+    }
+    const readable = !status || status === 'ready';
+    renderImagingSummary(readable ? report.latest_imaging_visualization : null);
+    renderModelPredictionSummary(readable ? report.latest_model_prediction : null);
+}
+
 function renderImagingSummary(imaging) {
     const section = document.getElementById('imagingSection');
     if (!section) return;
 
     if (!imaging) {
         section.classList.add('hidden');
+        ['imagingBadge', 'imagingSummary', 'imagingInterpretation', 'imagingMeta', 'imagingFiles'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.textContent = '';
+        });
+        ['imagingSlicePreview', 'imagingSurfacePreview'].forEach(id => {
+            const node = document.getElementById(id); if (node) SafeRender.setImage(node, null);
+        });
         return;
     }
 
@@ -498,16 +524,14 @@ function renderImagingSummary(imaging) {
 
     const slicePreview = document.getElementById('imagingSlicePreview');
     if (slicePreview) {
-        slicePreview.innerHTML = imaging.slice_screenshot_data
-            ? `<img src="${imaging.slice_screenshot_data}" alt="${imaging.slice_screenshot_name || '脑切面截图'}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
-            : '研究人员上传脑切面截图后，这里会显示在报告摘要中。';
+        SafeRender.setImage(slicePreview, imaging.slice_screenshot_data, imaging.slice_screenshot_name || '脑切面截图',
+            '研究人员上传脑切面截图后，这里会显示在报告摘要中。', 'width:100%;height:100%;object-fit:contain;border-radius:12px;');
     }
 
     const surfacePreview = document.getElementById('imagingSurfacePreview');
     if (surfacePreview) {
-        surfacePreview.innerHTML = imaging.surface_screenshot_data
-            ? `<img src="${imaging.surface_screenshot_data}" alt="${imaging.surface_screenshot_name || '3D表面截图'}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`
-            : '研究人员上传 3D 表面截图后，这里会显示在报告摘要中。';
+        SafeRender.setImage(surfacePreview, imaging.surface_screenshot_data, imaging.surface_screenshot_name || '3D表面截图',
+            '研究人员上传 3D 表面截图后，这里会显示在报告摘要中。', 'width:100%;height:100%;object-fit:contain;border-radius:12px;');
     }
 
     const meta = document.getElementById('imagingMeta');
@@ -538,13 +562,21 @@ function renderModelPredictionSummary(prediction) {
 
     if (!prediction) {
         section.classList.add('hidden');
+        ['modelPredictionBadge', 'modelPredictionLabel', 'modelPredictionConfidence', 'modelPredictionSummary',
+            'modelPredictionMeta', 'modelPredictionAdhdValue', 'modelPredictionControlValue', 'modelPredictionDemoNotice'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.textContent = '';
+        });
+        ['modelPredictionAdhdBar', 'modelPredictionControlBar'].forEach(id => {
+            const node = document.getElementById(id); if (node) node.style.width = '0%';
+        });
         return;
     }
 
     section.classList.remove('hidden');
     const controlProbability = getControlProbability(prediction);
 
-    document.getElementById('modelPredictionBadge').textContent = `${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
+    const demo = prediction.is_demo === true || prediction.source_type === 'mock';
+    document.getElementById('modelPredictionBadge').textContent = `${demo ? '演示 · ' : ''}${prediction.prediction_label} · ${formatPercent(prediction.probability)}`;
     const demoNotice = document.getElementById('modelPredictionDemoNotice');
     if (demoNotice) {
         if (prediction.is_demo) {
@@ -566,6 +598,9 @@ function renderModelPredictionSummary(prediction) {
     meta.innerHTML = '';
     [
         `生成时间：${formatDateTime(prediction.created_at)}`,
+        demo ? '演示结果，不用于临床' : prediction.source_admission_status === 'legacy_accepted' ? '沿用原有HGST权重，训练来源未重新核验' : !prediction.source_admission_status || prediction.source_admission_status === 'not_recorded' ? '历史来源准入状态未记录' : '来源准入状态待核对',
+        !prediction.professional_review_status || prediction.professional_review_status === 'not_recorded' ? '专业审核状态未记录' : '专业审核状态待核对',
+        !prediction.version_status || prediction.version_status === 'legacy_unversioned' ? '尚未绑定不可变报告版本' : '报告版本待核对',
         prediction.file_name ? `文件：${prediction.file_name}` : null,
         prediction.source_type ? `来源：${String(prediction.source_type).toUpperCase()}` : null,
         prediction.model_name ? `模型：${prediction.model_name}` : null,
@@ -579,6 +614,7 @@ function renderModelPredictionSummary(prediction) {
     document.getElementById('modelPredictionControlValue').textContent = formatPercent(controlProbability);
     document.getElementById('modelPredictionAdhdBar').style.width = `${Math.max(0, Math.min(100, Number(prediction.probability || 0) * 100))}%`;
     document.getElementById('modelPredictionControlBar').style.width = `${Math.max(0, Math.min(100, controlProbability * 100))}%`;
+    document.getElementById('modelPredictionControlBar').style.visibility = controlProbability === null ? 'hidden' : '';
 }
 
 function renderCognitiveSummary(profile) {
@@ -605,13 +641,13 @@ function renderCognitiveSummary(profile) {
     (profile.latest_tests || []).forEach((item) => {
         const row = document.createElement('div');
         row.style.cssText = 'padding:0.95rem 1rem;border-radius:14px;background:#F8FAFC;border:1px solid #E2E8F0;';
-        row.innerHTML = `
+        row.appendChild(SafeRender.html`
             <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:0.35rem;">
                 <strong style="color:#0F172A;font-size:0.96rem;">${item.test_name}</strong>
                 <span style="color:#64748B;font-size:0.82rem;">${formatDateTime(item.finished_at)}</span>
             </div>
             <div style="color:#475569;font-size:0.9rem;line-height:1.6;">${item.status_text} · 关键指标：${item.key_metric}</div>
-        `;
+        `);
         tests.appendChild(row);
     });
 
@@ -622,8 +658,7 @@ function renderDoctorReport(report) {
     renderHeader(report);
     renderScaleSummary(report);
     renderTrackingSection(report);
-    renderImagingSummary(report.latest_imaging_visualization);
-    renderModelPredictionSummary(report.latest_model_prediction);
+    renderImagingHistory(report);
     renderCognitiveSummary(report.cognitive_profile);
 }
 
@@ -653,12 +688,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const report = await window.API.Doctor.getPatientReportDetails(patientId);
         reportLoading.classList.add('hidden');
 
-        if (
+        if (!Array.isArray(report.allowed_scope) &&
             !report?.latest_scale &&
             !report?.latest_imaging_visualization &&
             !report?.latest_model_prediction &&
             !report?.cognitive_profile &&
-            !report?.tracking_summary
+            !report?.tracking_summary &&
+            (!report.imaging_history_status || ['ready', 'no_records'].includes(report.imaging_history_status))
         ) {
             showEmptyState({
                 title: '还没有生成报告内容',
@@ -693,12 +729,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Failed to load patient security overview:', error);
             });
 
+        const imagingShared = reportHasScope(report, 'imaging');
+        [openImagingBtn, openVisualizationBtn].filter(Boolean).forEach(button => {
+            button.disabled = !imagingShared;
+            if (!imagingShared) button.textContent = '影像未共享';
+        });
         openImagingBtn?.addEventListener('click', () => {
+            if (!imagingShared) return;
             localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(patientId));
             window.location.href = `doctor_imaging.html?patient_id=${patientId}`;
         });
 
         openVisualizationBtn?.addEventListener('click', () => {
+            if (!imagingShared) return;
             localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(patientId));
             let baseUrl = '';
             let authParams = '';

@@ -36,6 +36,8 @@ const childPayload = buildRegistrationPayload({
   email: 'child@example.com',
   patientType: 'child',
   age: '10',
+  guardianName: '合成监护人', guardianAge: '35', guardianRelation: 'parent',
+  proofReference: 'test-reference', guardianConfirmed: true,
   gender: '',
   password: 'ChildSafe#2026',
   confirmPassword: 'ChildSafe#2026',
@@ -48,7 +50,8 @@ const childPayload = buildRegistrationPayload({
 assert.deepEqual(childPayload.patient_profile, {
   age: 10,
   gender: null,
-  patient_type: 'child'
+  patient_type: 'child',
+  display_name: '李小明'
 })
 
 for (const excludedField of [

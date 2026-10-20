@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "具体研究授权",
+  "usingComponents": {
+    "ui-nav": "/components/ui-nav/index",
+    "ai-copilot": "/components/ai-copilot/index"
+  }
+}

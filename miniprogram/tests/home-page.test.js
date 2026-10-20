@@ -240,7 +240,7 @@ async function run() {
     url: '/pages/cognitive-center/index'
   })
   adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'tracking' } } })
-  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/tracking/index' })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/care-cycles/index' })
   adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'messages' } } })
   assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/patient-messages/index' })
   adultNavigationPage.handleEntryTap({ currentTarget: { dataset: { id: 'doctor-tasks' } } })
@@ -276,7 +276,7 @@ async function run() {
     url: '/pages/cognitive-center/index'
   })
   childNavigationPage.handleTaskTap({ currentTarget: { dataset: { id: 'tracking' } } })
-  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/tracking/index' })
+  assert.deepEqual(calls.navigateTo.at(-1), { url: '/pages/care-cycles/index' })
 
   childNavigationPage.openServerSettings()
   assert.deepEqual(calls.navigateTo.at(-1), {

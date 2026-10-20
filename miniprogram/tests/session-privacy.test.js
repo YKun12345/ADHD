@@ -51,6 +51,9 @@ assert.deepEqual(SESSION_KEYS, [
 ])
 
 assert.deepEqual(PATIENT_DATA_KEYS, [
+  'submission_queue_v1',
+  'assessment_execution_v1',
+  'assessment_scale_drafts_v1',
   'patient_dashboard_cache',
   'scale_draft_asrs',
   'scale_draft_snap_iv',

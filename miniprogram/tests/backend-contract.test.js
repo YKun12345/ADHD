@@ -54,8 +54,10 @@ for (const [file, testType] of expectedCognitiveTypes) {
 const cognitiveSupport = source('utils/cognitive-page-support.js')
 assert.match(
   cognitiveSupport,
-  /request\(\{\s*url:\s*['"]\/patient\/submit_cognitive_test['"],\s*method:\s*['"]POST['"],\s*data:\s*payload\s*\}\)/,
-  'all shared cognitive pages must send the complete payload to B backend'
+  /submissionQueue\.enqueue\(\{[^\n]*route:\s*['"]\/patient\/submit_cognitive_test['"][^\n]*payload:\s*\{\s*\.\.\.payload,\s*patient_id:\s*patientId/,
+  'all shared cognitive pages must durably enqueue their full payload and fixed patient before sending'
 )
+assert.match(source('utils/submission-queue.js'), /method:\s*['"]POST['"],\s*data:\s*copy\(item\.payload\)/,
+  'the shared queue must send the immutable stored payload rather than reconstructing a new attempt')
 
 console.log('A mini-program and B backend static contract tests passed')

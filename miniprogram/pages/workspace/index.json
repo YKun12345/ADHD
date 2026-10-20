@@ -1,0 +1,10 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "ui-nav": "/components/ui-nav/index",
+    "role-nav": "/components/role-nav/index",
+    "ai-copilot": "/components/ai-copilot/index",
+    "ui-icon": "/components/ui-icon/index",
+    "ui-data-preview": "/components/ui-data-preview/index"
+  }
+}

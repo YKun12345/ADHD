@@ -8,7 +8,7 @@ import os
 import hashlib
 import secrets
 from threading import RLock
-from findviz.workspace import current_workspace
+from findviz.workspace import current_workspace, require_authority
 
 from pathlib import Path
 
@@ -74,6 +74,7 @@ class Cache:
         IOError
             If saving fails
         """
+        require_authority()
         try:
             # Create parent directory if it doesn't exist
             self.cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -87,6 +88,7 @@ class Cache:
                 with open(temporary, 'x', encoding='utf8') as out:
                     out.write(envelope)
                 os.chmod(temporary, 0o600)
+                require_authority()
                 os.replace(temporary, self.cache_file)
             finally:
                 temporary.unlink(missing_ok=True)
@@ -104,13 +106,16 @@ class Cache:
         dict
             Cached data if exists, None otherwise
         """
+        require_authority()
         try:
             if self.cache_file.exists():
                 from backend.app.core.data_encryption import decrypt_value, PREFIX
                 envelope = self.cache_file.read_text(encoding='utf8')
                 if not envelope.startswith(PREFIX):
                     raise ValueError('Unauthenticated viewer metadata.')
-                return decrypt_value(envelope, self._encryption_context())
+                value = decrypt_value(envelope, self._encryption_context())
+                require_authority()
+                return value
             return None
         except Exception as e:
             logger.error(f"Failed to load cache: {str(e)}")
@@ -119,6 +124,7 @@ class Cache:
     def clear(self, during_shutdown=False):
         """Clear all cached data"""
         if not during_shutdown:
+            require_authority()
             logger.info("Clearing cache...")
         try:
             if self.cache_file.exists():

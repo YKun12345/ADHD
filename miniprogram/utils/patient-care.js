@@ -30,11 +30,13 @@ function normalizeCareSummary(payload) {
   }
 }
 
-function normalizePatientMessages(payload) {
+function normalizePatientMessages(payload, viewerUserId) {
+  const viewerId = Number(viewerUserId)
+  const hasViewer = Number.isSafeInteger(viewerId) && viewerId > 0
   return items(payload).map((item) => ({
     id: Number(item && item.id) || 0,
-    isMine: item && item.sender_role === 'patient',
-    senderName: clean(item && item.sender_name, item && item.sender_role === 'patient' ? '我' : '医生'),
+    isMine: Boolean(hasViewer && Number(item && item.sender_user_id) === viewerId),
+    senderName: clean(item && item.sender_name, hasViewer && Number(item && item.sender_user_id) === viewerId ? '我' : '历史发送者'),
     content: clean(item && item.content),
     createdAt: formatTime(item && item.created_at),
     status: 'sent'

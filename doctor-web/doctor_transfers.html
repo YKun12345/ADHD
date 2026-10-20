@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>责任交接与继任事项</title><link rel="stylesheet" href="css/care-workbench.css"></head>
+<body><nav class="care-nav"><a href="doctor_care.html">返回原负责关注队列</a></nav>
+<main id="transferShell" class="care-shell" data-role="doctor"><h1>责任交接与继任事项</h1>
+<p class="care-intro">查看向本人提出的具体交接请求、实际接受决定及后续处理。小程序内可接受、拒绝并处理待办；旧评估和计划不会因交接自动恢复。</p>
+<div class="care-controls"><button id="transferRefresh" type="button">重新读取</button></div><p id="transferMessage" role="status" aria-live="polite"></p>
+<section><h2>具体交接记录</h2><div id="transferRequests"></div></section><section><h2>已接受的继任事项</h2><div id="transferWork"></div></section><section id="transferDetail" class="care-detail" aria-label="原件及实际处理历史"></section></main>
+<script src="js/session-guard.js?v=20261016-w05"></script><script src="js/api.js?v=20261016-transfer"></script><script src="js/transfer-view.js?v=20261016-transfer"></script></body></html>

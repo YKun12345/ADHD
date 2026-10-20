@@ -19,6 +19,7 @@ from backend.app.core.data_encryption import (
 from backend.app.db.base import Base
 
 BACKUP_ROOT = Path(__file__).resolve().parents[2] / "migration-backups"
+SQLITE_DUMP_NAME = "database-before-encryption.sql"
 
 
 def migrate_sensitive_storage(engine) -> dict:
@@ -99,8 +100,20 @@ def migrate_sensitive_storage(engine) -> dict:
         try:
             with closing(sqlite3.connect(":memory:")) as out:
                 raw.driver_connection.backup(out)
-                snapshot = out.serialize()
-            _write_backup(backup, "database-before-encryption.db", snapshot)
+                serialize = getattr(out, "serialize", None)
+                if callable(serialize):
+                    snapshot_name = "database-before-encryption.db"
+                    snapshot = serialize()
+                else:
+                    # Python 3.10 has no serialize(); keep its snapshot in memory
+                    # until encrypted instead of writing a cleartext temp database.
+                    snapshot_name = SQLITE_DUMP_NAME
+                    dump = "\n".join(out.iterdump())
+                    for pragma in ("user_version", "application_id"):
+                        value = out.execute(f"PRAGMA {pragma}").fetchone()[0]
+                        dump += f"\nPRAGMA {pragma} = {int(value)};"
+                    snapshot = dump.encode("utf8")
+            _write_backup(backup, snapshot_name, snapshot)
         finally:
             raw.close()
     else:
@@ -171,6 +184,8 @@ MANIFEST_CONTEXT = "migration-backup:backup-manifest.json"
 def _write_manifest(directory: Path) -> None:
     files = []
     for source in sorted(directory.rglob("*.enc")):
+        if source == directory / MANIFEST_NAME:
+            continue
         payload = source.read_bytes()
         files.append(
             {
@@ -257,9 +272,20 @@ def restore_backup(directory: Path, destination: Path) -> int:
         prepared.append((original_relative, content))
     destination.mkdir(parents=True, exist_ok=True)
     for relative, content in prepared:
-        target = destination / relative
+        target = destination / (
+            "database-before-encryption.db" if relative == SQLITE_DUMP_NAME else relative
+        )
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(content)
+        if relative == SQLITE_DUMP_NAME:
+            import sqlite3
+            from contextlib import closing
+
+            with closing(sqlite3.connect(":memory:")) as snapshot:
+                snapshot.executescript(content.decode("utf8"))
+                with closing(sqlite3.connect(str(target))) as restored:
+                    snapshot.backup(restored)
+        else:
+            target.write_bytes(content)
     return len(prepared)
 
 

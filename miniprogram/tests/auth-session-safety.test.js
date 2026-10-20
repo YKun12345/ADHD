@@ -187,7 +187,10 @@ async function runLoginScenarios() {
   assert.equal(calls.requests[0].skipAuth, true)
   assert.deepEqual(calls.removals, [
     ...PATIENT_DATA_KEYS,
-    ...SESSION_KEYS
+    ...SESSION_KEYS,
+    'submission_queue_v1',
+    'assessment_execution_v1',
+    'assessment_scale_drafts_v1'
   ])
   assert.deepEqual(calls.writes.map(([key]) => key), [
     'current_user',
@@ -498,7 +501,10 @@ async function runRegisterScenarios() {
   assert.equal(calls.requests[0].skipAuth, true)
   assert.deepEqual(calls.removals, [
     ...PATIENT_DATA_KEYS,
-    ...SESSION_KEYS
+    ...SESSION_KEYS,
+    'submission_queue_v1',
+    'assessment_execution_v1',
+    'assessment_scale_drafts_v1'
   ])
   assert.deepEqual(calls.writes.map(([key]) => key), [
     'current_user',

@@ -34,6 +34,7 @@ registerPatientPage(withTaskInstructions('nback', {
     const trial = this._trials[this._index]
     const dataset = event.currentTarget.dataset
     if (Number(dataset.index) !== trial.position || (dataset.trial !== undefined && Number(dataset.trial) !== trial.id)) return
+    this._records.push({ ...trial, answeredMatch: null, outcome: 'warmup', correct: null, responseTimeMs: Math.max(0, Date.now() - this._trialAt) })
     this._advanceTrial()
   },
   handleAnswer(event) {

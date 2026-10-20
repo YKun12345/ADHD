@@ -1,5 +1,6 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!testing}}" page-key="server-settings" />
 <ui-nav title="服务器设置" />
-<view class="settings-page">
+<view class="settings-page product-page">
   <view class="settings-header">
     <view class="settings-header__mark"><ui-icon name="plan" shape="orbit" decorative="true" /></view>
     <view class="settings-header__copy">

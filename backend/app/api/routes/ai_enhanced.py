@@ -14,8 +14,7 @@ AI赋能优化 - API路由
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
+from backend.app.services.identity_access import require_processing_access, require_doctor, resolve_patient
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -38,7 +37,6 @@ from backend.app.schemas.smart_dashboard import (
     PatientAlert,
 )
 from backend.app.schemas.intervention import (
-    InterventionTask,
     InterventionPlanResponse,
     InterventionEffectResponse,
     PersonalizedMessageRequest,
@@ -60,13 +58,7 @@ from backend.app.services.smart_dashboard_service import (
     get_smart_dashboard_data,
     SmartDashboardService,
 )
-from backend.app.services.intervention_service import (
-    InterventionService,
-    get_intervention_dashboard,
-    InterventionType,
-)
 from backend.app.services.smart_reminder_service import SmartReminderService
-from backend.app.services.natural_language_query_service import NaturalLanguageQueryService
 from backend.app.services.enhanced_security_service import EnhancedSecurityService, AuditAction
 
 
@@ -90,18 +82,13 @@ def get_adaptive_difficulty(
     根据患者历史表现动态调整测试难度
     """
     # 权限检查
-    if current_user.role == UserRole.PATIENT:
-        from backend.app.models.patient import Patient
-        patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
-        if not patient or patient.id != patient_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="您只能访问自己的数据。",
-            )
+    patient = require_processing_access(db,current_user,patient_id,'assessment')
 
     try:
         difficulty_data = get_adaptive_difficulty_for_frontend(db, patient_id, test_type)
         return AdaptiveDifficultyResponse(**difficulty_data)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -112,6 +99,7 @@ def get_adaptive_difficulty(
 @router.post("/scale/anomaly_detection", response_model=AnomalyDetectionResponse)
 def detect_scale_anomalies(
     request: AnomalyDetectionRequest,
+    patient_id: int | None = None,
     current_user: User = Depends(require_roles(UserRole.PATIENT, UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> AnomalyDetectionResponse:
@@ -120,6 +108,11 @@ def detect_scale_anomalies(
 
     自动识别矛盾作答、规律性作答、过快作答等异常
     """
+    db.info["requires_basic_use"] = True
+    if patient_id is None:
+        resolve_patient(db,current_user,"assessment")
+    else:
+        require_processing_access(db,current_user,patient_id,"assessment")
     try:
         result = check_scale_anomalies(
             scale_type=request.scale_type,
@@ -127,6 +120,8 @@ def detect_scale_anomalies(
             response_times=request.response_times,
         )
         return AnomalyDetectionResponse(**result)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -152,15 +147,13 @@ def get_multimodal_insights(
     # 检查研究人员权限
     from backend.app.models.patient import Patient
     patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
+    patient = require_processing_access(db,current_user,patient_id,['profile', 'assessment', 'tracking', 'care', 'imaging'])
 
     try:
         insights = get_patient_insights_summary(db, patient_id)
         return MultimodalInsightsResponse(**insights)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -181,14 +174,7 @@ def get_trend_predictions(
     基于历史数据预测未来趋势
     """
     # 权限检查
-    if current_user.role == UserRole.PATIENT:
-        from backend.app.models.patient import Patient
-        patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
-        if not patient or patient.id != patient_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="您只能访问自己的数据。",
-            )
+    patient = require_processing_access(db,current_user,patient_id,['profile', 'assessment', 'tracking', 'care', 'imaging'])
 
     try:
         service = MultimodalAnalysisService(db)
@@ -222,6 +208,8 @@ def get_trend_predictions(
                 )
             )
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -245,14 +233,7 @@ def get_care_alerts(
     检测是否需要主动关怀（连续低心情、专注度下降等）
     """
     # 权限检查
-    if current_user.role == UserRole.PATIENT:
-        from backend.app.models.patient import Patient
-        patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
-        if not patient or patient.id != patient_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="您只能访问自己的数据。",
-            )
+    patient = require_processing_access(db,current_user,patient_id,['profile', 'assessment', 'tracking', 'care', 'imaging'])
 
     try:
         service = PersonalizedAIService(db)
@@ -273,6 +254,8 @@ def get_care_alerts(
             ],
             "personalized_reminder": reminder,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -292,14 +275,12 @@ def get_patient_care_summary(
     # 检查研究人员权限
     from backend.app.models.patient import Patient
     patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
+    patient = require_processing_access(db,current_user,patient_id,['profile', 'assessment', 'tracking', 'care', 'imaging'])
 
     try:
         return get_personalized_care_summary(db, patient_id)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -321,6 +302,8 @@ def get_smart_dashboard(
 
     包含预警列表、批量洞察、关键指标
     """
+    require_doctor(db,current_user.id)
+    db.info["requires_basic_use"] = True
     try:
         data = get_smart_dashboard_data(db, current_user.id)
         summary = data.get("summary", {})
@@ -353,6 +336,8 @@ def get_smart_dashboard(
                 for a in alerts[:5]
             ],
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -371,6 +356,8 @@ def get_patient_alerts(
 
     按优先级排序
     """
+    require_doctor(db,current_user.id)
+    db.info["requires_basic_use"] = True
     try:
         service = SmartDashboardService(db)
         alerts = service.get_patient_alerts(current_user.id, lookback_days)
@@ -388,6 +375,8 @@ def get_patient_alerts(
             )
             for a in alerts
         ]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -406,55 +395,7 @@ def get_intervention_plans(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> list[InterventionPlanResponse]:
-    """
-    为患者生成个性化干预方案
-
-    基于患者数据推荐适合的干预措施
-    """
-    # 检查研究人员权限
-    from backend.app.models.patient import Patient
-    patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
-
-    try:
-        from datetime import date, timedelta
-
-        service = InterventionService(db)
-        plans = service.generate_intervention_plan(patient_id, focus_area)
-
-        result = []
-        for plan in plans:
-            start = date.today()
-            result.append(
-                InterventionPlanResponse(
-                    patient_id=patient_id,
-                    intervention_type=plan.intervention_type.value,
-                    title=plan.title,
-                    description=plan.description,
-                    goals=plan.expected_outcome.split("；") if plan.expected_outcome else [],
-                    tasks=[
-                        InterventionTask(
-                            title=t.get("title", ""),
-                            description=t.get("description", ""),
-                            task_type=plan.intervention_type.value,
-                            estimated_minutes=int(t.get("duration_minutes", 15) or 15),
-                        )
-                        for t in (plan.daily_tasks or [])
-                    ],
-                    start_date=start.isoformat(),
-                    end_date=(start + timedelta(days=plan.duration_days or 14)).isoformat(),
-                )
-            )
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"生成干预方案失败：{str(e)}",
-        )
+    raise HTTPException(410, detail={"code": "UNIFIED_WORKFLOW_REQUIRED", "message": '统一助手生成计划草稿，医生核对后在真实计划页面发布。', "path": '/agent/runs', "web_page": "doctor_ai.html", "mini_page": "/pages/agent-chat/index"})
 
 
 @router.get("/patient/{patient_id}/intervention_effect/{intervention_type}", response_model=InterventionEffectResponse)
@@ -464,56 +405,7 @@ def get_intervention_effect(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> InterventionEffectResponse:
-    """
-    评估特定干预的效果
-
-    对比执行前后的情绪和专注度变化
-    """
-    # 检查研究人员权限
-    from backend.app.models.patient import Patient
-    patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
-
-    try:
-        service = InterventionService(db)
-        try:
-            itype = InterventionType(intervention_type)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"无效的干预类型：{intervention_type}",
-            )
-
-        effect = service.evaluate_intervention_effect(patient_id, itype)
-
-        return InterventionEffectResponse(
-            patient_id=patient_id,
-            plan_id=0,
-            task_completion_rate=effect.adherence_rate,
-            adherence_score=effect.adherence_rate,
-            mood_change=effect.mood_change,
-            focus_change=effect.focus_change,
-            effectiveness_rating=(
-                "high"
-                if effect.effectiveness_score >= 0.6
-                else "moderate"
-                if effect.effectiveness_score >= 0.4
-                else "low"
-            ),
-            insights=[],
-            recommendations=[effect.recommendation] if effect.recommendation else [],
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"评估干预效果失败：{str(e)}",
-        )
+    raise HTTPException(410, detail={"code": "UNIFIED_WORKFLOW_REQUIRED", "message": '请查看实际周期记录及医生周期复核，旧推荐模板不能证明干预效果。', "path": '/care/cycles', "web_page": "doctor_ai.html", "mini_page": "/pages/agent-chat/index"})
 
 
 @router.get("/patient/{patient_id}/intervention_dashboard")
@@ -522,27 +414,7 @@ def get_patient_intervention_dashboard(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    获取患者干预仪表盘
-
-    包含推荐方案和效果评估
-    """
-    # 检查研究人员权限
-    from backend.app.models.patient import Patient
-    patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
-
-    try:
-        return get_intervention_dashboard(db, patient_id)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"获取干预仪表盘失败：{str(e)}",
-        )
+    raise HTTPException(410, detail={"code": "UNIFIED_WORKFLOW_REQUIRED", "message": '请使用已发布计划及实际周期记录。', "path": '/care/plans', "web_page": "doctor_ai.html", "mini_page": "/pages/agent-chat/index"})
 
 
 @router.post("/researcher/send_message/{patient_id}", response_model=PersonalizedMessageResponse)
@@ -552,44 +424,7 @@ def send_personalized_message(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> PersonalizedMessageResponse:
-    """
-    研究人员向患者发送个性化消息
-
-    支持鼓励、指导、关怀等多种消息类型
-    """
-    # 检查研究人员权限
-    from backend.app.models.patient import Patient
-    patient = db.get(Patient, patient_id)
-    if not patient or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="该患者不属于当前研究人员。",
-        )
-
-    try:
-        service = InterventionService(db)
-        result = service.create_personalized_message(
-            researcher_id=current_user.id,
-            patient_id=patient_id,
-            message_type=request.message_type,
-            custom_content=request.content,
-        )
-
-        return PersonalizedMessageResponse(
-            message_id=result.get("message_id"),
-            patient_id=patient_id,
-            sender_id=current_user.id,
-            content=result.get("content", ""),
-            message_type=request.message_type,
-            tone=request.tone,
-            sent_at=result.get("created_at") or datetime.now(timezone.utc).isoformat(),
-            is_read=False,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"发送消息失败：{str(e)}",
-        )
+    raise HTTPException(410, detail={"code": "UNIFIED_WORKFLOW_REQUIRED", "message": '请在真实消息页面确认接收者和内容后发送。', "path": '/care/shared-messages', "web_page": "doctor_ai.html", "mini_page": "/pages/agent-chat/index"})
 
 
 # =========================================================
@@ -609,12 +444,7 @@ def get_smart_reminder(
     """
     # 权限检查
     from backend.app.models.patient import Patient
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
-    if not patient or patient.id != patient_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="您只能访问自己的数据。",
-        )
+    patient = require_processing_access(db,current_user,patient_id,['profile', 'assessment', 'tracking', 'care', 'imaging'])
 
     try:
         service = SmartReminderService(db)
@@ -644,6 +474,8 @@ def get_smart_reminder(
             ],
             "weekly_summary": weekly_summary,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -661,27 +493,7 @@ def natural_language_query(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """
-    自然语言数据查询
-
-    支持中文自然语言查询患者数据
-    """
-    try:
-        service = NaturalLanguageQueryService(db)
-        result = service.process_query(current_user.id, query_text)
-
-        return {
-            "success": result.success,
-            "answer": result.answer,
-            "data": result.data,
-            "query_description": result.query_sql,
-            "confidence": result.confidence,
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"查询处理失败：{str(e)}",
-        )
+    raise HTTPException(410, detail={"code": "UNIFIED_WORKFLOW_REQUIRED", "message": '请进入统一助手，选择当前获准档案后提问。', "path": '/agent/runs', "web_page": "doctor_ai.html", "mini_page": "/pages/agent-chat/index"})
 
 
 # =========================================================
@@ -743,6 +555,8 @@ def get_audit_logs(
             ],
             "total": len(logs),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -760,6 +574,8 @@ def get_compliance_report(
 
     包含知情同意状态、数据生命周期、访问统计
     """
+    require_doctor(db,current_user.id)
+    db.info["requires_basic_use"] = True
     try:
         service = EnhancedSecurityService(db)
         report = service.generate_compliance_report(current_user.id)
@@ -773,6 +589,8 @@ def get_compliance_report(
             "compliance_score": report["compliance_score"],
             "recommendations": report["recommendations"],
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -1777,6 +1777,7 @@ body.ai-drawer-open .floating-ai {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    min-width: 0;
 }
 
 .report-waterfall-card {
@@ -2341,7 +2342,7 @@ body.ai-drawer-open .floating-ai {
 
 @media (max-width: 1200px) {
     .report-page-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .report-main-waterfall {
@@ -2364,4 +2365,13 @@ body.ai-drawer-open .floating-ai {
         min-height: 420px;
         padding-left: 0;
     }
+}
+
+@media (max-width: 768px) {
+    :is(.report-main-waterfall, .researcher-report-stack) .report-meta-row { flex-wrap: wrap; }
+    :is(.report-main-waterfall, .researcher-report-stack) .todo-header { flex-wrap: wrap; gap: 0.7rem; }
+    :is(.report-main-waterfall, .researcher-report-stack) .report-scale-stack,
+    :is(.report-main-waterfall, .researcher-report-stack) .report-cognitive-stack { grid-template-columns: minmax(0, 1fr); }
+    :is(.report-main-waterfall, .researcher-report-stack) .report-scale-stack > *,
+    :is(.report-main-waterfall, .researcher-report-stack) .report-cognitive-stack > * { min-width: 0; }
 }

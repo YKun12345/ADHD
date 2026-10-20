@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.db.base import Base
 from backend.app.db.session import engine
+from backend.app.core.config import settings
 from backend.app.models import (  # noqa: F401
     AIChatLog,
     CareMessage,
@@ -410,7 +411,27 @@ def _ensure_security_runtime_columns() -> None:
 
 
 def init_db() -> None:
+    if settings.APP_ENV != "test":
+        from backend.app.db.identity_migration import require_identity_schema
+        require_identity_schema(engine)
+        from backend.app.db.assessment_migration import require_assessment_schema
+        require_assessment_schema(engine)
+        from backend.app.db.submission_migration import require_submission_schema
+        require_submission_schema(engine)
+        from backend.app.db.care_migration import require_care_schema
+        require_care_schema(engine)
+        from backend.app.services.wechat_notification_provider import WechatNotificationConfig
+        if WechatNotificationConfig.from_environment().worker_enabled:
+            from backend.app.db.notification_migration import require_notification_schema
+            require_notification_schema(engine)
+        return
+    from backend.app.services.authorization_ledger import initialize_ledger
+    initialize_ledger()
     Base.metadata.create_all(bind=engine)
+    inspector = inspect(engine)
+    if "patients" in inspector.get_table_names() and "display_name" not in {column["name"] for column in inspector.get_columns("patients")}:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE patients ADD COLUMN display_name TEXT NULL")
     _ensure_user_security_columns()
     _ensure_patient_assignment_column()
     _ensure_tracking_log_activities_column()

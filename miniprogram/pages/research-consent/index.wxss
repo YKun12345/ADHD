@@ -1,0 +1,4 @@
+.page{padding:28rpx}.page text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;margin:14rpx 0}.heading{font-size:36rpx;font-weight:700}.card{padding:26rpx;margin:24rpx 0;border:1px solid #d7dee8;border-radius:20rpx;background:#fff}.title{font-weight:700}.note{color:#526579}.warning{color:#8c551a}.error{color:#ad2424}.record{border-top:1px solid #d7dee8;padding:14rpx 0}label{display:block;margin:22rpx 0}input{border:1px solid #ccd5df;border-radius:10rpx;padding:18rpx;margin:18rpx 0;min-height:48rpx}button{margin:18rpx 0}
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

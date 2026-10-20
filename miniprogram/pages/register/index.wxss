@@ -1,10 +1,10 @@
 page {
   min-height: 100%;
-  background-color: #f4efff;
+  background-color: #edf5fc;
   background-image:
-    radial-gradient(circle at 4% 2%, rgba(151, 127, 213, 0.18) 0, rgba(151, 127, 213, 0) 28%),
+    radial-gradient(circle at 4% 2%, rgba(79, 177, 224, 0.18) 0, rgba(79, 177, 224, 0) 28%),
     radial-gradient(circle at 100% 20%, rgba(236, 157, 141, 0.14) 0, rgba(236, 157, 141, 0) 25%),
-    linear-gradient(160deg, #fcfaff 0%, #f4efff 52%, #fff0ec 100%);
+    linear-gradient(160deg, #fbfdff 0%, #edf5fc 52%, #fff3ea 100%);
 }
 
 .register-page {
@@ -36,7 +36,7 @@ page {
   right: -230rpx;
   width: 500rpx;
   height: 500rpx;
-  background: radial-gradient(circle, rgba(115, 103, 217, 0.07) 0, rgba(115, 103, 217, 0) 70%);
+  background: radial-gradient(circle, rgba(235, 170, 129, 0.07) 0, rgba(235, 170, 129, 0) 70%);
 }
 
 .register-header,
@@ -91,8 +91,18 @@ page {
 }
 
 .register-form {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   margin-top: 26rpx;
+  padding: 10rpx 32rpx 30rpx;
+  border: 1rpx solid rgba(255,255,255,.96);
+  border-radius: 34rpx;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 20rpx 60rpx rgba(49,90,105,.07);
+  overflow: hidden;
 }
+.register-section{padding:30rpx 0 34rpx;border-top:1rpx solid #e7eeee}.register-section--first{border-top:0}.register-form .consent-panel{padding-left:0;padding-right:0;margin-top:12rpx;background:transparent;box-shadow:none;border:0}.register-form .submit-button{width:100%;box-sizing:border-box}
 
 .register-card {
   padding: 40rpx 34rpx 44rpx;
@@ -231,9 +241,9 @@ page {
 }
 
 .gender-option--active {
-  border-color: rgba(115, 103, 217, 0.58);
-  color: #665bc7;
-  background: rgba(241, 239, 255, 0.9);
+  border-color: rgba(50, 102, 178, 0.58);
+  color: #3266b2;
+  background: rgba(231, 241, 255, 0.9);
   font-weight: 650;
 }
 
@@ -374,3 +384,6 @@ page {
     transition: none;
   }
 }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

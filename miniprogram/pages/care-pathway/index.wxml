@@ -1,6 +1,6 @@
 <ai-copilot page-key="care-pathway" />
 <ui-nav title="护理路径" />
-<view class="pathway-page ai-copilot-safe-space">
+<view class="pathway-page ai-copilot-safe-space product-page">
   <view class="pathway-header">
     <view class="pathway-header__mark"><ui-icon name="pathway" shape="orbit" decorative="true" /></view>
     <view class="pathway-header__copy">

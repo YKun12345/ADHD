@@ -2,11 +2,19 @@
 <ai-copilot wx:if="{{!onboardingVisible}}" page-key="doctor-guide-settings" />
 <ui-nav title="账号与隐私" />
 
-<view class="doctor-settings-page ai-copilot-safe-space">
+<view class="doctor-settings-page ai-copilot-safe-space product-page">
   <view class="settings-header">
     <text class="settings-title">账号与隐私</text>
-    <text class="settings-subtitle">{{doctorName}}，这里仅管理当前医生账号在本机上的页面引导偏好。</text>
+    <text class="settings-subtitle">{{doctorName}}，在这里查看身份资格、共享关系和页面引导偏好。</text>
     <text wx:if="{{doctorEmail}}" class="account-email">{{doctorEmail}}</text>
+  </view>
+
+  <authorization-panel role="researcher" />
+  <view class="settings-card glass-surface"><text class="card-title">微信提醒</text><text class="card-description">管理订阅许可、暂停提醒和查看投递状态。工作台待办一直可用。</text><button class="settings-button ui-button" bindtap="openNotifications">管理提醒</button></view>
+  <view class="settings-card glass-surface">
+    <text class="card-title">服务覆盖</text>
+    <text class="card-description">查看实际工作时段与响应窗口。仅本机构已核验的审核人员可以确认配置版本。</text>
+    <button class="settings-button ui-button" bindtap="openServiceCoverage">查看服务时间与配置</button>
   </view>
 
   <view class="settings-card glass-surface">

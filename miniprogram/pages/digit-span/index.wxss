@@ -9,3 +9,5 @@ page { background: linear-gradient(160deg, #fffaf1 0%, #fbf1dd 56%, #f3f6ef 100%
 .keypad-actions { width: 520rpx; display: flex; gap: 16rpx; margin-top: 18rpx; }
 .keypad-actions button { min-height: 82rpx; flex: 1; display: flex; align-items: center; justify-content: center; box-sizing: border-box; border-radius: 18rpx; color: #365866; background: #f4ead8; line-height: 1.3; }
 .keypad-actions .submit-key { color: #fff; background: #236b80; }
+
+@import "../../styles/product-page.wxss";

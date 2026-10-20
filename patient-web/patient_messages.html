@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>共享消息 | 知行合医</title><link rel="stylesheet" href="../doctor-web/css/care-workbench.css"></head>
+<body>
+<nav class="care-nav" aria-label="主导航"><a href="patient_home.html">返回首页</a><a href="patient_care.html">关注与日期记录</a><a href="patient_messages.html" aria-current="page">共享消息</a></nav>
+<main id="messageShell" class="care-shell" data-message-role="patient">
+<h1>共享消息</h1><p>选择具体接收关系，核对服务器已保存的消息。发送与重试请在小程序的“共享消息”中完成。</p>
+<div class="care-controls"><label for="messagePatient">获准档案</label><select id="messagePatient"></select><label for="messageRelationship">接收关系</label><select id="messageRelationship"></select><button id="messageRefresh" type="button">重新读取</button></div>
+<p id="messageStatus" class="care-status" role="status" aria-live="polite">正在核对当前账号…</p>
+<p>医生值守时间暂未配置，不代表全天响应。查看只表示当前账号已查看，不代表专业处理或事项解决。</p>
+<section id="messageItems" aria-label="当前关系的服务器消息"></section>
+<p><a href="patient_report.html#careSection">查看旧版本人历史</a>：旧消息当时的具体关系无法核实，不并入当前关系。</p>
+</main>
+<script src="js/session-guard.js?v=20261016-messages"></script><script src="js/api.js?v=20261016-messages"></script><script src="../doctor-web/js/shared-message-view.js?v=20261016-messages"></script>
+</body></html>

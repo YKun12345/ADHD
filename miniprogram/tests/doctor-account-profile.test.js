@@ -3,12 +3,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { randomUUID } = require('node:crypto');
 
 function fixture(user, { profile = false, logoutError = false, freshUser = user } = {}) {
   function node(tag = 'div') {
     return { tagName: tag.toUpperCase(), children: [], dataset: {}, attributes: {}, hidden: false,
       textContent: '', className: '', style: {}, listeners: {},
       appendChild(child) { child.parentElement = this; this.children.push(child); return child; },
+      append(...children) { children.forEach(child => this.appendChild(child)); },
+      replaceChildren(...children) { this.children = []; this.append(...children); },
       setAttribute(key, value) { this.attributes[key] = String(value); },
       getAttribute(key) { return this.attributes[key]; },
       querySelector(selector) { return selector === 'a' ? this.children.find(child => child.tagName === 'A') : null; },
@@ -21,17 +24,21 @@ function fixture(user, { profile = false, logoutError = false, freshUser = user 
   for (const id of ['accountLogout', 'accountRetry', 'accountName', 'accountUid', 'accountEmail', 'accountRole', 'accountStaffId', 'accountConsent', 'accountScope', 'accountAuditLink', 'accountStatus']) elements[id] = node();
   if (profile) { elements.accountProfile = node(); elements.accountProfile.dataset.accountRole = 'researcher'; }
   const handlers = {};
-  const document = { readyState: 'loading', querySelectorAll: () => [trigger], getElementById: id => elements[id] || null,
+  const document = { body: node(), createElement: node, readyState: 'loading', querySelectorAll: () => [trigger], getElementById: id => elements[id] || null,
     addEventListener(type, handler) { (handlers[type] ||= []).push(handler); },
     async emit(type) { for (const handler of handlers[type] || []) await handler(); } };
   const values = new Map([['smartbrain_user', typeof user === 'string' ? user : JSON.stringify(user)],
     ['smartbrain_token', 'synthetic-token'], ['smartbrain_selected_patient_id', '9'], ['unrelated_setting', 'keep']]);
-  const localStorage = { getItem: key => values.get(key) ?? null, removeItem: key => values.delete(key), setItem: (key, value) => values.set(key, value) };
+  const localStorage = { getItem: key => values.get(key) ?? null, removeItem: key => values.delete(key), setItem: (key, value) => values.set(key, value),
+    key: index => [...values.keys()][index], get length() { return values.size; } };
   let logoutCalls = 0;
-  const window = { location: { href: '', replace(url) { this.href = url; } }, API: { Auth: {
+  const window = { location: { href: '', pathname: '/doctor-web/doctor_profile.html', replace(url) { this.href = url; } },
+    setTimeout, clearTimeout, setInterval, clearInterval, addEventListener() {}, fetch: async () => ({}), API: { Auth: {
     async logout() { logoutCalls++; if (logoutError) throw new Error('offline'); }, async getMe() { return freshUser; }
   } } };
-  vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../../doctor-web/js/account.js'), 'utf8'), { document, localStorage, window, console: { warn() {} } });
+  const context = vm.createContext({ document, localStorage, sessionStorage: { removeItem() {} }, window, URLSearchParams, AbortController, crypto: { randomUUID }, console: { warn() {} } });
+  vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../doctor-web/js/session-guard.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../doctor-web/js/account.js'), 'utf8'), context);
   return { document, trigger, elements, values, window, logoutCalls: () => logoutCalls };
 }
 
@@ -77,10 +84,19 @@ test('repeated initialization does not double-bind navigation or logout', async 
 
 test('personal center uses server identity and only shows audit entry to DAC', async () => {
   const user = { id: 12, email: 'fixture@example.org', full_name: '<img src=x onerror=alert(1)>', role: 'researcher', subrole: 'normal', consent_agreed: true };
-  const f = fixture({ ...user, id: 99 }, { profile: true, freshUser: user }); await f.document.emit('DOMContentLoaded');
+  const f = fixture({ ...user, full_name: '旧显示名称' }, { profile: true, freshUser: user }); await f.document.emit('DOMContentLoaded');
   assert.equal(f.elements.accountUid.textContent, 'UID: DR-12');
   assert.equal(f.elements.accountName.textContent, user.full_name);
   assert.equal(f.elements.accountAuditLink.hidden, true);
   const dac = fixture({ ...user, subrole: 'dac' }, { profile: true }); await dac.document.emit('DOMContentLoaded');
   assert.equal(dac.elements.accountAuditLink.hidden, false);
+});
+
+test('server identity mismatch never replaces the page account', async () => {
+  const user = { id: 12, role: 'researcher', subrole: 'normal', full_name: 'Synthetic A' };
+  const f = fixture({ ...user, id: 99 }, { profile: true, freshUser: user });
+  await f.document.emit('DOMContentLoaded');
+  assert.equal(JSON.parse(f.values.get('smartbrain_user')).id, 99);
+  assert.equal(f.elements.accountName.textContent, '');
+  assert.match(f.elements.accountStatus.textContent, /会话|档案/);
 });

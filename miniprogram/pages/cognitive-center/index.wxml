@@ -1,6 +1,6 @@
 <ai-copilot page-key="cognitive-center" />
 <ui-nav title="认知测试中心" />
-<view class="cognitive-center-page ai-copilot-safe-space">
+<view class="cognitive-center-page ai-copilot-safe-space product-page">
   <view class="center-content">
     <view class="page-heading">
       <text class="page-kicker">你好，{{patientName}}</text>

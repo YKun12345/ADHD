@@ -200,8 +200,18 @@ function getCurrentScale() {
     return currentScaleKey ? SCALE_CONFIG[currentScaleKey] : null;
 }
 
-function getDraftKey(scaleKey) {
-    return `tempScaleAnswers_${scaleKey}`;
+function draftContext(scaleKey) {
+    const scale = SCALE_CONFIG[scaleKey];
+    return { kind: 'scale_draft', mode: 'legacy_self', assessmentId: null, itemId: null,
+        taskId: null, attemptId: null, protocolId: scale.apiType, protocolVersion: 1,
+        templateVersion: `patient-web-${scale.apiType}-v1`,
+        templateContent: JSON.stringify({ questions: scale.questions, options: scale.options }),
+        respondent: scale.respondentType };
+}
+
+function saveDraft() {
+    window.SessionGuard.assertCurrentSession();
+    window.OwnedCache.write(draftContext(currentScaleKey), answers);
 }
 
 function getOptionTone(optionIndex, optionCount) {
@@ -307,11 +317,13 @@ function renderQuestion() {
 }
 
 function handleAnswer(score, buttonElement) {
+    window.SessionGuard.assertCurrentSession();
     optionsGrid.querySelectorAll('.btn-option').forEach((button) => button.classList.remove('selected'));
     buttonElement.classList.add('selected');
 
     answers[currentQuestionIndex] = score;
-    localStorage.setItem(getDraftKey(currentScaleKey), JSON.stringify(answers));
+    try { saveDraft(); }
+    catch (error) { alert(error.message); return; }
 
     setTimeout(() => {
         currentQuestionIndex += 1;
@@ -345,7 +357,10 @@ function renderRecommendations(result) {
     (result.recommendations || []).forEach((item) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex;gap:0.6rem;align-items:flex-start;color:#475569;line-height:1.6;';
-        row.innerHTML = `<ion-icon name="checkmark-circle-outline" style="color:#10B981;font-size:1.1rem;margin-top:0.2rem;"></ion-icon><span>${item}</span>`;
+        const icon = document.createElement('ion-icon');
+        icon.setAttribute('name', 'checkmark-circle-outline');
+        const text = document.createElement('span'); text.textContent = item;
+        row.append(icon, text);
         recommendationList.appendChild(row);
     });
 }
@@ -417,6 +432,8 @@ function renderResult(result) {
 }
 
 async function completeScale() {
+    const snapshot = window.SessionGuard.captureSession();
+    window.SessionGuard.assertCurrentSession(snapshot);
     const scale = getCurrentScale();
     if (!scale) return;
 
@@ -424,7 +441,7 @@ async function completeScale() {
     if (firstInvalidAnswerIndex !== -1) {
         answers = answers.slice(0, firstInvalidAnswerIndex);
         currentQuestionIndex = firstInvalidAnswerIndex;
-        localStorage.setItem(getDraftKey(currentScaleKey), JSON.stringify(answers));
+        saveDraft();
         alert('检测到当前量表草稿里有未完成或无效的题目，已保留有效答案，请从缺失题继续作答。');
         renderQuestion();
         return;
@@ -440,7 +457,8 @@ async function completeScale() {
             respondent_type: scale.respondentType,
             answers: payloadAnswers
         });
-        localStorage.removeItem(getDraftKey(currentScaleKey));
+        window.SessionGuard.assertCurrentSession(snapshot);
+        window.OwnedCache.remove(draftContext(currentScaleKey));
         renderResult(result);
     } catch (error) {
         alert(error.message || '量表提交失败，请确认后端是否已启动。');
@@ -449,6 +467,7 @@ async function completeScale() {
 }
 
 window.startScale = function startScale(type) {
+    window.SessionGuard.assertCurrentSession();
     currentScaleKey = type;
     currentQuestionIndex = 0;
     answers = [];
@@ -458,16 +477,15 @@ window.startScale = function startScale(type) {
 
     timeEstimate.innerHTML = `<ion-icon name="time-outline"></ion-icon> 预计 ${scale.estimatedMinutes} 分钟`;
 
-    const draft = localStorage.getItem(getDraftKey(type));
+    const draft = window.OwnedCache.read(draftContext(type));
     if (draft) {
-        const parsed = JSON.parse(draft);
-        const normalizedDraft = normalizeDraftAnswers(scale, parsed);
+        const normalizedDraft = normalizeDraftAnswers(scale, draft);
         if (normalizedDraft.length > 0) {
             const resume = confirm('系统检测到该量表有未完成草稿，是否继续上次进度？');
             if (resume) {
                 answers = normalizedDraft;
                 currentQuestionIndex = normalizedDraft.length;
-                localStorage.setItem(getDraftKey(type), JSON.stringify(normalizedDraft));
+                saveDraft();
             }
         }
     }

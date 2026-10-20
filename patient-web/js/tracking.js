@@ -82,6 +82,15 @@ async function init() {
 }
 
 // --- 核心渲染 ---
+function appendActivityPills(container, activities) {
+    activities.forEach(activity => {
+        const pill = document.createElement('span');
+        pill.className = 'log-card-activity-pill';
+        pill.textContent = activity;
+        container.appendChild(pill);
+    });
+}
+
 function renderApp() {
     // 1. 渲染信息流 (Feed)
     if (state.logs.length === 0) {
@@ -97,32 +106,45 @@ function renderApp() {
         
         sortedLogs.forEach(log => {
             const mood = MOOD_MAP[log.mood_tag] || MOOD_MAP[3];
-            let actsHtml = '';
-            if (log.activities) {
-                const acts = log.activities.split(',');
-                actsHtml = acts.map(a => `<span class="log-card-activity-pill">${a}</span>`).join('');
-            }
-            
             const card = document.createElement('div');
             card.className = 'log-card';
+            card.appendChild(SafeRender.html`
+                <div class="log-card-header">
+                    <span class="log-card-date">第 ${log.day_index} 天打卡记录</span>
+                    <span class="log-card-emoji">${mood.emoji}</span>
+                </div>
+            `);
+            card.querySelector('.log-card-emoji').title = mood.name;
+
+            if (log.activities) {
+                const activities = document.createElement('div');
+                activities.className = 'log-card-activities';
+                appendActivityPills(activities, Array.isArray(log.activities) ? log.activities : String(log.activities).split(','));
+                card.appendChild(activities);
+            }
+            if (log.note) {
+                const note = document.createElement('div');
+                note.className = 'log-card-note';
+                note.textContent = `"${log.note}"`;
+                card.appendChild(note);
+            }
 
             // Build extra info
-            let extraHtml = '';
+            const extras = [];
             if (log.is_medication) {
-                extraHtml += `<span style="font-size:0.75rem; background:#EFF6FF; color:#3B82F6; padding:2px 8px; border-radius:4px;">用药${log.medication_dosage ? ` (${log.medication_dosage})` : ''}</span>`;
+                extras.push({ text: `用药${log.medication_dosage ? ` (${log.medication_dosage})` : ''}`, background: '#EFF6FF', color: '#3B82F6' });
             }
             if (log.sleep_quality) {
-                extraHtml += `<span style="font-size:0.75rem; background:#F0FDF4; color:#16A34A; padding:2px 8px; border-radius:4px;">睡眠:${log.sleep_quality}</span>`;
+                extras.push({ text: `睡眠:${log.sleep_quality}`, background: '#F0FDF4', color: '#16A34A' });
             }
             if (log.has_conflict) {
-                extraHtml += `<span style="font-size:0.75rem; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px;">有冲突</span>`;
+                extras.push({ text: '有冲突', background: '#FEF2F2', color: '#DC2626' });
             }
             if (log.was_criticized) {
-                extraHtml += `<span style="font-size:0.75rem; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px;">受批评</span>`;
+                extras.push({ text: '受批评', background: '#FEF2F2', color: '#DC2626' });
             }
 
             // Build core ratings display
-            let ratingsHtml = '';
             const ratingLabels = { attention: '注意力', hyperactivity: '多动', impulsivity: '冲动', emotion: '情绪', taskCompletion: '任务' };
             const ratingEmojis = ['', '😫', '😕', '😐', '😊', '🤩'];
             const ratingFields = ['attention', 'hyperactivity', 'impulsivity', 'emotion', 'taskCompletion'];
@@ -131,22 +153,28 @@ function renderApp() {
                 const ratingParts = ratingFields
                     .filter(f => log[`${f}_rating`] != null)
                     .map(f => `${ratingLabels[f]}${ratingEmojis[log[`${f}_rating`]]}`);
-                ratingsHtml = `<div style="font-size:0.75rem; color:#64748B; margin-top:4px;">${ratingParts.join(' · ')}</div>`;
+                const ratings = document.createElement('div');
+                ratings.style.cssText = 'font-size:0.75rem; color:#64748B; margin-top:4px;';
+                ratings.textContent = ratingParts.join(' · ');
+                card.appendChild(ratings);
             }
 
-            card.innerHTML = `
-                <div class="log-card-header">
-                    <span class="log-card-date">第 ${log.day_index} 天打卡记录</span>
-                    <span class="log-card-emoji" title="${mood.name}">${mood.emoji}</span>
-                </div>
-                ${actsHtml ? `<div class="log-card-activities">${actsHtml}</div>` : ''}
-                ${log.note ? `<div class="log-card-note">"${log.note}"</div>` : ''}
-                ${ratingsHtml}
-                ${extraHtml ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${extraHtml}</div>` : ''}
+            if (extras.length) {
+                const extraInfo = document.createElement('div');
+                extraInfo.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;';
+                extras.forEach(extra => {
+                    const pill = document.createElement('span');
+                    pill.style.cssText = `font-size:0.75rem; background:${extra.background}; color:${extra.color}; padding:2px 8px; border-radius:4px;`;
+                    pill.textContent = extra.text;
+                    extraInfo.appendChild(pill);
+                });
+                card.appendChild(extraInfo);
+            }
+            card.appendChild(SafeRender.html`
                 <div style="font-size:0.8rem; color:#94A3B8; margin-top:4px;">
                     专注表现: ${log.focus_minutes || 0} min &nbsp; • &nbsp; ${new Date(log.created_at).toLocaleString()}
                 </div>
-            `;
+            `);
             logsFeedList.appendChild(card);
         });
     }
@@ -255,8 +283,9 @@ wizardNextBtns.forEach(btn => {
             // 更新预览
             const mood = MOOD_MAP[state.draftMood];
             document.getElementById('previewMoodEmoji').innerText = mood.emoji;
-            document.getElementById('previewActivities').innerHTML = 
-                state.draftActivities.map(a => `<span class="log-card-activity-pill">${a}</span>`).join('');
+            const previewActivities = document.getElementById('previewActivities');
+            previewActivities.replaceChildren();
+            appendActivityPills(previewActivities, state.draftActivities);
         }
 
         if (state.currentStep < 3) {
@@ -387,6 +416,13 @@ saveLogBtnFinal.addEventListener('click', async () => {
 
 // --- ECharts 图表引擎 ---
 function renderCharts() {
+    if (!window.echarts) {
+        for (const id of ['lineChart', 'donutChart']) {
+            const chart = document.getElementById(id);
+            if (chart) chart.textContent = '图表暂时无法加载，打卡记录仍可查看。';
+        }
+        return;
+    }
     if (!lineChartInstance) {
         lineChartInstance = echarts.init(document.getElementById('lineChart'));
     }

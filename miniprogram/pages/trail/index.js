@@ -156,7 +156,7 @@ registerPatientPage(withTaskInstructions('trail', {
     this._stageCompleted = true
     const elapsedMs = Date.now() - this._stageStartedAt
     this._stageResults.push({ stage: this.data.stage, elapsedMs, errors: this._stageErrors, nodeCount: this._sequence.length, completed: true })
-    if (this.data.stage === 'A') {
+    if (this.data.stage === 'A' && !this.data.practiceStage) {
       const runToken = this._runToken
       const stageToken = this._stageToken
       this.setData({ phase: 'transition', running: false, elapsedText: `${(elapsedMs / 1000).toFixed(1)} 秒` }, () => this._scrollToTop())

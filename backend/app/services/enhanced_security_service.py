@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+from backend.app.services.identity_access import authorized_patient_ids
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -72,18 +74,6 @@ class AuditLogEntry:
     details: dict[str, Any]
     ip_address: str | None
     user_agent: str | None
-
-
-@dataclass
-class ConsentRecord:
-    """知情同意记录"""
-    patient_id: int
-    consent_type: str  # "data_collection", "ai_analysis", "research_use"
-    granted: bool
-    granted_at: datetime
-    expires_at: datetime | None
-    version: str
-    ip_address: str | None
 
 
 @dataclass
@@ -244,67 +234,18 @@ class EnhancedSecurityService:
     # 2. 知情同意数字化管理
     # =========================================================
 
-    def record_consent(
-        self,
-        patient_id: int,
-        consent_type: str,
-        granted: bool,
-        version: str = "1.0",
-        ip_address: str | None = None,
-        duration_years: int = 2,
-    ) -> ConsentRecord:
-        """记录知情同意"""
-        now = datetime.now(timezone.utc)
-        expires_at = now + timedelta(days=365 * duration_years) if duration_years > 0 else None
+    def record_consent(self, *args, **kwargs):
+        from fastapi import HTTPException
+        raise HTTPException(403,"Consent requires an authenticated actual grantor and the canonical patient consent API.")
 
-        # 记录知情同意
-        record = ConsentRecord(
-            patient_id=patient_id,
-            consent_type=consent_type,
-            granted=granted,
-            granted_at=now,
-            expires_at=expires_at,
-            version=version,
-            ip_address=ip_address,
-        )
-
-        # 记录审计日志
-        self.log_access(
-            actor_user_id=patient_id,  # 患者自己操作
-            actor_role="patient",
-            action=AuditAction.CONSENT_UPDATE,
-            resource_type="consent",
-            patient_id=patient_id,
-            details={
-                "consent_type": consent_type,
-                "granted": granted,
-                "version": version,
-                "expires_at": expires_at.isoformat() if expires_at else None,
-            },
-            ip_address=ip_address,
-        )
-
-        return record
-
-    def check_consent_status(
-        self,
-        patient_id: int,
-        consent_type: str,
-    ) -> dict[str, Any]:
-        """检查知情同意状态"""
-        # 这里应该从数据库查询
-        # 简化实现，返回模拟数据
-        now = datetime.now(timezone.utc)
-
-        return {
-            "patient_id": patient_id,
-            "consent_type": consent_type,
-            "has_consent": True,  # 假设有同意
-            "consent_date": now - timedelta(days=30),
-            "expires_date": now + timedelta(days=365 * 2 - 30),
-            "version": "1.0",
-            "is_expired": False,
-        }
+    def check_consent_status(self, patient_id, consent_type):
+        from backend.app.models.identity import ConsentRecord
+        from backend.app.services.consent_service import effective_consent
+        from backend.app.services.identity_access import not_expired
+        purpose = {"data_collection":"basic_use","ai_analysis":"external_ai","research_use":"research","ai_chat":"external_ai"}.get(consent_type,consent_type)
+        rows = self.db.scalars(select(ConsentRecord).where(ConsentRecord.patient_id == patient_id,ConsentRecord.purpose == purpose)).all()
+        active = next((row for row in rows if effective_consent(self.db,row)),None)
+        return {"patient_id":patient_id,"consent_type":consent_type,"has_consent":active is not None,"consent_date":active.created_at if active else None,"expires_date":active.expires_at if active else None,"version":active.terms_version if active else None,"is_expired":bool(rows and all(not not_expired(row.expires_at) for row in rows))}
 
     def get_consent_summary(self, patient_id: int) -> list[dict[str, Any]]:
         """获取患者知情同意摘要"""
@@ -490,7 +431,7 @@ class EnhancedSecurityService:
         # 获取研究人员的患者
         patients = self.db.scalars(
             select(Patient)
-            .where(Patient.assigned_researcher_id == researcher_id)
+            .where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
         ).all()
 
         total_patients = len(patients)

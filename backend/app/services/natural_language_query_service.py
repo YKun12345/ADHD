@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+from backend.app.services.identity_access import authorized_patient_ids
+
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -303,7 +305,7 @@ class NaturalLanguageQueryService:
         # 检查研究人员是否有患者
         patient_count = self.db.scalar(
             select(func.count(Patient.id))
-            .where(Patient.assigned_researcher_id == researcher_id)
+            .where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
         )
 
         return patient_count > 0
@@ -317,7 +319,7 @@ class NaturalLanguageQueryService:
         # 获取研究人员的患者列表
         patients = self.db.scalars(
             select(Patient)
-            .where(Patient.assigned_researcher_id == researcher_id)
+            .where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
             .order_by(Patient.created_at.desc())
         ).all()
 
@@ -375,7 +377,7 @@ class NaturalLanguageQueryService:
 
             results.append({
                 "patient_id": patient.id,
-                "patient_name": user.full_name,
+                "patient_name": patient.display_name or user.full_name,
                 "patient_type": patient.patient_type.value,
                 "age": patient.age,
                 "risk_level": latest_scale.risk_level if latest_scale else "unknown",

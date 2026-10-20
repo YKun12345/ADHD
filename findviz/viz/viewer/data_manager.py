@@ -4,7 +4,7 @@ from typing import Dict, Optional, ClassVar, List
 from threading import RLock
 from collections import OrderedDict
 from time import monotonic
-from findviz.workspace import current_workspace
+from findviz.workspace import current_workspace, require_authority
 
 from findviz.logger_config import setup_logger
 from findviz.viz.viewer.context import VisualizationContext
@@ -23,6 +23,7 @@ class DataManager:
     _active_context_id: str
 
     def __new__(cls) -> 'DataManager':
+        require_authority()
         namespace = current_workspace()
         with cls._instance_lock:
             if namespace == 'standalone-cli':
@@ -54,6 +55,7 @@ class DataManager:
     @property
     def ctx(self) -> VisualizationContext:
         """Short alias for the currently active visualization context."""
+        require_authority()
         return self._contexts[self._active_context_id]
     
     @property
@@ -88,6 +90,7 @@ class DataManager:
         Raises:
             ValueError: If the context does not exist
         """
+        require_authority()
         if context_id not in self._contexts:
             raise ValueError(f"Context {context_id} does not exist")
         return self._contexts[context_id]
@@ -166,4 +169,4 @@ class DataManager:
 
         # switch to new context
         self._active_context_id = context_id       
-   
+

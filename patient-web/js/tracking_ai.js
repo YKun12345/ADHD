@@ -3,55 +3,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = document.getElementById('trackingAiTitle');
     const message = document.getElementById('trackingAiMessage');
     const meta = document.getElementById('trackingAiMeta');
-    const actionBtn = document.getElementById('trackingAiActionBtn');
-    const askAiLink = document.getElementById('trackingAiAskLink');
-    const fabAddLog = document.getElementById('fabAddLog');
-
-    if (!card || !title || !message || !meta || !actionBtn || !askAiLink) {
-        return;
-    }
-
-    askAiLink.href = `patient_ai.html?scope=tracking&prompt=${encodeURIComponent('请结合我的 14 天追踪，帮我看看最近状态和下一步建议。')}`;
-
-    let latestReminder = null;
-
-    async function loadReminder() {
-        try {
-            const response = await window.API.AI.generateReminder({ tone: 'gentle' });
-            latestReminder = response;
-            card.classList.remove('hidden');
-            card.classList.toggle('completed', response.completion_status === 'completed');
-            title.textContent = response.title;
-            message.textContent = response.message;
-            meta.textContent = response.degraded
-                ? '当前使用降级模式提醒'
-                : '这条提醒由 AI 结合追踪数据生成';
-            actionBtn.textContent = response.action_label || '去处理';
-        } catch (error) {
-            latestReminder = null;
-            card.classList.remove('hidden');
-            card.classList.remove('completed');
-            title.textContent = 'AI 提醒暂时不可用';
-            message.textContent = error.message || '稍后再试，或者先手动完成今天的记录。';
-            meta.textContent = '系统没有拿到可用的提醒结果';
-            actionBtn.textContent = '去记录今天';
-        }
-    }
-
-    actionBtn.addEventListener('click', () => {
-        if (latestReminder?.completion_status === 'completed') {
-            window.location.href = askAiLink.href;
-            return;
-        }
-
-        if (fabAddLog) {
-            fabAddLog.click();
-            return;
-        }
-
-        window.location.href = askAiLink.href;
+    const action = document.getElementById('trackingAiActionBtn');
+    const ask = document.getElementById('trackingAiAskLink');
+    if (!card || !title || !message || !meta || !action || !ask) return;
+    const target = new URL('patient_ai.html', location.href);
+    target.searchParams.set('prompt', '请结合我当前获准的实际周期和每日记录，说明已有记录、缺失日期和下一步。');
+    const patientId = Number(new URLSearchParams(location.search).get('patient_id'));
+    if (Number.isSafeInteger(patientId) && patientId > 0) target.searchParams.set('patient_id', String(patientId));
+    ask.href = target.href;
+    ask.textContent = '问星仔助手';
+    title.textContent = '记录今天的实际情况';
+    message.textContent = '完成记录后，可以请星仔助手核对当前获准资料和下一步。';
+    meta.textContent = '星仔助手按实际资料核对，不自动生成或提交记录';
+    action.textContent = '去记录今天';
+    action.addEventListener('click', () => {
+        const add = document.getElementById('fabAddLog');
+        if (add) add.click();
+        else location.assign(target.href);
     });
-
-    document.addEventListener('tracking:log-saved', loadReminder);
-    loadReminder();
+    card.classList.remove('hidden', 'completed');
 });

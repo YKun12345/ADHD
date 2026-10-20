@@ -1,0 +1,17 @@
+<ui-nav title="医生已发布计划" showBack="{{true}}" fallbackUrl="/pages/home/index" />
+<ai-copilot page-key="patient-plan" patient-id="{{patientId}}" assessment-id="{{assessmentId}}" />
+<view class="review-page product-page product-form-page">
+  <view class="sheet"><text class="title">第 {{assessmentId}} 轮计划</text><text class="note">按实际日期记录；缺失不会变成0。确认收到不表示已经执行或产生治疗效果。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <text wx:if="{{plan}}" class="note">{{plan.statusLabel}} · {{plan.suspension_reason ? '原授权或责任不可用，计划已暂停；历史保留，不自动恢复。' : ''}}</text>
+    <text wx:if="{{!plan && !loading}}" class="note">本轮尚无医生已发布计划。</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新实际计划</button><button bindtap="openRecovery">查看本机待确认原件</button>
+    <button wx:if="{{pendingId}}" disabled="{{busy}}" bindtap="queryPending">按原编号查询确认</button>
+    <button wx:if="{{canReceive}}" disabled="{{busy || !!pendingId}}" bindtap="receive">我已收到并阅读最新计划</button>
+  </view>
+  <view wx:for="{{versions}}" wx:key="id" class="sheet"><text class="title">第 {{item.version}} 版 · {{item.title}}</text><text class="note">{{item.start_date}} 至 {{item.end_date}} · 实际医生账号 {{item.actor_user_id}}</text>
+    <text selectable="true">{{item.instructions}}</text><text wx:if="{{item.demonstration_only}}" class="note">合成资料演示计划。</text><button class="plan-cycle-open" data-id="{{item.cycle_id}}" disabled="{{busy}}" bindtap="openCycle">打开这一版周期记录</button>
+  </view>
+  <view wx:for="{{tasks}}" wx:key="id" class="sheet"><text>{{item.record_date}} · {{item.statusLabel}}</text><text class="note">{{item.instructions}}</text></view>
+  <view wx:for="{{versions}}" wx:key="id" class="sheet"><button data-id="{{item.cycle_id}}" bindtap="openStageReview">查看这一周期的复核与后续安排</button></view>
+</view>

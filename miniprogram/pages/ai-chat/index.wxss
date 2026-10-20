@@ -444,3 +444,7 @@ page {
     transform: none;
   }
 }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }
+.product-page.chat-shell .chat-page { padding: 32rpx; gap: 24rpx; }

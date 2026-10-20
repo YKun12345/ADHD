@@ -1,0 +1,17 @@
+page { background: #edf7fa; color: #17324d; }
+.shared-page { padding: 24rpx 28rpx 72rpx; padding-bottom: calc(72rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(72rpx + env(safe-area-inset-bottom)); }
+.sheet { margin: 22rpx 0; padding: 28rpx; border: 1rpx solid #d7e6ed; border-radius: 28rpx; background: #fff; }
+.title { display: block; font-size: 32rpx; font-weight: 700; }
+.note { display: block; font-size: 26rpx; color: #536d85; line-height: 1.8; margin: 16rpx 0; overflow-wrap: break-word; }
+.error { display: block; font-size: 26rpx; color: #a93434; line-height: 1.8; }
+.status { color: #285c64; }
+.picker { display: flex; flex-direction: column; gap: 10rpx; padding: 22rpx; margin-top: 20rpx; background: #f0f6fa; border: 1rpx solid #d7e6ed; border-radius: 16rpx; font-size: 27rpx; line-height: 1.6; }
+.sender { display: block; font-size: 28rpx; font-weight: 600; }
+.time { font-size: 23rpx; }
+.content { display: block; font-size: 29rpx; line-height: 1.8; white-space: pre-wrap; overflow-wrap: break-word; }
+.composer { box-sizing: border-box; width: 100%; min-height: 240rpx; padding: 22rpx; border: 1rpx solid #c9dce5; border-radius: 16rpx; font-size: 28rpx; line-height: 1.8; background: #f8fbfc; }
+button { margin-top: 18rpx; font-size: 27rpx; color: #17324d; border-radius: 18rpx; background: #e8f0fc; }
+.primary { background: #245e73; color: #fff; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

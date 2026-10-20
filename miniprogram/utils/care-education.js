@@ -334,7 +334,7 @@ function buildCarePathway(report, hasAccount = false) {
       status: trackingDone ? 'done' : trackingCount > 0 ? 'partial' : 'pending',
       detail: `已记录 ${trackingCount} / 14 天`,
       actionLabel: trackingDone ? '查看趋势' : '继续记录',
-      actionUrl: '/pages/tracking/index'
+      actionUrl: '/pages/care-cycles/index'
     }),
     createStep({
       id: 'report',

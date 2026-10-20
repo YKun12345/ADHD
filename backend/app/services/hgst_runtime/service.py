@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import importlib
 import logging
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 from backend.app.core.config import settings
+from backend.app.services.model_admission_service import ModelAdmissionError as HGSTModelNotAdmittedError, require_hgst_admission
 from backend.app.services.hgst_runtime.evaluation import (
     ValidationCheckpoint,
     classification_metrics,
@@ -56,6 +58,11 @@ class HGSTPredictionResult:
     model_version: str
     source_type: str
     summary_text: str
+    model_registry_version_id: int | None = None
+    model_registry_revision: int | None = None
+    model_input_contract_digest: str | None = None
+    model_artifact_sha256: str | None = None
+    model_admission_status: str | None = None
 
 
 def resolve_inference_mode() -> str:
@@ -137,6 +144,10 @@ def predict_with_mode(file_bytes: bytes, file_name: str) -> HGSTPredictionResult
     except HGSTPreprocessError as exc:
         # 真实路径里解析/形状校验失败统一映射为 422（原实现可能冒泡成 500）。
         raise HGSTInferenceError(str(exc)) from exc
+    except HGSTModelNotAdmittedError:
+        # Admission rejection is not a missing optional dependency. Auto mode
+        # cannot turn unverified provenance into an apparent successful result.
+        raise
     except (HGSTUnavailableError, HGSTBundleMissingError) as exc:
         if mode == "auto":
             logger.warning(
@@ -196,15 +207,27 @@ def _pretrained_path() -> Path:
 
 
 def load_hgst_bundle(bundle_path: str | Path | None = None) -> dict[str, Any]:
+    admitted=require_hgst_admission(bundle_path)
     torch, _, _, _ = _import_runtime_dependencies()
-    path = Path(bundle_path).expanduser().resolve() if bundle_path else _bundle_path()
+    if admitted.get('model_version_id'):
+        from backend.app.services.model_admission_service import registered_bundle_path
+        path=registered_bundle_path(admitted)
+    else:path = Path(bundle_path).expanduser().resolve() if bundle_path else _bundle_path()
     if not path.exists():
         raise HGSTBundleMissingError(
             f"尚未找到 HGST 部署版推理权重：{path}。请先在当前项目中生成 deployment bundle。"
         )
-    bundle = torch.load(path, map_location="cpu")
+    raw = path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != admitted['artifact']['sha256']:
+        raise HGSTModelNotAdmittedError('实际模型权重已变化，请重新核对后分析。')
+    # Torch 1.13's restricted loader rejects the original bundle's BINFLOAT
+    # config opcode. Only the owner's exact, fixed-SHA old bytes may use its
+    # original loader; registered/new artifacts retain weights_only=True.
+    bundle = torch.load(io.BytesIO(raw), map_location="cpu",
+                        weights_only=admitted['status'] != 'legacy_accepted')
     if not isinstance(bundle, dict) or "encoder_state_dict" not in bundle or "classifier_state_dict" not in bundle:
         raise HGSTInferenceError("HGST 部署版推理权重格式不正确。")
+    bundle['_registry_admission']=admitted
     return bundle
 
 
@@ -349,6 +372,15 @@ def build_hgst_deployment_bundle(
 
 
 def predict_timeseries_file(file_bytes: bytes, file_name: str) -> HGSTPredictionResult:
+    admission = require_hgst_admission()
+    if admission['status'] == 'legacy_accepted':
+        from backend.app.services.hgst_runtime.legacy_process import predict_in_legacy_process
+        return predict_in_legacy_process(file_bytes, file_name, admission)
+    return _predict_timeseries_in_process(file_bytes, file_name)
+
+
+def _predict_timeseries_in_process(file_bytes: bytes, file_name: str) -> HGSTPredictionResult:
+    require_hgst_admission()
     torch, Hypergraph, PreModel, MLPClassifier = _import_runtime_dependencies()
 
     bundle = load_hgst_bundle()
@@ -396,6 +428,8 @@ def predict_timeseries_file(file_bytes: bytes, file_name: str) -> HGSTPrediction
         f"当前时间序列推理结果提示 ADHD 风险{risk_text}。"
         f"模型输出 ADHD 概率约为 {adhd_probability:.2%}，建议结合量表与认知测试继续综合判断。"
     )
+    if bundle['_registry_admission']['status'] == 'legacy_accepted':
+        summary_text += '沿用项目原有旧权重；训练来源和输入一致性未重新核验，不构成医学诊断。'
 
     return HGSTPredictionResult(
         prediction_label=str(prediction_label),
@@ -408,4 +442,9 @@ def predict_timeseries_file(file_bytes: bytes, file_name: str) -> HGSTPrediction
         model_version=str(config["model_version"]),
         source_type="timeseries_hgst",
         summary_text=summary_text,
+        model_registry_version_id=bundle.get('_registry_admission',{}).get('model_version_id'),
+        model_registry_revision=bundle.get('_registry_admission',{}).get('registry_revision'),
+        model_input_contract_digest=bundle.get('_registry_admission',{}).get('input_contract_digest'),
+        model_artifact_sha256=bundle['_registry_admission']['artifact']['sha256'],
+        model_admission_status=bundle['_registry_admission']['status'],
     )

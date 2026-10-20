@@ -163,7 +163,7 @@ async function run() {
     { url: '/pages/cognitive-center/index' },
     { url: '/pages/tracking/index' },
     { url: '/pages/report/index' },
-    { url: '/pages/ai-chat/index' },
+    { url: '/pages/agent-chat/index' },
     { url: '/pages/education/index' }
   ])
   guardedPage.goBack()

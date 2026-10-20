@@ -3,13 +3,18 @@ param(
     [ValidateRange(1024, 65535)]
     [int]$Port = 8000,
     [switch]$NoPause,
-    [switch]$CheckOnly
+    [switch]$CheckOnly,
+    [switch]$Restart,
+    [switch]$Stable
 )
 
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $projectRoot = [System.IO.Directory]::GetParent($PSScriptRoot).FullName
 $pythonPath = Join-Path $projectRoot '.venv\Scripts\python.exe'
+if (-not (Test-Path -LiteralPath $pythonPath -PathType Leaf)) {
+    $pythonPath = Join-Path $projectRoot '.venv-hgst\Scripts\python.exe'
+}
 $backendDir = Join-Path $projectRoot 'backend'
 $baseUrl = 'http://127.0.0.1:' + $Port
 $exitCode = 0
@@ -20,6 +25,9 @@ function Test-BackendReady {
     try {
         $health = Invoke-RestMethod -Uri ($baseUrl + '/api/v1/health') -TimeoutSec 2
         if ($health.status -ne 'ok') { return $false }
+        if (-not $health.capabilities.reference_assessments -or
+            -not $health.capabilities.care_worker_running -or
+            -not $health.capabilities.agent_worker_running) { return $false }
         $schema = Invoke-RestMethod -Uri ($baseUrl + '/openapi.json') -TimeoutSec 2
         $sessionPath = $schema.paths.PSObject.Properties['/api/v1/imaging/session']
         return ($null -ne $sessionPath -and
@@ -55,6 +63,7 @@ try {
     Write-Host '知行合医 - 后端一键启动' -ForegroundColor Cyan
     Write-Host ('项目位置：' + $projectRoot)
     Write-Host ('服务地址：' + $baseUrl)
+    Write-Host ('Python 环境：' + $pythonPath)
     Write-Host ''
     if (-not (Test-Path -LiteralPath $pythonPath -PathType Leaf)) {
         throw '没有找到项目的 .venv Python 环境。请先恢复该环境，再双击启动。'
@@ -66,6 +75,26 @@ try {
     # Inspect only listeners that can accept connections on our local address.
     $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop |
         Where-Object { $_.LocalPort -eq $Port -and $_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::') })
+    if ($Restart -and $listeners.Count -gt 0) {
+        # Resolve and check every listener before changing any process.
+        $owned = @()
+        foreach ($listener in $listeners) {
+            $server = Find-ProjectServer -ProcessId $listener.OwningProcess
+            if ($null -eq $server) { throw '端口属于其他程序，未停止任何进程。' }
+            $owned += [int]$server.ProcessId
+            $owned += [int]$listener.OwningProcess
+        }
+        foreach ($ownedId in ($owned | Select-Object -Unique)) {
+            Stop-Process -Id $ownedId -ErrorAction SilentlyContinue
+        }
+        $stopDeadline = [DateTime]::UtcNow.AddSeconds(10)
+        do {
+            Start-Sleep -Milliseconds 300
+            $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop |
+                Where-Object { $_.LocalPort -eq $Port -and $_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::') })
+        } while ($listeners.Count -gt 0 -and [DateTime]::UtcNow -lt $stopDeadline)
+        if ($listeners.Count -gt 0) { throw '原后端仍占用端口，未启动重复服务。' }
+    }
     if ($listeners.Count -gt 0) {
         foreach ($listener in $listeners) {
             if ($null -eq (Find-ProjectServer -ProcessId $listener.OwningProcess)) {
@@ -87,8 +116,10 @@ try {
         $stderrLog = Join-Path $logDir ('backend-start-' + $stamp + '.stderr.log')
         # Start-Process joins ArgumentList, so quote paths that may contain spaces.
         $arguments = @('-X', 'utf8', '-m', 'uvicorn', 'backend.app.main:app',
-            '--host', '127.0.0.1', '--port', [string]$Port,
-            '--reload', '--reload-dir', ('"' + $backendDir + '"'))
+            '--host', '127.0.0.1', '--port', [string]$Port)
+        if (-not $Stable) {
+            $arguments += @('--reload', '--reload-dir', ('"' + $backendDir + '"'))
+        }
         $startOptions = @{
             FilePath = $pythonPath
             ArgumentList = $arguments
@@ -117,8 +148,14 @@ try {
         Write-Host ('启动日志：' + $stderrLog)
     }
     Write-Host ('接口文档：' + $baseUrl + '/docs')
+    Write-Host ('用户网页：' + $baseUrl + '/patient-web/login.html')
+    Write-Host ('医生网页：' + $baseUrl + '/doctor-web/login.html')
     Write-Host '现在可以刷新网页继续使用。'
-    Write-Host '后端在后台运行，关闭本窗口后仍可使用；后端代码修改会自动重新加载。'
+    if ($Stable) {
+        Write-Host '后端在后台运行；本次使用稳定录制模式，代码修改不会中断当前服务。'
+    } else {
+        Write-Host '后端在后台运行，关闭本窗口后仍可使用；后端代码修改会自动重新加载。'
+    }
 } catch {
     $exitCode = 1
     Write-Host ('启动未完成：' + $_.Exception.Message) -ForegroundColor Red

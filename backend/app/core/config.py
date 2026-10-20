@@ -27,6 +27,9 @@ _DEFAULT_HGST_BUNDLE = str(
 
 class Settings:
     APP_ENV: str = os.getenv("APP_ENV", "development").strip().lower()
+    # Reference screening is available in the normal local backend. Production
+    # can opt in explicitly; this does not grant clinical template approval.
+    ASSESSMENT_REFERENCE_ENABLED: str = os.getenv("ASSESSMENT_REFERENCE_ENABLED", "auto").strip().lower()
     PROJECT_NAME: str = os.getenv("PROJECT_NAME", "ADHD Assist Platform API")
     API_V1_STR: str = os.getenv("API_V1_STR", "/api/v1")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "change-me")
@@ -35,6 +38,19 @@ class Settings:
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
     )
     DATABASE_URL: str = os.getenv("DATABASE_URL", "").strip()
+    MODEL_REGISTRY_ENABLED: bool = os.getenv('MODEL_REGISTRY_ENABLED','false').lower() in {'true','1','yes'}
+    MODEL_REGISTRY_ARTIFACT_ROOT: str = os.getenv('MODEL_REGISTRY_ARTIFACT_ROOT','').strip() or str(Path(__file__).resolve().parents[2]/'models'/'registered')
+    MODEL_REGISTRY_REQUIRED_INSTANCES: str = os.getenv('MODEL_REGISTRY_REQUIRED_INSTANCES','')
+    MODEL_REGISTRY_INSTANCE_KEYS_JSON: str = os.getenv('MODEL_REGISTRY_INSTANCE_KEYS_JSON','{}')
+    FEDERATED_WORKER_ENABLED: bool = os.getenv('FEDERATED_WORKER_ENABLED','false').lower() in {'true','1','yes'}
+    FEDERATED_WORKER_INTERVAL_SECONDS: float = float(os.getenv('FEDERATED_WORKER_INTERVAL_SECONDS','2'))
+    FEDERATED_WORKER_LEASE_SECONDS: int = int(os.getenv('FEDERATED_WORKER_LEASE_SECONDS','90'))
+    FEDERATED_ROUND_TIMEOUT_SECONDS: int = int(os.getenv('FEDERATED_ROUND_TIMEOUT_SECONDS','1800'))
+    FEDERATED_RUNTIME_ROOT: str = os.getenv('FEDERATED_RUNTIME_ROOT','').strip() or str(Path(__file__).resolve().parents[3]/'.codex-tmp'/'federated-runtime')
+    FEDERATED_NODE_ROOT: str = os.getenv('FEDERATED_NODE_ROOT','').strip() or str(Path(__file__).resolve().parents[3]/'.codex-tmp')
+    FEDERATED_NODE_REGISTRY_PATH: str = os.getenv('FEDERATED_NODE_REGISTRY_PATH','').strip()
+    FEDERATED_PYTHON: str = os.getenv('FEDERATED_PYTHON','').strip() or str(Path(__file__).resolve().parents[3]/'.venv-federated'/'Scripts'/'python.exe')
+    FEDERATED_HGST_PYTHON: str = os.getenv('FEDERATED_HGST_PYTHON','').strip() or str(Path(__file__).resolve().parents[3]/'.codex-tmp'/'python310-compat-f00'/'python.exe')
 
     MYSQL_HOST: str = os.getenv("MYSQL_HOST", "127.0.0.1")
     MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", "3306"))
@@ -58,6 +74,12 @@ class Settings:
         "DEEPSEEK_REMINDER_MODEL", "deepseek-v4-flash"
     ).strip()
     DEEPSEEK_TIMEOUT_SECONDS: int = int(os.getenv("DEEPSEEK_TIMEOUT_SECONDS", "300"))
+    # Explicit per-run deployment caps/prices; missing values keep rule mode.
+    AGENT_MAX_PROMPT_TOKENS: int = int(os.getenv('AGENT_MAX_PROMPT_TOKENS', '0'))
+    AGENT_MAX_COMPLETION_TOKENS: int = int(os.getenv('AGENT_MAX_COMPLETION_TOKENS', '0'))
+    AGENT_MAX_COST_MICROUNITS: int = int(os.getenv('AGENT_MAX_COST_MICROUNITS', '0'))
+    AGENT_PROMPT_MICROUNITS_PER_TOKEN: str = os.getenv('AGENT_PROMPT_MICROUNITS_PER_TOKEN', '').strip()
+    AGENT_COMPLETION_MICROUNITS_PER_TOKEN: str = os.getenv('AGENT_COMPLETION_MICROUNITS_PER_TOKEN', '').strip()
     HGST_PRETRAINED_WEIGHTS_PATH: str = (
         os.getenv("HGST_PRETRAINED_WEIGHTS_PATH", "") or _DEFAULT_HGST_PRETRAINED
     ).strip()
@@ -66,6 +88,10 @@ class Settings:
     ).strip()
     HGST_DEFAULT_DATA_DIR: str = os.getenv("HGST_DEFAULT_DATA_DIR", "").strip()
     HGST_DEFAULT_LABELS_PATH: str = os.getenv("HGST_DEFAULT_LABELS_PATH", "").strip()
+    # Owner explicitly retained the original bundle on 2026-10-18. This is
+    # operational compatibility, not verified training provenance or registry admission.
+    HGST_LEGACY_COMPATIBILITY_ENABLED: bool = os.getenv('HGST_LEGACY_COMPATIBILITY_ENABLED', 'true').lower() in {'true', '1', 'yes'}
+    HGST_INFERENCE_PYTHON: str = os.getenv('HGST_INFERENCE_PYTHON', '').strip() or str(Path(__file__).resolve().parents[3]/'.codex-tmp'/'python310-compat-f00'/'python.exe')
     # 模型推理模式（见 backend/app/services/hgst_runtime/service.py 的 resolve_inference_mode）：
     #   留空 / false / strict -> 真实推理；缺失依赖或权重时返回 503（默认，安全护栏，绝不静默降级）
     #   true -> 恒走演示 Mock（真上传假结果，is_demo=true，供答辩/联调用）
@@ -78,12 +104,24 @@ class Settings:
     UPLOAD_MAX_BYTES: int = int(os.getenv("UPLOAD_MAX_BYTES", str(10 * 1024 * 1024)))
 
     DATA_ENCRYPTION_KEY: str = os.getenv("DATA_ENCRYPTION_KEY", "").strip()
+    AUTHORIZATION_LEDGER_PATH: str = os.getenv("AUTHORIZATION_LEDGER_PATH", "").strip()
+    CARE_WORKER_ENABLED: bool = os.getenv("CARE_WORKER_ENABLED", "true" if APP_ENV == "development" else "false").strip().lower() in {"true","1"}
+    CARE_WORKER_INTERVAL_SECONDS: float = float(os.getenv("CARE_WORKER_INTERVAL_SECONDS","1"))
+    CARE_WORKER_LEASE_SECONDS: int = int(os.getenv("CARE_WORKER_LEASE_SECONDS","30"))
+    AGENT_WORKER_ENABLED: bool = os.getenv('AGENT_WORKER_ENABLED', 'true' if APP_ENV == 'development' else 'false').strip().lower() in {'true','1'}
+    AGENT_WORKER_INTERVAL_SECONDS: float = float(os.getenv('AGENT_WORKER_INTERVAL_SECONDS','2'))
     SECURITY_MASTER_KEY_PATH: str = os.getenv(
         "SECURITY_MASTER_KEY_PATH",
         str(Path(__file__).resolve().parents[2] / ".keys" / "data_encryption.key"),
     ).strip()
 
     def __init__(self) -> None:
+        if not .1 <= self.FEDERATED_WORKER_INTERVAL_SECONDS <= 60 or not 5 <= self.FEDERATED_WORKER_LEASE_SECONDS <= 3600 or not 1 <= self.FEDERATED_ROUND_TIMEOUT_SECONDS <= 7200:
+            raise RuntimeError('Federated worker interval, lease or round deadline is outside supported limits.')
+        if not .1 <= self.AGENT_WORKER_INTERVAL_SECONDS <= 60:
+            raise RuntimeError('Agent worker interval is outside supported limits.')
+        if not 0.1 <= self.CARE_WORKER_INTERVAL_SECONDS <= 60 or not 1 <= self.CARE_WORKER_LEASE_SECONDS <= 3600:
+            raise RuntimeError("Care worker interval or lease is outside supported limits.")
         if self.APP_ENV == "production":
             if not self.DATABASE_URL:
                 raise RuntimeError("DATABASE_URL is required when APP_ENV=production.")

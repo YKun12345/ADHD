@@ -15,3 +15,6 @@ page { min-height: 100%; background: #eef6f5; color: #17324d; }
 .composer textarea { flex: 1; min-height: 70rpx; max-height: 180rpx; padding: 12rpx; font-size: 26rpx; }
 .composer button { width: 128rpx; margin-left: 12rpx; display: flex; align-items: center; justify-content: center; color: #fff; background: #27758a; }
 .medical-tip { display: block; margin-top: 26rpx; color: #607984; font-size: 21rpx; text-align: center; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

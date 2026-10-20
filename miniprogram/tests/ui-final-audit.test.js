@@ -14,6 +14,14 @@ const expectedRoutes = [
   'pages/doctor-patient/index',
   'pages/doctor-guide-settings/index',
   'pages/home/index',
+  'pages/assessments/index',
+  'pages/submission-queue/index',
+  'pages/care-attention/index',
+  'pages/service-coverage/index',
+  'pages/responsibility-transfers/index',
+  'pages/transferred-work/index',
+  'pages/care-cycles/index',
+  'pages/shared-messages/index',
   'pages/privacy-settings/index',
   'pages/register/index',
   'pages/scale/index',
@@ -34,7 +42,7 @@ const expectedRoutes = [
   'pages/education/index',
   'pages/education-detail/index'
 ]
-const expectedComponents = ['ai-copilot', 'ai-mascot', 'onboarding-guide', 'task-instructions', 'ui-icon', 'ui-nav']
+const expectedComponents = ['ai-copilot', 'ai-mascot', 'authorization-panel', 'onboarding-guide', 'task-instructions', 'ui-icon', 'ui-nav']
 
 assert.deepEqual(
   collectRoutes({

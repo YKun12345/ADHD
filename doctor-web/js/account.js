@@ -17,15 +17,15 @@
 
     async function logout() {
         if (loggingOut) return;
+        const snapshot = window.SessionGuard.captureSession();
+        window.SessionGuard.assertCurrentSession(snapshot);
         loggingOut = true;
         const button = document.getElementById('accountLogout');
         if (button) { button.disabled = true; button.textContent = '正在退出…'; }
         try { await window.API?.Auth?.logout?.(); }
         catch (_) { console.warn('退出会话请求未完成，正在清理浏览器登录状态。'); }
         finally {
-            ['smartbrain_token', 'smartbrain_user', 'smartbrain_selected_patient_id']
-                .forEach(key => localStorage.removeItem(key));
-            goToLogin();
+            if (window.SessionGuard.invalidateSession(snapshot)) goToLogin();
         }
     }
 
@@ -35,6 +35,7 @@
     }
 
     async function loadProfile() {
+        const snapshot = window.SessionGuard.captureSession();
         const profile = document.getElementById('accountProfile');
         if (!profile) return;
         if (!localStorage.getItem('smartbrain_token')) { goToLogin(); return; }
@@ -43,12 +44,13 @@
         setText('accountStatus', '正在读取账号信息…');
         try {
             const user = await window.API.Auth.getMe();
+            window.SessionGuard.assertCurrentSession(snapshot);
             if (!user?.id) throw new Error('账号信息读取失败，请重新登录。');
             if (profile.dataset.accountRole && user.role !== profile.dataset.accountRole) {
                 window.location.replace(profilePath(user));
                 return;
             }
-            localStorage.setItem('smartbrain_user', JSON.stringify(user));
+            window.SessionGuard.updateUser(snapshot, user);
             const isPatient = user.role === 'patient';
             const isDac = user.subrole === 'dac';
             const role = isPatient ? '就诊者' : isDac ? 'DAC 审计员' : '医生 / 研究人员';
@@ -59,8 +61,8 @@
             setText('accountStaffId', user.staff_id || '未设置');
             setText('accountConsent', user.consent_agreed ? '已确认' : '未确认');
             setText('accountScope', isPatient ? '查看自己的评估、追踪与报告。' : isDac
-                ? '在 DAC 审计台管理安全配置与审计；患者业务访问仍受绑定检查约束。'
-                : '查看与自己绑定的就诊者，完成综合分析、影像可视化和任务推送。');
+                ? '在 DAC 审计台管理安全配置与审计；临床访问仍需独立医生资格、当前关系和用途同意。'
+                : '临床访问须通过医生资格及机构核验，并由双方确认当前共享范围；研究身份单独授权。');
             const audit = document.getElementById('accountAuditLink');
             if (audit) audit.hidden = !isDac;
             setText('accountStatus', '');
@@ -81,6 +83,7 @@
             trigger.setAttribute('aria-label', '打开个人中心');
             const open = event => {
                 event.preventDefault();
+                window.SessionGuard.assertCurrentSession();
                 const user = readUser();
                 if (!user || !localStorage.getItem('smartbrain_token')) { goToLogin(); return; }
                 window.location.href = profilePath(user);

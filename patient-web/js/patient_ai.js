@@ -1,12 +1,3 @@
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
 function formatAiReplyText(value) {
     const raw = String(value ?? '').replace(/\r\n/g, '\n').trim();
     if (!raw) {
@@ -67,29 +58,32 @@ function formatAiReplyText(value) {
 }
 
 function buildReportCard(data) {
-    const findings = (data.key_findings || [])
-        .map((item) => `<li>${escapeHtml(item)}</li>`)
-        .join('');
-    const actions = (data.next_actions || [])
-        .map((item) => `<li>${escapeHtml(item)}</li>`)
-        .join('');
-
-    return `
+    const fragment = SafeRender.html`
         <div class="ai-rich-card">
             <div class="ai-rich-card-tag">AI解读${data.degraded ? ' · 降级模式' : ''}</div>
-            <h4>${escapeHtml(data.headline || '报告解读')}</h4>
-            <p>${escapeHtml(data.plain_summary || '')}</p>
+            <h4>${data.headline || '报告解读'}</h4>
+            <p>${data.plain_summary || ''}</p>
             <div class="ai-rich-card-section">
                 <strong>你现在最值得关注的点</strong>
-                <ul>${findings || '<li>先继续补充量表和追踪数据，结论会更稳。</li>'}</ul>
+                <ul></ul>
             </div>
             <div class="ai-rich-card-section">
                 <strong>下一步建议</strong>
-                <ul>${actions || '<li>先完成今天的记录，再来看趋势。</li>'}</ul>
+                <ul></ul>
             </div>
-            <div class="ai-mini-note">${escapeHtml(data.disclaimer || '')}</div>
+            <div class="ai-mini-note">${data.disclaimer || ''}</div>
         </div>
     `;
+    const lists = fragment.querySelectorAll('ul');
+    [data.key_findings?.length ? data.key_findings : ['先继续补充量表和追踪数据，结论会更稳。'],
+        data.next_actions?.length ? data.next_actions : ['先完成今天的记录，再来看趋势。']].forEach((items, index) => {
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            lists[index].appendChild(li);
+        });
+    });
+    return fragment;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -144,8 +138,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const bubble = document.createElement('div');
         bubble.className = 'ai-bubble';
 
-        if (options.html) {
-            bubble.innerHTML = content;
+        if (options.node) {
+            bubble.appendChild(content);
         } else {
             bubble.textContent = role === 'assistant' ? formatAiReplyText(content) : content;
         }
@@ -242,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const response = await window.API.AI.explainReport({ focus: 'patient_ai_page' });
             typingBubble.remove();
-            appendBubble('assistant', buildReportCard(response), { html: true });
+            appendBubble('assistant', buildReportCard(response), { node: true });
             pushConversation('assistant', `${response.headline}。${response.plain_summary}`);
         } catch (error) {
             typingBubble.remove();

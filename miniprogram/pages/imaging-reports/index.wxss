@@ -1,0 +1,5 @@
+.page{padding:28rpx}.page text{display:block;white-space:pre-wrap;word-break:break-all;margin:12rpx 0}.heading{font-size:38rpx;font-weight:700}.card{padding:24rpx;margin:24rpx 0;border:1px solid #d7dee8;border-radius:20rpx;background:#fff}.title{font-weight:700}.note{color:#64748b}.warning{color:#9a5b13}.error{color:#b91c1c}textarea{width:100%;min-height:180rpx;border:1px solid #d7dee8;margin:18rpx 0;padding:10rpx;box-sizing:border-box}
+.empty-report{line-height:1.8;font-size:27rpx}.empty-report .title{font-size:30rpx}.empty-report .empty-step{margin-top:22rpx}.empty-report .note{font-size:25rpx}
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

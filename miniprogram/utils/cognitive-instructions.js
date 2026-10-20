@@ -1,5 +1,7 @@
-const { clearTimers } = require('./cognitive-page-support')
+const { clearTimers, refreshPendingState } = require('./cognitive-page-support')
 const { capturePatientSessionLease, isPatientSessionLeaseCurrent } = require('./session-privacy')
+const execution = require('./assessment-execution')
+const { preparePractice, prepareFormal } = require('./cognitive-practice')
 
 const READING_MS = 3000
 
@@ -47,22 +49,42 @@ function showInstructions(page, taskId) {
 function withTaskInstructions(taskId, definition) {
   return {
     ...definition,
-    data: { ...definition.data, instructionVisible: false, instructionReady: false, instructionRemaining: 3, taskInstruction: null },
+    data: { ...definition.data, canRetrySync: false, formalExecution: false, executionLoading: false, executionError: '', practiceStage: false,
+      practiceFinished: false, practicePassed: false, practiceStatus: '', instructionVisible: false, instructionReady: false, instructionRemaining: 3, taskInstruction: null },
     onLoad(query) {
       this._disposed = false
       this._hidden = false
+      this._taskId = taskId
       if (definition.onLoad) definition.onLoad.call(this, query)
+      refreshPendingState(this, taskId)
+      if (query && ['assessment_id', 'item_id', 'attempt_id'].some(key => query[key] !== undefined)) {
+        const lease = capturePatientSessionLease()
+        this.setData({ formalExecution: true, executionLoading: true })
+        return execution.loadExecution(query, taskId).then(context => {
+          if (this._disposed || this._hidden || !isPatientSessionLeaseCurrent(lease)) return
+          this._execution = context
+          this._formalConfig = context.attempt.config_snapshot
+          this._config = this._formalConfig
+          this._context = { ...this._context, ageGroup: context.attempt.age_group, patientId: context.attempt.patient_id,
+            testRunId: context.attempt.run_id, mode: 'single', interruptedCount: 0, practiceAttempts: 0 }
+          this._practiceRecords = []
+          this.setData({ executionLoading: false, ageGroup: context.attempt.age_group, mode: 'single' })
+          showInstructions(this, taskId)
+        }).catch(error => { if (!this._disposed && isPatientSessionLeaseCurrent(lease)) this.setData({ executionLoading: false, executionError: error.message }) })
+      }
       showInstructions(this, taskId)
     },
     onShow() {
       const wasHidden = this._hidden
       this._hidden = false
       if (definition.onShow) definition.onShow.call(this)
+      if (!this._disposed) refreshPendingState(this, taskId)
       const needsInstructions = this.data.instructionVisible || this.data.phase === 'intro' || this.data.phase === 'paused'
       if (wasHidden && needsInstructions && !this._disposed && !this.data.running && this._config) showInstructions(this, taskId)
     },
     startTest() {
-      if (this._disposed || this._hidden || this.data.running || this.data.submitting) return
+      if (this._disposed || this._hidden || this.data.running || this.data.submitting || this.data.executionLoading || this.data.executionError) return
+      if (this.data.formalExecution && this._executionBegun) { this.setData({ executionError: '该运行已开始或中断，请返回本轮评估创建新尝试。' }); return }
       if (!this.data.instructionVisible) { showInstructions(this, taskId); return }
       if (!this.data.instructionReady || this._instructionStartedAt === null || Date.now() - this._instructionStartedAt < READING_MS) return
       clearInstructionTimer(this)
@@ -70,18 +92,34 @@ function withTaskInstructions(taskId, definition) {
       this._completionSaved = false
       this._lastPayload = null
       this._runLease = capturePatientSessionLease()
-      this._context.testRunId = `wx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`
+      if (this._execution) {
+        try { execution.beginExecution(this._execution) } catch (error) { this.setData({ executionError: error.message }); return }
+        this._executionBegun = true
+        this._context.testRunId = this._execution.attempt.run_id
+        preparePractice(this, taskId)
+      } else this._context.testRunId = `wx-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`
       this.setData({ instructionVisible: false })
       return definition.startTest.call(this)
     },
     handleInstructionStart() { return this.startTest() },
+    handlePracticeContinue() {
+      if (!this._execution || this._disposed || this._hidden || this.data.running || !this.data.practiceFinished || this.data.executionError) return
+      try { execution.assertCurrent(this._execution) } catch (error) { this.setData({ executionError: error.message }); return }
+      this._runGeneration = (this._runGeneration || 0) + 1
+      if (this.data.practicePassed) prepareFormal(this, taskId)
+      else if (this._practiceRecords.length < this._formalConfig.maxPracticeAttempts) preparePractice(this, taskId)
+      else return
+      return definition.startTest.call(this)
+    },
     onHide() {
       this._hidden = true
       this._runGeneration = (this._runGeneration || 0) + 1
       clearInstructionTimer(this)
       clearTimers(this)
       if (definition.onHide) definition.onHide.call(this)
+      if (this._executionBegun && this.data.phase !== 'result') this.setData({ executionError: '该运行已中断，请返回本轮评估创建新尝试。' })
       this.setData({ instructionReady: false })
+      require('./submission-recovery').resume()
     },
     onUnload() {
       this._disposed = true
@@ -90,6 +128,7 @@ function withTaskInstructions(taskId, definition) {
       clearTimers(this)
       if (definition.onUnload) definition.onUnload.call(this)
       this.setData({ running: false })
+      require('./submission-recovery').resume()
     },
     onPatientSessionEnded() {
       this._disposed = true

@@ -242,3 +242,6 @@ page {
     transition: none;
   }
 }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

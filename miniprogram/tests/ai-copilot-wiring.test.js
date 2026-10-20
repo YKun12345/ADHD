@@ -1,89 +1,42 @@
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const test = require('node:test')
 
-const pageKeys = [
-  'home',
-  'scale',
-  'cognitive-center',
-  'cognitive',
-  'stroop',
-  'trail',
-  'flanker',
-  'nback',
-  'digit-span',
-  'tracking',
-  'tracking-trend',
-  'report',
-  'care-pathway',
-  'education',
-  'education-detail',
-  'patient-tasks',
-  'patient-messages',
-  'privacy-settings',
-  'doctor-home',
-  'doctor-patient',
-  'doctor-guide-settings'
-]
+const root = path.join(__dirname, '..')
+const pages = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8')).pages
+const formal = ['cognitive', 'stroop', 'flanker', 'nback', 'digit-span', 'trail']
+const localHelp = ['login', 'register', 'server-settings', 'research-consent',
+  'care-attention', 'service-coverage', 'responsibility-transfers', 'transferred-work']
 
-const excludedPages = [
-  'login',
-  'register',
-  'server-settings',
-  'ai-chat'
-]
-
-const pagesRoot = path.join(__dirname, '..', 'pages')
-
-for (const pageKey of pageKeys) {
-  const directory = path.join(pagesRoot, pageKey)
-  const config = JSON.parse(
-    fs.readFileSync(path.join(directory, 'index.json'), 'utf8')
-  )
-  const wxml = fs.readFileSync(
-    path.join(directory, 'index.wxml'),
-    'utf8'
-  )
-
-  assert.equal(
-    config.usingComponents && config.usingComponents['ai-copilot'],
-    '/components/ai-copilot/index',
-    `${pageKey} 未声明 ai-copilot`
-  )
-  if (['cognitive', 'stroop', 'flanker', 'nback', 'digit-span', 'trail'].includes(pageKey)) {
-    assert.equal(wxml.includes(`wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="${pageKey}"`), true, `${pageKey} 说明弹窗和测试期间不显示AI助手`)
-  } else if (pageKey === 'tracking') {
-    assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!noteFocused && !submitting\}\}"\s+page-key="tracking"\s*\/>/)
-  } else if (pageKey === 'home' || pageKey === 'doctor-home' || pageKey === 'doctor-guide-settings' || pageKey === 'privacy-settings') {
-    assert.match(wxml, new RegExp(`<ai-copilot\\s+wx:if="\\{\\{!onboardingVisible\\}\\}"\\s+page-key="${pageKey}"\\s*/>`))
-  } else if (pageKey === 'patient-messages') {
-    assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!inputFocused && !sending\}\}"\s+page-key="patient-messages"\s*\/>/)
-  } else if (pageKey === 'doctor-patient') {
-    assert.match(wxml, /<ai-copilot\s+wx:if="\{\{!inputFocused && !sending && !creatingTask\}\}"\s+page-key="doctor-patient"\s*\/>/)
-  } else {
-    assert.equal(
-      wxml.includes(`<ai-copilot page-key="${pageKey}" />`),
-      true,
-      `${pageKey} 未渲染 ai-copilot`
-    )
-  }
+for (const page of pages) {
+  const key = page.split('/')[1]
+  test(`${key} declares and renders its real companion with applicable safety guards`, () => {
+    const config = JSON.parse(fs.readFileSync(path.join(root, page + '.json'), 'utf8'))
+    const wxml = fs.readFileSync(path.join(root, page + '.wxml'), 'utf8')
+    if (key === 'agent-chat') {
+      assert.equal(config.usingComponents['ai-mascot'], '/components/ai-mascot/index')
+      assert.match(wxml, /<ai-mascot\b[^>]*id="chat-pet"/)
+      assert.doesNotMatch(wxml, /<ai-copilot\b/)
+      return
+    }
+    assert.equal(config.usingComponents['ai-copilot'], '/components/ai-copilot/index')
+    const tags = wxml.match(/<ai-copilot\b[^>]*\/>/g) || []
+    assert.equal(tags.length, 1, 'exactly one floating companion per page')
+    const tag = tags[0]
+    assert.ok(tag.includes(`page-key="${key === 'workspace' ? '{{companionPageKey}}' : key}"`))
+    if (formal.includes(key)) {
+      assert.ok(tag.includes(`wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}"`))
+      assert.ok(tag.includes(key === 'trail' ? `paused="{{running || phase === 'transition'}}"` : `paused="{{running}}"`))
+    }
+    if (['home', 'doctor-home', 'doctor-guide-settings', 'privacy-settings'].includes(key)) {
+      assert.ok(tag.includes('wx:if="{{!onboardingVisible}}"'))
+    }
+    if (key === 'tracking') assert.ok(tag.includes('wx:if="{{!noteFocused && !submitting}}"'))
+    if (key === 'patient-messages') assert.ok(tag.includes('wx:if="{{!inputFocused && !sending}}"'))
+    if (key === 'doctor-patient') assert.ok(tag.includes('wx:if="{{!inputFocused && !sending && !creatingTask}}"'))
+    if (localHelp.includes(key)) assert.ok(tag.includes('local-help-only="{{true}}"'), 'help must preserve this form and work without a login')
+    if (['home', 'workspace', 'doctor-home'].includes(key)) assert.ok(tag.includes('bottom-inset="{{60}}"'))
+    if (key === 'workspace' || key === 'doctor-patient') assert.ok(tag.includes('patient-id="{{patientId}}"'))
+  })
 }
-
-for (const pageKey of excludedPages) {
-  const directory = path.join(pagesRoot, pageKey)
-  const config = JSON.parse(
-    fs.readFileSync(path.join(directory, 'index.json'), 'utf8')
-  )
-  const wxml = fs.readFileSync(
-    path.join(directory, 'index.wxml'),
-    'utf8'
-  )
-
-  assert.notEqual(
-    config.usingComponents && config.usingComponents['ai-copilot'],
-    '/components/ai-copilot/index'
-  )
-  assert.equal(wxml.includes('<ai-copilot'), false)
-}
-
-console.log('AI Copilot 页面接线测试全部通过')

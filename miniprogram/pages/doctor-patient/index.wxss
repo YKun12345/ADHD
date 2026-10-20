@@ -80,3 +80,6 @@ page {
 .state-card--error { color: #9b4e4e; }
 .retry-button { min-width: 180rpx; min-height: 88rpx; margin-top: 22rpx; border-radius: 18rpx; color: #735b49; font-size: 24rpx; background: #efe4d9; }
 .medical-disclaimer { display: block; margin: 30rpx 18rpx 0; color: #766f69; font-size: 21rpx; line-height: 1.7; text-align: center; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

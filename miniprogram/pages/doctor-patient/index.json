@@ -1,6 +1,7 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
+    "agent-actions": "/components/agent-actions/index",
     "ai-copilot": "/components/ai-copilot/index",
     "ui-nav": "/components/ui-nav/index"
   }

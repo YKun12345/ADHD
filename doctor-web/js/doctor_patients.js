@@ -81,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return '未分类';
     }
 
+    const hasScope = (item, scope) => !Array.isArray(item.allowed_scope) || item.allowed_scope.includes(scope);
+    const subjectName = item => item.patient_name || `共享档案 #${item.patient_id}`;
+
     function formatRiskLevel(level) {
         const mapping = {
             high: '高风险',
@@ -159,23 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     }
 
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
     function createInlineTaskRow(task) {
         const row = document.createElement('div');
         row.className = 'inline-mini-row';
-        row.innerHTML = `
-            <strong>${escapeHtml(task.task_title)}</strong><br>
-            ${escapeHtml(task.task_description || '已为就诊者安排下一步任务。')}<br>
+        row.appendChild(SafeRender.html`
+            <strong>${task.task_title}</strong><br>
+            ${task.task_description || '已为就诊者安排下一步任务。'}<br>
             <span style="color:#64748B;">${formatTaskType(task.task_type)} · ${formatTaskStatus(task.status)}</span>
-        `;
+        `);
         return row;
     }
 
@@ -195,16 +189,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function refreshPatientTaskBlock(patientId) {
+        const patient = state.patients.find(item => String(item.patient_id) === String(patientId));
+        if (patient && !hasScope(patient, 'care')) {
+            renderTaskBlock(patientId, []);
+            const empty = document.getElementById(`taskEmpty-${patientId}`);
+            if (empty) empty.textContent = '任务未共享';
+            return;
+        }
         try {
             const tasks = await window.API.Care.getPatientTasksForDoctor(patientId);
             renderTaskBlock(patientId, tasks.items || []);
         } catch (error) {
             renderTaskBlock(patientId, []);
+            const empty = document.getElementById(`taskEmpty-${patientId}`);
+            if (empty) empty.textContent = error.status === 403 ? '任务未共享或授权已失效' : '任务加载失败，请重试';
         }
     }
 
     function buildPatientRow(item) {
-        const trackingStatus = formatCompletionStatus(item.completion_status);
+        const trackingStatus = hasScope(item, 'tracking') ? formatCompletionStatus(item.completion_status) : { label: '跟踪未共享', className: '' };
         const securityOverview = getSecurityOverview(item.patient_id);
         const securityStage = formatSecurityStage(securityOverview);
         const cipherText = securityOverview
@@ -218,45 +221,45 @@ document.addEventListener('DOMContentLoaded', () => {
         row.className = 'patient-workspace-row';
         row.id = `patient-row-${item.patient_id}`;
 
-        row.innerHTML = `
+        row.appendChild(SafeRender.html`
             <section class="patient-row-main">
                 <div class="patient-card-top">
                     <div>
-                        <h4>${item.patient_name}</h4>
-                        <div class="patient-card-sub">${item.patient_email}</div>
+                        <h4>${subjectName(item)}</h4>
+                        <div class="patient-card-sub">${item.patient_email || '基础资料未共享'}</div>
                     </div>
-                    <span class="patient-status-pill ${trackingStatus.className}">${trackingStatus.label}</span>
+                    <span class="patient-status-pill">${trackingStatus.label}</span>
                 </div>
 
                 <div class="patient-tags">
-                    <span class="tag">${formatPatientType(item.patient_type)}</span>
-                    <span class="tag">${formatScaleType(item.latest_scale_type)}</span>
-                    <span class="tag">${formatRiskLevel(item.latest_scale_risk_level)}</span>
-                    <span class="tag security ${securityStage.className}">${securityStage.label}</span>
+                    <span class="tag">${hasScope(item, 'profile') ? formatPatientType(item.patient_type) : '基础资料未共享'}</span>
+                    <span class="tag">${hasScope(item, 'assessment') ? formatScaleType(item.latest_scale_type) : '评估未共享'}</span>
+                    <span class="tag">${hasScope(item, 'assessment') ? formatRiskLevel(item.latest_scale_risk_level) : '评估未共享'}</span>
+                    <span class="tag security">${securityStage.label}</span>
                 </div>
 
                 <div class="patient-stat-grid">
                     <div class="patient-stat">
                         <span class="patient-stat-label">14天追踪</span>
-                        <span class="patient-stat-value">${item.completed_tracking_days}/14 天 · 当前第 ${item.current_tracking_day} 天</span>
+                        <span class="patient-stat-value">${hasScope(item, 'tracking') ? `${item.completed_tracking_days}/14 天 · 当前第 ${item.current_tracking_day} 天` : '跟踪未共享'}</span>
                     </div>
                     <div class="patient-stat">
                         <span class="patient-stat-label">认知测试</span>
-                        <span class="patient-stat-value">${Number(item.cognitive_test_count || 0)} 项${item.cognitive_test_count ? '已补充' : '待补充'}</span>
+                        <span class="patient-stat-value">${hasScope(item, 'assessment') ? `${Number(item.cognitive_test_count || 0)} 项${item.cognitive_test_count ? '已补充' : '待补充'}` : '认知评估未共享'}</span>
                     </div>
                     <div class="patient-stat">
                         <span class="patient-stat-label">量表结果</span>
-                        <span class="patient-stat-value">${formatRiskLevel(item.latest_scale_risk_level)} · 总分 ${item.latest_scale_total_score ?? '--'}</span>
+                        <span class="patient-stat-value">${hasScope(item, 'assessment') ? `${formatRiskLevel(item.latest_scale_risk_level)} · 总分 ${item.latest_scale_total_score ?? '--'}` : '评估未共享'}</span>
                     </div>
                     <div class="patient-stat">
                         <span class="patient-stat-label">影像状态</span>
-                        <span class="patient-stat-value">${item.has_imaging ? '已有关联影像' : '待进入影像处理'}</span>
+                        <span class="patient-stat-value">${hasScope(item, 'imaging') ? (item.has_imaging ? '已有关联影像' : '待进入影像处理') : '影像未共享'}</span>
                     </div>
                 </div>
 
                 <div class="patient-focus-box">
                     <span class="patient-focus-label">当前最值得推进的下一步</span>
-                    <div class="patient-focus-text">${item.next_step_text || '建议进入综合分析页，串联查看量表、追踪、认知与影像。'}</div>
+                    <div class="patient-focus-text">${item.next_step_text || '按已确认的共享范围查看记录或处理随访。'}</div>
                 </div>
 
                 <div class="patient-security-box">
@@ -265,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <strong>安全状态</strong>
                             <div class="patient-security-sub">展示该患者是否已经纳入安全链路，以及最近一次时间审计状态。</div>
                         </div>
-                        <span class="patient-security-pill ${securityStage.className}">${securityStage.label}</span>
+                        <span class="patient-security-pill">${securityStage.label}</span>
                     </div>
                     <div class="patient-security-grid">
                         <div class="patient-security-item">
@@ -288,8 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="patient-action-row">
-                    <button class="view-report-btn" data-patient-id="${item.patient_id}" type="button">查看综合分析</button>
-                    <button class="view-visualization-btn" data-patient-id="${item.patient_id}" type="button">进入影像可视化</button>
+                    <button class="view-report-btn" type="button">查看综合分析</button>
+                    <button class="view-visualization-btn" type="button">进入影像可视化</button>
                 </div>
             </section>
 
@@ -297,9 +300,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <section class="workspace-side-card">
                     <h5>研究人员推送任务</h5>
                     <p>直接在就诊者工作台安排下一步量表、认知测试、追踪或报告复核任务。</p>
-                    <div id="taskList-${item.patient_id}" class="inline-mini-list"></div>
-                    <div id="taskEmpty-${item.patient_id}" class="inline-empty">暂未向这位就诊者推送任务。</div>
-                    <form class="inline-task-form" data-patient-id="${item.patient_id}">
+                    <div class="inline-mini-list"></div>
+                    <div class="inline-empty">暂未向这位就诊者推送任务。</div>
+                    <form class="inline-task-form">
                         <select name="taskType">
                             <option value="scale">行为量表</option>
                             <option value="cognitive">认知测试</option>
@@ -308,14 +311,52 @@ document.addEventListener('DOMContentLoaded', () => {
                         </select>
                         <input name="taskTitle" type="text" required placeholder="例如：补做 Stroop 认知测试">
                         <textarea name="taskDescription" required placeholder="告诉就诊者为什么推荐这个任务，以及建议什么时候完成。"></textarea>
-                        <div id="taskFeedback-${item.patient_id}" class="inline-feedback"></div>
+                        <div class="inline-feedback"></div>
                         <div class="inline-task-actions">
                             <button class="inline-task-btn" type="submit">推送任务</button>
                         </div>
                     </form>
                 </section>
             </aside>
-        `;
+        `);
+
+        if (trackingStatus.className) row.querySelector('.patient-status-pill').classList.add(trackingStatus.className);
+        if (securityStage.className) {
+            row.querySelectorAll('.tag.security, .patient-security-pill').forEach((node) => node.classList.add(securityStage.className));
+        }
+        row.querySelector('.inline-mini-list').id = `taskList-${item.patient_id}`;
+        row.querySelector('.inline-empty').id = `taskEmpty-${item.patient_id}`;
+        row.querySelector('.inline-feedback').id = `taskFeedback-${item.patient_id}`;
+        row.querySelectorAll('.view-report-btn, .view-visualization-btn, .inline-task-form').forEach((node) => {
+            node.dataset.patientId = String(item.patient_id);
+        });
+
+        const reportShared = ['profile', 'assessment', 'tracking', 'imaging'].some(scope => hasScope(item, scope));
+        if (hasScope(item, 'assessment')) {
+            const assessmentLink = document.createElement('a');
+            assessmentLink.href = `doctor_assessments.html?patient_id=${encodeURIComponent(item.patient_id)}`;
+            assessmentLink.textContent = hasScope(item, 'care') ? '评估发布与轮次' : '查看评估轮次';
+            assessmentLink.className = 'view-assessment-link';
+            row.querySelector('.patient-action-row').appendChild(assessmentLink);
+        }
+        const reportButton = row.querySelector('.view-report-btn');
+        if (!reportShared) {
+            reportButton.classList.replace('view-report-btn', 'view-care-btn');
+            reportButton.textContent = '处理已共享随访';
+            reportButton.addEventListener('click', () => {
+                selectCarePatient(item.patient_id);
+                if (window.SessionGuard.captureSession().patientId === Number(item.patient_id)) openCareDrawer();
+            });
+        } else {
+            reportButton.textContent = '查看已共享报告';
+        }
+        const imagingButton = row.querySelector('.view-visualization-btn');
+        imagingButton.disabled = !hasScope(item, 'imaging');
+        if (imagingButton.disabled) imagingButton.textContent = '影像未共享';
+        if (!hasScope(item, 'care')) {
+            row.querySelector('.inline-task-form').classList.add('hidden');
+            row.querySelector('.inline-empty').textContent = '任务未共享';
+        }
 
         return row;
     }
@@ -470,11 +511,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const meta = document.createElement('div');
         meta.className = 'doctor-care-patient-meta';
-        meta.innerHTML = `
-            <strong>${patient.patient_name}</strong>
-            <span>${patient.patient_email}</span>
-            <span>${formatPatientType(patient.patient_type)} · ${formatRiskLevel(patient.latest_scale_risk_level)}</span>
-        `;
+        meta.appendChild(SafeRender.html`
+            <strong>${subjectName(patient)}</strong>
+            <span>${patient.patient_email || '基础资料未共享'}</span>
+            <span>${hasScope(patient, 'assessment') ? formatRiskLevel(patient.latest_scale_risk_level) : '评估未共享'}</span>
+        `);
         button.appendChild(meta);
 
         const badges = buildUnreadBadges(patient.patient_id);
@@ -512,12 +553,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function createBubbleRow(side, roleText, content) {
         const row = document.createElement('div');
         row.className = `doctor-care-bubble-row ${side}`;
-        row.innerHTML = `
+        row.appendChild(SafeRender.html`
             <div class="doctor-care-bubble">
                 <div class="doctor-care-bubble-role">${roleText}</div>
-                <div>${escapeHtml(content)}</div>
+                <div>${content}</div>
             </div>
-        `;
+        `);
         return row;
     }
 
@@ -525,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doctorCareMessageThread.innerHTML = '';
 
         if (!messages.length) {
-            doctorCareMessageThread.innerHTML = '<div class="doctor-care-empty">这位就诊者暂时还没有通知记录。你可以直接在这里给他发送一条通知。</div>';
+            doctorCareMessageThread.textContent = '旧版本消息的具体关系无法核验，本通道不投射旧历史。请到共享消息页核对原关系下的实际记录。';
             return;
         }
 
@@ -542,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doctorCareAiLogThread.innerHTML = '';
 
         if (!logs.length) {
-            doctorCareAiLogThread.innerHTML = '<div class="doctor-care-empty">这位就诊者最近还没有和 AI 助手的互动记录。</div>';
+            doctorCareAiLogThread.textContent = '私人AI对话默认不向医生共享。用户可通过随访消息明确分享反馈。';
             return;
         }
 
@@ -561,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function markCurrentTabAsRead() {
         const patient = getSelectedPatient();
-        if (!patient) return;
+        if (!patient || !hasScope(patient, 'care')) return;
 
         const patientId = String(patient.patient_id);
         const record = getCareRecord(patientId);
@@ -596,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const showingMessages = tab === 'messages';
         doctorCareMessageThread.classList.toggle('hidden', !showingMessages);
         doctorCareAiLogThread.classList.toggle('hidden', showingMessages);
-        doctorCareMessageForm.classList.toggle('hidden', !showingMessages);
+        doctorCareMessageForm.classList.toggle('hidden', !showingMessages || !getSelectedPatient() || !hasScope(getSelectedPatient(), 'care') || getCareRecord(state.selectedPatientId).denied);
 
         if (markRead) {
             markCurrentTabAsRead();
@@ -605,12 +646,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadCareRecords(patientId) {
         const record = getCareRecord(patientId);
-        const [messages, aiLogs] = await Promise.all([
-            window.API.Care.getDoctorMessages(patientId),
-            window.API.Care.getDoctorAiLogs(patientId)
-        ]);
+        const patient = state.patients.find(item => String(item.patient_id) === String(patientId));
+        if (patient && !hasScope(patient, 'care')) {
+            record.messages = []; record.aiLogs = []; record.denied = true;
+            return record;
+        }
+        const messages = await window.API.Care.getDoctorMessages(patientId);
         record.messages = messages.items || [];
-        record.aiLogs = aiLogs.items || [];
+        record.aiLogs = [];
+        record.denied = false;
         return record;
     }
 
@@ -640,18 +684,22 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        doctorCareTitle.textContent = `${patient.patient_name} 的沟通记录`;
-        doctorCareHint.textContent = `${patient.patient_email} · ${formatPatientType(patient.patient_type)}。你可以切换查看通知记录或这位就诊者与 AI 助手的互动内容。`;
+        doctorCareTitle.textContent = `${subjectName(patient)} 的沟通记录`;
+        doctorCareHint.textContent = '具体关系的共享消息请在新消息页查看；私人 AI 对话默认不向医生共享。';
+        const scopedLink = document.getElementById('doctorCareScopedLink');
+        if (scopedLink) scopedLink.href = `doctor_messages.html?patient_id=${encodeURIComponent(patient.patient_id)}`;
         doctorCareEmpty.classList.add('hidden');
 
         try {
             const record = await loadCareRecords(String(patient.patient_id));
             renderCareMessages(record.messages);
+            if (record.denied) doctorCareMessageThread.textContent = '随访消息未共享';
             renderCareAiLogs(record.aiLogs);
         } catch (error) {
-            const fallback = '<div class="doctor-care-empty">当前内容加载失败，请稍后重试。</div>';
-            doctorCareMessageThread.innerHTML = fallback;
-            doctorCareAiLogThread.innerHTML = fallback;
+            const record = getCareRecord(String(patient.patient_id));
+            record.messages = []; record.aiLogs = []; record.denied = true;
+            doctorCareMessageThread.textContent = error.status === 403 ? '随访消息未共享或授权已失效' : '当前内容加载失败，请稍后重试。';
+            renderCareAiLogs([]);
         }
 
         applyCareTab(state.activeTab, true);
@@ -659,6 +707,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectCarePatient(patientId) {
+        const snapshot = window.SessionGuard.assertCurrentSession();
+        if (snapshot.patientId !== Number(patientId)) {
+            window.location.href = `doctor_patients.html?focus_patient_id=${encodeURIComponent(patientId)}&care=1`;
+            return;
+        }
         state.selectedPatientId = String(patientId);
         localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(patientId));
         refreshCareDrawerContent();
@@ -666,6 +719,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function openCareDrawer() {
         if (state.drawerOpen) return;
+        const targetId = state.selectedPatientId || window.SessionGuard.captureSession().patientId || state.patients[0]?.patient_id;
+        if (targetId && window.SessionGuard.captureSession().patientId !== Number(targetId)) {
+            selectCarePatient(targetId);
+            return;
+        }
         state.drawerOpen = true;
         doctorCareOverlay.classList.remove('hidden');
         document.body.classList.add('ai-drawer-open');
@@ -762,20 +820,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         bindPatientBtn.disabled = true;
-        bindPatientBtn.textContent = '添加中...';
+        bindPatientBtn.textContent = '邀请中...';
         setFeedback('', '');
 
         try {
-            const result = await window.API.Doctor.bindPatientByEmail({ patient_email: email });
-            localStorage.setItem(SELECTED_PATIENT_STORAGE_KEY, String(result.patient_id));
-            setFeedback(`已将 ${result.patient_name} 纳入就诊者工作台。`, 'success');
-            patientEmailInput.value = '';
-            await loadPatients();
+            await window.API.Authorization.invite({ target_email: email, scope: ['profile', 'assessment', 'tracking', 'care', 'imaging'], purpose: 'clinical_sharing', expires_at: new Date(Date.now() + 90 * 86400000).toISOString() });
+            setFeedback('邀请已发出，等待本人或获准监护人确认。在下方授权区核对当前状态。', 'success');
+            document.querySelector('[data-authorization-panel]')?.authorizationRefresh?.();
         } catch (error) {
             setFeedback(error.message || '添加就诊者失败，请稍后重试。', 'error');
         } finally {
             bindPatientBtn.disabled = false;
-            bindPatientBtn.textContent = '添加就诊者档案';
+            bindPatientBtn.textContent = '发出共享邀请';
         }
     });
 
@@ -783,48 +839,6 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', () => {
             applyCareTab(button.dataset.careTab, true);
         });
-    });
-
-    doctorCareMessageForm?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const patient = getSelectedPatient();
-        const content = doctorCareMessageInput.value.trim();
-
-        if (!patient) {
-            setCareFeedback('请先选择一位就诊者。', 'error');
-            return;
-        }
-
-        if (!content) {
-            setCareFeedback('请输入要发送的通知内容。', 'error');
-            return;
-        }
-
-        doctorCareSendBtn.disabled = true;
-        setCareFeedback('正在发送通知...', '');
-
-        const clientMessageId = state.pendingCareMessageContent === content
-            ? state.pendingCareMessageId
-            : createClientMessageId();
-        state.pendingCareMessageId = clientMessageId;
-        state.pendingCareMessageContent = content;
-
-        try {
-            await window.API.Care.sendDoctorMessage(patient.patient_id, {
-                content,
-                client_message_id: clientMessageId
-            });
-            doctorCareMessageInput.value = '';
-            state.pendingCareMessageId = '';
-            state.pendingCareMessageContent = '';
-            setCareFeedback('通知已发送给就诊者。', 'success');
-            await refreshCareDrawerContent();
-        } catch (error) {
-            setCareFeedback(error.message || '通知发送失败，请稍后重试。', 'error');
-        } finally {
-            doctorCareSendBtn.disabled = false;
-        }
     });
 
     closeDoctorCareTooltip?.addEventListener('click', (event) => {
@@ -843,5 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    loadPatients();
+    loadPatients().then(() => {
+        if (new URLSearchParams(window.location.search).get('care') === '1') openCareDrawer();
+    });
 });

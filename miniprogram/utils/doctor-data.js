@@ -4,6 +4,13 @@ const RISK_TEXT = Object.freeze({
   low: '低风险'
 })
 const { normalizeProfessionalData } = require('./report-data')
+const SHARING_SCOPE = Object.freeze(['profile', 'assessment', 'tracking', 'care', 'imaging'])
+function sharingScope(payload) {
+  return Array.isArray(payload && payload.allowed_scope)
+    ? payload.allowed_scope.filter(value => SHARING_SCOPE.includes(value))
+    : SHARING_SCOPE.slice()
+}
+function sharedCount(value) { return value === null ? '未共享' : Math.max(0, finiteNumber(value)) }
 
 function safeArray(value) {
   return Array.isArray(value) ? value : []
@@ -33,28 +40,32 @@ function normalizeDashboard(statsPayload, patientsPayload) {
     : {}
   const patients = safeArray(patientList.items).map((item) => {
     const patient = item && typeof item === 'object' ? item : {}
+    const allowedScope = sharingScope(patient)
+    const assessmentShared = allowedScope.includes('assessment'), trackingShared = allowedScope.includes('tracking')
     const trackingDays = Math.max(0, finiteNumber(patient.completed_tracking_days))
     const cognitiveCount = Math.max(0, finiteNumber(patient.cognitive_test_count))
-    const patientName = text(patient.patient_name, '未命名患者')
+    const patientName = allowedScope.includes('profile') ? text(patient.patient_name, `共享档案 #${patient.patient_id}`) : `共享档案 #${patient.patient_id}`
     return {
       patientId: finiteNumber(patient.patient_id),
       patientName,
       avatarText: patientName.substring(0, 1),
-      patientEmail: text(patient.patient_email, '未提供邮箱'),
+      patientEmail: allowedScope.includes('profile') ? text(patient.patient_email, '未提供邮箱') : '基础资料未共享',
       patientType: text(patient.patient_type),
       riskLevel: text(patient.latest_scale_risk_level),
-      riskText: riskText(patient.latest_scale_risk_level),
-      progressText: `随访 ${trackingDays} 天 · 认知 ${cognitiveCount} 项`,
-      nextStepText: text(patient.next_step_text, '查看报告并安排下一步'),
-      hasImaging: patient.has_imaging === true
+      riskText: assessmentShared ? riskText(patient.latest_scale_risk_level) : '评估未共享',
+      progressText: `${trackingShared ? `随访 ${trackingDays} 天` : '跟踪未共享'} · ${assessmentShared ? `认知 ${cognitiveCount} 项` : '认知未共享'}`,
+      nextStepText: text(patient.next_step_text, '查看已共享的资料'),
+      allowedScope,
+      weeklyReportCount: assessmentShared && Number.isFinite(patient.weekly_report_count) ? Math.max(0, patient.weekly_report_count) : null,
+      hasImaging: allowedScope.includes('imaging') ? patient.has_imaging === true : null
     }
   }).filter((item) => item.patientId > 0)
 
   return {
     stats: {
       patientCount: Math.max(0, finiteNumber(stats.patient_count)),
-      pendingImagingCount: Math.max(0, finiteNumber(stats.pending_imaging_count)),
-      weeklyReportCount: Math.max(0, finiteNumber(stats.weekly_report_count))
+      pendingImagingCount: sharedCount(stats.pending_imaging_count),
+      weeklyReportCount: sharedCount(stats.weekly_report_count)
     },
     total: Math.max(0, finiteNumber(patientList.total, patients.length)),
     patients
@@ -63,13 +74,15 @@ function normalizeDashboard(statsPayload, patientsPayload) {
 
 function normalizePatientReport(payload) {
   const report = payload && typeof payload === 'object' ? payload : {}
-  const scalePayload = report.latest_scale && typeof report.latest_scale === 'object'
+  const allowedScope = sharingScope(report)
+  const assessmentShared = allowedScope.includes('assessment'), trackingShared = allowedScope.includes('tracking'), imagingShared = allowedScope.includes('imaging')
+  const scalePayload = assessmentShared && report.latest_scale && typeof report.latest_scale === 'object'
     ? report.latest_scale
     : null
-  const cognitivePayload = report.cognitive_profile && typeof report.cognitive_profile === 'object'
+  const cognitivePayload = assessmentShared && report.cognitive_profile && typeof report.cognitive_profile === 'object'
     ? report.cognitive_profile
     : null
-  const trackingPayload = report.tracking_summary && typeof report.tracking_summary === 'object'
+  const trackingPayload = trackingShared && report.tracking_summary && typeof report.tracking_summary === 'object'
     ? report.tracking_summary
     : null
 
@@ -104,9 +117,11 @@ function normalizePatientReport(payload) {
       : `平均专注 ${Math.max(0, finiteNumber(trackingPayload.average_focus_minutes))} 分钟`
   } : null
 
+  const professional = normalizeProfessionalData(imagingShared ? report : { imaging_history_status: 'not_authorized' })
+
   return {
     patientId: finiteNumber(report.patient_id),
-    patientName: text(report.patient_name, '患者报告'),
+    patientName: text(report.patient_name, `共享档案 #${report.patient_id}`),
     patientEmail: text(report.patient_email),
     patientType: text(report.patient_type),
     scale,
@@ -114,9 +129,12 @@ function normalizePatientReport(payload) {
     tracking,
     careSummary: safeArray(report.care_summary).map((item) => text(item)).filter(Boolean),
     suggestedActions: safeArray(report.suggested_actions).map((item) => text(item)).filter(Boolean),
-    hasImaging: Boolean(report.latest_imaging_visualization),
-    hasModelPrediction: Boolean(report.latest_model_prediction),
-    professional: normalizeProfessionalData(report)
+    allowedScope, assessmentShared, trackingShared, imagingShared,
+    hasImaging: imagingShared && !professional.historyBlocked ? professional.hasImaging : null,
+    hasModelPrediction: imagingShared && !professional.historyBlocked ? professional.hasModelPrediction : null,
+    imagingStatusText: imagingShared ? (professional.historyStatusText || (professional.hasImaging ? '已有影像记录' : '暂无影像记录')) : '影像未共享',
+    modelStatusText: imagingShared ? (professional.historyStatusText || (professional.hasModelPrediction ? '已有结果' : '暂无模型结果')) : '模型资料未共享',
+    professional
   }
 }
 
@@ -173,12 +191,17 @@ function filterPatients(patients, filters = {}) {
   return safeArray(patients).filter((patient) => {
     const matchesQuery = !query || `${patient.patientName} ${patient.patientEmail}`.toLowerCase().includes(query)
     const matchesRisk = risk === 'all' || patient.riskLevel === risk
-    const matchesCompletion = completion === 'all' || (
+    const trackingShared = !Array.isArray(patient.allowedScope) || patient.allowedScope.includes('tracking')
+    const matchesCompletion = completion === 'all' || trackingShared && (
       completion === 'complete'
         ? /随访 14 天/.test(patient.progressText)
         : !/随访 14 天/.test(patient.progressText)
     )
-    return matchesQuery && matchesRisk && matchesCompletion
+    const matchesStatistic = !filters.statistic || filters.statistic === 'patients' ||
+      filters.statistic === 'reports' && patient.weeklyReportCount > 0 ||
+      filters.statistic === 'imaging' && patient.hasImaging === false ||
+      filters.statistic === 'tasks' && patient.pending > 0
+    return matchesQuery && matchesRisk && matchesCompletion && matchesStatistic
   })
 }
 

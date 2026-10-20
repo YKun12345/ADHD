@@ -1,0 +1,25 @@
+<ui-nav title="具体补问与答复" showBack="{{true}}" fallbackUrl="{{role === 'researcher' ? '/pages/doctor-home/index' : '/pages/home/index'}}" />
+<ai-copilot page-key="review-questions" patient-id="{{patientId}}" assessment-id="{{assessmentId}}" />
+<view class="review-page product-page product-form-page">
+  <view class="sheet"><text class="title">第 {{assessmentId}} 轮补问</text><text class="note">背景可跳过；答复保留不知道、跳过及每次实际修订，不改写原始背景或分数。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{busy || loading}}" bindtap="reload">刷新问题与答复</button><button bindtap="openRecovery">查看本机待确认原件</button>
+    <button wx:if="{{pendingId}}" disabled="{{busy}}" bindtap="queryPending">按原编号查询确认</button><text wx:if="{{pendingId}}" class="note">待确认原编号：{{pendingId}}。确认前不能建立冲突操作。</text>
+  </view>
+  <view wx:if="{{role === 'researcher' && sources.length}}" class="sheet"><text class="title">向用户提出一个具体问题</text>
+    <text wx:if="{{adoptionId}}" class="note">已带入本人核对的助手草稿；还需明确提出补问。若要改写，请回助手保存新的编辑记录。</text>
+    <picker range="{{sources}}" range-key="label" value="{{sourceIndex}}" bindchange="onSourceChange" disabled="{{busy || !!pendingId || !!adoptionId}}"><view class="note">针对：{{sources[sourceIndex].label}}</view></picker>
+    <textarea value="{{questionText}}" bindinput="onQuestionInput" maxlength="2000" disabled="{{busy || !!pendingId || !!adoptionId}}" placeholder="填写需要核对的具体问题" />
+    <button disabled="{{busy || !!pendingId || loading}}" bindtap="ask">核对并提出补问</button>
+  </view>
+  <view wx:for="{{questions}}" wx:key="id" class="sheet"><text class="title">补问 {{item.id}} · {{item.sourceLabel}}</text><text class="note">实际医生账号 {{item.actor_user_id}} · {{item.created_at}}</text><text selectable="true">{{item.question}}</text>
+    <text wx:if="{{!item.replies.length}}" class="note">尚无实际答复。</text>
+    <view wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id"><text class="note">答复第 {{reply.revision}} 版 · {{reply.statusLabel}} · 账号 {{reply.actor_user_id}}</text><text selectable="true">{{reply.answer}}</text></view>
+    <button wx:if="{{role === 'patient'}}" data-id="{{item.id}}" disabled="{{busy || !!pendingId}}" bindtap="selectQuestion">答复或追加更正</button>
+  </view>
+  <view wx:if="{{selectedQuestion}}" class="sheet"><text class="title">答复：{{selectedQuestion.question}}</text>
+    <radio-group bindchange="onAnswerStatus"><label><radio value="provided" checked="{{answerStatus === 'provided'}}" />提供</label><label><radio value="unknown" checked="{{answerStatus === 'unknown'}}" />不知道</label><label><radio value="skipped" checked="{{answerStatus === 'skipped'}}" />跳过</label></radio-group>
+    <textarea wx:if="{{answerStatus === 'provided'}}" value="{{answerText}}" bindinput="onAnswerInput" maxlength="4000" disabled="{{busy || !!pendingId}}" placeholder="填写实际答复" />
+    <button disabled="{{busy || !!pendingId}}" bindtap="answer">核对并提交本次答复</button>
+  </view>
+</view>

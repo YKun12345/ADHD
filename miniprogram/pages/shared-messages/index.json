@@ -1,0 +1,4 @@
+{
+  "navigationBarTitleText": "共享消息",
+  "usingComponents": { "ui-nav": "/components/ui-nav/index", "ai-copilot": "/components/ai-copilot/index" }
+}

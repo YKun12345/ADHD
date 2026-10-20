@@ -504,10 +504,13 @@
         </div>
     </footer>
 
-    <script src="js/api.js"></script>
-    <script src="js/achievement.js"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261014-w02"></script>
+    <script src="js/achievement.js?v=20261013-w01"></script>
     <script src="js/games.js"></script>
-    <script src="js/patient_copilot.js"></script>
+    <script src="js/patient_copilot.js?v=20261017-unified"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // 获取用户名
@@ -539,11 +542,11 @@
         }
 
         // 检查是否从测试会话返回（带成就触发标志）
-        const achFlag = sessionStorage.getItem('achievement_trigger');
+        const achFlag = window.OwnedCache.read(window.OwnedCache.achievementContext);
         if (achFlag && window.Achievement) {
             try {
-                const result = JSON.parse(achFlag);
-                sessionStorage.removeItem('achievement_trigger');
+                const result = achFlag;
+                window.OwnedCache.remove(window.OwnedCache.achievementContext);
                 setTimeout(() => window.Achievement.onTestComplete(result), 600);
             } catch(e) {}
         }

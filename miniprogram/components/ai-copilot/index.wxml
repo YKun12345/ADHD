@@ -3,6 +3,7 @@
   style="left: {{positionX}}px; top: {{positionY}}px"
 >
   <view class="ai-copilot__guide-bubble" wx:if="{{guideBubbleVisible}}">
+    <text class="ai-copilot__greeting">你好，我是星仔。</text>
     <text class="ai-copilot__guide-text">{{config.intro}}</text>
     <view class="ai-copilot__guide-close" aria-role="button" aria-label="关闭页面介绍" bindtap="closeGuideBubble">×</view>
   </view>
@@ -10,10 +11,10 @@
     <view class="ai-copilot__header">
       <view class="ai-copilot__partner">
         <view class="ai-copilot__partner-avatar">
-          <ai-mascot state="happy" decorative="{{true}}" />
+          <ai-mascot id="copilot-panel-mascot" state="{{navigating ? 'thinking' : 'idle'}}" label="摸摸星仔" active="{{!paused}}" reduced-motion="{{reducedMotion}}" bind:interact="handlePetInteract" />
         </view>
         <view class="ai-copilot__partner-copy">
-          <text class="ai-copilot__companion-name">星仔 · AI健康小助手</text>
+          <text class="ai-copilot__companion-name">星仔助手</text>
           <text class="ai-copilot__title">{{config.title}}</text>
         </view>
       </view>
@@ -32,6 +33,8 @@
 
     <text class="ai-copilot__advice">{{config.advice}}</text>
     <text class="ai-copilot__companion-line">我会陪你一步一步完成，不着急。</text>
+    <text wx:if="{{petFeedback}}" class="ai-copilot__pet-reply" aria-live="polite">{{petFeedback}}</text>
+    <view wx:if="{{inlineHelpVisible}}" class="ai-copilot__steps"><text wx:for="{{helpSteps}}" wx:key="*this" class="ai-copilot__step">{{index + 1}}. {{item}}</text><text class="ai-copilot__stay-note">查看这段帮助会保留当前页和正在填写的内容。</text></view>
 
     <view class="ai-copilot__actions">
       <view
@@ -40,19 +43,21 @@
         aria-role="button"
         aria-disabled="{{navigating}}"
         bindtap="openPageHelp"
-      >如何使用本页</view>
+      >这页怎么用</view>
       <view
+        wx:if="{{!localHelpOnly}}"
         class="ai-copilot__action ai-copilot__action--secondary"
         hover-class="ai-copilot__control--pressed"
         aria-role="button"
         aria-disabled="{{navigating}}"
         bindtap="openFreeQuestion"
-      >自己提问</view>
+      >问问星仔</view>
     </view>
 
     <text class="ai-copilot__notice">
       AI仅提供辅助信息，不替代医生诊断
     </text>
+    <view class="ai-copilot__motion-control" aria-role="button" aria-pressed="{{reducedMotion}}" bindtap="toggleReducedMotion">{{reducedMotion ? '恢复星仔的小动作' : '减少星仔的动作'}}</view>
   </view>
 
   <view
@@ -60,7 +65,7 @@
     wx:if="{{!expanded}}"
     hover-class="ai-copilot__trigger--pressed"
     aria-role="button"
-    aria-label="{{expanded ? '收起AI健康助手' : '打开AI健康助手'}}"
+    aria-label="{{expanded ? '收起星仔助手' : '打开星仔助手'}}"
     aria-description="可按住拖动到屏幕其他位置"
     aria-expanded="{{expanded}}"
     aria-disabled="{{navigating}}"
@@ -72,8 +77,11 @@
     <view class="ai-copilot__icon">
       <ai-mascot
         state="{{navigating ? 'thinking' : expanded ? 'happy' : 'idle'}}"
-        label="星仔 · AI健康小助手"
+        label="星仔助手"
         decorative="{{false}}"
+        active="{{!paused}}"
+        reduced-motion="{{reducedMotion}}"
+        touch-managed="{{true}}"
       />
     </view>
   </view>

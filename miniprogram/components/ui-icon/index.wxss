@@ -447,3 +447,35 @@
   background: currentColor;
   transform: translateY(-50%);
 }
+
+/* Plain line variant: the same geometry works in cards and in the TabBar. */
+.ui-icon--shape-line { color:var(--ui-primary,#159ca8); background:transparent; border:0; border-radius:0; box-shadow:none; }
+.ui-icon--shape-line.ui-icon--tone-inverse { color:#fff; }
+.ui-icon--shape-line.ui-icon--tone-muted { color:#83929e; }
+.ui-icon--home .ui-icon__a { width:35rpx;height:35rpx;border-top:4rpx solid currentColor;border-left:4rpx solid currentColor;transform:translate(-50%,-65%) rotate(45deg);border-radius:4rpx; }
+.ui-icon--home .ui-icon__b { top:46rpx;width:40rpx;height:34rpx;border:4rpx solid currentColor;border-top:0;border-radius:3rpx; }
+.ui-icon--home .ui-icon__c { top:54rpx;width:11rpx;height:21rpx;border:3rpx solid currentColor;border-bottom:0;border-radius:3rpx 3rpx 0 0; }
+.ui-icon--account .ui-icon__a,.ui-icon--users .ui-icon__a { top:27rpx;width:22rpx;height:22rpx;border:4rpx solid currentColor;border-radius:50%; }
+.ui-icon--account .ui-icon__b,.ui-icon--users .ui-icon__b { top:57rpx;width:44rpx;height:25rpx;border:4rpx solid currentColor;border-radius:24rpx 24rpx 8rpx 8rpx; }
+.ui-icon--users .ui-icon__c { left:64rpx;top:30rpx;width:13rpx;height:17rpx;border:3rpx solid currentColor;border-left:0;border-radius:0 12rpx 12rpx 0; }
+.ui-icon--users .ui-icon__d { left:67rpx;top:57rpx;width:16rpx;height:22rpx;border:3rpx solid currentColor;border-left:0;border-radius:0 15rpx 7rpx 0; }
+.ui-icon--workbench .ui-icon__a,.ui-icon--folder .ui-icon__a,.ui-icon--calendar .ui-icon__a,.ui-icon--imaging .ui-icon__a { width:46rpx;height:43rpx;border:4rpx solid currentColor;border-radius:7rpx; }
+.ui-icon--workbench .ui-icon__b { width:24rpx;height:4rpx;background:currentColor;box-shadow:0 11rpx 0 currentColor; }
+.ui-icon--folder .ui-icon__b { top:19rpx;left:31rpx;width:21rpx;height:8rpx;border:3rpx solid currentColor;border-bottom:0;border-radius:5rpx 5rpx 0 0; }
+.ui-icon--calendar .ui-icon__b { top:30rpx;width:44rpx;height:4rpx;background:currentColor; }
+.ui-icon--calendar .ui-icon__c { top:18rpx;left:31rpx;width:4rpx;height:14rpx;background:currentColor;box-shadow:22rpx 0 0 currentColor; }
+.ui-icon--calendar .ui-icon__d { top:46rpx;left:31rpx;width:6rpx;height:6rpx;background:currentColor;box-shadow:15rpx 0 0 currentColor,0 12rpx 0 currentColor,15rpx 12rpx 0 currentColor; }
+.ui-icon--imaging .ui-icon__b { top:31rpx;left:32rpx;width:8rpx;height:8rpx;border:3rpx solid currentColor;border-radius:50%; }
+.ui-icon--imaging .ui-icon__c { top:52rpx;width:28rpx;height:20rpx;border-top:3rpx solid currentColor;border-left:3rpx solid currentColor;transform:translate(-50%,-25%) rotate(45deg); }
+.ui-icon--message .ui-icon__a { width:48rpx;height:37rpx;border:4rpx solid currentColor;border-radius:12rpx; }
+.ui-icon--message .ui-icon__b { top:56rpx;left:25rpx;width:10rpx;height:10rpx;border-left:3rpx solid currentColor;transform:rotate(25deg); }
+.ui-icon--message .ui-icon__c { width:25rpx;height:3rpx;background:currentColor;box-shadow:0 9rpx 0 currentColor; }
+.ui-icon--shield .ui-icon__a { width:41rpx;height:47rpx;border:4rpx solid currentColor;border-radius:13rpx 13rpx 25rpx 25rpx; }
+.ui-icon--shield .ui-icon__b { width:9rpx;height:9rpx;border:3rpx solid currentColor;border-radius:50%; }
+.ui-icon--bell .ui-icon__a { width:37rpx;height:38rpx;border:4rpx solid currentColor;border-radius:22rpx 22rpx 8rpx 8rpx; }
+.ui-icon--bell .ui-icon__b { top:66rpx;width:13rpx;height:4rpx;background:currentColor;border-radius:999rpx; }
+.ui-icon--settings .ui-icon__a { width:43rpx;height:43rpx;border:4rpx solid currentColor;border-radius:13rpx;transform:translate(-50%,-50%) rotate(45deg); }
+.ui-icon--settings .ui-icon__b { width:16rpx;height:16rpx;border:3rpx solid currentColor;border-radius:50%; }
+.ui-icon--upload .ui-icon__a { top:51rpx;width:44rpx;height:27rpx;border:4rpx solid currentColor;border-top:0;border-radius:0 0 9rpx 9rpx; }
+.ui-icon--upload .ui-icon__b { top:32rpx;width:20rpx;height:20rpx;border-top:4rpx solid currentColor;border-left:4rpx solid currentColor;transform:translate(-50%,-50%) rotate(45deg); }
+.ui-icon--upload .ui-icon__c { top:39rpx;width:4rpx;height:32rpx;background:currentColor; }

@@ -1,0 +1,28 @@
+page { min-height: 100%; background: #f3f8f8; color: #264c57; }
+.notifications-page { padding: 30rpx 30rpx calc(48rpx + env(safe-area-inset-bottom)); }
+.settings-card { padding: 32rpx; border: 1rpx solid #dcebed; border-radius: 28rpx; background: #fff; }
+.section-title { font-size: 31rpx; font-weight: 700; }
+.settings-copy, .settings-hint, .status-note, .notification-reason, .footer-note { display: block; line-height: 1.7; }
+.settings-copy { margin-top: 16rpx; color: #607c83; font-size: 25rpx; }
+.status-row { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 26rpx; color: #286c73; font-size: 23rpx; }
+.status-note { margin-top: 14rpx; color: #886933; font-size: 23rpx; }
+.primary-button, .subscribe-button { display: flex; align-items: center; justify-content: center; min-height: 90rpx; margin-top: 22rpx; border-radius: 20rpx; font-size: 27rpx; }
+.primary-button { color: #fff; background: #287f83; }
+.subscribe-button { color: #216970; background: #e6f3f3; }
+.primary-button::after, .subscribe-button::after { border: 0; }
+.primary-button[disabled], .subscribe-button[disabled] { color: #819898; background: #eaf0f0; }
+.pause-action, .refresh-action, .business-action { display: flex; align-items: center; min-height: 88rpx; color: #286f78; font-size: 24rpx; }
+.pause-action { justify-content: center; color: #7c6471; }
+.settings-hint, .footer-note { color: #70858a; font-size: 22rpx; }
+.error-message { margin-top: 20rpx; padding: 20rpx; border-radius: 16rpx; color: #985151; background: #fff0ed; font-size: 24rpx; }
+.list-heading, .notification-main { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.list-heading { margin: 22rpx 4rpx 6rpx; }
+.empty-state { padding: 26rpx 8rpx; color: #70858a; font-size: 24rpx; line-height: 1.6; }
+.notification-row { padding: 26rpx 28rpx 4rpx; border-bottom: 1rpx solid #dfeaec; background: #fff; }
+.notification-title { flex: 1; font-size: 27rpx; font-weight: 600; }
+.notification-state { color: #67858c; font-size: 22rpx; }
+.notification-reason { margin-top: 12rpx; color: #806f52; font-size: 23rpx; }
+.footer-note { margin: 26rpx 8rpx 0; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

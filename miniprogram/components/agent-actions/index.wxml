@@ -1,0 +1,11 @@
+<view class="agent-card agent-card--{{tone}}">
+  <view class="agent-header"><text class="agent-title">星仔陪你下一步</text><text wx:if="{{items.length > 1}}" class="agent-page">{{actionIndex + 1}} / {{items.length}} · 左右滑动</text></view>
+  <picker wx:if="{{!patientId && profiles.length > 1}}" range="{{profiles}}" range-key="label" value="{{profileIndex}}" bindchange="selectProfile" disabled="{{busy}}"><view class="agent-note">当前档案：{{profiles[profileIndex].label}}</view></picker>
+  <text wx:if="{{loading}}" class="agent-note">星仔正在看看你的安排…</text>
+  <text wx:if="{{errorText}}" class="agent-error">{{errorText}}</text>
+  <swiper wx:if="{{items.length}}" class="agent-slides" current="{{actionIndex}}" bindchange="slideAction" circular="{{false}}" duration="250">
+    <swiper-item wx:for="{{items}}" wx:key="id"><view class="agent-action"><text class="action-title">{{item.title}}</text><text class="agent-note action-reason">{{item.leadText}}</text><button class="agent-primary {{busy || loading ? 'agent-button--disabled' : ''}}" data-id="{{item.id}}" disabled="{{busy || loading}}" bindtap="openAction">{{item.buttonText}}</button></view></swiper-item>
+  </swiper>
+  <text wx:if="{{!items.length && !loading && !errorText}}" class="agent-note">{{selectedPatientId ? '这会儿没有新的安排，想聊聊随时叫我。' : modeText}}</text>
+  <view class="agent-footer"><button class="agent-chat-link {{busy || loading || !selectedPatientId ? 'agent-button--disabled' : ''}}" disabled="{{busy || loading || !selectedPatientId}}" bindtap="openChat">和星仔聊聊</button><button class="agent-refresh {{busy || loading ? 'agent-button--disabled' : ''}}" disabled="{{busy || loading}}" bindtap="reload">刷新</button></view>
+</view>

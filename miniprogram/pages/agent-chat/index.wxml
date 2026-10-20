@@ -1,0 +1,79 @@
+<ui-nav title="星仔助手" showBack="{{true}}" rightText="更多" bind:righttap="toggleMore" fallbackUrl="{{role === 'researcher' ? '/pages/doctor-home/index' : '/pages/home/index'}}" />
+<view class="chat-page product-page">
+  <view class="chat-presence"><view class="presence-dot"></view><text>{{hasRunning || busy ? '星仔正在想办法' : '陪你一步一步来'}}</text><text wx:if="{{loading}}"> · 正在读取记录</text></view>
+  <text class="service-label">{{serviceLabel}}</text>
+  <view wx:if="{{moreVisible}}" class="chat-tools">
+    <text class="tools-title">想做什么，告诉星仔就好</text>
+    <picker wx:if="{{!patientFixed && profiles.length > 1}}" range="{{profiles}}" range-key="label" value="{{profileIndex}}" bindchange="selectProfile" disabled="{{busy || !!pendingId}}"><view class="tool-choice">正在帮助：{{profiles[profileIndex].label}} ▾</view></picker>
+    <picker wx:if="{{assessments.length > 1}}" range="{{assessments}}" range-key="label" value="{{assessmentIndex}}" bindchange="selectAssessment" disabled="{{busy || !!pendingId}}"><view class="tool-choice">本次聊：{{assessments[assessmentIndex].label}} ▾</view></picker>
+    <picker range="{{intents}}" range-key="label" value="{{intentIndex}}" bindchange="selectIntent" disabled="{{busy || !!pendingId}}"><view class="tool-choice">{{intents[intentIndex].label}} ▾</view></picker>
+    <picker wx:if="{{isCycleInput && cycles.length}}" range="{{cycles}}" range-key="label" value="{{cycleIndex}}" bindchange="selectCycle" disabled="{{busy || !!pendingId}}"><view class="tool-choice">{{cycles[cycleIndex].label}} ▾</view></picker>
+    <text wx:if="{{isCycleInput && !cycles.length}}" class="quiet-text">当前没有可读的实际日期周期，请先到日期记录中建立周期。</text>
+    <view wx:if="{{isProfileInput}}"><text class="quiet-text">只整理你主动提供的内容，可全部跳过；不会发给外部模型。</text><text wx:if="{{!profileAllowed}}" class="quiet-text">当前未获背景处理权限，请先核对账号与隐私。</text>
+      <view wx:for="{{profileInputFields}}" wx:key="key" class="writing-preview"><text>{{item.label}}（选填）</text>
+        <radio-group data-scope="input" data-index="{{index}}" data-type="status" bindchange="onProfileField"><label><radio value="skipped" checked="{{item.status === 'skipped'}}" disabled="{{!profileAllowed || busy || !!pendingId}}"/>跳过</label><label><radio value="unknown" checked="{{item.status === 'unknown'}}" disabled="{{!profileAllowed || busy || !!pendingId}}"/>不知道</label><label><radio value="provided" checked="{{item.status === 'provided'}}" disabled="{{!profileAllowed || busy || !!pendingId}}"/>提供</label></radio-group>
+        <textarea wx:if="{{item.status === 'provided'}}" class="writing-textarea" value="{{item.value}}" data-scope="input" data-index="{{index}}" data-type="value" bindinput="onProfileField" maxlength="1000" disabled="{{busy || !!pendingId}}" placeholder="填写这一项实际情况"/>
+      </view>
+    </view>
+    <text wx:if="{{role === 'researcher'}}" class="quiet-text">写作建议只在需要时使用，专业意见和计划由你确认发布。</text>
+    <view wx:if="{{contextChoices.length}}" class="context-choices"><text class="quiet-text">接着哪段对话聊？可选两轮，智能解答前会展示完整发送内容。</text><button wx:for="{{contextChoices}}" wx:key="run_id" class="context-choice {{item.selected ? 'context-choice--selected' : ''}}" data-id="{{item.run_id}}" bindtap="toggleContext" disabled="{{busy || !!pendingId || !!smartPreview}}">{{item.selected ? '✓ ' : '○ '}}{{item.label}}</button></view>
+    <button class="text-button" bindtap="toggleQuietMotion">{{reducedMotion ? '恢复星仔的小动作' : '减少星仔的动作'}}</button>
+    <view class="tool-row"><button class="text-button" disabled="{{busy || loading}}" bindtap="reload">刷新记录</button><button class="text-button" bindtap="openRecovery">发送恢复</button><button class="text-button" bindtap="closeMore">收起</button></view>
+  </view>
+  <view class="conversation">
+    <view class="message message--assistant welcome-message">
+      <view class="pet-avatar"><ai-mascot state="idle" decorative="{{true}}" reduced-motion="{{reducedMotion}}" active="{{petActive}}" /></view>
+      <view class="bubble bubble--assistant"><text>{{welcomeText}}</text></view>
+    </view>
+    <view wx:if="{{!runs.length}}" class="starter-prompts"><button wx:for="{{quickPrompts}}" wx:key="*this" class="prompt-button" data-text="{{item}}" bindtap="showHelpPrompt" disabled="{{busy || !!pendingId}}">{{item}}</button></view>
+    <button wx:if="{{runs.length > visibleRuns.length}}" class="text-button earlier-button" bindtap="showEarlier">查看更早的对话</button>
+    <view wx:for="{{visibleRuns}}" wx:key="run_id" class="message-pair">
+      <view class="message message--user"><view class="bubble bubble--user"><text selectable="true">{{item.originalText}}</text></view></view>
+      <view class="message message--assistant"><view class="small-avatar"><ai-mascot state="{{item.working ? 'thinking' : 'idle'}}" decorative="{{true}}" /></view>
+        <view class="bubble bubble--assistant">
+          <text wx:if="{{item.working}}" class="working-text">{{item.statusLabel}}…</text>
+          <text wx:if="{{item.replyText}}" selectable="true">{{item.replyText}}</text>
+          <text wx:if="{{item.answerNotice}}" class="quiet-text">{{item.answerNotice}}</text>
+          <text wx:if="{{!item.working && !item.replyText}}" class="quiet-text">{{item.statusLabel}}</text>
+          <text wx:if="{{!item.isAnswer && item.summaryText}}" class="summary-text">{{item.summaryText}}</text>
+          <view wx:if="{{item.canEditDraft && item.planDraft}}" class="writing-preview"><text class="writing-title">{{item.planDraft.title}}</text><text>{{item.planDraft.instructions}}</text></view>
+          <view wx:if="{{item.canEditDraft && item.replyDraft}}" class="writing-preview"><text>{{item.replyDraft.text}}</text></view>
+          <view wx:if="{{item.canEditDraft && item.questionDrafts.length}}" class="writing-preview"><text>{{item.questionDrafts[0].question}}</text></view>
+          <text wx:if="{{item.artifact.stale}}" class="quiet-text">这是当时的回答。资料已有变化，新的操作会重新确认。</text>
+          <button wx:if="{{item.canEditDraft && item.artifact && !item.artifact.stale}}" class="action-button" data-id="{{item.artifact.id}}" disabled="{{busy || !!pendingId}}" bindtap="openEditor">编辑并使用这份建议</button>
+          <button wx:if="{{item.artifact}}" class="details-toggle" data-id="{{item.run_id}}" bindtap="toggleRunDetails">{{item.detailsVisible ? '收起说明' : '查看依据与说明'}}</button>
+          <view wx:if="{{item.detailsVisible}}" class="answer-details"><text>{{item.modeLabel}}</text><text>{{item.sourceText}}</text><text wx:if="{{item.isAnswer && item.summaryText}}">{{item.summaryText}}</text><text wx:if="{{item.dispositionText}}">{{item.dispositionText}}</text><button wx:if="{{item.canEditDraft}}" class="text-button" data-id="{{item.artifact.id}}" disabled="{{busy}}" bindtap="viewDecisions">查看我的编辑记录</button></view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{companion && companion.updates.length && !hasRunning}}" class="business-reminder"><text class="next-step-intro">业务进展提醒 · 来自已保存记录</text><text wx:for="{{companion.updates}}" wx:key="id" class="quiet-text">{{item.text}}</text></view>
+    <view wx:if="{{nextAction && !hasRunning && !editor}}" class="business-reminder">
+      <text class="next-step-intro">{{role === 'researcher' ? '医生工作台 · 业务提醒' : '当前档案 · 业务提醒'}}</text>
+      <text class="reminder-caption">根据已有记录推荐；实际往来消息请到“共享消息”查看。</text>
+      <text wx:if="{{companion.resume_action_id === nextAction.id}}" class="quiet-text">上次查看的事项仍可打开</text>
+      <text class="next-step-title">{{nextAction.title}}</text><text class="quiet-text">{{nextAction.leadText || nextAction.reason}}</text><button class="action-button" disabled="{{busy || loading || !!pendingId}}" bindtap="openNextAction">{{nextAction.buttonText}}</button><button wx:if="{{nextActions.length > 1}}" class="details-toggle" bindtap="nextSuggestion" disabled="{{busy || !!pendingId}}">查看其他事项 · {{nextActionIndex + 1}}/{{nextActions.length}}</button>
+    </view>
+    <text wx:if="{{actionNote && !nextAction}}" class="quiet-notice">{{actionNote}}</text>
+    <view wx:if="{{businessOptions.length}}" class="writing-sheet"><text class="writing-title">你想带到哪里？</text><button wx:for="{{businessOptions}}" wx:key="id" class="context-choice" data-id="{{item.id}}" bindtap="chooseBusiness" disabled="{{busy}}">{{item.label}}</button><button class="text-button" bindtap="cancelBusiness">取消</button></view>
+    <view wx:if="{{businessDraft}}" class="writing-sheet"><text class="writing-title">{{businessDraft.title}}</text><text class="quiet-text">{{businessDraft.recipient}}</text><text selectable="true">{{businessDraft.text}}</text><text class="quiet-text">带入原话后，还需在实际表单中核对保存或发送。</text><button class="action-button" bindtap="confirmBusiness" disabled="{{busy || !!pendingId}}">确认带入，打开表单</button><button class="text-button" bindtap="cancelBusiness">取消</button></view>
+    <view wx:if="{{smartPreview}}" class="writing-sheet smart-preview"><text class="writing-title">这次准备发送给 DeepSeek 的全部文字</text><text class="quiet-text">仅发送下列选中对话和本次文字。文字中主动填写的私人资料也会发送，请逐项核对。</text><view wx:for="{{smartPreview.turns}}" wx:key="run_id" class="writing-preview"><text class="quiet-text">选中的第 {{index + 1}} 轮 · 你的话</text><text selectable="true">{{item.user_message}}</text><text class="quiet-text">星仔的回答</text><text selectable="true">{{item.assistant_message}}</text></view><view class="writing-preview"><text class="quiet-text">本次文字</text><text selectable="true">{{smartPreview.message}}</text></view><button class="action-button" bindtap="confirmSmartPreview" disabled="{{busy}}">确认发送以上全部文字</button><button class="text-button" bindtap="cancelSmartPreview">取消发送</button></view>
+    <view wx:if="{{editor}}" class="writing-sheet"><text class="writing-title">把建议改成你要表达的内容</text><text class="quiet-text">{{editor.sourceText}}。确认后可带入对应表单，尚不会发布或发送。</text>
+      <view wx:if="{{editor.isProfile && editor.canUse}}" wx:for="{{editorFields}}" wx:key="key" class="writing-preview"><text>{{item.label}}</text><radio-group data-scope="editor" data-index="{{index}}" data-type="status" bindchange="onProfileField"><label><radio value="skipped" checked="{{item.status === 'skipped'}}"/>跳过</label><label><radio value="unknown" checked="{{item.status === 'unknown'}}"/>不知道</label><label><radio value="provided" checked="{{item.status === 'provided'}}"/>提供</label></radio-group><textarea wx:if="{{item.status === 'provided'}}" class="writing-textarea" value="{{item.value}}" data-scope="editor" data-index="{{index}}" data-type="value" bindinput="onProfileField" maxlength="1000"/><checkbox-group data-scope="editor" data-index="{{index}}" data-type="confirmed" bindchange="onProfileField"><label><checkbox value="confirmed" checked="{{item.confirmed}}"/>我已核对这一项内容和状态</label></checkbox-group></view>
+      <input wx:if="{{editor.canUse && editor.isPlan}}" class="writing-input" value="{{editorTitle}}" data-field="editorTitle" bindinput="onEditorInput" maxlength="120" placeholder="计划标题"/><textarea wx:if="{{editor.canUse && !editor.isProfile}}" class="writing-textarea" value="{{editorText}}" data-field="editorText" bindinput="onEditorInput" maxlength="{{editor.maxLength}}" placeholder="编辑建议正文"/><textarea class="writing-reason" value="{{editorReason}}" data-field="editorReason" bindinput="onEditorInput" maxlength="2000" placeholder="简要说明修改、采用或不用的原因"/><button wx:if="{{editor.canUse}}" class="action-button" data-action="use" disabled="{{busy || !!pendingId}}" bindtap="saveEditor">确认采用，继续下一步</button><button class="text-button" data-action="reject" disabled="{{busy || !!pendingId}}" bindtap="saveEditor">这次不用</button></view>
+    <view wx:if="{{adoptedDecision}}" class="writing-sheet"><text>建议已经保存。现在可以带入对应工作。</text><button class="action-button" disabled="{{busy}}" bindtap="openDecision">继续填写并确认</button></view>
+    <view wx:for="{{decisionHistory}}" wx:key="id" class="writing-sheet"><text class="quiet-text">{{item.label}} · {{item.created_at}}</text><text>{{item.contentText}}</text><text class="quiet-text">{{item.reason}}</text></view>
+    <view wx:if="{{pendingId}}" class="delivery-note"><text>这条消息的发送状态还在确认，内容已保留。</text><button class="text-button" disabled="{{busy}}" bindtap="queryPending">查询是否收到</button><button class="text-button" bindtap="openRecovery">查看发送记录</button></view>
+    <text wx:if="{{errorText}}" class="error-notice">{{errorText}}</text><button wx:if="{{needsExternalConsent && role === 'patient'}}" class="text-button" bindtap="openAIConsent">去账号与隐私管理授权</button><text wx:if="{{statusText && !hasRunning}}" class="quiet-notice">{{statusText}}</text>
+  </view>
+</view>
+<view class="composer product-page product-chat-composer" style="bottom: {{keyboardHeight}}px">
+  <view class="composer-pet">
+    <view class="composer-pet-avatar"><ai-mascot id="chat-pet" state="{{pendingId ? 'recover' : busy || hasRunning ? 'thinking' : loading ? 'waiting' : errorText ? 'care' : petState}}" active="{{petActive}}" reduced-motion="{{reducedMotion}}" bind:interact="petXingzai" label="摸摸星仔" /></view>
+    <view class="composer-pet-copy"><text class="composer-pet-name">星仔陪着你</text><text class="composer-pet-status">{{petText || (pendingId ? '先一起确认刚才的提交' : busy || hasRunning ? '我在认真想你的问题…' : loading ? '等我看看当前进度' : errorText ? '我们一起看看哪里卡住了' : petState === 'listening' ? '我在听，你慢慢写' : petState === 'success' ? '刚才这一步完成啦！' : reducedMotion ? '安静陪着你，轻触也有回应' : '我会自己动，也可以摸摸我')}}</text></view>
+    <button class="pet-touch-button" bindtap="touchXingzai" aria-label="摸摸星仔，看动作和回应">摸摸星仔</button>
+  </view>
+  <view wx:if="{{businessChoices.length && !businessDraft && !smartPreview}}" class="business-shortcuts"><button wx:for="{{businessChoices}}" wx:key="kind" class="smart-button" data-kind="{{item.kind}}" bindtap="prepareBusiness" disabled="{{busy || loading || !!pendingId}}">{{item.label}} →</button></view>
+  <text wx:if="{{intentIndex > 0}}" class="composer-mode">{{intents[intentIndex].label}} · 可在“更多”切回聊天</text>
+  <view class="composer-row"><textarea wx:if="{{!isProfileInput}}" class="composer-input" value="{{inputValue}}" bindinput="onInput" bindfocus="onComposerFocus" bindblur="onComposerBlur" maxlength="4000" auto-height="{{true}}" fixed="{{true}}" adjust-position="{{false}}" disabled="{{busy || !!pendingId || !!smartPreview}}" placeholder="问问操作、下一步，或注意力相关困惑"/><text wx:else class="composer-caption">请在上方逐项填写背景</text><button class="send-button" disabled="{{busy || loading || hasRunning || !!pendingId || !!smartPreview || !patientId || (!inputValue && !isProfileInput)}}" bindtap="send">{{busy ? '发送中' : isProfileInput ? '整理背景' : '发送'}}</button></view>
+  <view class="composer-options"><text class="composer-caption">{{selectedContextIds.length ? '已选 ' + selectedContextIds.length + ' 轮 · 智能发送前预览' : intentIndex === 0 ? '发送使用本机帮助' : '建议需由你核对后使用'}}</text><button wx:if="{{intentIndex === 0}}" class="smart-button" disabled="{{busy || loading || hasRunning || !!pendingId || !!smartPreview || !patientId || !inputValue}}" bindtap="sendSmart">智能解答 · 逐次确认</button></view>
+</view>

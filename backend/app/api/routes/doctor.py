@@ -1,3 +1,6 @@
+from backend.app.services.identity_access import require_patient_access, require_doctor, SCOPES
+from backend.app.services import authorization_ledger
+from backend.app.services.care_relationship_service import current_patient_actor
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, func
@@ -17,6 +20,7 @@ from backend.app.models.patient import Patient
 from backend.app.models.scale_result import ScaleResult
 from backend.app.models.tracking_log import TrackingLog
 from backend.app.models.user import User, UserRole
+from backend.app.models.identity import CareRelationship
 from backend.app.schemas.imaging import (
     ImagingVisualizationResponse,
     SaveImagingVisualizationRequest,
@@ -29,6 +33,8 @@ from backend.app.schemas.researcher import (
     ResearcherPatientReportResponse,
 )
 from backend.app.schemas.tracking import TrackingLogResponse
+from backend.app.core.record_provenance import record_storage_info
+from backend.app.services.imaging_storage_service import (require_imaging_storage,read_imaging_history,stamp_storage_context,save_storage_transaction)
 
 
 router = APIRouter(prefix="/doctor", tags=["doctor"])
@@ -59,6 +65,8 @@ def _to_imaging_response(record: ImagingVisualization | None) -> ImagingVisualiz
 
     return ImagingVisualizationResponse(
         id=record.id,
+        storage_integrity=record_storage_info(record),
+        storage_context=record.storage_context,
         visualization_type=record.visualization_type,
         func_file_name=record.func_file_name,
         anat_file_name=record.anat_file_name,
@@ -157,31 +165,58 @@ def _build_suggested_actions(
     return deduped[:4]
 
 
+def _allowed_patient_scopes(db,user,patient_id):
+    if db.get(Patient,patient_id) is None:
+        raise HTTPException(404,"Patient not found.")
+    allowed = set()
+    for scope in sorted(SCOPES):
+        try:
+            require_patient_access(db,user,patient_id,scope)
+            allowed.add(scope)
+        except HTTPException as exc:
+            if exc.status_code not in {403,404}:
+                raise
+    return allowed
+
+
+def _doctor_patient_scopes(db,user):
+    require_doctor(db,user.id)
+    candidates = db.scalars(select(CareRelationship.patient_id).where(CareRelationship.doctor_user_id == user.id,CareRelationship.status == "active")).all()
+    return {pid:scopes for pid in set(candidates) if (scopes := _allowed_patient_scopes(db,user,pid))}
+
+
 def _build_patient_item(db: Session, patient: Patient) -> ResearcherPatientItem:
+    scope = db.info["clinical_patient_scopes"][patient.id]
     latest_scale = db.scalar(
         select(ScaleResult)
         .where(ScaleResult.patient_id == patient.id)
         .order_by(ScaleResult.created_at.desc(), ScaleResult.id.desc())
-    )
+    ) if "assessment" in scope else None
+    weekly_report_count = db.scalar(select(func.count(ScaleResult.id)).where(
+        ScaleResult.patient_id == patient.id,
+        ScaleResult.created_at >= datetime.now(timezone.utc) - timedelta(days=7)
+    )) if "assessment" in scope else None
     cognitive_test_count = db.scalar(
         select(func.count(CognitiveTest.id)).where(CognitiveTest.patient_id == patient.id)
-    ) or 0
-    tracking_summary = _extract_tracking_summary(db, patient.id)
-    has_imaging = db.scalar(
+    ) or 0 if "assessment" in scope else None
+    tracking_summary = _extract_tracking_summary(db, patient.id) if "tracking" in scope else None
+    has_imaging = (db.scalar(
         select(func.count(ImagingVisualization.id)).where(ImagingVisualization.patient_id == patient.id)
-    ) > 0
+    ) > 0) if "imaging" in scope else None
 
     return ResearcherPatientItem(
         patient_id=patient.id,
-        patient_name=patient.user.full_name,
-        patient_email=patient.user.email,
-        patient_type=patient.patient_type.value,
+        patient_name=(patient.display_name or patient.user.full_name) if "profile" in scope else None,
+        patient_email=current_patient_actor(db,patient.id,db.info["clinical_viewer_user_id"]).email if "profile" in scope else None,
+        patient_type=patient.patient_type.value if "profile" in scope else None,
+        allowed_scope=sorted(scope),
         latest_scale_type=latest_scale.scale_type if latest_scale else None,
         latest_scale_risk_level=latest_scale.risk_level if latest_scale else None,
         latest_scale_total_score=latest_scale.total_score if latest_scale else None,
-        completed_tracking_days=tracking_summary.completed_count,
-        current_tracking_day=tracking_summary.current_day,
-        completion_status=tracking_summary.completion_status,
+        weekly_report_count=weekly_report_count,
+        completed_tracking_days=tracking_summary.completed_count if tracking_summary else None,
+        current_tracking_day=tracking_summary.current_day if tracking_summary else None,
+        completion_status=tracking_summary.completion_status if tracking_summary else None,
         cognitive_test_count=cognitive_test_count,
         has_imaging=has_imaging,
         next_step_text=_build_next_step_text(
@@ -189,57 +224,30 @@ def _build_patient_item(db: Session, patient: Patient) -> ResearcherPatientItem:
             cognitive_test_count,
             tracking_summary.completed_count,
             has_imaging,
-        ),
-        created_at=patient.created_at,
+        ) if {"profile","assessment","tracking","imaging"} <= scope else None,
+        created_at=patient.created_at if "profile" in scope else None,
     )
 
 
-@router.post("/bind_patient", response_model=ResearcherPatientItem)
-def bind_patient_by_email(
-    payload: BindPatientByEmailRequest,
-    current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
-    db: Session = Depends(get_db),
-) -> ResearcherPatientItem:
-    patient_user = db.scalar(
-        select(User).where(
-            User.email == payload.patient_email,
-            User.role == UserRole.PATIENT,
-        )
-    )
-    if patient_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="未找到该邮箱对应的患者账号。",
-        )
-
-    patient = db.scalar(select(Patient).where(Patient.user_id == patient_user.id))
-    if patient is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="该患者尚未完善档案，暂时无法绑定。",
-        )
-
-    if patient.assigned_researcher_id and patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="该患者已绑定其他研究人员。",
-        )
-
-    patient.assigned_researcher_id = current_user.id
-    db.commit()
-    db.refresh(patient)
-
-    return _build_patient_item(db, patient)
+@router.post("/bind_patient")
+def bind_patient_by_email(payload: BindPatientByEmailRequest, current_user: User = Depends(require_roles(UserRole.RESEARCHER)), db: Session = Depends(get_db)):
+    from backend.app.schemas.identity import RelationshipInvitation
+    from backend.app.services.care_relationship_service import create_invitation
+    return create_invitation(db,current_user,RelationshipInvitation(target_email=payload.patient_email))
 
 
 @router.get("/my_patients", response_model=ResearcherPatientListResponse)
+@authorization_ledger.read_heads()
 def get_my_patients(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> ResearcherPatientListResponse:
+    db.info["clinical_viewer_user_id"] = current_user.id
+    scopes = _doctor_patient_scopes(db,current_user)
+    db.info["clinical_patient_scopes"] = scopes
     patients = db.scalars(
         select(Patient)
-        .where(Patient.assigned_researcher_id == current_user.id)
+        .where(Patient.id.in_(scopes))
         .order_by(Patient.created_at.desc(), Patient.id.desc())
     ).all()
 
@@ -248,13 +256,17 @@ def get_my_patients(
 
 
 @router.get("/dashboard_stats", response_model=ResearcherDashboardStats)
+@authorization_ledger.read_heads()
 def get_dashboard_stats(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> ResearcherDashboardStats:
+    scope_by_patient = _doctor_patient_scopes(db,current_user)
+    imaging_ids = [pid for pid,scopes in scope_by_patient.items() if "imaging" in scopes]
+    assessment_ids = [pid for pid,scopes in scope_by_patient.items() if "assessment" in scopes]
     # 1. 当前就诊者总数
     patient_count = db.scalar(
-        select(func.count(Patient.id)).where(Patient.assigned_researcher_id == current_user.id)
+        select(func.count(Patient.id)).where(Patient.id.in_(scope_by_patient))
     ) or 0
 
     # 2. 待分析影像数 (已绑定但未上传影像的患者)
@@ -262,7 +274,7 @@ def get_dashboard_stats(
         select(func.count(Patient.id))
         .outerjoin(ImagingVisualization, Patient.id == ImagingVisualization.patient_id)
         .where(
-            Patient.assigned_researcher_id == current_user.id,
+            Patient.id.in_(imaging_ids),
             ImagingVisualization.id.is_(None)
         )
     ) or 0
@@ -273,15 +285,16 @@ def get_dashboard_stats(
         select(func.count(ScaleResult.id))
         .join(Patient, ScaleResult.patient_id == Patient.id)
         .where(
-            Patient.assigned_researcher_id == current_user.id,
+            Patient.id.in_(assessment_ids),
             ScaleResult.created_at >= last_week
         )
     ) or 0
 
     return ResearcherDashboardStats(
         patient_count=patient_count,
-        pending_imaging_count=pending_imaging_count,
-        weekly_report_count=weekly_report_count
+        pending_imaging_count=pending_imaging_count if imaging_ids or not patient_count else None,
+        weekly_report_count=weekly_report_count if assessment_ids or not patient_count else None,
+        scope_patient_counts={scope:sum(scope in scopes for scopes in scope_by_patient.values()) for scope in sorted(SCOPES)},
     )
 
 
@@ -296,12 +309,8 @@ def save_patient_imaging_visualization(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> ImagingVisualizationResponse:
-    patient = db.get(Patient, patient_id)
-    if patient is None or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="未找到该患者，或该患者不属于当前研究人员。",
-        )
+    patient = require_patient_access(db,current_user,patient_id,"imaging")
+    require_imaging_storage(db,patient.id)
 
     if payload.visualization_type not in {"nifti", "gifti"}:
         raise HTTPException(
@@ -309,7 +318,6 @@ def save_patient_imaging_visualization(
             detail="影像可视化类型仅支持 nifti 或 gifti。",
         )
 
-    summary_text = _build_imaging_summary(payload)
     record = db.scalar(
         select(ImagingVisualization)
         .where(ImagingVisualization.patient_id == patient.id)
@@ -321,13 +329,12 @@ def save_patient_imaging_visualization(
             patient_id=patient.id,
             researcher_id=current_user.id,
             visualization_type=payload.visualization_type,
-            summary_text=summary_text,
+            summary_text='',
         )
         db.add(record)
     else:
         record.researcher_id = current_user.id
         record.visualization_type = payload.visualization_type
-        record.summary_text = summary_text
 
     record.func_file_name = payload.func_file_name or record.func_file_name
     record.anat_file_name = payload.anat_file_name or record.anat_file_name
@@ -345,7 +352,16 @@ def save_patient_imaging_visualization(
     if payload.notes is not None:
         record.notes = payload.notes
 
-    db.commit()
+    # Derive the summary from the actual saved inputs, including values retained
+    # when a note-only edit omits filenames/screenshots.
+    merged = SaveImagingVisualizationRequest(**{name:getattr(record,name) for name in SaveImagingVisualizationRequest.model_fields})
+    record.summary_text = _build_imaging_summary(merged)
+    stamp_storage_context(db,record,current_user,input_context={
+        'kind':'doctor_saved_visualization',
+        'input_verification_status':'submitted_names_and_content_only',
+        'original_imaging_source_verified':False,
+    })
+    save_storage_transaction(db,record,current_user,action='imaging_visualization_saved')
     db.refresh(record)
 
     return _to_imaging_response(record)
@@ -357,61 +373,52 @@ def get_patient_report_details(
     current_user: User = Depends(require_roles(UserRole.RESEARCHER)),
     db: Session = Depends(get_db),
 ) -> ResearcherPatientReportResponse:
-    patient = db.get(Patient, patient_id)
-    if patient is None or patient.assigned_researcher_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="未找到该患者，或该患者不属于当前研究人员。",
-        )
+    scope = _allowed_patient_scopes(db,current_user,patient_id)
+    if not scope & {"profile","assessment","tracking","imaging"}:
+        raise HTTPException(403,"No current authority for report evidence. Care messages use their separate care scope.")
+    patient = db.get(Patient,patient_id)
 
     latest_scale = db.scalar(
         select(ScaleResult)
         .where(ScaleResult.patient_id == patient.id)
         .order_by(ScaleResult.created_at.desc(), ScaleResult.id.desc())
-    )
-    latest_imaging = db.scalar(
-        select(ImagingVisualization)
-        .where(ImagingVisualization.patient_id == patient.id)
-        .order_by(ImagingVisualization.created_at.desc(), ImagingVisualization.id.desc())
-    )
-    latest_model_prediction = db.scalar(
-        select(ModelPrediction)
-        .where(ModelPrediction.patient_id == patient.id)
-        .order_by(ModelPrediction.created_at.desc(), ModelPrediction.id.desc())
-    )
-    cognitive_profile = _extract_latest_cognitive_profile(db, patient.id)
-    tracking_summary = _extract_tracking_summary(db, patient.id)
+    ) if "assessment" in scope else None
+    latest_imaging,latest_model_prediction,imaging_state = read_imaging_history(db,patient.id) if 'imaging' in scope else (None,None,'not_authorized')
+    cognitive_profile = _extract_latest_cognitive_profile(db, patient.id) if "assessment" in scope else None
+    tracking_summary = _extract_tracking_summary(db, patient.id) if "tracking" in scope else None
     tracking_logs = db.scalars(
         select(TrackingLog)
         .where(TrackingLog.patient_id == patient.id)
         .order_by(TrackingLog.day_index.asc(), TrackingLog.created_at.asc())
-    ).all()
+    ).all() if "tracking" in scope else None
     cognitive_test_count = db.scalar(
         select(func.count(CognitiveTest.id)).where(CognitiveTest.patient_id == patient.id)
-    ) or 0
-    has_imaging = latest_imaging is not None
+    ) or 0 if "assessment" in scope else None
+    has_imaging = latest_imaging is not None if "imaging" in scope else None
 
     return ResearcherPatientReportResponse(
+        imaging_history_status=imaging_state,
         patient_id=patient.id,
-        patient_name=patient.user.full_name,
-        patient_email=patient.user.email,
-        patient_type=patient.patient_type.value,
+        patient_name=(patient.display_name or patient.user.full_name) if "profile" in scope else None,
+        patient_email=current_patient_actor(db,patient.id,current_user.id).email if "profile" in scope else None,
+        patient_type=patient.patient_type.value if "profile" in scope else None,
+        allowed_scope=sorted(scope),
         latest_scale=_to_scale_response(latest_scale) if latest_scale else None,
         cognitive_profile=cognitive_profile,
         tracking_summary=tracking_summary,
-        tracking_logs=[TrackingLogResponse.from_orm(log) for log in tracking_logs],
+        tracking_logs=[TrackingLogResponse.from_orm(log) for log in tracking_logs] if tracking_logs is not None else None,
         care_summary=_build_care_summary(
             latest_scale,
             cognitive_profile,
             tracking_summary,
             has_imaging,
-        ),
+        ) if SCOPES <= scope else [],
         suggested_actions=_build_suggested_actions(
             latest_scale,
             cognitive_test_count,
             tracking_summary,
             has_imaging,
-        ),
+        ) if SCOPES <= scope else [],
         latest_imaging_visualization=_to_imaging_response(latest_imaging),
         latest_model_prediction=_to_model_prediction_response(latest_model_prediction),
     )

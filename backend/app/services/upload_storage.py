@@ -64,6 +64,7 @@ def store_timeseries_upload(
     file_name: str,
     upload_root: Path,
     max_bytes: int,
+    authorization_check=None,
 ) -> StoredUpload:
     original_name = Path(file_name).name
     suffix = Path(original_name).suffix.lower()
@@ -76,6 +77,8 @@ def store_timeseries_upload(
     if len(file_bytes) > max_bytes:
         raise UploadTooLargeError(f"The uploaded file exceeds the {max_bytes}-byte limit.")
 
+    if authorization_check is not None:
+        authorization_check()
     resolved_root = upload_root.expanduser().resolve()
     resolved_root.mkdir(parents=True, exist_ok=True)
     destination = (resolved_root / f"{uuid4().hex}{suffix}").resolve()
@@ -83,7 +86,10 @@ def store_timeseries_upload(
         raise UploadValidationError("The upload destination is outside the configured root.")
 
     from backend.app.core.data_encryption import FILE_MAGIC, encrypt_bytes
-    destination.write_bytes(FILE_MAGIC + encrypt_bytes(file_bytes, "upload:" + destination.name))
+    envelope = FILE_MAGIC + encrypt_bytes(file_bytes, "upload:" + destination.name)
+    if authorization_check is not None:
+        authorization_check()
+    destination.write_bytes(envelope)
     return StoredUpload(
         original_name=original_name,
         stored_path=destination,

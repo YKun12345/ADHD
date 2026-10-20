@@ -3,6 +3,8 @@
  * 管理患者认知测试的成就解锁、连续天数奖励和视觉正反馈弹层
  */
 (function () {
+    const guard = window.SessionGuard;
+    const pageSession = guard.captureSession();
 
     // ==============================
     // 成就定义表
@@ -87,18 +89,21 @@
     // 持久化
     // ==============================
     function getStorageKey() {
-        const user = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
-        return user?.id ? `smartbrain_achievements_${user.id}` : 'smartbrain_achievements_guest';
+        guard.assertCurrentSession(pageSession);
+        if (pageSession.role !== 'patient' || !pageSession.accountId) throw new Error('请先登录本人账号。');
+        return `smartbrain_achievements_${pageSession.accountId}`;
     }
 
     function getStatsKey() {
-        const user = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
-        return user?.id ? `smartbrain_ach_stats_${user.id}` : 'smartbrain_ach_stats_guest';
+        guard.assertCurrentSession(pageSession);
+        if (pageSession.role !== 'patient' || !pageSession.accountId) throw new Error('请先登录本人账号。');
+        return `smartbrain_ach_stats_${pageSession.accountId}`;
     }
 
     function loadUnlocked() {
+        const key = getStorageKey();
         try {
-            return new Set(JSON.parse(localStorage.getItem(getStorageKey()) || '[]'));
+            return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
         } catch { return new Set(); }
     }
 
@@ -107,8 +112,12 @@
     }
 
     function loadStats() {
+        const key = getStatsKey();
         try {
-            const raw = JSON.parse(localStorage.getItem(getStatsKey()) || '{}');
+            const raw = JSON.parse(localStorage.getItem(key) || '{}');
+            for (const field of ['totalSessions', 'streak', 'bestNbackAccuracy', 'bestGoNoGoRT']) {
+                const number = Number(raw[field]); raw[field] = Number.isFinite(number) && number >= 0 ? number : 0;
+            }
             if (raw.completedTypes) raw.completedTypes = new Set(raw.completedTypes);
             return raw;
         } catch { return {}; }
@@ -247,9 +256,7 @@
                 <div style="font-size:3.5rem; margin-bottom:0.5rem;">🎉</div>
                 <h2 style="color:white; font-size:1.4rem; margin:0 0 0.3rem;">${streakMsg}</h2>
                 ${scoreDisplay}
-                <p style="opacity:0.8; font-size:0.88rem; line-height:1.6; margin:0.5rem 0 0;">
-                    ${testResult?.summary || '你的认知数据已记录，继续坚持！'}
-                </p>
+                <p data-achievement-summary style="opacity:0.8; font-size:0.88rem; line-height:1.6; margin:0.5rem 0 0;"></p>
                 ${achHtml}
                 <div style="display:flex; gap:0.8rem; justify-content:center; margin-top:1.4rem; flex-wrap:wrap;">
                     <a href="patient_tracking.html" style="
@@ -272,6 +279,7 @@
             </div>
         `;
 
+        modal.querySelector('[data-achievement-summary]').textContent = testResult?.summary || '你的认知数据已记录，继续坚持！';
         document.body.appendChild(modal);
 
         // Auto-close after 8s or on button click

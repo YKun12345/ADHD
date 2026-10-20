@@ -133,13 +133,15 @@ component.handleDragCancel()
 assert.equal(component.data.expanded, false, '触摸取消不得打开面板')
 
 component.openPageHelp()
-assert.match(calls.navigation[0], /scope=general&prompt=/)
-assert.equal(component.data.expanded, false)
+assert.equal(calls.navigation.length, 0)
+assert.equal(component.data.expanded, true)
+assert.equal(component.data.inlineHelpVisible, true)
+assert.ok(component.data.helpSteps.length)
 
 component.openFreeQuestion()
 assert.equal(
-  calls.navigation[1],
-  '/pages/ai-chat/index?scope=general'
+  calls.navigation[0],
+  '/pages/agent-chat/index?scope=general'
 )
 
 navigationShouldFail = true
@@ -147,7 +149,7 @@ component.togglePanel()
 component.openFreeQuestion()
 assert.equal(component.data.expanded, true)
 assert.deepEqual(calls.toasts.at(-1), {
-  title: '暂时无法打开AI助手',
+  title: '暂时无法打开星仔助手',
   icon: 'none'
 })
 
@@ -157,6 +159,7 @@ const guardedComponent = createComponent('home')
 componentDefinition.lifetimes.attached.call(guardedComponent)
 const navigationCountBeforeGuard = calls.navigation.length
 guardedComponent.openPageHelp()
+guardedComponent.openFreeQuestion()
 guardedComponent.openFreeQuestion()
 assert.equal(
   calls.navigation.length,
@@ -203,8 +206,9 @@ for (const fragment of [
   'bindtap="closePanel"',
   'bindtap="openPageHelp"',
   'bindtap="openFreeQuestion"',
-  '如何使用本页',
-  '自己提问'
+  '这页怎么用',
+  '问问星仔',
+  'inlineHelpVisible'
 ]) {
   assert.equal(
     wxml.includes(fragment),

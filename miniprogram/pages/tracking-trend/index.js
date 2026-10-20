@@ -1,6 +1,8 @@
 const { registerPatientPage } = require('../../utils/patient-page')
 const { TRACKING_LOGS_KEY } = require('../../utils/tracking-data')
 const { buildTrackingTrendModel, createChartPoints, createDayAxisTicks } = require('../../utils/tracking-trend')
+const { request } = require('../../utils/request')
+const { fetchFollowupSummary } = require('../../utils/followup-summary')
 const {
   createCanvasMetrics,
   measureTextWidths,
@@ -63,6 +65,12 @@ function drawTrendGrid(context, metrics, layout, minValue, maxValue) {
 
 registerPatientPage({
   data: {
+    summary: null,
+    summaryLoading: false,
+    summaryError: '',
+    summaryProfiles: [],
+    summaryProfileIndex: 0,
+    summaryPatientId: 0,
     metricTabs: METRIC_TABS,
     activeMetric: 'mood',
     hasData: false,
@@ -78,10 +86,52 @@ registerPatientPage({
     chartCanvasWidth: 0,
     chartCanvasHeight: 0
   },
+  onLoad(options = {}) {
+    this._requestedSummaryPatientId = /^\d+$/.test(String(options.patient_id || '')) ? Number(options.patient_id) : 0
+  },
   onShow() {
     this._canvasDisposed = false
     this._model = buildTrackingTrendModel(wx.getStorageSync(TRACKING_LOGS_KEY))
     this._applyMetric(this.data.activeMetric || 'mood')
+    if (typeof wx.request === 'function') this.reloadSummary()
+  },
+  async reloadSummary() {
+    const lease = capturePatientSessionLease()
+    const version = (this._summaryVersion || 0) + 1
+    this._summaryVersion = version
+    const current = () => !this._canvasDisposed && version === this._summaryVersion && isPatientSessionLeaseCurrent(lease)
+    this.setData({ summary: null, summaryLoading: true, summaryError: '' })
+    try {
+      const context = await request({ url: '/identity/context' })
+      if (!current()) return false
+      const profiles = (context.accessible_patients || []).filter(row => Number.isInteger(row.patient_id) && row.patient_id > 0)
+      const requested = this._requestedSummaryPatientId || this.data.summaryPatientId
+      const profile = requested ? profiles.find(row => row.patient_id === requested) : profiles[0]
+      if (!profile) throw new Error('当前没有可读取的本人或儿童档案。')
+      const summary = await fetchFollowupSummary(profile.patient_id)
+      if (!current()) return false
+      this.setData({ summary, summaryLoading: false, summaryPatientId: profile.patient_id,
+        summaryProfiles: profiles.map(row => ({ ...row, label: row.name || row.patient_name || `档案${row.patient_id}` })),
+        summaryProfileIndex: profiles.indexOf(profile) })
+      return true
+    } catch (error) {
+      if (current()) this.setData({ summary: null, summaryLoading: false, summaryError: error.message || '阶段总结读取失败，请重试。' })
+      return false
+    }
+  },
+  selectSummaryProfile(event) {
+    const index = Number(event.detail.value)
+    const selected = this.data.summaryProfiles[index]
+    if (!selected) return false
+    this._requestedSummaryPatientId = selected.patient_id
+    this.setData({ summaryPatientId: selected.patient_id, summaryProfileIndex: index, summary: null })
+    return this.reloadSummary()
+  },
+  openSummaryStep(event) {
+    const step = this.data.summary && this.data.summary.nextSteps[Number(event.currentTarget.dataset.index)]
+    if (!step || !step.target || !['care-cycles', 'cycle-review'].includes(step.target.page) ||
+      step.target.patient_id !== this.data.summaryPatientId || !Number.isInteger(step.target.cycle_id) || step.target.cycle_id <= 0) return
+    wx.navigateTo({ url: `/pages/${step.target.page}/index?patient_id=${step.target.patient_id}&cycle_id=${step.target.cycle_id}` })
   },
   onReady() { this._scheduleRedraw(this.data.activeMetric) },
   onResize() { this._scheduleRedraw(this.data.activeMetric) },
@@ -243,14 +293,21 @@ registerPatientPage({
     this._canvasDisposed = true
     this._model = null
     this._chartRenderToken = (this._chartRenderToken || 0) + 1
+    this._clearSummary()
+  },
+  _clearSummary() {
+    this._summaryVersion = (this._summaryVersion || 0) + 1
+    this.setData({ summary: null, summaryLoading: false, summaryError: '', summaryProfiles: [], summaryPatientId: 0 })
   },
   onHide() {
     this._canvasDisposed = true
     this._chartRenderToken = (this._chartRenderToken || 0) + 1
+    this._clearSummary()
   },
   onUnload() {
     this._canvasDisposed = true
     this._chartRenderToken = (this._chartRenderToken || 0) + 1
+    this._clearSummary()
   },
   goBack() { wx.navigateBack({ delta: 1 }) }
 })

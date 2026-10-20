@@ -8,8 +8,8 @@
 .ui-nav {
   box-sizing: border-box;
   width: 100%;
-  background: rgba(247, 252, 253, 0.94);
-  border-bottom: 1rpx solid rgba(104, 151, 162, 0.18);
+  background: #f7fbfe;
+  border-bottom: 1rpx solid rgba(225,237,244,.6);
 }
 
 .ui-nav__bar {
@@ -28,11 +28,11 @@
   top: 50%;
   left: 50%;
   display: block;
-  width: 240rpx;
+  width: 340rpx;
   max-width: calc(100% - 320rpx);
   overflow: hidden;
-  color: #173f50;
-  font-size: 32rpx;
+  color: var(--ui-ink,#183747);
+  font-size: var(--ui-font-title,34rpx);
   font-weight: 650;
   line-height: 1.25;
   letter-spacing: 1rpx;

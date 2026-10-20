@@ -1,12 +1,13 @@
+<ai-copilot local-help-only="{{true}}" wx:if="{{!submitting}}" page-key="login" />
 <!--pages/login/index.wxml-->
-<view class="login-page ui-page">
+<view class="login-page ui-page product-page">
   <view class="ambient-orb ambient-orb--cyan"></view>
   <view class="ambient-orb ambient-orb--violet"></view>
 
   <view class="login-header">
-    <text class="brand-kicker">ADHD SMART CARE</text>
+    <text class="brand-kicker">注意力评估与日常陪伴</text>
     <text class="title">ADHD智慧辅助</text>
-    <text class="subtitle">回到你的14天认知健康计划</text>
+    <text class="subtitle">评估、医生协作与持续随访</text>
   </view>
 
   <form class="login-card glass-surface" bindsubmit="handleLogin">
@@ -23,7 +24,7 @@
         aria-checked="{{role === 'patient'}}"
         bindtap="selectRole"
       >
-        <text class="role-title">患者端</text>
+        <text class="role-title">用户</text>
         <text class="role-note">测评与日常管理</text>
       </view>
       <view
@@ -33,8 +34,8 @@
         aria-checked="{{role === 'researcher'}}"
         bindtap="selectRole"
       >
-        <text class="role-title">医生端</text>
-        <text class="role-note">患者随访与报告</text>
+        <text class="role-title">医生</text>
+        <text class="role-note">用户随访与报告</text>
       </view>
     </view>
 
@@ -80,7 +81,7 @@
       aria-role="button"
       aria-disabled="{{submitting}}"
       bindtap="goToRegister"
-    >首次使用？创建患者账号</view>
+    >首次使用？创建用户账号</view>
 
     <view class="soft-divider"></view>
 

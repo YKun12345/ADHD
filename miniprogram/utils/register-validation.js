@@ -88,6 +88,18 @@ function validateRegistration(form = {}) {
     return '请阅读并同意知情同意说明'
   }
 
+  if (patientType === 'adult' && ageNumber < 18) return '本人使用需年满18岁，请选择为儿童使用'
+  if (patientType === 'child') {
+    if (ageNumber >= 18) return '儿童档案需未满18岁，成年转换须核验本人身份'
+    const guardianName = String(form.guardianName || '').trim()
+    if (guardianName.length < 2 || guardianName.length > 100) return '请填写主要监护人姓名'
+    const guardianAge = Number(form.guardianAge)
+    if (!Number.isInteger(guardianAge) || guardianAge < 18 || guardianAge > 120) return '监护人年龄须为18至120之间的整数'
+    if (!['parent', 'legal_guardian'].includes(form.guardianRelation)) return '请选择监护关系'
+    if (String(form.proofReference || '').length > 200) return '监护关系说明不能超过200个字符'
+    if (form.guardianConfirmed !== true) return '请确认主要监护关系及儿童使用说明'
+  }
+
   return ''
 }
 

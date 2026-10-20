@@ -22,20 +22,21 @@ def _database_scope():
 
 
 def can_access_patient(user, patient):
-    from backend.app.models.user import UserRole
+    from backend.app.db.session import SessionLocal
+    from backend.app.services.identity_access import require_patient_access as authorize
     if patient is None or user is None or not user.is_active:
         return False
-    if user.role == UserRole.PATIENT:
-        return patient.user_id == user.id
-    return user.role == UserRole.RESEARCHER and patient.assigned_researcher_id == user.id
+    try:
+        with SessionLocal() as db:
+            authorize(db,user,patient.id,"imaging",record=False)
+        return True
+    except HTTPException:
+        return False
 
 
 def require_patient_access(db, user, patient_id):
-    from backend.app.models.patient import Patient
-    patient = db.get(Patient, patient_id)
-    if not can_access_patient(user, patient):
-        raise HTTPException(status_code=403, detail='没有该患者影像工作区的护理权限。')
-    return patient
+    from backend.app.services.identity_access import require_patient_access as authorize
+    return authorize(db,user,patient_id,"imaging")
 
 
 def issue_session_token(user_id, patient_id, lifetime=SESSION_LIFETIME):
@@ -51,6 +52,7 @@ class ImagingWorkspace:
     user_id: int
     patient_id: int
     namespace: str
+    authorization_receipts: tuple = ()
 
 
 def _audit(db, actor_id, patient_id, method, path, allowed):
@@ -87,9 +89,14 @@ def authorize_scope(scope):
         relative_path = relative_path[len(root_path):] or '/'
     method = scope.get('method', 'GET')
     with SessionLocal() as db:
+        db.info["requires_basic_use"] = method not in {"GET","HEAD"}
         user = db.get(User, user_id)
         patient = db.get(Patient, patient_id)
-        allowed = can_access_patient(user, patient)
+        try:
+            require_patient_access(db,user,patient_id) if user and user.is_active else None
+            allowed = bool(user and user.is_active)
+        except HTTPException:
+            allowed = False
         # A tab identifies its patient even when another tab has replaced the cookie.
         document_route = relative_path == '/' or relative_path.startswith('/analysis_view/')
         expected = (parse_qs(scope.get('query_string', b'').decode()).get('patient_id') or [None])[0] if document_route else headers.get(PATIENT_HEADER)
@@ -106,4 +113,12 @@ def authorize_scope(scope):
             raise HTTPException(status_code=401, detail='账户已失效，请重新登录。')
         if not allowed:
             raise HTTPException(status_code=403, detail='影像工作区授权失败，请确认患者绑定并重新进入当前患者页面。')
-    return ImagingWorkspace(user_id, patient_id, f'{_database_scope()}:user:{user_id}:patient:{patient_id}')
+        receipts = tuple(db.info.get("authorization_receipts",[]))
+    return ImagingWorkspace(user_id, patient_id, f'{_database_scope()}:user:{user_id}:patient:{patient_id}',receipts)
+
+
+def recheck_workspace(workspace):
+    from backend.app.db.session import SessionLocal
+    from backend.app.services.identity_access import recheck_receipts
+    with SessionLocal() as db:
+        recheck_receipts(db,workspace.authorization_receipts)

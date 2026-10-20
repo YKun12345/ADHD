@@ -1,0 +1,5 @@
+<view wx:if="{{items.length}}" class="role-nav" aria-role="navigation" aria-label="主要功能">
+  <view wx:for="{{items}}" wx:key="key" class="role-nav-item {{activeKey === item.key ? 'role-nav-item--active' : ''}}" data-key="{{item.key}}" bindtap="open" aria-role="button" aria-label="{{item.label}}" aria-disabled="{{navigating}}">
+    <view class="role-nav-icon"><ui-icon name="{{item.icon}}" shape="line" tone="{{activeKey === item.key ? 'primary' : 'muted'}}" decorative="{{true}}" /></view><text>{{item.label}}</text><view wx:if="{{activeKey === item.key}}" class="role-nav-dot" aria-hidden="{{true}}"></view>
+  </view>
+</view>

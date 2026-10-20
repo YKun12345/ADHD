@@ -93,7 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setFeedback(message, type = 'error') {
-        formFeedback.innerHTML = `<ion-icon name="${type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline'}"></ion-icon> ${message}`;
+        const icon = document.createElement('ion-icon');
+        icon.setAttribute('name', type === 'success' ? 'checkmark-circle-outline' : 'alert-circle-outline');
+        formFeedback.replaceChildren(icon, document.createTextNode(` ${message}`));
         formFeedback.className = `form-feedback ${type === 'success' ? 'feedback-success' : 'feedback-error'}`;
     }
 
@@ -155,13 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveSession(result) {
-        localStorage.setItem('smartbrain_token', result.access_token);
-        localStorage.setItem('smartbrain_user', JSON.stringify(result.user));
+        window.SessionGuard.establishSession(result.access_token, result.user, window.SessionGuard.captureSession());
     }
 
     function clearSession() {
-        localStorage.removeItem('smartbrain_token');
-        localStorage.removeItem('smartbrain_user');
+        window.SessionGuard.clearLoginSession(window.SessionGuard.captureSession());
     }
 
     async function redirectAfterAuth(role, user) {

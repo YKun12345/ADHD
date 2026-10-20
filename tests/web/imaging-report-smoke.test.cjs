@@ -1,0 +1,31 @@
+const{test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),net=require('node:net'),{spawn}=require('node:child_process'),{setTimeout:pause}=require('node:timers/promises'),puppeteer=require('puppeteer-core');
+const{createHarness}=require('../../miniprogram/tests/helpers/cognitive-harness'),root=path.resolve(__dirname,'../..');
+test('mini and web publish immutable imaging opinions; patient reads the same actual versions',{timeout:120000},async()=>{
+ const probe=net.createServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));const origin=`http://127.0.0.1:${port}`,base=origin+'/api/v1';
+ const server=spawn(path.join(root,'.venv/Scripts/python.exe'),[path.join(root,'tests/web/isolated_review_server.py'),String(port)],{cwd:root,windowsHide:true,env:{...process.env,APP_ENV:'test',CARE_WORKER_ENABLED:'false',DEEPSEEK_API_KEY:''},stdio:['ignore','pipe','pipe']});let browser,log='',h;server.stdout.on('data',v=>log+=v);server.stderr.on('data',v=>log+=v);
+ async function api(route,auth,body){const r=await fetch(base+route,{method:body?'POST':'GET',headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+auth.access_token}:{}),...(route.startsWith('/__synthetic__/')?{'X-Synthetic-Test':'w06-local-synthetic-only'}:{})},...(body?{body:JSON.stringify(body)}:{})});const v=await r.json();assert.ok(r.ok,JSON.stringify(v));return v;}
+ try{for(let i=0;i<300;i++){try{if((await fetch(origin)).ok)break;}catch{}if(i===299)throw Error('startup timeout');await pause(100);}
+  const{owner,doctor,assessment}=await api('/__synthetic__/review-source',null,{minimal:true}),pid=assessment.patient_id;
+  const capabilities=await api('/care/capabilities',owner);assert.deepEqual(capabilities.protocols.find(v=>v.kind==='cognitive').platforms,['miniprogram','web']);assert.equal(capabilities.legacy_preview.formal_assessment_credit,false);
+  await api('/model/predict_mock?patient_id='+pid,owner,{});
+  h=createHarness();h.restore();Object.assign(h.storage,{current_user:doctor.user,access_token:doctor.access_token,api_base_url:base});delete require.cache[require.resolve('../../miniprogram/utils/request')];
+  wx.showModal=options=>options.success({confirm:true});let miniPosts=0,lost=true;
+  wx.request=options=>{fetch(options.url,{method:options.method,headers:options.header,...(options.method==='POST'?{body:JSON.stringify(options.data)}:{})}).then(async r=>{const response={statusCode:r.status,data:await r.json()};
+   if(options.method==='POST')miniPosts++;if(options.method==='POST'&&r.status===201&&lost){lost=false;options.fail({errMsg:'synthetic lost ACK after real commit'});}else options.success(response);
+  }).catch(error=>options.fail({errMsg:error.message}));};
+  const mini=h.load('imaging-reports',{query:{patient_id:String(pid)}});await mini._loadPromise;assert.equal(mini.data.reports.length,1,mini.data.errorText);assert.equal(mini.data.reports[0].demonstration_only,true);
+  await mini.review({currentTarget:{dataset:{id:mini.data.reports[0].id}}});assert.ok(mini.data.selected,mini.data.errorText);
+  mini.onInput({currentTarget:{dataset:{field:'body'}},detail:{value:'合成医生小程序真实审核，保留演示限制。'}});mini.onInput({currentTarget:{dataset:{field:'limitations'}},detail:{value:'仅合成mock演示，不能诊断。'}});
+  assert.equal(await mini.publish(),false,mini.data.errorText);assert.ok(mini.data.pendingId);await mini.queryPending();assert.equal(mini.data.pendingId,'');assert.equal(mini.data.reports.length,2,mini.data.errorText);assert.equal(miniPosts,1);mini.onHide();assert.deepEqual(mini.data.reports,[]);
+  browser=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,userDataDir:fs.mkdtempSync(path.join(root,'.codex-tmp/imaging-report-')),args:['--no-first-run','--disable-background-networking']});let page=await browser.newPage();page.on('dialog',d=>d.accept());const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.evaluateOnNewDocument(({base,auth})=>{window.SMARTBRAIN_API_BASE_URL=base;localStorage.setItem('smartbrain_token',auth.access_token);localStorage.setItem('smartbrain_user',JSON.stringify(auth.user));},{base,auth:doctor});
+  await page.goto(`${origin}/doctor-web/doctor_imaging_reports.html?patient_id=${pid}`,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>document.querySelectorAll('#clinicalHistory article').length===2,{timeout:30000});
+  await page.evaluate(()=>document.querySelector('#clinicalHistory button').click());await page.waitForSelector('#clinicalInputs textarea',{timeout:15000});
+  await page.type('#clinicalInputs textarea[aria-label="本人核对后的影像意见"]','合成医生网页真实追加审核版本。');await page.evaluate(()=>document.querySelector('#clinicalInputs form').requestSubmit());
+  await page.waitForFunction(()=>document.querySelectorAll('#clinicalHistory article').length===3,{timeout:30000});assert.equal(await page.$eval('#clinicalPending',n=>n.textContent),'');
+  const versions=await api('/care/imaging-reports?patient_id='+pid,owner);assert.equal(versions.items[0].version,3);assert.equal(versions.items[2].version,1);assert.ok(versions.items.every(v=>v.demonstration_only&&v.raw_image_session_included===false));
+  const patient=await browser.newPage();await patient.evaluateOnNewDocument(({base,auth})=>{window.SMARTBRAIN_API_BASE_URL=base;localStorage.setItem('smartbrain_token',auth.access_token);localStorage.setItem('smartbrain_user',JSON.stringify(auth.user));},{base,auth:owner});
+  await patient.goto(`${origin}/patient-web/patient_imaging_reports.html?patient_id=${pid}`,{waitUntil:'domcontentloaded'});await patient.waitForFunction(()=>document.querySelectorAll('#clinicalHistory article').length===3,{timeout:30000});assert.equal(await patient.$$eval('#clinicalHistory button',n=>n.length),0);assert.equal(errors.length,0,errors.join('\n'));
+  console.log(JSON.stringify({actual_http:true,actual_chrome:true,actual_mini_controller:true,mini_post_count:miniPosts,lost_ack_get_only:true,versions:versions.items.map(v=>v.version),raw_image_sessions:false}));
+ }finally{h?.restore();await browser?.close();server.kill();await Promise.race([new Promise(r=>server.once('exit',r)),pause(2000)]);if(log.trim())console.log(log.slice(-1800));}
+});

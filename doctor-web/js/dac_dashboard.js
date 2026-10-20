@@ -168,17 +168,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         return '暂无数据';
     }
 
-    function setResultBox(target, html) {
-        target.innerHTML = html;
+    function setResultBox(target, content) {
+        target.replaceChildren(content);
     }
 
     function buildStatsGrid(stats = {}) {
         const items = Object.entries(stats);
         if (!items.length) {
-            return '<div class="result-note">当前没有可展示的统计指标。</div>';
+            return SafeRender.html`<div class="result-note">当前没有可展示的统计指标。</div>`;
         }
 
-        return items.map(([key, value]) => {
+        const grid = document.createDocumentFragment();
+        items.forEach(([key, value]) => {
             const maxMetricValue = Math.max(
                 Number(value.sum || 0),
                 Number(value.average || 0),
@@ -186,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 1
             );
 
-            return `
+            const fragment = SafeRender.html`
                 <div class="result-stat">
                     <label>${metricLabel(key)}</label>
                     <strong>记录均值 ${value.average}</strong>
@@ -197,20 +198,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="result-mini-chart">
                         <div class="result-mini-row">
                             <span>总和</span>
-                            <div class="result-mini-track"><div class="result-mini-fill sum" style="width:${percent(value.sum, maxMetricValue)}%"></div></div>
+                            <div class="result-mini-track"><div class="result-mini-fill sum"></div></div>
                         </div>
                         <div class="result-mini-row">
                             <span>均值</span>
-                            <div class="result-mini-track"><div class="result-mini-fill avg" style="width:${percent(value.average, maxMetricValue)}%"></div></div>
+                            <div class="result-mini-track"><div class="result-mini-fill avg"></div></div>
                         </div>
                         <div class="result-mini-row">
                             <span>方差</span>
-                            <div class="result-mini-track"><div class="result-mini-fill var" style="width:${percent(value.variance, maxMetricValue)}%"></div></div>
+                            <div class="result-mini-track"><div class="result-mini-fill var"></div></div>
                         </div>
                     </div>
                 </div>
             `;
-        }).join('');
+            [['sum', value.sum], ['avg', value.average], ['var', value.variance]].forEach(([kind, number]) => {
+                fragment.querySelector(`.result-mini-fill.${kind}`).style.width = `${percent(number, maxMetricValue)}%`;
+            });
+            grid.appendChild(fragment);
+        });
+        return grid;
     }
 
     function buildVerificationSummaryList(result) {
@@ -230,38 +236,49 @@ document.addEventListener('DOMContentLoaded', async () => {
             details.issues.forEach((issue) => items.push(`异常：${issue}`));
         }
 
-        return `<ul class="result-summary-list">${items.map((item) => `<li>${item}</li>`).join('')}</ul>`;
+        const list = document.createElement('ul');
+        list.className = 'result-summary-list';
+        items.forEach(item => {
+            const row = document.createElement('li');
+            row.textContent = item;
+            list.appendChild(row);
+        });
+        return list;
     }
 
     function buildPatientPanels(result) {
         const taskType = result.task_type;
         if (taskType !== 'spatial') {
-            return '';
+            return document.createDocumentFragment();
         }
 
         const stats = result.decrypted_stats || {};
         const aggregatedIds = stats.aggregated_patient_ids || [];
         const missingIds = stats.missing_patient_ids || result.verification_details?.missing_patient_ids || [];
 
-        const aggregatedList = aggregatedIds.length
-            ? aggregatedIds.map((id) => `<span class="result-person-tag">${patientNameById(id)}</span>`).join('')
-            : '<span class="result-person-tag">暂无可参与聚合的患者</span>';
-        const missingList = missingIds.length
-            ? missingIds.map((id) => `<span class="result-person-tag missing">${patientNameById(id)}</span>`).join('')
-            : '<span class="result-person-tag">当前无缺失患者</span>';
-
-        return `
+        const panel = SafeRender.html`
             <div class="result-person-grid">
                 <div class="result-person-panel">
                     <strong>参与患者名单</strong>
-                    <div class="result-person-tags">${aggregatedList}</div>
+                    <div class="result-person-tags"></div>
                 </div>
                 <div class="result-person-panel">
                     <strong>缺失患者名单</strong>
-                    <div class="result-person-tags">${missingList}</div>
+                    <div class="result-person-tags"></div>
                 </div>
             </div>
         `;
+        const lists = panel.querySelectorAll('.result-person-tags');
+        [aggregatedIds, missingIds].forEach((ids, index) => {
+            const names = ids.length ? ids.map(patientNameById) : [index ? '当前无缺失患者' : '暂无可参与聚合的患者'];
+            names.forEach(name => {
+                const tag = document.createElement('span');
+                tag.className = `result-person-tag${index && ids.length ? ' missing' : ''}`;
+                tag.textContent = name;
+                lists[index].appendChild(tag);
+            });
+        });
+        return panel;
     }
 
     function buildAuditCard(result, modeLabel) {
@@ -271,15 +288,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             ? `当前数据类型下缺少有效记录的患者ID：${missingPatients.join('、')}`
             : '当前参与对象都具备可用密文记录。';
 
-        return `
-            <div class="result-card ${result.verification_passed ? 'success' : 'fail'}">
+        const card = SafeRender.html`
+            <div class="result-card">
                 <div class="result-status-strip"><div class="fill"></div></div>
                 <div class="result-head">
                     <div>
                         <h3>${modeLabel}</h3>
                         <p>聚合类型：${sourceLabel(result.source_type)} · 本地 MCS 节点：${result.mcs_node_id || result.decrypted_stats?.mcs_node_id || '--'}</p>
                     </div>
-                    <span class="dac-badge${result.verification_passed ? '' : ' fail'}">${result.verification_passed ? '校验通过' : '校验失败'}</span>
+                    <span class="dac-badge">${result.verification_passed ? '校验通过' : '校验失败'}</span>
                 </div>
                 <div class="result-kv-grid">
                     <div class="result-kv emphasis">
@@ -300,23 +317,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
                 <div class="result-note">${missingText}</div>
-                <div class="result-stat-grid">
-                    ${buildStatsGrid(stats)}
-                </div>
-                ${buildPatientPanels(result)}
-                <div class="result-note">
+                <div class="result-stat-grid"></div>
+                <div class="result-note result-verification-summary">
                     <strong style="display:block; margin-bottom:0.4rem; color:#0F172A;">完整校验摘要</strong>
-                    ${buildVerificationSummaryList(result)}
                 </div>
             </div>
         `;
+        card.querySelector('.result-card').classList.add(result.verification_passed ? 'success' : 'fail');
+        if (!result.verification_passed) card.querySelector('.dac-badge').classList.add('fail');
+        const grid = card.querySelector('.result-stat-grid');
+        grid.appendChild(buildStatsGrid(stats));
+        grid.after(buildPatientPanels(result));
+        card.querySelector('.result-verification-summary').appendChild(buildVerificationSummaryList(result));
+        return card;
     }
 
     function renderSystemStatus(status) {
         el.dacName.textContent = `${currentUser.full_name || 'DAC 审计员'} · DAC`;
         el.systemStatusBadge.textContent = status.is_initialized ? '已初始化' : '未初始化';
         el.systemStatusBadge.className = `dac-badge${status.is_initialized ? '' : ' fail'}`;
-        setResultBox(el.systemStatusText, `
+        setResultBox(el.systemStatusText, SafeRender.html`
             <pre>${[
                 `初始化状态：${status.is_initialized ? '已完成' : '未完成'}`,
                 `系统版本：${status.system_version}`,
@@ -380,13 +400,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const canUse = hasSourceData(item, sourceType);
             const wrapper = document.createElement('label');
             if (!canUse) wrapper.classList.add('disabled');
-            wrapper.innerHTML = `
-                <input type="checkbox" class="spatial-patient-checkbox" value="${item.patient_id}" ${canUse && checkedCount < 2 ? 'checked' : ''} ${canUse ? '' : 'disabled'}>
+            wrapper.appendChild(SafeRender.html`
+                <input type="checkbox" class="spatial-patient-checkbox">
                 <div>
                     <strong>${item.patient_name}</strong>
                     <span>患者ID：${item.patient_id} · ${patientSourceHint(item, sourceType)}</span>
                 </div>
-            `;
+            `);
+            const checkbox = wrapper.querySelector('input');
+            checkbox.value = String(item.patient_id);
+            checkbox.checked = canUse && checkedCount < 2;
+            checkbox.disabled = !canUse;
             if (canUse && checkedCount < 2) checkedCount += 1;
             el.spatialPatientList.appendChild(wrapper);
         });
@@ -396,28 +420,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         el.cipherRecordTableBody.innerHTML = '';
         if (!items.length) {
             el.cipherRecordTableBody.innerHTML = '<tr><td colspan="4">暂无密文记录</td></tr>';
-            setResultBox(el.cipherRecordStatusBox, `<pre>${context.patientName || '当前患者'} 在 ${context.sourceTypeLabel || '当前数据类型'} 下暂无密文记录。</pre>`);
+            setResultBox(el.cipherRecordStatusBox, SafeRender.html`<pre>${context.patientName || '当前患者'} 在 ${context.sourceTypeLabel || '当前数据类型'} 下暂无密文记录。</pre>`);
             return;
         }
 
         items.forEach((item) => {
             const row = document.createElement('tr');
-            row.innerHTML = `
+            row.appendChild(SafeRender.html`
                 <td>${item.id}</td>
                 <td>${item.time_bucket}</td>
                 <td>${sourceLabel(item.source_type)} · v${item.metadata?.evidence_version || "历史"}</td>
                 <td>${item.mcs_node_id || '--'}</td>
-            `;
+            `);
             el.cipherRecordTableBody.appendChild(row);
         });
 
-        setResultBox(el.cipherRecordStatusBox, `<pre>已加载 ${items.length} 条密文记录。目标患者：${context.patientName || '--'}；数据类型：${context.sourceTypeLabel || '--'}。</pre>`);
+        setResultBox(el.cipherRecordStatusBox, SafeRender.html`<pre>已加载 ${items.length} 条密文记录。目标患者：${context.patientName || '--'}；数据类型：${context.sourceTypeLabel || '--'}。</pre>`);
     }
 
     function renderSimpleTable(body, items, createRow, emptyText, colspan) {
         body.innerHTML = '';
         if (!items.length) {
-            body.innerHTML = `<tr><td colspan="${colspan}">${emptyText}</td></tr>`;
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = colspan;
+            cell.textContent = emptyText;
+            row.appendChild(cell);
+            body.appendChild(row);
             return;
         }
         items.forEach((item) => body.appendChild(createRow(item)));
@@ -429,11 +458,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             items,
             (item) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
+                row.appendChild(SafeRender.html`
                     <td>${item.full_name}<br><span style="color:#64748B;">${item.staff_id || item.email}</span></td>
                     <td>${item.role}${item.subrole ? ` / ${item.subrole}` : ''}</td>
                     <td>${item.key_fingerprint || '--'}</td>
-                `;
+                `);
                 return row;
             },
             '暂无密钥分配数据',
@@ -447,11 +476,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             items,
             (item) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
+                row.appendChild(SafeRender.html`
                     <td>${item.node_name}<br><span style="color:#64748B;">${item.node_code}</span></td>
                     <td>${item.storage_backend}<br><span style="color:#64748B;">${item.storage_namespace}</span></td>
                     <td>${item.is_active ? '可用' : '停用'}</td>
-                `;
+                `);
                 return row;
             },
             '暂无节点数据',
@@ -465,11 +494,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             items,
             (item) => {
                 const row = document.createElement('tr');
-                row.innerHTML = `
+                row.appendChild(SafeRender.html`
                     <td>${item.patient_name || '--'}<br><span style="color:#64748B;">Patient #${item.patient_id}</span></td>
                     <td>${item.assigned_dac_name || '--'}<br><span style="color:#64748B;">${statusLabel(item.assignment_status)}</span></td>
                     <td>${item.assigned_mcs_node_code || '--'}</td>
-                `;
+                `);
                 return row;
             },
             '暂无分配数据',
@@ -492,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const detail = document.createElement('div');
             detail.style.display = 'none';
             detail.style.marginTop = '0.8rem';
-            detail.innerHTML = buildAuditCard(item, `${modeLabel}历史结果`);
+            detail.appendChild(buildAuditCard(item, `${modeLabel}历史结果`));
 
             const toggleBtn = document.createElement('button');
             toggleBtn.type = 'button';
@@ -506,12 +535,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 toggleBtn.textContent = expanded ? '查看完整结果' : '收起完整结果';
             });
 
-            wrapper.innerHTML = `
+            wrapper.appendChild(SafeRender.html`
                 <strong>任务 #${item.id} · ${modeLabel} · ${sourceLabel(item.source_type)}</strong>
                 <span>状态：${statusLabel(item.status)} · MCS：${item.mcs_node_id || '--'}</span>
-                <p><span class="dac-badge${item.verification_passed ? '' : ' fail'}">${item.verification_passed ? '校验通过' : '校验未通过 / 待完成'}</span></p>
+                <p><span class="dac-badge">${item.verification_passed ? '校验通过' : '校验未通过 / 待完成'}</span></p>
                 <p>参与记录数：${item.decrypted_stats?.record_count || item.verification_details?.record_count || 0}</p>
-            `;
+            `);
+            if (!item.verification_passed) wrapper.querySelector('.dac-badge').classList.add('fail');
             wrapper.appendChild(toggleBtn);
             wrapper.appendChild(detail);
             el.recentAuditList.appendChild(wrapper);
@@ -528,11 +558,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         items.forEach((item) => {
             const wrapper = document.createElement('div');
             wrapper.className = 'dac-item';
-            wrapper.innerHTML = `
+            wrapper.appendChild(SafeRender.html`
                 <strong>${actionLabel(item.action)}</strong>
                 <span>${statusLabel(item.status)} · ${item.created_at || '--'}</span>
                 <p>${item.message}</p>
-            `;
+            `);
             el.recentLogList.appendChild(wrapper);
         });
     }
@@ -583,7 +613,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         setButtonLoading(el.loadCipherBtn, '加载中...');
-        setResultBox(el.cipherRecordStatusBox, `<pre>正在加载 ${selectedPatient?.patient_name || '当前患者'} 的 ${sourceLabel(sourceType)} 密文记录...</pre>`);
+        setResultBox(el.cipherRecordStatusBox, SafeRender.html`<pre>正在加载 ${selectedPatient?.patient_name || '当前患者'} 的 ${sourceLabel(sourceType)} 密文记录...</pre>`);
         try {
             const response = await window.API.Security.getPatientCipherRecords(patientId, sourceType);
             renderCipherRecords(response.items || [], {
@@ -591,7 +621,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 sourceTypeLabel: sourceLabel(sourceType),
             });
         } catch (error) {
-            setResultBox(el.cipherRecordStatusBox, `<pre>${error.message || '密文记录加载失败。'}</pre>`);
+            setResultBox(el.cipherRecordStatusBox, SafeRender.html`<pre>${error.message || '密文记录加载失败。'}</pre>`);
         } finally {
             restoreButton(el.loadCipherBtn);
         }
@@ -610,7 +640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]);
             await loadCipherRecords();
         } catch (error) {
-            setResultBox(el.auditResultBox, `<pre>${error.message || 'DAC 数据加载失败。'}</pre>`);
+            setResultBox(el.auditResultBox, SafeRender.html`<pre>${error.message || 'DAC 数据加载失败。'}</pre>`);
         }
     }
 
@@ -619,9 +649,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await window.API.Security.initializeSystem();
             await refreshAll();
-            setResultBox(el.auditResultBox, '<pre>安全系统初始化完成，已同步用户密钥、患者分配关系与本地 MCS 密文记录。</pre>');
+            setResultBox(el.auditResultBox, SafeRender.html`<pre>安全系统初始化完成，已同步用户密钥、患者分配关系与本地 MCS 密文记录。</pre>`);
         } catch (error) {
-            setResultBox(el.auditResultBox, `<pre>${error.message || '初始化失败。'}</pre>`);
+            setResultBox(el.auditResultBox, SafeRender.html`<pre>${error.message || '初始化失败。'}</pre>`);
         } finally {
             restoreButton(el.initSecurityBtn);
         }
@@ -636,22 +666,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectedPatient = patientItems.find((item) => Number(item.patient_id) === patientId);
 
         if (!patientId) {
-            setResultBox(el.auditResultBox, '<pre>请先选择患者。</pre>');
+            setResultBox(el.auditResultBox, SafeRender.html`<pre>请先选择患者。</pre>`);
             return;
         }
 
         setButtonLoading(el.runAuditBtn, '审计中...');
-        setResultBox(el.auditResultBox, `<pre>正在对 ${selectedPatient?.patient_name || '当前患者'} 的 ${sourceLabel(sourceType)} 执行时间聚合审计，请稍候...</pre>`);
+        setResultBox(el.auditResultBox, SafeRender.html`<pre>正在对 ${selectedPatient?.patient_name || '当前患者'} 的 ${sourceLabel(sourceType)} 执行时间聚合审计，请稍候...</pre>`);
         try {
             const result = await window.API.Security.runTemporalAudit({
                 patient_id: patientId,
                 source_type: sourceType,
                 audit_group: el.auditGroupSelect.value || null,
             });
-            el.auditResultBox.innerHTML = buildAuditCard(result, '时间聚合审计');
+            el.auditResultBox.replaceChildren(buildAuditCard(result, '时间聚合审计'));
             await Promise.all([loadRecentAudits(), loadAuditLogs(), loadCipherRecords(), loadSystemStatus()]);
         } catch (error) {
-            setResultBox(el.auditResultBox, `<pre>${error.message || '执行时间审计失败。'}</pre>`);
+            setResultBox(el.auditResultBox, SafeRender.html`<pre>${error.message || '执行时间审计失败。'}</pre>`);
         } finally {
             restoreButton(el.runAuditBtn);
         }
@@ -662,22 +692,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const patientIds = getSelectedSpatialPatientIds();
 
         if (patientIds.length < 2) {
-            setResultBox(el.spatialAuditResultBox, '<pre>请至少选择两位患者后再执行空间审计。</pre>');
+            setResultBox(el.spatialAuditResultBox, SafeRender.html`<pre>请至少选择两位患者后再执行空间审计。</pre>`);
             return;
         }
 
         setButtonLoading(el.runSpatialAuditBtn, '审计中...');
-        setResultBox(el.spatialAuditResultBox, `<pre>正在对 ${patientIds.length} 位患者执行 ${sourceLabel(sourceType)} 空间聚合审计，请稍候...</pre>`);
+        setResultBox(el.spatialAuditResultBox, SafeRender.html`<pre>正在对 ${patientIds.length} 位患者执行 ${sourceLabel(sourceType)} 空间聚合审计，请稍候...</pre>`);
         try {
             const result = await window.API.Security.runSpatialAudit({
                 patient_ids: patientIds,
                 source_type: sourceType,
                 audit_group: el.spatialAuditGroupSelect.value || null,
             });
-            el.spatialAuditResultBox.innerHTML = buildAuditCard(result, '空间聚合审计');
+            el.spatialAuditResultBox.replaceChildren(buildAuditCard(result, '空间聚合审计'));
             await Promise.all([loadRecentAudits(), loadAuditLogs(), loadSystemStatus()]);
         } catch (error) {
-            setResultBox(el.spatialAuditResultBox, `<pre>${error.message || '执行空间审计失败。'}</pre>`);
+            setResultBox(el.spatialAuditResultBox, SafeRender.html`<pre>${error.message || '执行空间审计失败。'}</pre>`);
         } finally {
             restoreButton(el.runSpatialAuditBtn);
         }

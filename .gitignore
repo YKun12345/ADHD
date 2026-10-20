@@ -6,6 +6,7 @@ __pycache__/
 
 # Virtual environments
 .venv/
+.venv-*/
 venv/
 
 # Secrets
@@ -16,6 +17,8 @@ deploy/.env
 
 # Local databases
 *.db
+*.db-wal
+*.db-shm
 backend/app.db
 
 # Node dependencies

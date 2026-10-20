@@ -1,147 +1,49 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+"""Compatibility boundary for clients predating the durable unified Agent.
 
-from backend.app.api.deps import get_db, require_roles
-from backend.app.core.config import settings
-from backend.app.models.ai_chat_log import AIChatLog
-from backend.app.models.patient import Patient
+The old request has no patient selection, signed input head or original ID.
+It cannot safely become a durable Agent submission without those fields.
+"""
+from fastapi import APIRouter, Depends, HTTPException
+from backend.app.api.deps import require_roles
 from backend.app.models.user import User, UserRole
-from backend.app.schemas.ai import (
-    AIChatRequest,
-    AIChatResponse,
-    AIExplainReportRequest,
-    AIExplainReportResponse,
-    AIReminderRequest,
-    AIReminderResponse,
-    AIStatusResponse,
-)
-from backend.app.services.ai_service import (
-    AI_DISCLAIMER,
-    ai_status_message,
-    build_patient_snapshot,
-    generate_chat_reply,
-    generate_report_explanation,
-    generate_tracking_reminder,
-    used_context_for_scope,
-)
-
+from backend.app.schemas.ai import AIChatRequest, AIExplainReportRequest, AIReminderRequest, AIStatusResponse
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
 
-def _provider_name(model: str, degraded: bool) -> str:
-    return "local" if degraded or model in {"fallback-template", "safety-guard"} else "deepseek"
-
-
-def _store_ai_chat_turns(
-    db: Session,
-    current_user: User,
-    user_message: str,
-    assistant_reply: str,
-    scope: str,
-    model: str,
-    degraded: bool,
-) -> None:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
-    if patient is None:
-        return
-
-    logs = [
-        AIChatLog(
-            patient_id=patient.id,
-            role="user",
-            scope=scope,
-            content=user_message.strip(),
-        ),
-        AIChatLog(
-            patient_id=patient.id,
-            role="assistant",
-            scope=scope,
-            content=assistant_reply.strip(),
-        ),
-    ]
-    for log in logs:
-        log.provider = _provider_name(model, degraded)
-        log.model_name = model
-        log.mode = "safety_guard" if model == "safety-guard" else ("local_fallback" if log.provider == "local" else "remote")
-    db.add_all(logs)
-    db.commit()
+def unified_agent_required() -> None:
+    raise HTTPException(410, detail={
+        "code": "UNIFIED_AGENT_REQUIRED",
+        "message": "助手已升级，请进入统一助手，选择获准档案后继续提问。旧请求未提交，也未生成回答。",
+        "web_page": "patient_ai.html",
+        "mini_page": "/pages/agent-chat/index",
+        "prepare_path": "/agent/run-context",
+        "submit_path": "/agent/runs",
+        "original_query_path": "/agent/runs/submissions/{client_run_id}",
+    })
 
 
 @router.get("/status", response_model=AIStatusResponse)
-def get_ai_status(
-    current_user: User = Depends(require_roles(UserRole.PATIENT)),
-) -> AIStatusResponse:
+def get_ai_status(current_user: User = Depends(require_roles(UserRole.PATIENT))) -> AIStatusResponse:
     return AIStatusResponse(
-        configured=bool(settings.DEEPSEEK_API_KEY),
-        chat_model=settings.DEEPSEEK_CHAT_MODEL,
-        reminder_model=settings.DEEPSEEK_REMINDER_MODEL,
-        message=ai_status_message(),
+        configured=False, provider="local", chat_model="unified-agent",
+        reminder_model="unified-agent", fallback_available=False,
+        message="旧助手接口已迁移到统一助手。请进入 patient_ai.html 或小程序统一助手继续。",
     )
 
 
-@router.post("/chat", response_model=AIChatResponse)
-def chat_with_ai(
-    payload: AIChatRequest,
-    current_user: User = Depends(require_roles(UserRole.PATIENT)),
-    db: Session = Depends(get_db),
-) -> AIChatResponse:
-    snapshot = build_patient_snapshot(db, current_user)
-    reply, model, degraded = generate_chat_reply(
-        message=payload.message,
-        conversation=[turn.model_dump() for turn in payload.conversation],
-        context_scope=payload.context_scope,
-        snapshot=snapshot,
-    )
-    _store_ai_chat_turns(db, current_user, payload.message, reply, payload.context_scope, model, degraded)
-    return AIChatResponse(
-        reply=reply,
-        model=model,
-        provider=_provider_name(model, degraded),
-        disclaimer=AI_DISCLAIMER,
-        degraded=degraded,
-        used_context=used_context_for_scope(payload.context_scope, snapshot),
-    )
+@router.post("/chat", deprecated=True)
+def chat_with_ai(payload: AIChatRequest, current_user: User = Depends(require_roles(UserRole.PATIENT))):
+    unified_agent_required()
 
 
-@router.post("/explain_report", response_model=AIExplainReportResponse)
-def explain_report(
-    payload: AIExplainReportRequest | None = None,
-    current_user: User = Depends(require_roles(UserRole.PATIENT)),
-    db: Session = Depends(get_db),
-) -> AIExplainReportResponse:
-    snapshot = build_patient_snapshot(db, current_user)
-    explanation, model, degraded = generate_report_explanation(snapshot, payload.focus if payload else None)
-    return AIExplainReportResponse(
-        headline=explanation["headline"],
-        plain_summary=explanation["plain_summary"],
-        key_findings=explanation["key_findings"],
-        next_actions=explanation["next_actions"],
-        disclaimer=explanation["disclaimer"],
-        model=model,
-        provider=_provider_name(model, degraded),
-        degraded=degraded,
-    )
+@router.post("/explain_report", deprecated=True)
+def explain_report(payload: AIExplainReportRequest | None = None,
+                   current_user: User = Depends(require_roles(UserRole.PATIENT))):
+    unified_agent_required()
 
 
-@router.post("/generate_reminder", response_model=AIReminderResponse)
-def generate_reminder(
-    payload: AIReminderRequest | None = None,
-    current_user: User = Depends(require_roles(UserRole.PATIENT)),
-    db: Session = Depends(get_db),
-) -> AIReminderResponse:
-    snapshot = build_patient_snapshot(db, current_user)
-    tone = payload.tone if payload else "gentle"
-    reminder, model, degraded = generate_tracking_reminder(snapshot, tone=tone)
-    return AIReminderResponse(
-        should_remind=reminder["should_remind"],
-        title=reminder["title"],
-        message=reminder["message"],
-        action_label=reminder["action_label"],
-        completion_status=reminder["completion_status"],
-        disclaimer=reminder["disclaimer"],
-        model=model,
-        provider=_provider_name(model, degraded),
-        degraded=degraded,
-    )
+@router.post("/generate_reminder", deprecated=True)
+def generate_reminder(payload: AIReminderRequest | None = None,
+                      current_user: User = Depends(require_roles(UserRole.PATIENT))):
+    unified_agent_required()

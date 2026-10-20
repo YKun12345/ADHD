@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from backend.app.services.provider_policy import provider_allowed
+from backend.app.services.identity_access import resolve_patient
+from backend.app.services.imaging_storage_service import read_imaging_history
+
 import json
 import logging
 import re
 from dataclasses import dataclass
 from statistics import mean
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -232,73 +234,17 @@ def _high_risk_reply() -> str:
 
 
 class DeepSeekClient:
+    """Retired transport; external dispatch only exists in agent.provider.
+
+    Keep this symbol for old pure-function imports without allowing a second
+    model loop that lacks the durable run and original authority binding.
+    """
     @property
     def configured(self) -> bool:
-        return bool(settings.DEEPSEEK_API_KEY and settings.DEEPSEEK_BASE_URL)
+        return False
 
-    def chat(
-        self,
-        *,
-        model: str,
-        messages: list[dict[str, str]],
-        temperature: float = 0.4,
-        max_tokens: int = 800,
-        thinking: bool = False,
-        reasoning_effort: str | None = None,
-    ) -> AIProviderResult:
-        if not self.configured:
-            raise AIProviderError("DeepSeek API key is not configured.")
-
-        payload = {
-            "model": model,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "stream": False,
-            "thinking": {"type": "enabled" if thinking else "disabled"},
-        }
-        if thinking:
-            if reasoning_effort in {"low", "high", "max"}:
-                payload["reasoning_effort"] = reasoning_effort
-        else:
-            payload["temperature"] = temperature
-        request_body = json.dumps(payload).encode("utf-8")
-        request = Request(
-            settings.DEEPSEEK_BASE_URL,
-            data=request_body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
-            },
-            method="POST",
-        )
-
-        try:
-            with urlopen(request, timeout=settings.DEEPSEEK_TIMEOUT_SECONDS) as response:
-                body = response.read().decode("utf-8")
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="ignore")
-            raise AIProviderError(f"DeepSeek request failed with {exc.code}: {detail}") from exc
-        except URLError as exc:
-            raise AIProviderError(f"DeepSeek service is unreachable: {exc.reason}") from exc
-
-        try:
-            parsed = json.loads(body)
-        except json.JSONDecodeError as exc:
-            raise AIProviderError("DeepSeek returned an invalid JSON payload.") from exc
-
-        choices = parsed.get("choices") or []
-        if not choices:
-            raise AIProviderError("DeepSeek returned no completion choices.")
-
-        message = choices[0].get("message") or {}
-        content = _normalize_content(message.get("content"))
-        if not content:
-            raise AIProviderError("DeepSeek returned an empty message.")
-
-        return AIProviderResult(
-            content=_normalize_display_text(content),
-            model=str(parsed.get("model") or model),
-        )
+    def chat(self, **kwargs) -> AIProviderResult:
+        raise AIProviderError("Legacy AI transport retired. Use the unified /agent/runs protocol.")
 
 
 deepseek_client = DeepSeekClient()
@@ -455,7 +401,7 @@ def _tracking_summary(logs: list[TrackingLog], total_days: int = 14) -> dict:
 
 
 def build_patient_snapshot(db: Session, current_user: User) -> dict:
-    patient = db.scalar(select(Patient).where(Patient.user_id == current_user.id))
+    patient = resolve_patient(db,current_user,["profile","assessment","tracking","imaging"])
     if patient is None:
         return {
             "patient_profile": {
@@ -465,6 +411,8 @@ def build_patient_snapshot(db: Session, current_user: User) -> dict:
             "cognitive_profile": None,
             "latest_imaging_visualization": None,
             "latest_model_prediction": None,
+            "imaging_history_status": "no_records",
+            "model_evidence_status": "not_admitted",
             "tracking": _tracking_summary([]),
         }
 
@@ -473,16 +421,7 @@ def build_patient_snapshot(db: Session, current_user: User) -> dict:
         .where(ScaleResult.patient_id == patient.id)
         .order_by(ScaleResult.created_at.desc(), ScaleResult.id.desc())
     )
-    latest_imaging = db.scalar(
-        select(ImagingVisualization)
-        .where(ImagingVisualization.patient_id == patient.id)
-        .order_by(ImagingVisualization.created_at.desc(), ImagingVisualization.id.desc())
-    )
-    latest_model_prediction = db.scalar(
-        select(ModelPrediction)
-        .where(ModelPrediction.patient_id == patient.id)
-        .order_by(ModelPrediction.created_at.desc(), ModelPrediction.id.desc())
-    )
+    latest_imaging, _, imaging_state = read_imaging_history(db, patient.id)
     logs = db.scalars(
         select(TrackingLog)
         .where(TrackingLog.patient_id == patient.id)
@@ -492,7 +431,7 @@ def build_patient_snapshot(db: Session, current_user: User) -> dict:
 
     return {
         "patient_profile": {
-            "name": current_user.full_name,
+            "name": patient.display_name or current_user.full_name,
             "age": patient.age,
             "gender": patient.gender,
             "patient_type": patient.patient_type.value,
@@ -504,9 +443,12 @@ def build_patient_snapshot(db: Session, current_user: User) -> dict:
         "latest_imaging_visualization": _to_imaging_response(latest_imaging).model_dump(mode="json")
         if latest_imaging
         else None,
-        "latest_model_prediction": _to_model_prediction_response(latest_model_prediction).model_dump(mode="json")
-        if latest_model_prediction
-        else None,
+        # No authenticated per-prediction registry/input-contract attestation is
+        # implemented. A storage-bound or explicitly mock row is not admitted
+        # evidence and must not feed generated professional interpretations.
+        "latest_model_prediction": None,
+        "imaging_history_status": imaging_state,
+        "model_evidence_status": "not_admitted",
         "tracking": _tracking_summary(logs),
     }
 
@@ -767,7 +709,7 @@ def heuristic_tracking_reminder(snapshot: dict, tone: str = "gentle") -> dict:
 
 def _provider_or_fallback_report(snapshot: dict, focus: str | None) -> tuple[dict, str, bool]:
     fallback = heuristic_report_explanation(snapshot)
-    if not deepseek_client.configured:
+    if not provider_allowed() or not deepseek_client.configured:
         return fallback, "fallback-template", True
 
     prompt = {
@@ -827,7 +769,8 @@ def _provider_or_fallback_report(snapshot: dict, focus: str | None) -> tuple[dic
 
 def generate_report_explanation(snapshot: dict, focus: str | None) -> tuple[dict, str, bool]:
     try:
-        return _provider_or_fallback_report(snapshot, focus)
+        result = _provider_or_fallback_report(snapshot, focus)
+        return result if result[2] or provider_allowed() else (heuristic_report_explanation(snapshot),"fallback-template",True)
     except Exception:
         fallback = heuristic_report_explanation(snapshot)
         return fallback, "fallback-template", True
@@ -835,7 +778,7 @@ def generate_report_explanation(snapshot: dict, focus: str | None) -> tuple[dict
 
 def _provider_or_fallback_reminder(snapshot: dict, tone: str) -> tuple[dict, str, bool]:
     fallback = heuristic_tracking_reminder(snapshot, tone=tone)
-    if not deepseek_client.configured:
+    if not provider_allowed() or not deepseek_client.configured:
         return fallback, "fallback-template", True
 
     prompt = {
@@ -874,7 +817,8 @@ def _provider_or_fallback_reminder(snapshot: dict, tone: str) -> tuple[dict, str
 
 def generate_tracking_reminder(snapshot: dict, tone: str) -> tuple[dict, str, bool]:
     try:
-        return _provider_or_fallback_reminder(snapshot, tone)
+        result = _provider_or_fallback_reminder(snapshot, tone)
+        return result if result[2] or provider_allowed() else (heuristic_tracking_reminder(snapshot,tone),"fallback-template",True)
     except Exception:
         fallback = heuristic_tracking_reminder(snapshot, tone=tone)
         return fallback, "fallback-template", True
@@ -890,7 +834,7 @@ def generate_chat_reply(
     if _is_high_risk_message(message):
         return _high_risk_reply(), "safety-guard", True
 
-    if not deepseek_client.configured:
+    if not provider_allowed() or not deepseek_client.configured:
         return (
             build_fallback_chat_reply(
                 message,
@@ -919,6 +863,8 @@ def generate_chat_reply(
         else:
             chat_options.update(thinking=False, temperature=0.7)
         result = deepseek_client.chat(**chat_options)
+        if not provider_allowed():
+            return build_fallback_chat_reply(message,context_scope,snapshot,reason="当前先使用本地辅助模式。"), "fallback-template", True
         return result.content, result.model, False
     except AIProviderError as exc:
         logger.warning(
@@ -950,9 +896,7 @@ def generate_chat_reply(
 
 
 def ai_status_message() -> str:
-    if deepseek_client.configured:
-        return "DeepSeek 模型已配置，AI 助手可以直接调用大模型。"
-    return "AI 网关已接入，当前先使用本地辅助模式。"
+    return "旧助手已迁移；请进入统一助手，选择获准档案后继续。"
 
 
 def used_context_for_scope(scope: str, snapshot: dict) -> list[str]:

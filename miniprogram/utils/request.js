@@ -12,6 +12,54 @@ const {
 } = require('./session-privacy')
 
 const BASE_URL = DEFAULT_API_BASE_URL
+const pendingReads = new Map()
+let writeGeneration = 0
+
+function invalidatePendingReads() {
+  writeGeneration += 1
+  pendingReads.clear()
+}
+
+function copyReadValue(value) {
+  return value && typeof value === 'object' ? JSON.parse(JSON.stringify(value)) : value
+}
+
+// Share only a request still in flight. Completed responses and authorization
+// decisions are never cached; every subsequent refresh goes to the backend.
+function request(options) {
+  if (String(options.method || 'GET').toUpperCase() !== 'GET') {
+    invalidatePendingReads()
+    return sendRequest(options).then(value => {
+      invalidatePendingReads()
+      return value
+    }, error => {
+      invalidatePendingReads()
+      throw error
+    })
+  }
+  let key
+  try {
+    const actor = wx.getStorageSync('current_user') || {}
+    key = JSON.stringify([writeGeneration, getPatientDataRevision(), actor.id, actor.role,
+      wx.getStorageSync('access_token'), Boolean(options.skipAuth),
+      resolveApiBaseUrl(options.baseUrl || wx.getStorageSync(API_BASE_URL_KEY)), options.url, options.data || {}])
+  } catch (_) {
+    return sendRequest(options)
+  }
+  const existing = pendingReads.get(key)
+  if (existing) return existing.then(copyReadValue)
+  if (pendingReads.size >= 64) return sendRequest(options)
+  const release = () => { if (pendingReads.get(key) === pending) pendingReads.delete(key) }
+  const pending = sendRequest(options).then(value => {
+    release()
+    return value
+  }, error => {
+    release()
+    throw error
+  })
+  pendingReads.set(key, pending)
+  return pending.then(copyReadValue)
+}
 
 function createTransportError(error = {}) {
   const detail =
@@ -76,7 +124,7 @@ function returnToLogin() {
   )
 }
 
-function request(options) {
+function sendRequest(options) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('access_token')
     const authenticated = Boolean(token && !options.skipAuth)

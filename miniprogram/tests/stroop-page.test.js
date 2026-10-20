@@ -45,12 +45,13 @@ async function run() {
     for (const trial of offline._trials) { offline.handleAnswer({ currentTarget: { dataset: { key: trial.colorKey } } }); h.advance(350) }
     await h.flush()
     assert.equal(offline.data.syncStatus, '待同步')
-    const pending = h.storage.pending_stroop_result
-    h.setRequest(async () => ({ id: 2 }))
+    const queue = require('../utils/submission-queue')
+    const pending = queue.pendingEntries().find(item => item.payload.test_type === 'stroop').payload
+    h.setRequest(async options => ({ id: 2, legacy: true, test_type: options.data.test_type, result_json: options.data.result_json }))
     await offline.retrySync()
     assert.equal(offline.data.syncStatus, '已同步')
-    assert.equal(h.storage.pending_stroop_result, undefined)
-    assert.equal(h.requests.at(-1).data, pending)
+    assert.equal(queue.pendingEntries().some(item => item.payload.result_json.test_run_id === pending.result_json.test_run_id), false)
+    assert.deepEqual(h.requests.at(-1).data, pending)
     offline.onUnload()
 
     const stale = h.load('stroop')

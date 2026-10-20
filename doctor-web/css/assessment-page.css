@@ -1,0 +1,14 @@
+body { background: #f3f6fb; color: #17324d; font-family: system-ui, sans-serif; margin: 0; }
+.assessment-shell { max-width: 1050px; margin: 40px auto; padding: 0 24px 50px; }
+.assessment-sheet { border: 1px solid #dce6f1; background: rgba(255,255,255,.9); border-radius: 22px; padding: 28px; margin: 22px 0; }
+.assessment-note { color: #526d83; line-height: 1.75; }
+.assessment-background, .assessment-item { border-top: 1px solid #e1e9f2; padding: 18px 0; }
+.assessment-background label { display: inline-block; min-width: 180px; }
+button, select { padding: 11px 17px; border: 1px solid #cedbea; border-radius: 10px; background: #edf3fc; color: #17324d; margin: 8px 8px 8px 0; font: inherit; }
+button, select { max-width: calc(100% - 8px); box-sizing: border-box; }
+input { max-width: 100%; box-sizing: border-box; }
+button:not(:disabled) { cursor: pointer; }
+button:disabled { opacity: .55; }
+textarea { box-sizing: border-box; width: 100%; min-height: 90px; border: 1px solid #cedbea; border-radius: 10px; padding: 14px; margin-top: 10px; font: inherit; }
+#assessmentList button { display: block; width: 100%; text-align: left; }
+#assessmentMessage { white-space: pre-wrap; line-height: 1.6; }

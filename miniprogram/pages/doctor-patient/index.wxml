@@ -1,23 +1,28 @@
-<ai-copilot wx:if="{{!inputFocused && !sending && !creatingTask}}" page-key="doctor-patient" />
-<view class="patient-page ai-copilot-safe-space">
+<ai-copilot wx:if="{{!inputFocused && !sending && !creatingTask}}" page-key="doctor-patient" patient-id="{{patientId}}" />
+<view class="patient-page ai-copilot-safe-space product-page">
   <ui-nav title="患者随访" showBack="{{true}}" fallbackUrl="/pages/doctor-home/index" />
 
   <view class="patient-content">
+    <agent-actions patient-id="{{patientId}}" />
     <view wx:if="{{loading}}" class="state-card">正在汇总患者报告与沟通记录…</view>
     <view wx:elif="{{errorText}}" class="state-card state-card--error">
       <text>{{errorText}}</text>
       <button class="retry-button" bindtap="retryLoad">重新加载</button>
     </view>
 
-    <block wx:elif="{{report}}">
+    <block wx:elif="{{detailsAvailable}}">
       <view class="patient-hero">
         <text class="hero-kicker">PATIENT OVERVIEW</text>
-        <text class="hero-name">{{report.patientName}}</text>
-        <text class="hero-email">{{report.patientEmail}}</text>
+        <text class="hero-name">{{patientName}}</text>
+        <text class="hero-email">{{patientEmail}}</text>
         <view class="privacy-note">报告只在本页临时展示，不写入本地缓存</view>
       </view>
 
-      <view class="report-grid">
+      <view wx:if="{{reportAccessDenied}}" class="privacy-note">当前共享范围不含评估报告；仍可处理已共享的消息和任务。</view>
+      <button id="patient-imaging-reports" class="retry-button" bindtap="openImagingReports">已生成影像报告与实际审核版本</button>
+      <button class="retry-button" bindtap="openFollowupSummary">真实日期随访、困难与长期总结</button>
+      <button wx:if="{{report && report.assessmentShared && !careAccessDenied}}" class="retry-button" bindtap="openAssessments">发起评估或查看已有轮次</button>
+      <view wx:if="{{report}}" class="report-grid">
         <view class="report-card report-card--scale">
           <text class="card-label">最近量表</text>
           <block wx:if="{{report.scale}}">
@@ -28,7 +33,7 @@
             <text class="score-text">总分 {{report.scale.totalScore}}</text>
             <text class="card-copy">{{report.scale.summary}}</text>
           </block>
-          <text wx:else class="empty-copy">暂无量表结果</text>
+          <text wx:else class="empty-copy">{{report.assessmentShared ? '暂无量表结果' : '评估与报告未共享'}}</text>
         </view>
 
         <view class="report-card report-card--cognitive">
@@ -43,7 +48,7 @@
               <text class="test-metric">{{item.metric}}</text>
             </view>
           </block>
-          <text wx:else class="empty-copy">暂无认知测评结果</text>
+          <text wx:else class="empty-copy">{{report.assessmentShared ? '暂无认知测评结果' : '认知测评未共享'}}</text>
         </view>
 
         <view class="report-card report-card--tracking">
@@ -55,7 +60,7 @@
               <text>{{report.tracking.focusText}}</text>
             </view>
           </block>
-          <text wx:else class="empty-copy">暂无日常跟踪记录</text>
+          <text wx:else class="empty-copy">{{report.trackingShared ? '暂无日常跟踪记录' : '跟踪记录未共享'}}</text>
         </view>
 
         <view class="report-card report-card--care">
@@ -65,31 +70,38 @@
               <text class="bullet-dot"></text><text>{{item}}</text>
             </view>
           </view>
-          <text wx:else class="empty-copy">暂无综合提醒</text>
+          <text wx:else class="empty-copy">{{report.allowedScope.length === 5 ? '暂无综合提醒' : '当前仅展示已共享范围内的记录'}}</text>
           <text class="action-label">建议下一步</text>
           <view wx:if="{{report.suggestedActions.length}}" class="bullet-list">
             <view wx:for="{{report.suggestedActions}}" wx:key="index" class="bullet-item bullet-item--action">
               <text class="bullet-dot"></text><text>{{item}}</text>
             </view>
           </view>
-          <text wx:else class="empty-copy">暂无待办建议</text>
+          <text wx:else class="empty-copy">{{report.allowedScope.length === 5 ? '暂无待办建议' : '综合建议需完整共享范围'}}</text>
         </view>
 
         <view class="report-card report-card--desktop">
-          <text class="card-label">专业评估只读摘要</text>
+          <text class="card-label">影像与模型记录</text>
           <view class="desktop-status-row">
             <text>影像状态</text>
-            <text class="desktop-status-value">{{report.hasImaging ? '已有记录' : '尚未录入'}}</text>
+            <text class="desktop-status-value">{{report.imagingStatusText}}</text>
           </view>
           <view class="desktop-status-row">
             <text>模型结果</text>
-            <text class="desktop-status-value">{{report.hasModelPrediction ? '已有记录' : '尚未生成'}}</text>
+            <text class="desktop-status-value">{{report.modelStatusText}}</text>
           </view>
+          <text wx:if="{{report.professional.historyStatusText}}" class="desktop-note">{{report.professional.historyStatusText}}</text>
           <block wx:if="{{report.professional.hasData}}">
+            <text wx:if="{{report.professional.imagingSummary}}" class="desktop-note">已保存影像摘要：{{report.professional.imagingSummary}}</text>
+            <text wx:if="{{report.professional.modelSummary}}" class="desktop-note">模型原摘要：{{report.professional.modelSummary}}</text>
             <image wx:if="{{report.professional.screenshotData}}" class="professional-thumb" mode="widthFix" src="{{report.professional.screenshotData}}" />
             <text wx:if="{{report.professional.predictionLabel}}" class="desktop-note">模型输出：{{report.professional.predictionLabel}} · ADHD {{report.professional.adhdProbabilityText}} · 对照 {{report.professional.controlProbabilityText}}</text>
-            <text class="desktop-note">{{report.professional.modelLabel}} · {{report.professional.confidenceLabel}}</text>
+            <text wx:if="{{report.professional.predictionLabel}}" class="desktop-note">{{report.professional.modelLabel}} · {{report.professional.confidenceLabel}}</text>
             <text wx:if="{{report.professional.doctorInterpretation}}" class="desktop-note">影像解释：{{report.professional.doctorInterpretation}}</text>
+            <text wx:if="{{report.professional.doctorNotes}}" class="desktop-note">保存的补充说明：{{report.professional.doctorNotes}}</text>
+            <text class="desktop-note">记录时间：{{report.professional.generatedAt}} · 来源：{{report.professional.dataSource}}</text>
+            <text wx:if="{{report.professional.hasImaging}}" class="desktop-note">影像记录创建时间：{{report.professional.imagingGeneratedAt}}</text>
+            <text class="desktop-note">{{report.professional.sourceStatusText}}；{{report.professional.reviewStatusText}}；{{report.professional.versionStatusText}}</text>
           </block>
           <text class="desktop-note">影像上传、可视化和模型操作请在电脑医生端完成。</text>
           <text class="desktop-note">本结果来自辅助分析模型，不可独立用于诊断。</text>
@@ -99,7 +111,7 @@
       <view class="task-card">
         <view class="message-heading">
           <text class="card-title">医生任务</text>
-          <text class="message-count">{{tasks.length}} 项</text>
+          <text class="message-count">{{careAccessDenied ? '未共享' : tasks.length + ' 项'}}</text>
         </view>
         <view wx:if="{{tasks.length}}" class="doctor-task-list">
           <view wx:for="{{tasks}}" wx:key="id" class="doctor-task-item">
@@ -108,8 +120,9 @@
             <text wx:if="{{item.dueAt}}" class="test-status">截止：{{item.dueAt}}</text>
           </view>
         </view>
-        <text wx:else class="empty-copy">还没有下发任务。</text>
-        <form class="task-form" bindsubmit="createTask">
+        <text wx:else class="empty-copy">{{careAccessDenied ? '任务未共享' : '还没有下发任务。'}}</text>
+        <text wx:if="{{careAccessDenied}}" class="empty-copy">当前共享范围不包含任务或消息。</text>
+        <form wx:if="{{!careAccessDenied}}" class="task-form" bindsubmit="createTask">
           <text class="action-label">创建新任务</text>
           <view class="task-type-row">
             <view wx:for="{{taskTypes}}" wx:key="value" class="task-type-chip {{taskType === item.value ? 'task-type-chip--active' : ''}}" data-value="{{item.value}}" bindtap="selectTaskType">{{item.label}}</view>
@@ -122,44 +135,19 @@
       </view>
 
       <view class="task-card">
-        <view class="message-heading"><text class="card-title">患者 AI 对话摘要</text><text class="message-count">最近 {{aiLogs.length}} 条</text></view>
+        <view class="message-heading"><text class="card-title">用户确认共享的反馈</text></view>
         <view wx:if="{{aiLogs.length}}" class="ai-log-list">
-          <view wx:for="{{aiLogs}}" wx:key="id" class="ai-log-item"><text class="test-status">{{item.role === 'user' ? report.patientName : 'AI助手'}} · {{item.scope}} · {{item.createdAt}}</text><text class="card-copy">{{item.content}}</text></view>
+          <view wx:for="{{aiLogs}}" wx:key="id" class="ai-log-item"><text class="test-status">{{item.role === 'user' ? patientName : 'AI助手'}} · {{item.scope}} · {{item.createdAt}}</text><text class="card-copy">{{item.content}}</text></view>
         </view>
-        <text wx:else class="empty-copy">暂无可供随访参考的 AI 对话记录。</text>
+        <text wx:else class="empty-copy">私人AI对话默认不向医生共享。用户可通过随访消息明确分享需要医生查看的反馈。</text>
         <text class="desktop-note">仅作为沟通线索，不作为诊断或用药依据。</text>
       </view>
 
       <view class="message-card">
-        <view class="message-heading">
-          <text class="card-title">随访消息</text>
-          <text class="message-count">{{messages.length}} 条</text>
-        </view>
-        <view wx:if="{{messages.length}}" class="message-list">
-          <view wx:for="{{messages}}" wx:key="id" class="message-item {{item.isDoctor ? 'message-item--doctor' : 'message-item--patient'}}">
-            <text class="message-role">{{item.isDoctor ? '我' : report.patientName}}</text>
-            <text class="message-content">{{item.content}}</text>
-            <text class="message-time">{{item.createdAt}}</text>
-          </view>
-        </view>
-        <text wx:else class="empty-copy">还没有消息，可以发送第一条随访提醒。</text>
-
-        <form class="message-form" bindsubmit="sendMessage">
-          <textarea
-            class="message-input"
-            value="{{messageInput}}"
-            maxlength="2000"
-            disabled="{{sending}}"
-            placeholder="给患者发送简短、清晰的随访消息"
-            bindinput="onMessageInput"
-            bindfocus="onInputFocus"
-            bindblur="onInputBlur"
-          />
-          <view class="message-footer">
-            <text class="length-note">{{messageInput.length}} / 2000</text>
-            <button class="send-button doctor-action-button" form-type="submit" loading="{{sending}}" disabled="{{sending}}">发送消息</button>
-          </view>
-        </form>
+        <view class="message-heading"><text class="card-title">共享随访消息</text></view>
+        <text class="empty-copy">旧版本消息的具体关系来源无法核验，因此本页不展示旧消息。请到共享消息页核对固定关系下的消息；这不表示历史消息不存在。</text>
+        <button class="send-button doctor-action-button" bindtap="openSharedMessages">核对关系并查看共享消息</button>
+        <text class="desktop-note">消息已读不代表医生已处理；紧急情况请直接就医或联系急救。</text>
       </view>
 
       <text class="medical-disclaimer">本页信息用于辅助筛查与随访，不替代医生诊断、面诊或处方判断。</text>

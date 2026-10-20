@@ -6,7 +6,7 @@
     <title>我的报告 | 知行合“医”</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/patient.css">
+    <link rel="stylesheet" href="css/patient.css?v=20261016-w09-storage">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
@@ -123,6 +123,7 @@
                         </div>
                     </div>
 
+                    <p id="imagingHistoryStatus" class="hidden" role="status" style="padding:1rem;color:#92400E;background:#FFFBEB;border-radius:14px;"></p>
                     <div id="imagingSection" class="todo-widget report-waterfall-card hidden" style="box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
                         <div class="todo-header" style="border-bottom: 1px solid #E2E8F0; padding-bottom: 1.2rem; margin-bottom: 1.4rem; display:flex; justify-content:space-between; align-items:center;">
                             <h3><ion-icon name="scan-outline" style="color: var(--primary-blue);"></ion-icon> 影像可视化摘要</h3>
@@ -224,17 +225,10 @@
                                 <div id="patientTaskEmpty" class="care-mini-empty">当前还没有研究人员推送的任务。</div>
                             </section>
                             <section class="care-card">
-                                <h3>给研究人员留言</h3>
-                                <p>围绕当前报告、追踪与任务进度进行异步沟通，消息会直接发送给研究人员，不会发给 AI 助手。</p>
+                                <h3>旧版本人消息历史</h3>
+                                <p>旧消息当时的具体关系无法核实，不转换为当前关系。<a href="patient_messages.html">查看明确关系下的共享消息</a>；发送与重试请在小程序确认。</p>
                                 <div id="patientMessageList" class="care-message-thread"></div>
-                                <div id="patientMessageEmpty" class="care-mini-empty">当前还没有消息记录。</div>
-                                <form id="patientMessageForm" class="care-form">
-                                    <textarea id="patientMessageInput" placeholder="例如：我已经完成认知测试了，想请你看看最近追踪结果有什么变化。"></textarea>
-                                    <div id="patientMessageFeedback" class="care-feedback"></div>
-                                    <div class="care-form-actions">
-                                        <button id="patientSendMessageBtn" class="btn-primary-orange" type="submit">发送给研究人员</button>
-                                    </div>
-                                </form>
+                                <div id="patientMessageEmpty" class="care-mini-empty">当前本人历史范围内没有可展示的旧消息。</div>
                             </section>
                         </div>
                     </div>
@@ -261,8 +255,11 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <script src="js/api.js?v=20260405c"></script>
-    <script src="js/report.js?v=20260405c"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261016-messages"></script>
+    <script src="js/report.js?v=20261016-w09-storage"></script>
     <script>
     // ==============================
     // 行动建议面板逻辑
@@ -383,7 +380,7 @@
     }
 
     </script>
-    <script src="js/report_ai.js?v=20260405c"></script>
-    <script src="js/patient_copilot.js?v=20260405c"></script>
+    <script src="js/report_ai.js?v=20261017-unified"></script>
+    <script src="js/patient_copilot.js?v=20261017-unified"></script>
 </body>
 </html>

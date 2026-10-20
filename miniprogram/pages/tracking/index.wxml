@@ -1,14 +1,15 @@
 <ai-copilot wx:if="{{!noteFocused && !submitting}}" page-key="tracking" />
 <ui-nav title="健康追踪" />
-<view class="tracking-page ai-copilot-safe-space">
+<view class="tracking-page ai-copilot-safe-space product-page">
   <view class="tracking-content">
     <view class="page-heading">
       <view class="page-heading__mark" aria-hidden="true">
         <ui-icon name="tracking" shape="lens" decorative="true" />
       </view>
       <view class="page-heading__copy">
-        <text class="page-title">14天每日追踪</text>
-        <text class="page-subtitle">你好，{{patientName}}，用几分钟记录今天的状态</text>
+        <text class="page-title">旧版14天每日追踪</text>
+        <text class="page-subtitle">这里保留旧版按天数编号的记录，实际日期未知，不计入新的日期周期。</text>
+        <button class="trend-button ui-button ui-button--secondary" hover-class="ui-button--pressed" bindtap="openDateCycles">进入真实日期记录与周期</button>
       </view>
     </view>
     <view class="progress-card glass-surface">

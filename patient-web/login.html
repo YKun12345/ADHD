@@ -113,9 +113,23 @@
                         <div class="input-field">
                             <ion-icon name="people-outline" class="input-icon"></ion-icon>
                             <select id="patientTypeInput">
-                                <option value="adult">成人</option>
-                                <option value="child">儿童青少年</option>
+                                <option value="adult">本人使用（成人）</option>
+                                <option value="child">为儿童使用</option>
                             </select>
+                        </div>
+                        <div class="input-group-top"><label for="ageInput">被评估者年龄</label></div>
+                        <div class="input-field"><input type="number" id="ageInput" min="1" max="120" placeholder="用于核验适用范围" /></div>
+                        <div id="guardianSection" hidden>
+                            <p>以上姓名和年龄属于儿童；登录账号属于主要监护人。一位主要监护人管理一名儿童，关系须由机构核验。</p>
+                            <div class="input-group-top"><label for="guardianNameInput">主要监护人姓名</label></div>
+                            <div class="input-field"><input id="guardianNameInput" maxlength="100" placeholder="登录账号持有人姓名" /></div>
+                            <div class="input-group-top"><label for="guardianAgeInput">监护人年龄</label></div>
+                            <div class="input-field"><input type="number" id="guardianAgeInput" min="18" max="120" /></div>
+                            <div class="input-group-top"><label for="guardianRelationInput">监护关系</label></div>
+                            <div class="input-field"><select id="guardianRelationInput"><option value="parent">父母</option><option value="legal_guardian">其他法定监护人</option></select></div>
+                            <div class="input-group-top"><label for="proofReferenceInput">关系证明引用</label></div>
+                            <div class="input-field"><input id="proofReferenceInput" maxlength="200" placeholder="机构核验编号，勿填证件全文" /></div>
+                            <label><input type="checkbox" id="guardianConfirmedInput" />确认主要监护关系及儿童使用说明，核验前不读取或提交儿童敏感资料</label>
                         </div>
                     </div>
 
@@ -196,8 +210,11 @@
         </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/session-guard.js?v=20261020-login"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261020-login"></script>
+    <script src="js/login.js?v=20261014-w02"></script>
 </body>
 
 </html>

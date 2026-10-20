@@ -1,15 +1,18 @@
 const assert = require('node:assert/strict')
 
 function createHarness() {
+  for (const name of ['assessment-execution', 'submission-queue', 'cognitive-page-support', 'cognitive-instructions', 'transfer-page', 'companion-chat-flow']) {
+    delete require.cache[require.resolve(`../../utils/${name}`)]
+  }
   const originals = { setTimeout: global.setTimeout, clearTimeout: global.clearTimeout, now: Date.now }
   let now = 1000
   let timerId = 0
   let definition
-  let requestImplementation = async () => ({ id: 1 })
+  let requestImplementation = async options => ({ id: 1, legacy: true, test_type: options.data.test_type, result_json: options.data.result_json })
   const timers = new Map()
   const requests = []
   const writes = []
-  const storage = { access_token: 'test-token', current_user: { id: 7, role: 'patient', full_name: '测试患者', patient_profile: { patient_type: 'adult' } } }
+  const storage = { access_token: 'test-token', current_user: { id: 7, role: 'patient', full_name: '测试患者', patient_profile: { id: 8, patient_type: 'adult' } } }
   global.setTimeout = (callback, delay) => { const id = ++timerId; timers.set(id, { callback, at: now + delay, delay }); return id }
   global.clearTimeout = (id) => timers.delete(id)
   Date.now = () => now
@@ -35,13 +38,13 @@ function createHarness() {
     }
     throw new Error('Unexpected timer loop')
   }
-  function load(name, { ageGroup = 'adult', mode = 'single' } = {}) {
-    storage.current_user.patient_profile.patient_type = ageGroup
+  function load(name, { ageGroup = 'adult', mode = 'single', query = {} } = {}) {
+    if (storage.current_user.patient_profile) storage.current_user.patient_profile.patient_type = ageGroup
     const file = require.resolve(`../../pages/${name}/index`)
     delete require.cache[file]
     require(file)
     const page = { ...definition, data: JSON.parse(JSON.stringify(definition.data)), setData(patch, callback) { Object.assign(this.data, patch); if (callback) callback() } }
-    page.onLoad({ mode })
+    page._loadPromise = page.onLoad({ mode, ...query })
     if (page.onShow) page.onShow()
     return page
   }

@@ -1,5 +1,11 @@
 # 真实 HGST 模型集成方案（Mock / real / auto 推理模式）
 
+> 2026-10-18当前行为：按用户明确决定，默认沿用项目原有部署权重恢复新影像分析，不重训、不要求找回旧训练记录。只有项目原路径且SHA256为`74575afa48ef423461ca463f8c57cc2f1b767c3cf320c94367c00e02aba7f95a`的包获得`legacy_accepted`兼容状态；不将训练来源、输入一致性或用途许可伪写为已验证。`MODEL_REGISTRY_ENABLED=true`时仍只认正式激活版本，不回退旧包。可通过`HGST_LEGACY_COMPATIBILITY_ENABLED=false`关闭旧包兼容。
+>
+> 业务服务用`.venv`，旧权重推理由`HGST_INFERENCE_PYTHON`指定的独立环境处理，默认已有`.codex-tmp/python310-compat-f00/python.exe`和`.venv-hgst/Lib/site-packages`，不安装或改动原环境。原Torch1.13受限加载器不支持该旧包的BINFLOAT配置指令，因此仅对固定SHA256的原包使用原加载方式；其他注册包仍为受限加载。推理前核验实际字节，保存前再核验当前权重与兼容状态。
+>
+> 本轮真实旧权重+合成ROI验证：后端12项、Chrome6项、小程序报告2项通过；包括真实网页上传、新模型输出、保存并读回、越权拒绝、报告版本及旧兼容标识。权重未改、未训练、未迁移真实库。下方15项为旧版本历史记录。
+
 > 状态：已实现并单测通过（15 passed）。本文件说明“5 项交付物”分别落在哪些代码、行为语义、
 > 如何验证、答辩口径与回滚。
 >
@@ -77,7 +83,7 @@ python -m backend.scripts.verify_model
 ```
 
 退出码：0 当前配置链路可用（含 auto/mock 明确演示结果）；1 未预期错误；2 默认真实模式下
-torch/dhg 依赖或权重文件缺失。本机实测：real → 2（依赖缺失并提示安装要求/演示开关），
+torch/dhg 依赖或权重文件缺失。早期 Python 3.11 环境实测：real → 2（依赖缺失并提示安装要求/演示开关），
 mock → 0（`label=ADHD`、概率 0.6630、`is_demo=True`、`DemoMock/mock-2026-08`、`90×16`）。
 
 自动测试：
@@ -91,27 +97,48 @@ python -m pytest backend/tests/test_model_modes.py backend/tests/test_model_uplo
 mock 下坏输入报错、bundle 默认路径在 `backend/models/` 下、上传路由回归
 （含 `test_real_inference_failure_does_not_fall_back_to_mock` guardrail）。
 
-## 6. 启用真实模型（仅需时执行）
+## 6. 启用真实模型
 
-> 本机是 Python 3.11；`requirements-hgst.txt` 固定 `torch==1.13.1` / `dhg==0.9.5`，
-> **需要 Python≤3.10**。因此当前环境无法安装真实运行时，默认保持 real→503 或显式 mock/auto 演示。
+`requirements-hgst.txt` 固定 `torch==1.13.1` / `dhg==0.9.5` / `numpy==1.26.4`，
+并包含后端和安全存储所需的依赖。Torch 1.13.1 没有 Windows Python 3.11 安装包，
+因此在 Windows 上使用独立的 Python 3.10 环境。创建和安装均可在 PowerShell 完成，无需 VS Code。
 
-1. 建 Python≤3.10 环境并按 `requirements-hgst.txt` 安装依赖。
-2. 准备 encoder 预训练权重（`HGST_PRETRAINED_WEIGHTS_PATH`，缺省为
-   `HGST-main/logs/ADHD/sparse_2026-04-01-11-41-03/pretrained_model_2020.pth`）。
-3. 生成部署 bundle 到 `backend/models/hgst_adhd_bundle.pt`：
+安装 Python 3.10 后，在仓库根目录执行：
 
-   ```bash
-   python -m backend.scripts.build_hgst_bundle \
-     --data-dir <AAL 时间序列目录> --labels-path <标签.csv> \
-     --pretrained <预训练 .pth> --output backend/models/hgst_adhd_bundle.pt
-   ```
+```powershell
+py -3.10 -m venv .venv-hgst
+.\.venv-hgst\Scripts\python.exe -m pip install -r requirements-hgst.txt
+.\.venv-hgst\Scripts\python.exe -m pip check
+.\.venv-hgst\Scripts\python.exe -X utf8 scripts/verify_model.py --mode real
+```
 
-4. 校验：
+最后一步应退出 0，显示 `source_type=timeseries_hgst`、`is_demo=False`。
+已有可加载的 `backend/models/hgst_adhd_bundle.pt` 时，直接验证即可；
+补齐运行依赖不需要重新训练，也不需要 encoder 预训练文件。
 
-   ```bash
-   USE_MOCK_MODEL=false python scripts/verify_model.py   # 应显示真实推理、source_type 非 mock
-   ```
+`tools/start-backend.ps1` 优先使用 `.venv-hgst`，没有该环境时使用原来的 `.venv`，
+并显示所选 Python 路径。桌面 `启动ADHD后端.cmd` 仍调用这份脚本。
+切换环境后需要重启已有后端；只切换编辑器的解释器不会改变正在运行的服务。
+
+2026-10-11 本机已创建该环境并切换后端，真实模型和隔离上传接口验证通过，
+39 项相关回归测试通过。详细记录见
+[`2026-10-11-hgst-environment.md`](evidence/2026-10-11-hgst-environment.md)。
+
+仅在需要生成或重新训练部署 bundle 时，才准备 encoder 预训练权重和有标签的数据：
+
+```powershell
+.\.venv-hgst\Scripts\python.exe -m backend.scripts.build_hgst_bundle `
+  --data-dir <AAL时间序列目录> --labels-path <标签.csv> `
+  --pretrained <预训练.pth> --output backend/models/hgst_adhd_bundle.pt
+```
+
+保留原来的 `.venv`。不要在模型环境中安装 `requirements.txt` 或 `requirements-dev.txt`，
+这两份清单包含与 DHG 不兼容的 NumPy 2.x；测试工具可单独安装
+`pytest==8.3.5 httpx==0.28.1`。环境目录已由 `.gitignore` 排除。
+
+这套 Python 3.10 / Torch 1.13 环境用于兼容现有模型；Python 3.10 已结束官方支持，
+长期对外部署需要升级模型依赖并重新验证，不能把这套兼容环境视为持续维护的生产方案。
+支持状态见 [Python 官方发布页](https://www.python.org/downloads/release/python-31011/)。
 
 路径空值防护：`config.py` 对 `HGST_*` 路径统一 `os.getenv(..) or 默认值` —— 即使 `.env` 里写了
 `HGST_DEPLOYMENT_BUNDLE_PATH=`（空），也会回退到 `backend/models/hgst_adhd_bundle.pt`，不会把
@@ -119,7 +146,7 @@ mock 下坏输入报错、bundle 默认路径在 `backend/models/` 下、上传�
 
 ## 7. 演示与答辩口径
 
-- 当前演示/联调链路是 **Mock（`USE_MOCK_MODEL=true` 或 `auto`）**：输出带 `is_demo=true` +
+- 显式启用的演示链路是 **Mock（`USE_MOCK_MODEL=true` 或 `auto` 下的降级结果）**：输出带 `is_demo=true` +
   “Demonstration output only; not a medical diagnosis.”，PPT 需如实说明“模拟预测（真上传假结果）”，
   不构成诊断或临床有效性的证据。
 - 默认 real 模式在缺权重/依赖时返回 503，是为防止把演示结果冒充真实诊断的安全设计，属**预期行为**；

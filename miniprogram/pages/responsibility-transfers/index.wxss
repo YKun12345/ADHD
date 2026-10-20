@@ -1,0 +1,14 @@
+page { background: #edf7fa; color: #17324d; }
+.transfer-page { padding: 24rpx 28rpx 72rpx; padding-bottom: calc(72rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(72rpx + env(safe-area-inset-bottom)); }
+.sheet { padding: 28rpx; margin: 22rpx 0; border: 1rpx solid #d7e6ed; border-radius: 28rpx; background: #fff; overflow-wrap: anywhere; }
+.title { display: block; font-size: 32rpx; font-weight: 700; }
+.note, .choice { display: block; font-size: 26rpx; color: #536d85; line-height: 1.8; margin: 16rpx 0; white-space: pre-wrap; }
+.choice { padding: 14rpx 0; min-height: 60rpx; }
+.error { display: block; color: #a93434; font-size: 26rpx; line-height: 1.8; }
+textarea, .picker-field { box-sizing: border-box; width: 100%; margin-top: 18rpx; padding: 18rpx; border-radius: 16rpx; background: #f2f6fb; color: #17324d; font-size: 27rpx; }
+.picker-field { min-height: 84rpx; } textarea { min-height: 180rpx; }
+button { margin-top: 18rpx; font-size: 27rpx; color: #17324d; border-radius: 18rpx; background: #e8f0fc; }
+.history-row { padding: 18rpx 0; border-bottom: 1rpx solid #d7e6ed; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

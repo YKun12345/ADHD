@@ -52,5 +52,7 @@ registerDoctorPage({
 
   goBack() {
     wx.navigateBack({ delta: 1 })
-  }
+  },
+  openServiceCoverage() { wx.navigateTo({ url: '/pages/service-coverage/index' }) },
+  openNotifications() { if (getCurrentDoctor()) wx.navigateTo({ url: '/pages/notifications/index' }) }
 })

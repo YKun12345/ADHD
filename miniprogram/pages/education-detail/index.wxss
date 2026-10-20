@@ -26,3 +26,6 @@ page { min-height: 100%; color: #17324d; background: #fff8e8; }
 .source-button { min-height: 88rpx; flex: 0 0 170rpx; display: flex; align-items: center; justify-content: center; box-sizing: border-box; margin-left: 20rpx; padding: 12rpx 18rpx; border: 1rpx solid #b9d2d6; border-radius: 20rpx; color: #245e68; background: #eaf4f5; font-size: 21rpx; font-weight: 650; text-align: center; }
 .article-control--pressed { opacity: .76; transform: scale(.985); }
 .article-disclaimer { margin-top: 26rpx; padding: 24rpx 24rpx 24rpx 28rpx; border-left: 6rpx solid #d59b55; border-radius: 8rpx 22rpx 22rpx 8rpx; color: #506b75; background: #fff7ec; font-size: 23rpx; line-height: 1.7; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

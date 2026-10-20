@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -40,3 +41,7 @@ class ImagingVisualizationResponse(BaseModel):
     summary_text: str
     notes: str | None = None
     created_at: datetime
+    professional_review_status: Literal['not_recorded'] = 'not_recorded'
+    version_status: Literal['legacy_mutable_record'] = 'legacy_mutable_record'
+    storage_integrity: dict | None = None
+    storage_context: dict | None = None

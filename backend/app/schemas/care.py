@@ -48,6 +48,7 @@ class PatientTaskCreateRequest(BaseModel):
 
 
 class PatientTaskResponse(BaseModel):
+    suspension_reason: str | None = None
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -64,6 +65,9 @@ class PatientTaskResponse(BaseModel):
     researcher_name: str = "医生"
     created_at: datetime
     completed_at: datetime | None = None
+    assessment_id: int | None = None
+    assessment_item_id: int | None = None
+    legacy: bool = True
 
 
 class PatientTaskListResponse(BaseModel):
@@ -101,15 +105,20 @@ class CareMessageResponse(BaseModel):
     related_task_id: int | None = None
     sender_name: str = ""
     read_at: datetime | None = None
+    legacy: bool = True
+    read_receipt_scope: Literal["legacy_role_history"] = "legacy_role_history"
 
 
 class CareMessageListResponse(BaseModel):
     items: list[CareMessageResponse]
+    legacy_scope_status: Literal["own_history_only", "unverified_relationship"] = "unverified_relationship"
 
 
 class CareSummaryResponse(BaseModel):
     unread_message_count: int = 0
     pending_task_count: int = 0
+    unread_message_scope: Literal["accessible_shared_messages_actual_viewer"] = "accessible_shared_messages_actual_viewer"
+    legacy_scope_status: Literal["own_history_only", "unverified_relationship"] = "unverified_relationship"
 
 
 class ReadReceiptResponse(BaseModel):

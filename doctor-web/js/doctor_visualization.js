@@ -55,10 +55,11 @@ function setStartupAlert(message = '', type = 'error') {
     }
 
     alert.className = `startup-alert visible ${type}`.trim();
-    alert.innerHTML = `
-        <ion-icon name="${type === 'info' ? 'information-circle-outline' : 'warning-outline'}"></ion-icon>
+    alert.replaceChildren(SafeRender.html`
+        <ion-icon></ion-icon>
         <div>${message}</div>
-    `;
+    `);
+    alert.querySelector('ion-icon').setAttribute('name', type === 'info' ? 'information-circle-outline' : 'warning-outline');
 }
 
 async function fetchFragment(path) {
@@ -243,7 +244,10 @@ function resetSavePanel() {
 }
 
 function formatFileChip(label, value) {
-    return `<span class="save-file-chip">${label}：${value}</span>`;
+    const chip = document.createElement('span');
+    chip.className = 'save-file-chip';
+    chip.textContent = `${label}：${value}`;
+    return chip;
 }
 
 function getSelectedFileName(inputId) {
@@ -301,7 +305,7 @@ function renderSavePanel(payload) {
         $('saveVisualizationSummary').textContent = '当前为 GIfTI 3D 表面可视化结果，保存后会直接挂到当前患者的影像摘要里。';
     }
 
-    $('saveVisualizationFiles').innerHTML = chips.join('');
+    $('saveVisualizationFiles').replaceChildren(...chips);
     $('saveVisualizationPanel').style.display = 'block';
     $('saveVisualizationButton').disabled = false;
     setSaveFeedback('');
@@ -312,12 +316,8 @@ function renderScreenshotPreview(kind) {
     if (!preview) return;
 
     const item = screenshotState[kind];
-    if (!item?.dataUrl) {
-        preview.innerHTML = kind === 'slice' ? '脑剖面截图预览区' : '3D 表面截图预览区';
-        return;
-    }
-
-    preview.innerHTML = `<img src="${item.dataUrl}" alt="${item.name || 'screenshot'}">`;
+    SafeRender.setImage(preview, item?.dataUrl, item?.name || 'screenshot',
+        kind === 'slice' ? '脑剖面截图预览区' : '3D 表面截图预览区');
 }
 
 function readFileAsDataUrl(file) {
@@ -331,10 +331,15 @@ function readFileAsDataUrl(file) {
 
 function loadImageElement(dataUrl) {
     return new Promise((resolve, reject) => {
+        const safeSource = SafeRender.imageUrl(dataUrl);
+        if (!safeSource) {
+            reject(new Error('截图只支持 PNG、JPEG、GIF 或 WebP 图片。'));
+            return;
+        }
         const image = new Image();
         image.onload = () => resolve(image);
         image.onerror = () => reject(new Error('截图图片解析失败。'));
-        image.src = dataUrl;
+        image.src = safeSource;
     });
 }
 

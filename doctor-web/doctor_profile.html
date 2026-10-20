@@ -10,6 +10,7 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link rel="stylesheet" href="css/account-profile.css?v=20261010c">
+    <link rel="stylesheet" href="css/authorization-panel.css?v=20261014-w02">
 </head>
 <body class="bg-page">
     <nav class="navbar">
@@ -56,6 +57,7 @@
                     <p id="accountStatus" class="account-status" role="status" aria-live="polite"></p>
                 </div>
             </section>
+            <section data-authorization-panel data-authorization-role="researcher" aria-label="身份与共享授权"></section>
         </div>
     </main>
 
@@ -65,7 +67,10 @@
             <span>知行合“医” - 专注每刻 © 2026</span>
         </div>
     </footer>
-    <script src="js/api.js?v=20261010c"></script>
-    <script src="js/account.js?v=20261010c"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261014-w02"></script>
+    <script src="js/account.js?v=20261014-w02"></script>
+    <script src="js/authorization-panel.js?v=20261014-w02"></script>
 </body>
 </html>

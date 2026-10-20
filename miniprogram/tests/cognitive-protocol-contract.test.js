@@ -2,28 +2,34 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
+const { tab, storage, signIn } = require('../../tests/web/session-harness.cjs')
 const { buildLocalReport, mergeReport } = require('../utils/report-data')
 const { attachProtocolMetadata } = require('../utils/cognitive-page-support')
 const { getTaskConfig } = require('../utils/cognitive-config')
 
 async function run() {
   const source = fs.readFileSync(path.resolve(__dirname, '../../patient-web/js/patient_test_session.js'), 'utf8')
-  const local = new Map()
+  const store = storage(); signIn(store, 1)
+  const web = tab('patient-web', store)
+  web.load('patient-web/js/owned-cache.js')
+  const local = store.values
   const session = new Map()
   const submitted = []
   const elements = new Map()
   const element = id => {
-    if (!elements.has(id)) elements.set(id, { textContent: '', innerHTML: '', classList: { add() {}, remove() {} }, scrollIntoView() {} })
+    if (!elements.has(id)) elements.set(id, { textContent: '', innerHTML: '', children: [], classList: { add() {}, remove() {} }, scrollIntoView() {},
+      append(...children) { this.children.push(...children) }, appendChild(child) { this.children.push(child) }, replaceChildren() { this.children = [] } })
     return elements.get(id)
   }
-  const context = vm.createContext({
+  const context = web.context
+  Object.assign(context, {
     console, URLSearchParams, Date, Math, clearTimeout() {}, setTimeout() { return 1 },
     performance: { now: () => 500 },
-    document: { getElementById: element, addEventListener() {} },
-    localStorage: { getItem: key => local.get(key) || null, setItem: (key, value) => local.set(key, value) },
+    document: { getElementById: element, createElement: element, addEventListener() {} },
     sessionStorage: { getItem: key => session.get(key) || null, setItem: (key, value) => session.set(key, value) },
-    window: { location: { search: '?test=reaction' }, API: { Patient: { submitCognitiveTest: async payload => submitted.push(payload) } } }
   })
+  context.window.location.search = '?test=reaction'
+  context.window.API.Patient.submitCognitiveTest = async payload => submitted.push(payload)
   vm.runInContext(source, context)
   assert.equal(vm.runInContext('getTestType()', context), 'simple_reaction', 'old reaction links must launch the correctly identified simple reaction')
   vm.runInContext("canvas={width:400,height:400}; clearCanvas=fillCanvasBackground=drawCircle=drawCenterText=()=>{}; schedule=()=>1; sessionState.testType=getTestType(); sessionState.running=true; startReactionTest(); for(let i=0;i<5;i++){sessionState.runtime.clickable=true; sessionState.runtime.startTime=200; canvasClickHandler();}", context)
@@ -36,8 +42,12 @@ async function run() {
   assert.equal(result.protocol_schema_version, 1)
   assert.equal(result.age_group, 'unspecified')
   assert.equal(result.raw_result.completed_rounds, 5)
-  assert.equal(JSON.parse(local.get('smartbrain_latest_cognitive_test')).protocol_id, result.protocol_id)
-  assert.equal(JSON.parse(session.get('achievement_trigger')).gonogo_rt, undefined, 'simple reaction cannot unlock a Go/No-Go achievement')
+  const stored = JSON.parse([...local.entries()].find(([key]) => key.startsWith('smartbrain_owned_v1:'))[1])
+  assert.equal(stored.value[0].protocol_id, result.protocol_id)
+  assert.equal(stored.owner.accountId, 1)
+  assert.equal(local.has('smartbrain_latest_cognitive_test'), false)
+  assert.equal(web.window.OwnedCache.read(web.window.OwnedCache.achievementContext).gonogo_rt, undefined, 'simple reaction cannot unlock a Go/No-Go achievement')
+  assert.equal(session.has('achievement_trigger'), false, 'anonymous achievement flags must never be created')
 
   const mobile = attachProtocolMetadata({ test_type: 'digit', result_json: { raw_result: {} } }, getTaskConfig('digit', 'adult'), 4)
   assert.equal(mobile.result_json.source, 'miniprogram')

@@ -1,0 +1,67 @@
+<ui-nav title="本轮评估" showBack="{{true}}" fallbackUrl="{{role === 'researcher' ? '/pages/doctor-home/index' : '/pages/home/index'}}" />
+<ai-copilot page-key="assessments" patient-id="{{patientId}}" assessment-id="{{assessment.id || 0}}" />
+<view class="assessment-page product-page product-form-page">
+  <view class="sheet">
+    <text class="heading">{{patientName || '当前档案'}}</text>
+    <text class="note">自助评估与医生发布的评估分别保留。背景可全部跳过，不会被记为无相关情况。</text>
+    <text wx:if="{{loading}}" class="note">正在读取评估…</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text>
+    <text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <button disabled="{{loading || busy}}" bindtap="reload">刷新本轮资料</button>
+  </view>
+  <view class="sheet">
+    <text class="heading">新建一轮评估</text>
+    <text class="note">{{admissionText}}</text>
+    <view wx:for="{{templates}}" wx:key="id" class="template" data-id="{{item.id}}" bindtap="selectTemplate">
+      <text>{{selectedTemplateId === item.id ? '● ' : '○ '}}{{item.title}}</text>
+      <text class="note">{{item.age_group === 'child' ? '儿童' : '成人'}} · {{item.items.length}} 项 · {{item.admission_status === 'blocked' ? '尚未开放' : '了解注意状态'}}</text>
+    </view>
+    <view wx:if="{{canCreate}}">
+      <text wx:if="{{adoptionId}}" class="note">来自你已经逐项核对的星仔建议。请再次逐项确认；修改建议需回到星仔重新核对。</text>
+      <text wx:if="{{!backgroundProcessingAllowed}}" class="note">当前未授权处理背景资料，可以选择跳过或不知道。</text>
+      <view wx:for="{{backgroundFields}}" wx:key="key" class="background">
+        <text>{{item.label}}（选填）</text>
+        <radio-group data-index="{{index}}" bindchange="setBackgroundStatus">
+          <label><radio value="skipped" disabled="{{!!adoptionId}}" checked="{{item.status === 'skipped'}}" />跳过</label>
+          <label><radio value="unknown" disabled="{{!!adoptionId}}" checked="{{item.status === 'unknown'}}" />不知道</label>
+          <label><radio value="provided" disabled="{{!backgroundProcessingAllowed || !!adoptionId}}" checked="{{item.status === 'provided'}}" />提供</label>
+        </radio-group>
+        <textarea wx:if="{{item.status === 'provided'}}" disabled="{{!!adoptionId}}" value="{{item.value}}" data-index="{{index}}" bindinput="setBackgroundValue" maxlength="1000" placeholder="填写并确认这一项背景" />
+        <checkbox-group wx:if="{{adoptionId}}" data-index="{{index}}" bindchange="confirmBackgroundField"><label><checkbox value="confirmed" checked="{{item.confirmed}}"/>我已核对这一项内容和状态</label></checkbox-group>
+      </view>
+    </view>
+    <button wx:if="{{adoptionId}}" disabled="{{busy}}" bindtap="reviseAdoption">回到星仔修改并重新核对</button>
+    <button disabled="{{!canCreate || busy || loading}}" bindtap="createAssessment">{{role === 'researcher' ? '保存评估草稿' : '开始本轮评估'}}</button>
+  </view>
+  <view class="sheet">
+    <text class="heading">已有评估</text>
+    <text wx:if="{{!sessions.length}}" class="note">暂无可访问的评估。</text>
+    <button class="assessment-session-open" wx:for="{{sessions}}" wx:key="id" data-id="{{item.id}}" disabled="{{busy}}" bindtap="openAssessment">第 {{item.id}} 轮 · {{item.source === 'self' ? '自助' : '医生发布'}} · {{item.statusLabel}}</button>
+  </view>
+  <view wx:if="{{assessment}}" class="sheet">
+    <text class="heading">本轮状态：{{assessment.statusLabel}}</text>
+    <text wx:if="{{assessment.suspension_reason}}" class="note">原授权或身份关系已失效，本轮已暂停。历史记录保留，新建自助评估不会恢复或改写原医生安排。</text>
+    <text class="note">{{assessment.source === 'self' ? '自助项目无需医生验收。' : '医生任务需要真实提交及医生验收。'}}</text>
+    <text wx:if="{{assessment.usage_notice || assessment.demonstration_only}}" class="note">{{assessment.usage_notice || '参考评估用于了解注意状态，不替代医生诊断。'}}</text>
+    <text wx:if="{{assessment.background_visibility === 'withheld'}}" class="note">背景资料未共享。</text>
+    <view wx:for="{{backgroundViews}}" wx:key="key" class="background"><text>{{item.label}}</text><text class="note">{{item.value}} · {{item.source}}</text></view>
+    <button wx:if="{{assessment.canPublish}}" disabled="{{busy}}" bindtap="publishAssessment">确认并发布评估</button>
+    <button wx:if="{{assessment.canReview}}" disabled="{{busy}}" bindtap="openReview">核对原始材料并进入医生审核</button>
+    <button id="assessment-reports" disabled="{{busy}}" bindtap="openReports">查看本轮报告与已发布意见</button>
+    <button wx:if="{{assessment.source === 'doctor_assigned'}}" disabled="{{busy}}" bindtap="openQuestions">查看具体补问与答复</button>
+    <button id="assessment-plan" wx:if="{{assessment.source === 'doctor_assigned'}}" disabled="{{busy}}" bindtap="openPlan">{{role === 'researcher' ? '发布或修订医生计划' : '查看医生已发布计划'}}</button>
+    <checkbox-group wx:if="{{role === 'patient'}}" bindchange="setRespondentConfirmation"><label><checkbox value="confirmed" checked="{{respondentConfirmed}}" />确认认知项目由被评估者执行；量表由指定观察者根据实际情况填写。</label></checkbox-group>
+    <checkbox-group wx:if="{{role === 'patient'}}" bindchange="setAssistance"><label><checkbox value="assisted" checked="{{assistanceProvided}}" />本次有人协助操作</label></checkbox-group>
+    <view wx:for="{{itemViews}}" wx:key="id" class="item">
+      <text>{{item.title}}</text>
+      <text class="note">执行：{{item.executionLabel}} · 质量：{{item.qualityLabel}} · 验收：{{item.acceptanceLabel}}</text>
+      <text wx:if="{{item.repeat_request}}" class="note">医生要求重测：{{item.repeat_request.reason}}（报告第 {{item.repeat_request.report_version}} 版）。新尝试保留原结果。</text>
+      <text wx:if="{{item.recall_window === 'P6M'}}" class="note">量表根据近六个月实际情况填写，不作为短周期改善指标。</text>
+      <text wx:for="{{item.attempts}}" wx:for-item="attempt" wx:key="id" class="note">尝试 {{attempt.id}} · {{attempt.execution_status === 'submitted' ? '已提交' : '已开始，尚未提交'}}</text>
+      <button wx:if="{{item.canAttempt}}" data-id="{{item.id}}" disabled="{{busy || !respondentConfirmed}}" bindtap="createAttempt">{{item.repeat_request ? '按医生安排重测' : item.kind === 'scale' ? '填写量表' : '开始测试'}}</button>
+      <button wx:if="{{item.canResume}}" data-id="{{item.id}}" disabled="{{busy || !respondentConfirmed}}" bindtap="resumeAttempt">返回本次重测说明</button>
+      <text wx:if="{{item.canResume && item.kind === 'cognitive'}}" class="note">认知试次一旦正式开始，不可重新使用同一运行；中断或更换设备请联系医生重新安排新尝试。</text>
+    </view>
+    <text class="note">创建尝试后进入实际作答；本地完成需获得服务器提交确认。质量与医生验收分别以本轮实际状态为准。</text>
+  </view>
+</view>

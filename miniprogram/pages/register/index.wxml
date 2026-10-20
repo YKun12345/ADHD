@@ -1,34 +1,35 @@
-<ui-nav title="患者注册" fallbackUrl="/pages/login/index" />
-<view class="register-page ui-page">
+<ai-copilot local-help-only="{{true}}" wx:if="{{!submitting}}" page-key="register" />
+<ui-nav title="用户注册" fallbackUrl="/pages/login/index" />
+<view class="register-page ui-page product-page">
   <view class="ambient-orb ambient-orb--cyan"></view>
   <view class="ambient-orb ambient-orb--violet"></view>
   <view class="register-header">
     <view class="register-brand-mark">
-      <ui-icon name="scale" shape="sheet" label="患者注册资料" decorative="{{false}}" />
+      <ui-icon name="scale" shape="sheet" label="用户注册资料" decorative="{{false}}" />
     </view>
-    <text class="register-kicker">PATIENT PROFILE</text>
-    <text class="register-title">创建患者账号</text>
+    <text class="register-kicker">欢迎使用</text>
+    <text class="register-title">创建用户账号</text>
     <text class="register-subtitle">
-      完善基础信息，开始14天辅助筛查计划
+      建立本人或儿童档案，背景资料可以稍后填写
     </text>
   </view>
 
   <form class="register-form {{submitting ? 'register-form--locked' : ''}}" bindsubmit="handleSubmit">
-    <view class="register-card glass-surface register-card--first">
-      <text class="section-title">患者信息</text>
+    <view class="register-section register-section--first">
+      <text class="section-title">使用者信息</text>
       <text class="section-description">
-        请填写接受辅助筛查的患者资料
+        请填写实际接受评估的本人或儿童资料
       </text>
 
       <view class="field-block">
-        <text class="field-label">患者姓名</text>
+        <text class="field-label">姓名</text>
         <input
           class="field-input ui-input"
           type="text"
           maxlength="100"
           disabled="{{submitting}}"
           value="{{fullName}}"
-          placeholder="请输入患者姓名"
+          placeholder="请输入本人或儿童姓名"
           placeholder-class="input-placeholder"
           data-field="fullName"
           bindinput="onFieldInput"
@@ -36,9 +37,9 @@
       </view>
 
       <view class="field-block">
-        <text class="field-label">患者类型</text>
-        <text class="field-help">请主动选择，不根据年龄自动判断</text>
-        <view class="choice-grid patient-type-grid" aria-role="radiogroup" aria-label="患者类型">
+        <text class="field-label">为谁使用</text>
+        <text class="field-help">选择实际使用方式，年龄用于核验适用范围</text>
+        <view class="choice-grid patient-type-grid" aria-role="radiogroup" aria-label="使用者类型">
           <view
             class="choice-card {{patientType === 'adult' ? 'choice-card--active' : ''}}"
             data-value="adult"
@@ -48,7 +49,7 @@
             aria-disabled="{{submitting}}"
             bindtap="onPatientTypeSelect"
           >
-            <text class="choice-title">成人患者</text>
+            <text class="choice-title">本人使用</text>
             <text class="choice-description">成人量表与任务</text>
           </view>
           <view
@@ -60,7 +61,7 @@
             aria-disabled="{{submitting}}"
             bindtap="onPatientTypeSelect"
           >
-            <text class="choice-title">儿童患者</text>
+            <text class="choice-title">为儿童使用</text>
             <text class="choice-description">儿童量表与任务</text>
           </view>
         </view>
@@ -124,10 +125,32 @@
       </view>
     </view>
 
-    <view class="register-card glass-surface register-card--last">
+    <view wx:if="{{patientType === 'child'}}" class="register-section">
+      <text class="section-title">主要监护人</text>
+      <text class="section-description">登录账号属于监护人，以上姓名和年龄属于儿童。确认监护关系后即可使用，一位主要监护人管理一名儿童。</text>
+      <view class="field-block">
+        <text class="field-label">监护人姓名</text>
+        <input class="field-input ui-input" value="{{guardianName}}" maxlength="100" disabled="{{submitting}}" data-field="guardianName" bindinput="onFieldInput" placeholder="登录账号持有人的姓名" />
+      </view>
+      <view class="field-block">
+        <text class="field-label">监护人年龄</text>
+        <input class="field-input ui-input" type="number" value="{{guardianAge}}" maxlength="3" disabled="{{submitting}}" data-field="guardianAge" bindinput="onFieldInput" placeholder="18至120岁" />
+      </view>
+      <view class="choice-grid">
+        <view class="choice-card {{guardianRelation === 'parent' ? 'choice-card--active' : ''}}" data-value="parent" bindtap="onGuardianRelationSelect"><text>父母</text></view>
+        <view class="choice-card {{guardianRelation === 'legal_guardian' ? 'choice-card--active' : ''}}" data-value="legal_guardian" bindtap="onGuardianRelationSelect"><text>其他法定监护人</text></view>
+      </view>
+      <view class="field-block">
+        <text class="field-label">监护关系说明（选填）</text>
+        <input class="field-input ui-input" value="{{proofReference}}" maxlength="200" disabled="{{submitting}}" data-field="proofReference" bindinput="onFieldInput" placeholder="可以补充关系说明，无需机构编号或证件全文" />
+      </view>
+      <checkbox-group bindchange="onGuardianConfirmation"><label><checkbox value="guardian" checked="{{guardianConfirmed}}" disabled="{{submitting}}" />我确认是该儿童的主要监护人，对所填资料负责，并同意代儿童进行评估和日常记录；医生共享、外部AI和研究另行确认</label></checkbox-group>
+    </view>
+
+    <view class="register-section">
       <text class="section-title">账号安全</text>
       <text class="section-description">
-        使用邮箱和安全密码创建患者账号
+        使用邮箱和安全密码创建账号
       </text>
 
       <view class="field-block">

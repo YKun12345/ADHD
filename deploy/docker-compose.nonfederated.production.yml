@@ -1,0 +1,45 @@
+# Independent production candidate. Review first; running this is a separate authorized release.
+# Starts the API only: never create_all, seed, migrate, admit weights or start federation.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?Explicit reviewed database URL required}
+      SECRET_KEY: ${SECRET_KEY:?Production signing key required}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?Production data encryption key required}
+      AUTHORIZATION_LEDGER_PATH: /app/authorization/heads.db
+      UPLOAD_ROOT: /app/backend/uploads
+      FINDVIZ_CACHE_ROOT: /app/findviz-cache
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-}
+      USE_MOCK_MODEL: "false"
+      CARE_WORKER_ENABLED: ${CARE_WORKER_ENABLED:-false}
+      AGENT_WORKER_ENABLED: ${AGENT_WORKER_ENABLED:-false}
+      FEDERATED_WORKER_ENABLED: "false"
+      WECHAT_NOTIFICATION_SEND_ENABLED: ${WECHAT_NOTIFICATION_SEND_ENABLED:-false}
+      WECHAT_NOTIFICATION_WORKER_ENABLED: ${WECHAT_NOTIFICATION_WORKER_ENABLED:-false}
+      WECHAT_APP_ID: ${WECHAT_APP_ID:-}
+      WECHAT_APP_SECRET: ${WECHAT_APP_SECRET:-}
+      WECHAT_SUBSCRIBE_TEMPLATE_ID: ${WECHAT_SUBSCRIBE_TEMPLATE_ID:-}
+      WECHAT_SUBSCRIBE_TITLE_FIELD: ${WECHAT_SUBSCRIBE_TITLE_FIELD:-}
+      WECHAT_SUBSCRIBE_TIME_FIELD: ${WECHAT_SUBSCRIBE_TIME_FIELD:-}
+      WECHAT_MINIPROGRAM_STATE: ${WECHAT_MINIPROGRAM_STATE:-formal}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com/chat/completions}
+      DEEPSEEK_CHAT_MODEL: ${DEEPSEEK_CHAT_MODEL:-deepseek-v4-flash}
+      TZ: Asia/Shanghai
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - production_uploads:/app/backend/uploads
+      - independent_authorization:/app/authorization
+      - findviz_cache:/app/findviz-cache
+volumes:
+  production_uploads:
+  independent_authorization:
+  findviz_cache:

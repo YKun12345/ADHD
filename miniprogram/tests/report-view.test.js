@@ -22,7 +22,9 @@ const appConfig = JSON.parse(fs.readFileSync(
 ))
 
 assert.match(wxml, /bindtap="toggleProfessional"/)
-assert.match(wxml, /专业评估结果/)
+assert.match(wxml, /影像与模型记录/)
+assert.match(wxml, /professional.reviewStatusText/)
+assert.match(wxml, /professional.versionStatusText/)
 assert.match(wxml, /不可独立用于诊断/)
 assert.match(wxml, /professionalExpanded/)
 const professionalBlockEnd = wxml.indexOf('</block>', wxml.indexOf('wx:if="{{professionalExpanded}}"'))
@@ -61,7 +63,7 @@ const requiredWxml = [
   'data-task="cognitive"',
   'data-task="tracking"',
   'bindtap="openTrend"',
-  '暂无专业评估记录',
+  "professional.historyStatusText || '暂无可显示的影像或模型记录'",
   '仅用于辅助筛查，不替代专业医生诊断'
 ]
 

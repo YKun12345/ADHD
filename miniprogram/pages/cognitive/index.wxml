@@ -1,8 +1,16 @@
 <task-instructions visible="{{instructionVisible}}" content="{{taskInstruction}}" remaining="{{instructionRemaining}}" ready="{{instructionReady}}" bindstart="handleInstructionStart" />
-<ai-copilot wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="cognitive" />
+<view wx:if="{{formalExecution && !running}}" class="notice-box" role="status">
+  <text wx:if="{{executionLoading}}">正在核对本轮执行资料…</text>
+  <text wx:if="{{executionError}}">{{executionError}}</text>
+  <text wx:if="{{practiceStatus}}">{{practiceStatus}}</text>
+  <button wx:if="{{practiceFinished && !executionError}}" disabled="{{submitting}}" bindtap="handlePracticeContinue">{{practicePassed ? '开始正式测试' : '重新练习'}}</button>
+  <button wx:if="{{executionError}}" bindtap="goBack">返回本轮评估</button>
+</view>
+<view wx:if="{{formalExecution && practiceStage && running}}" class="protocol-note"><text>当前为练习</text></view>
+<ai-copilot wx:if="{{!instructionVisible && !submitting && (phase === 'intro' || phase === 'result')}}" page-key="cognitive" paused="{{running}}" />
 <view class="cognitive-shell {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-shell--testing' : ''}}">
-<ui-nav title="Go / No-Go" />
-<view class="cognitive-page theme-lagoon {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}}">
+<ui-nav title="反应抑制测试" />
+<view class="cognitive-page theme-lagoon {{phase === 'intro' || phase === 'result' ? 'ai-copilot-safe-space' : ''}} {{phase === 'waiting' || phase === 'stimulus' || phase === 'feedback' ? 'cognitive-page--testing' : ''}} {{phase === 'intro' || phase === 'result' ? 'product-task-shell' : ''}}">
   <view class="cognitive-content">
     <view class="page-heading">
       <view class="assessment-hero-icon">
@@ -107,7 +115,7 @@
       <button
         class="primary-button ui-button ui-button--primary {{submitting ? 'ui-button--disabled' : ''}}"
         hover-class="{{submitting ? 'none' : 'ui-button--pressed'}}"
-        wx:if="{{syncStatus === '待同步'}}"
+        wx:if="{{canRetrySync}}"
         loading="{{submitting}}"
         disabled="{{submitting}}"
         bindtap="retrySync"

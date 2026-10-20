@@ -29,7 +29,7 @@ function protectDoctorPage(definition, guard = ensureResearcherSession) {
   const originalOnLoad = definition.onLoad
   const originalOnShow = definition.onShow
 
-  return Object.assign({}, definition, {
+  return require('./assistant-draft-guard').protectAssistantDraft(Object.assign({}, definition, {
     onLoad(...args) {
       const allowed = checkDoctorSession(this, guard)
       if (!allowed || typeof originalOnLoad !== 'function') return undefined
@@ -42,7 +42,7 @@ function protectDoctorPage(definition, guard = ensureResearcherSession) {
       if (!allowed || typeof originalOnShow !== 'function') return undefined
       return originalOnShow.apply(this, args)
     }
-  })
+  }))
 }
 
 function registerDoctorPage(definition) {

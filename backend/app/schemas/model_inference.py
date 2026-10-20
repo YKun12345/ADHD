@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -19,6 +20,11 @@ class ModelPredictionReportResponse(BaseModel):
     is_demo: bool
     disclaimer: str
     created_at: datetime
+    source_admission_status: Literal['not_recorded', 'demonstration_only', 'active', 'legacy_accepted'] = 'not_recorded'
+    professional_review_status: Literal['not_recorded'] = 'not_recorded'
+    version_status: Literal['legacy_unversioned'] = 'legacy_unversioned'
+    storage_integrity: dict | None = None
+    storage_context: dict | None = None
 
 
 class TimeseriesPredictionResponse(ModelPredictionReportResponse):

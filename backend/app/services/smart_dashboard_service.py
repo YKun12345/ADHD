@@ -10,6 +10,8 @@
 
 from __future__ import annotations
 
+from backend.app.services.identity_access import authorized_patient_ids
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -71,7 +73,7 @@ class SmartDashboardService:
         # 获取研究人员负责的所有患者
         patients = self.db.scalars(
             select(Patient)
-            .where(Patient.assigned_researcher_id == researcher_id)
+            .where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
             .order_by(Patient.created_at.desc())
         ).all()
 
@@ -79,7 +81,7 @@ class SmartDashboardService:
 
         for patient in patients:
             user = self.db.get(User, patient.user_id)
-            patient_name = user.full_name if user else f"Patient #{patient.id}"
+            patient_name = patient.display_name or user.full_name if user else f"Patient #{patient.id}"
 
             # 检查各类预警
             compliance_alerts = self._check_compliance(patient.id, patient_name, lookback_days)
@@ -296,7 +298,7 @@ class SmartDashboardService:
         from backend.app.models.patient import Patient
 
         patients = self.db.scalars(
-            select(Patient).where(Patient.assigned_researcher_id == researcher_id)
+            select(Patient).where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
         ).all()
 
         patient_ids = [p.id for p in patients]
@@ -469,12 +471,12 @@ class SmartDashboardService:
 
         # 患者总数
         patient_count = self.db.scalar(
-            select(func.count(Patient.id)).where(Patient.assigned_researcher_id == researcher_id)
+            select(func.count(Patient.id)).where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
         ) or 0
 
         # 获取所有患者ID
         patient_ids = list(self.db.scalars(
-            select(Patient.id).where(Patient.assigned_researcher_id == researcher_id)
+            select(Patient.id).where(Patient.id.in_(authorized_patient_ids(self.db,researcher_id)))
         ))
 
         if not patient_ids:

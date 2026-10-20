@@ -1,0 +1,44 @@
+<ui-nav title="日期记录与周期" showBack="{{true}}" fallbackUrl="/pages/home/index" />
+<ai-copilot id="page-companion" page-key="care-cycles" patient-id="{{patientId}}" cycle-id="{{cycle.id || 0}}" />
+<view class="cycles-page product-page product-form-page">
+  <view class="sheet">
+    <text class="title">自助记录周期</text>
+    <text class="note">按北京时间的真实日期记录。缺失保留为未记录，补录与每次修订分别保存。自助记录不代表医生已发布专业计划。</text>
+    <text wx:if="{{errorText}}" class="error">{{errorText}}</text><text wx:if="{{statusText}}" class="note">{{statusText}}</text>
+    <text wx:if="{{loading}}" class="note">正在读取服务器记录…</text>
+    <button disabled="{{loading || busy}}" bindtap="reload">刷新周期</button>
+    <picker mode="date" value="{{startDate}}" disabled="{{busy || !!pendingCycleId}}" data-field="startDate" bindchange="onCycleDate"><view class="date-choice">开始日期：{{startDate}}</view></picker>
+    <picker mode="date" value="{{endDate}}" disabled="{{busy || !!pendingCycleId}}" data-field="endDate" bindchange="onCycleDate"><view class="date-choice">结束日期：{{endDate}}</view></picker>
+    <button disabled="{{loading || busy || !patientId}}" bindtap="createCycle">{{pendingCycleId ? '重试原周期创建' : '创建自助记录周期'}}</button>
+  </view>
+  <view wx:for="{{cycles}}" wx:key="id" class="sheet">
+    <text class="title">{{item.start_date}} 至 {{item.end_date}}</text>
+    <text class="note">{{item.cycle_type === 'self' ? '自助记录' : '医生计划'}} · {{item.processing_status === 'suspended' ? '原授权已失效，仅可查看历史' : '按日期记录'}}</text>
+    <button data-id="{{item.id}}" disabled="{{loading || busy}}" bindtap="openCycle">打开这个周期</button>
+  </view>
+  <view wx:if="{{cycle}}" class="sheet">
+    <text class="title">{{cycle.start_date}} 至 {{cycle.end_date}}</text><text class="note">{{coverageText}}</text>
+    <button bindtap="openStageReview">阶段复核、结束或后续安排</button>
+    <text class="note">统计截至 {{today}}。未记录日期不会计作0，也不会混入旧14天资料。</text>
+    <text wx:if="{{!canRecord}}" class="note">当前周期不能新增记录。原授权失效后重新同意不会自动恢复旧周期；已保存历史仍保留。</text>
+    <picker mode="date" value="{{recordDate}}" start="{{cycle.start_date}}" end="{{cycle.end_date < today ? cycle.end_date : today}}" disabled="{{busy || !!pendingId || !canRecord}}" bindchange="selectRecordDate"><view class="date-choice">记录日期：{{recordDate}}</view></picker>
+    <text class="note">专注分钟数（可留空，0表示实际记录为0）</text>
+    <input id="daily-focus-minutes" type="number" value="{{focusMinutes}}" disabled="{{busy || !!pendingId || !canRecord}}" data-field="focusMinutes" bindinput="onDailyInput" placeholder="未记录" />
+    <text class="note">情绪描述（可选）</text><input value="{{moodTag}}" maxlength="32" disabled="{{busy || !!pendingId || !canRecord}}" data-field="moodTag" bindinput="onDailyInput" placeholder="未记录" />
+    <text class="note">睡眠情况（可选）</text><input value="{{sleepQuality}}" maxlength="64" disabled="{{busy || !!pendingId || !canRecord}}" data-field="sleepQuality" bindinput="onDailyInput" placeholder="未记录" />
+    <text class="note">备注（可选）</text><textarea value="{{note}}" maxlength="500" disabled="{{busy || !!pendingId || !canRecord}}" data-field="note" bindinput="onDailyInput" placeholder="填写实际情况" />
+    <picker mode="time" value="{{originalTime}}" disabled="{{busy || !!pendingId || !canRecord}}" bindchange="onOriginalTime"><view class="date-choice">当时记录的时间：{{originalTime || '未知，可选填'}}（北京时间）</view></picker>
+    <button disabled="{{busy || loading || !canRecord}}" bindtap="saveDaily">{{pendingId ? '重试原记录' : '保存本次记录或修订'}}</button>
+    <text wx:if="{{pendingId}}" class="note">原记录尚未确认，当前内容保持固定。可在待同步记录中按原编号查询或重试。</text>
+  </view>
+  <view wx:for="{{records}}" wx:key="record_id" class="sheet">
+    <text class="title">{{item.record_date}} · 第{{item.revision}}次记录</text>
+    <text class="note">{{item.backfillLabel}} · 专注：{{item.focusText}}</text><text class="note">{{item.noteText}}</text>
+    <text class="note">{{item.recordedTimeText}}</text><text class="note">实际提交时间：{{item.submitted_at}}</text>
+    <button data-date="{{item.record_date}}" disabled="{{busy || loading}}" bindtap="showHistory">查看全部修订</button>
+  </view>
+  <view wx:for="{{history}}" wx:key="record_id" class="sheet">
+    <text class="title">{{item.record_date}} · 修订{{item.revision}}</text><text class="note">专注：{{item.focusText}} · {{item.noteText}}</text><text class="note">{{item.recordedTimeText}}</text>
+  </view>
+  <view class="sheet"><button bindtap="openQueue">待同步记录与恢复</button><button bindtap="openLegacy">查看旧版14天记录（实际日期未知）</button></view>
+</view>

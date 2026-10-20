@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import re
+import hashlib
+import json
+import math
+from decimal import Decimal
 from copy import deepcopy
 from typing import Any
 
@@ -34,6 +38,19 @@ TEST_NAMES = {
 }
 
 CONTINUOUS_PROTOCOL_ID = "continuous-mobile-v4"
+CONTINUOUS_SCHEMA_VERSION = 6
+
+
+def validate_formal_attempt_source(protocol_id: str, schema_version: int, platform: str) -> None:
+    """Full executors share frozen tasks; source/device never imply equivalence."""
+    if protocol_id != CONTINUOUS_PROTOCOL_ID or schema_version != CONTINUOUS_SCHEMA_VERSION or platform not in {"miniprogram", "web"}:
+        raise ValueError("Formal cognitive attempts require the frozen continuous-mobile-v4/schema6 complete executor and an explicit supported platform.")
+
+
+def reject_legacy_assessment_claims(value) -> None:
+    fields = {"assessment_id", "assessment_item_id", "task_attempt_id", "attempt_id", "actor_user_id", "submitter_user_id", "acceptance_status", "execution_status"}
+    if isinstance(value, dict) and fields.intersection(value):
+        raise ValueError("Legacy submission cannot attach or declare a new assessment/attempt context; use the versioned submission contract.")
 
 
 def validate_test_run_id(value: Any) -> str:
@@ -56,17 +73,22 @@ def _number(value: Any) -> int | float | None:
     return value
 
 
-def _accuracy_percent(value: Any) -> float | int | None:
+def _accuracy_percent(value: Any, *, already_percent=False) -> float | int | None:
     number = _number(value)
     if number is None:
         return None
-    if 0 <= number <= 1:
-        return round(float(number) * 100, 2)
+    if not already_percent and 0 <= number <= 1:
+        return _scale_number(number,100)
     return number
 
 
-def _derived_accuracy(source: dict[str, Any]) -> float | int | None:
-    direct = _accuracy_percent(source.get("accuracy"))
+def _scale_number(value,multiplier):
+    scaled = Decimal(str(value))*Decimal(str(multiplier))
+    return int(scaled) if scaled == scaled.to_integral_value() else float(scaled)
+
+
+def _derived_accuracy(source: dict[str, Any], *, already_percent=False) -> float | int | None:
+    direct = _accuracy_percent(source.get("accuracy"),already_percent=already_percent)
     if direct is not None:
         return direct
     direct = _accuracy_percent(source.get("correct_rate"))
@@ -89,13 +111,13 @@ def _copy_number(
     for key in source_keys:
         value = _number(source.get(key))
         if value is not None:
-            destination[destination_key] = value * multiplier
+            destination[destination_key] = _scale_number(value,multiplier)
             return
 
 
-def _legacy_raw_result(test_type: str, source: dict[str, Any]) -> dict[str, Any]:
+def _legacy_raw_result(test_type: str, source: dict[str, Any], *, already_percent=False) -> dict[str, Any]:
     raw: dict[str, Any] = {}
-    accuracy = _derived_accuracy(source)
+    accuracy = _derived_accuracy(source,already_percent=already_percent)
 
     if test_type in {"reaction", "simple_reaction", "stroop", "flanker"}:
         _copy_number(
@@ -136,15 +158,21 @@ def _legacy_raw_result(test_type: str, source: dict[str, Any]) -> dict[str, Any]
 
 
 def normalize_result_json(test_type: str, value: dict[str, Any]) -> dict[str, Any]:
+    if "normalization_version" in value and (type(value["normalization_version"]) is not int or value["normalization_version"] != 1):
+        raise ValueError("Canonical numeric representation version must be integer 1 when supplied.")
+    validate_numeric_aliases(value,test_type)
+    already_percent = value.get("normalization_version") == 1
     canonical_type = result_test_type(test_type, value)
     normalized = deepcopy(value)
     supplied_raw = normalized.get("raw_result")
     if isinstance(supplied_raw, dict):
         raw = deepcopy(supplied_raw)
-        if "accuracy" in raw:
-            accuracy = _accuracy_percent(raw.get("accuracy"))
-            if accuracy is not None:
-                raw["accuracy"] = accuracy
+        # Canonicalize aliases inside raw_result as well as legacy top-level
+        # metrics. Retain all unknown evidence instead of reconstructing it.
+        raw.update(_legacy_raw_result(canonical_type,supplied_raw,already_percent=already_percent))
+        for canonical,alias,_ in _numeric_aliases(canonical_type):
+            if canonical in raw:
+                raw.pop(alias,None)
         if canonical_type == "digit" and _number(raw.get("highest_span")) is None:
             spans = [
                 value
@@ -158,13 +186,88 @@ def normalize_result_json(test_type: str, value: dict[str, Any]) -> dict[str, An
             if spans:
                 raw["highest_span"] = max(spans)
     else:
-        raw = _legacy_raw_result(canonical_type, normalized)
+        raw = _legacy_raw_result(canonical_type, normalized,already_percent=already_percent)
 
     normalized.update(protocol_metadata(test_type, value))
     normalized["raw_result"] = raw
+    if "accuracy" in normalized and _number(normalized["accuracy"]) is not None:
+        normalized["accuracy"] = _accuracy_percent(normalized["accuracy"],already_percent=already_percent)
+    normalized["normalization_version"] = 1
     normalized.setdefault("test_name", TEST_NAMES[canonical_type])
     normalized.setdefault("status_text", "已记录")
     return normalized
+
+
+NUMERIC_ALIASES = (("average_reaction_time_ms","avg_reaction_ms",1),("accuracy","correct_rate",1),("elapsed_ms","duration_s",1000),("highest_span","max_span",1))
+NUMERIC_FIELDS = {"average_reaction_time_ms","avg_reaction_ms","accuracy","correct_rate","elapsed_ms","duration_s","highest_span","max_span","false_starts","forward_max_span","backward_max_span","n","total_trials","correct_trials","go_trials","nogo_trials","commission_errors","omission_errors","errors","wrong","correct","median_reaction_time_ms","interference_effect_ms","conflict_effect_ms","d_prime","correct_digits","total_digits"}
+
+
+def _numeric_aliases(test_type):
+    return NUMERIC_ALIASES+(("errors","wrong",1),) if canonical_test_type(test_type) == "trail" else NUMERIC_ALIASES
+
+
+def validate_numeric_aliases(value: dict[str, Any],test_type: str) -> None:
+    layers = []
+    for source in (value,value.get("raw_result")):
+        if not isinstance(source, dict):
+            continue
+        metrics = {}
+        for key in NUMERIC_FIELDS.intersection(source):
+            number = source[key]
+            if number is None:
+                continue
+            if _number(number) is None or abs(number) > 10**100 or (type(number) is float and not math.isfinite(number)):
+                raise ValueError("Cognitive numeric evidence must contain finite numbers, never booleans.")
+            canonical,multiplier = key,1
+            for target,alias,factor in _numeric_aliases(test_type):
+                if key == alias:
+                    canonical,multiplier = target,factor
+                    break
+            number = _accuracy_percent(number,already_percent=value.get("normalization_version") == 1 and key == "accuracy") if canonical == "accuracy" else _scale_number(number,multiplier)
+            if canonical in metrics and metrics[canonical] != number:
+                raise ValueError("Conflicting cognitive numeric aliases are not an equivalent submission.")
+            metrics[canonical] = number
+        layers.append(metrics)
+    if len(layers) == 2 and any(layers[0][key] != layers[1][key] for key in layers[0].keys() & layers[1].keys()):
+        raise ValueError("Top-level and raw cognitive metrics contain contradictory actual evidence.")
+
+
+def canonical_digest(value: Any) -> str:
+    def normalize(item):
+        if isinstance(item, bool) or item is None or isinstance(item, str):
+            return item
+        if isinstance(item, (int, float)):
+            if abs(item) > 10**100 or type(item) is float and not math.isfinite(item):
+                raise ValueError("Submission content must contain finite numbers.")
+            return int(item) if item == int(item) else item
+        if isinstance(item, list):
+            return [normalize(child) for child in item]
+        if isinstance(item, dict):
+            return {key:normalize(child) for key,child in item.items()}
+        raise ValueError("Submission content must be JSON.")
+    return hashlib.sha256(json.dumps(normalize(value),sort_keys=True,ensure_ascii=False,separators=(",",":"),allow_nan=False).encode("utf-8")).hexdigest()
+
+
+def legacy_cognitive_digest(patient_id: int, test_type: str, result: dict[str, Any]) -> str:
+    canonical = result_test_type(test_type, result)
+    normalized = normalize_result_json(canonical, result)
+    # These fields duplicate server protocol projections, never actual evidence.
+    for key in ("protocol_key", "protocol_label", "protocol_inferred", "normalization_version"):
+        normalized.pop(key, None)
+    raw = normalized["raw_result"]
+    aliases = _numeric_aliases(canonical)
+    for key, alias, multiplier in aliases:
+        if key not in raw:
+            continue
+        raw.pop(alias,None)
+        for top_key in (key,alias):
+            if top_key in normalized:
+                # Legacy normalizer already froze the canonical metric.
+                normalized.pop(top_key)
+    for key in ("false_starts","forward_max_span","backward_max_span","n"):
+        if key in raw and normalized.get(key) == raw[key]:
+            normalized.pop(key,None)
+    return canonical_digest({"patient_id":patient_id,"test_type":canonical,"result_json":normalized})
 
 WEB_PROTOCOL_ID = "patient-web-preview-v1"
 LEGACY_PROTOCOL_ID = "legacy-unversioned"

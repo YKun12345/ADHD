@@ -379,6 +379,45 @@ def test_migration_refuses_upload_outside_root_before_mutation(client, tmp_path,
         engine.dispose()
 
 
+def test_migration_without_sqlite_serialize_restores_data_and_schema(client, tmp_path, monkeypatch):
+    engine, upload, migration = legacy_storage(client, tmp_path, monkeypatch)
+    original_connect = sqlite3.connect
+
+    class LegacyConnection(sqlite3.Connection):
+        @property
+        def serialize(self):
+            raise AttributeError("serialize unavailable")
+
+    def legacy_connect(*args, **kwargs):
+        if args and args[0] == ":memory:":
+            kwargs["factory"] = LegacyConnection
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(sqlite3, "connect", legacy_connect)
+    try:
+        with engine.begin() as connection:
+            connection.exec_driver_sql("CREATE TABLE samples (id INTEGER PRIMARY KEY AUTOINCREMENT, value BLOB)")
+            connection.exec_driver_sql("CREATE INDEX sample_value_index ON samples (value)")
+            connection.exec_driver_sql("INSERT INTO samples (value) VALUES (X'0001FEFF')")
+            connection.exec_driver_sql("PRAGMA user_version = 7")
+        original_upload = upload.read_bytes()
+        backup = Path(migration.migrate_sensitive_storage(engine)["backup_directory"])
+        assert all(path.suffix == ".enc" for path in backup.rglob("*") if path.is_file())
+        assert b"private-legacy-name" not in b"".join(path.read_bytes() for path in backup.rglob("*.enc"))
+        destination = tmp_path / "legacy-runtime-restored"
+        assert migration.restore_backup(backup, destination) == 2
+        assert (destination / "uploads" / "clinical.csv").read_bytes() == original_upload
+        with original_connect(destination / "database-before-encryption.db") as connection:
+            assert connection.execute("SELECT full_name FROM users").fetchone()[0] == "private-legacy-name"
+            assert connection.execute("SELECT value FROM samples").fetchone()[0] == b"\x00\x01\xfe\xff"
+            assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
+            assert connection.execute("SELECT name FROM sqlite_master WHERE type = 'index' AND name = 'sample_value_index'").fetchone()
+            connection.execute("INSERT INTO samples (value) VALUES (X'02')")
+            assert connection.execute("SELECT MAX(id) FROM samples").fetchone()[0] == 2
+    finally:
+        engine.dispose()
+
+
 def test_backup_authentication_failure_does_not_partially_restore(client, tmp_path, monkeypatch):
     engine, _, migration = legacy_storage(client, tmp_path, monkeypatch)
     from cryptography.exceptions import InvalidTag

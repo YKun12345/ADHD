@@ -1,25 +1,45 @@
 /** app.wxss **/
 page {
-  --ui-ink: #173f50;
-  --ui-text: #506b75;
-  --ui-muted: #5d747d;
-  --ui-bg: #f2f8fa;
-  --ui-surface: rgba(255,255,255,0.78);
-  --ui-line: #d7e7eb;
-  --ui-primary: #236b80;
+  --ui-ink: #183747;
+  --ui-text: #607583;
+  --ui-muted: #687c89;
+  --ui-bg: #eaf4fc;
+  --ui-surface: #ffffff;
+  --ui-line: #e7eef3;
+  --ui-primary: #159ca8;
   --ui-highlight: #50bee0;
   --ui-cognitive: #7367d9;
   --ui-success: #4aa997;
   --ui-warning: #e0a45b;
   --ui-danger: #e06f67;
+  --ui-archive: #fff5e9;
+  --ui-archive-line: #f4e8d8;
+  --ui-focus: linear-gradient(120deg, #117888, #287b9b);
+  /* Shared, fixed waves stay decorative and never intercept page interaction. */
+  --ui-page-background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='750' height='300' viewBox='0 0 750 300'%3E%3Cpath d='M0 80 C140 10 245 100 365 115 S605 25 750 75 V300 H0Z' fill='%23d8eafa' fill-opacity='.65'/%3E%3Cpath d='M0 170 C170 225 270 115 430 155 S630 225 750 150 V300 H0Z' fill='%23e6f2fc' fill-opacity='.85'/%3E%3C/svg%3E") center bottom / 100% 300rpx no-repeat fixed, linear-gradient(155deg, #f8fbfe 0%, #eaf4fc 65%, #f6fbff 100%) center / 100% 100% no-repeat fixed;
+  --ui-radius-lg: 32rpx;
+  --ui-radius-md: 24rpx;
+  --ui-radius-sm: 16rpx;
+  --ui-space-xs: 8rpx;
+  --ui-space-sm: 16rpx;
+  --ui-space-md: 24rpx;
+  --ui-space-lg: 32rpx;
+  --ui-shadow-soft: 0 8rpx 28rpx rgba(35,80,105,.06);
+  --ui-shadow-focus: 0 12rpx 32rpx rgba(20,125,145,.12);
+  --ui-status-progress: #327fd0;
+  --ui-status-complete: #318b72;
+  --ui-status-pending: #b67329;
+  --ui-status-unread: #d95454;
+  --ui-status-muted: #9aa7b1;
+  --ui-font-title: 34rpx;
+  --ui-font-section: 30rpx;
+  --ui-font-body: 28rpx;
+  --ui-font-note: 24rpx;
+  --ui-tab-height: 112rpx;
 
   min-height: 100%;
   color: var(--ui-ink);
-  background-color: var(--ui-bg);
-  background-image:
-    radial-gradient(circle at 12% 0%, rgba(80, 190, 224, 0.14) 0, rgba(80, 190, 224, 0) 38%),
-    radial-gradient(circle at 100% 24%, rgba(115, 103, 217, 0.07) 0, rgba(115, 103, 217, 0) 34%),
-    linear-gradient(160deg, #f8fcfd 0%, var(--ui-bg) 58%, #edf6f8 100%);
+  background: var(--ui-page-background);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
 }
 
@@ -37,8 +57,8 @@ page {
   box-sizing: border-box;
   background: var(--ui-surface);
   border: 1rpx solid rgba(255, 255, 255, 0.92);
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 36rpx rgba(60, 104, 119, 0.09);
+  border-radius: var(--ui-radius-lg);
+  box-shadow: var(--ui-shadow-soft);
 }
 
 .glass-surface {
@@ -80,7 +100,7 @@ page {
 
 .ui-button--primary {
   color: #ffffff;
-  background: linear-gradient(135deg, #236b80 0%, #27758a 100%);
+  background: var(--ui-focus);
   border-color: transparent;
   box-shadow: 0 10rpx 24rpx rgba(49, 140, 166, 0.18);
 }
@@ -123,6 +143,13 @@ page {
   padding-bottom: calc(28rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(28rpx + env(safe-area-inset-bottom));
 }
+
+.product-visually-hidden { position:absolute; width:1rpx; height:1rpx; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+.product-status--progress { color:var(--ui-status-progress); background:#e9f2fd; }
+.product-status--complete { color:var(--ui-status-complete); background:#e9f6ef; }
+.product-status--pending { color:var(--ui-status-pending); background:#fff1df; }
+.product-status--muted { color:var(--ui-status-muted); background:#f1f4f6; }
+.product-status { padding:7rpx 14rpx; border-radius:12rpx; font-size:23rpx; line-height:1.5; }
 
 @media (prefers-reduced-motion: reduce) {
   .ui-button,

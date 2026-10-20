@@ -26,11 +26,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     const openPatientReportLink = document.getElementById('openPatientReportImagingLink');
     const childNavImaging = document.getElementById('childNavImaging');
     const childNavVisualization = document.getElementById('childNavVisualization');
+    const admissionStatus = document.getElementById('modelAdmissionStatus');
 
     let boundPatients = [];
     let currentSelectedPatient = null;
     let selectedFile = null;
     let running = false;
+    let admission = null, active = true, epoch = 0;
+    const fixedIdentity = ['smartbrain_user', 'smartbrain_token'].map(key => localStorage.getItem(key));
+    const session = window.SessionGuard?.captureSession();
+    const usable = () => active && fixedIdentity.every((value, index) => value === localStorage.getItem(['smartbrain_user', 'smartbrain_token'][index]))
+        && (!session || window.SessionGuard.isCurrentSession(session));
+    const current = operation => usable() && operation === epoch;
+    const allowed = () => admission?.inference_mode === 'mock' ||
+        (['admitted', 'legacy_accepted'].includes(admission?.status) && admission?.real_inference_allowed === true);
+    function updateControls() {
+        if (generateBtn) {
+            generateBtn.disabled = !usable() || running || !currentSelectedPatient || !allowed();
+            generateBtn.textContent = running ? '处理中...' : admission?.inference_mode === 'mock' ? '开始演示分析'
+                : allowed() ? '开始分类推理' : admission ? '模型待准入，暂不能分析' : '模型状态待核对';
+        }
+    }
+    function renderAdmission() {
+        if (admissionStatus) admissionStatus.textContent = admission?.inference_mode === 'mock'
+            ? '当前为演示模式，结果由合成规则生成，只供界面演示，不用于临床判断。'
+            : typeof admission?.message === 'string' ? admission.message : '模型状态暂不可核对，不能开始新分析。';
+        updateControls();
+    }
 
     const currentUser = JSON.parse(localStorage.getItem('smartbrain_user') || 'null');
     if (userProfileName && currentUser?.full_name) {
@@ -47,13 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function formatPercent(value) {
         return `${(Number(value || 0) * 100).toFixed(1)}%`;
-    }
-
-    function getConfidenceLevel(probability) {
-        const score = Number(probability || 0);
-        if (score >= 0.9) return '高置信';
-        if (score >= 0.75) return '中等置信';
-        return '低置信';
     }
 
     function updateChildLinks(patient) {
@@ -147,6 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderSelectedFile(file) {
+        if (!usable()) return;
         selectedFile = file;
         if (!file) {
             setStatus(fileStatusBadge, 'waiting', '等待中');
@@ -157,15 +173,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         setStatus(connectivityStatusBadge, 'waiting', '待构建');
         setStatus(predictionStatusBadge, 'waiting', '待推理');
         if (graphText) {
-            graphText.textContent = `已选择文件：${file.name}。点击“开始分类推理”后，系统将解析时间序列并运行 HGST 模型。`;
+            graphText.textContent = allowed() ? `已在本机选择文件：${file.name}。请核对模型使用状态后开始。`
+                : `已在本机选择文件：${file.name}。模型尚未准入，未开始分析。`;
         }
     }
 
-    async function ensureLockedPatient() {
+    async function ensureLockedPatient(operation) {
         if (!window.API?.Doctor?.getMyPatients) return;
 
         try {
             const response = await window.API.Doctor.getMyPatients();
+            if (!current(operation)) return;
             boundPatients = response.items || [];
             const targetId = queryPatientId || localStorage.getItem(SELECTED_PATIENT_STORAGE_KEY);
             const patient = boundPatients.find((item) => String(item.patient_id) === String(targetId));
@@ -177,11 +195,51 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderSelectedPatient(null);
             }
         } catch (error) {
-            renderSelectedPatient(null);
+            if (current(operation)) renderSelectedPatient(null);
         }
     }
 
+    async function readAdmission(operation) {
+        try {
+            const result = await window.API.Model.getAdmission();
+            if (!current(operation)) return false;
+            if (!['real', 'auto', 'mock'].includes(result?.inference_mode) || typeof result.real_inference_allowed !== 'boolean') throw new Error('模型状态不完整。');
+            admission = result; renderAdmission(); return true;
+        } catch (error) {
+            if (current(operation)) { admission = null; renderAdmission(); }
+            return false;
+        }
+    }
+    async function refreshWorkspace() {
+        if (!usable()) return false;
+        const operation = ++epoch;
+        await Promise.allSettled([ensureLockedPatient(operation), readAdmission(operation)]);
+        if (!current(operation)) return false;
+        updateControls(); return true;
+    }
+    function hideWorkspace() {
+        active = false; epoch++; running = false; admission = null;
+        boundPatients = []; selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        renderSelectedPatient(null); resetResultUi();
+        if (userProfileName) userProfileName.textContent = '';
+        renderAdmission();
+    }
+    async function showWorkspace() {
+        if (active) return;
+        active = true;
+        if (!usable()) { hideWorkspace(); return; }
+        if (userProfileName && currentUser?.full_name) userProfileName.textContent = `${currentUser.full_name} · 研究人员`;
+        await refreshWorkspace();
+    }
+    window.addEventListener('pagehide', hideWorkspace);
+    window.addEventListener('pageshow', showWorkspace);
+    document.addEventListener('visibilitychange', () => document.hidden ? hideWorkspace() : showWorkspace());
+    window.SessionGuard?.onInvalidated(hideWorkspace);
+
     async function runPrediction() {
+        if (!usable() || running) return;
+        if (!allowed()) { renderAdmission(); return; }
         if (!currentSelectedPatient) {
             renderSelectedPatient(null);
             return;
@@ -193,11 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return;
         }
-        if (running) return;
-
+        const operation = epoch, patientId = currentSelectedPatient.patient_id, originalMode = admission.inference_mode;
         running = true;
-        generateBtn.disabled = true;
-        generateBtn.textContent = '推理中...';
+        updateControls();
         setStatus(fileStatusBadge, 'success', '已读取');
         setStatus(connectivityStatusBadge, 'processing', '处理中');
         setStatus(predictionStatusBadge, 'waiting', '等待中');
@@ -206,14 +262,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('timeseries_file', selectedFile);
 
         try {
-            const result = await window.API.Doctor.predictTimeseries(currentSelectedPatient.patient_id, formData);
-            setStatus(connectivityStatusBadge, 'success', '已构建');
-            setStatus(predictionStatusBadge, 'success', '已完成');
+            if (!await readAdmission(operation) || !current(operation)) return;
+            if (!allowed() || admission.inference_mode !== originalMode) {
+                if (graphText) graphText.textContent = '模型使用状态已变化，请核对后重新开始。';
+                return;
+            }
+            const result = await window.API.Doctor.predictTimeseries(patientId, formData);
+            if (!current(operation)) return;
+            const demo = result.is_demo === true && result.source_type === 'mock';
+            if ((originalMode === 'mock') !== demo) throw new Error('结果来源与已核对的模式不一致，请重新核对。');
+            setStatus(connectivityStatusBadge, demo ? 'waiting' : 'success', demo ? '演示未计算' : '已构建');
+            setStatus(predictionStatusBadge, 'success', demo ? '演示完成' : '已完成');
 
             if (nodeAttention) nodeAttention.textContent = String(result.timepoints);
             if (edgeConnectivity) edgeConnectivity.textContent = `${result.roi_dim_used} ROI`;
-
-            const confidenceLevel = getConfidenceLevel(result.probability);
 
             if (predictionMeta) {
                 predictionMeta.innerHTML = '';
@@ -222,20 +284,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     `模型：${result.model_name}`,
                     `版本：${result.model_version}`,
                     `结果ID：${result.prediction_id}`,
-                    `置信等级：${confidenceLevel}`
+                    `来源：${demo ? '演示结果，不用于临床' : '模型分析，需专业审核'}`
                 ].forEach((text) => predictionMeta.appendChild(buildMetaChip(text)));
             }
 
             if (predictionLabelText) {
-                predictionLabelText.textContent = `分类结果：${result.prediction_label} · 模型输出概率 ${formatPercent(result.probability)}`;
+                predictionLabelText.textContent = `${demo ? '演示' : '模型'}结果：${result.prediction_label} · 输出概率 ${formatPercent(result.probability)}`;
             }
 
             if (predictionSummary) {
-                predictionSummary.innerHTML = `<strong>推理摘要：</strong> ${result.summary_text}<br><strong>说明：</strong> 当前展示的是模型输出概率，仅供辅助参考，不代表绝对诊断结论。`;
+                predictionSummary.replaceChildren(SafeRender.html`<strong>${demo ? '演示摘要' : '推理摘要'}：</strong> ${result.summary_text}<br><strong>说明：</strong> ${demo ? '演示结果不用于临床判断。' : '模型输出不代表诊断，需由医生结合规定证据审核。'}`);
             }
 
             if (graphText) {
-                graphText.textContent = `时间序列推理已完成。当前文件为 ${result.file_name}，输出标签为 ${result.prediction_label}，模型输出概率为 ${formatPercent(result.probability)}。`;
+                graphText.textContent = `${demo ? '演示' : '时间序列推理'}已完成。当前文件为 ${result.file_name}，输出标签为 ${result.prediction_label}，输出概率为 ${formatPercent(result.probability)}。`;
                 graphText.style.color = 'var(--success)';
             }
 
@@ -255,6 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 controlProbabilityBar.style.width = `${Number(result.probability_control || 0) * 100}%`;
             }
         } catch (error) {
+            if (!current(operation)) return;
             console.error('推理失败详情:', error);
             setStatus(connectivityStatusBadge, 'warning', '失败');
             setStatus(predictionStatusBadge, 'warning', '失败');
@@ -280,16 +343,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             if (predictionSummary) {
-                predictionSummary.innerHTML = `<strong>推理失败：</strong> ${errorMessage}`;
+                predictionSummary.replaceChildren(SafeRender.html`<strong>推理失败：</strong> ${errorMessage}`);
             }
             if (graphText) {
                 graphText.textContent = errorMessage;
                 graphText.style.color = '#B91C1C';
             }
         } finally {
-            running = false;
-            generateBtn.disabled = false;
-            generateBtn.textContent = '开始分类推理';
+            if (current(operation)) { running = false; updateControls(); }
         }
     }
 
@@ -327,5 +388,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     generateBtn?.addEventListener('click', runPrediction);
 
     resetResultUi();
-    await ensureLockedPatient();
+    await refreshWorkspace();
 });

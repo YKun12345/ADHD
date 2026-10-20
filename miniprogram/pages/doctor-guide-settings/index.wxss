@@ -15,3 +15,6 @@ page { min-height: 100%; color: #263e5d; background: #edf3f8; }
 .medical-disclaimer { margin-top: 28rpx; color: #62748a; font-size: 21rpx; line-height: 1.65; text-align: center; }
 .back-link { min-height: 88rpx; display: flex; align-items: center; justify-content: center; margin-top: 14rpx; border-radius: 20rpx; color: #315f91; font-size: 23rpx; font-weight: 600; }
 .settings-control--pressed { opacity: .72; }
+
+@import "../../styles/product-page.wxss";
+page { color: var(--ui-ink); background: var(--ui-page-background); }

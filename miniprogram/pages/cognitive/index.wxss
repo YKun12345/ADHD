@@ -600,3 +600,5 @@ page {
 .result-card { text-align: center; }
 .result-card .result-heading { justify-content: center; }
 .result-card .result-heading-copy { align-items: center; text-align: center; }
+
+@import "../../styles/product-page.wxss";

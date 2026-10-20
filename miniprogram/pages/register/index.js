@@ -47,6 +47,9 @@ const EDITABLE_FIELDS = [
   'fullName',
   'email',
   'age',
+  'guardianName',
+  'guardianAge',
+  'proofReference',
   'password',
   'confirmPassword'
 ]
@@ -59,6 +62,11 @@ Page({
     patientType: '',
     age: '',
     gender: '',
+    guardianName: '',
+    guardianAge: '',
+    guardianRelation: 'parent',
+    proofReference: '',
+    guardianConfirmed: false,
     password: '',
     confirmPassword: '',
     consentAgreed: false,
@@ -105,6 +113,17 @@ Page({
     })
   },
 
+  onGuardianRelationSelect(event) {
+    if (this.data.submitting) return
+    const guardianRelation = event.currentTarget.dataset.value
+    if (['parent', 'legal_guardian'].includes(guardianRelation)) this.setData({ guardianRelation })
+  },
+
+  onGuardianConfirmation(event) {
+    if (this.data.submitting) return
+    this.setData({ guardianConfirmed: event.detail.value.includes('guardian') })
+  },
+
   togglePasswordVisibility() {
     if (this.data.submitting) return
 
@@ -135,7 +154,7 @@ Page({
     wx.showModal({
       title: '知情同意说明摘要',
       content:
-        '平台会收集账号资料、患者基础资料、量表、认知测试和追踪数据，用于辅助筛查、任务安排和报告生成。平台结果不替代专业医生诊断。当前竞赛版本的正式文本仍需指导老师或相关专业人员审核。',
+        '基本使用同意用于本人或由你实际监护的儿童的参考评估、记录和报告。儿童由年满18岁的主要监护人填写并明确确认关系，无需机构审核。医生共享、外部AI和具体研究分别确认，可单独拒绝或撤回。结果帮助了解注意状态，不替代专业医生诊断。',
       showCancel: false,
       confirmText: '我知道了'
     })

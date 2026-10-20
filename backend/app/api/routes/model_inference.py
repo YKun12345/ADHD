@@ -5,21 +5,28 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
+from backend.app.services.identity_access import require_patient_access, recheck_request_authority
 from backend.app.api.deps import get_db, require_roles
 from backend.app.core.config import settings
 from backend.app.models.model_prediction import ModelPrediction
 from backend.app.models.patient import Patient
 from backend.app.models.upload import Upload
 from backend.app.models.user import User, UserRole
+from backend.app.core.record_provenance import record_storage_info
+from backend.app.services.imaging_storage_service import require_imaging_storage,stamp_storage_context,save_storage_transaction
 from backend.app.schemas.model_inference import TimeseriesPredictionResponse
 from backend.app.services.hgst_runtime.service import (
     HGSTBundleMissingError,
     HGSTInferenceError,
     HGSTUnavailableError,
+    HGSTModelNotAdmittedError,
     MOCK_SOURCE_TYPE,
     predict_with_mode,
+    resolve_inference_mode,
 )
+from backend.app.services.model_admission_service import inspect_hgst_admission
 from backend.app.services.upload_storage import (
     UploadTooLargeError,
     UploadValidationError,
@@ -33,37 +40,25 @@ MODEL_DISCLAIMER = "Screening support only; not a medical diagnosis."
 MOCK_DISCLAIMER = "Demonstration output only; not a medical diagnosis."
 
 
+def _discard_new_upload(stored):
+    target=Path(stored.stored_path).resolve()
+    if target.parent != Path(settings.UPLOAD_ROOT).expanduser().resolve():
+        raise RuntimeError('Upload cleanup target escaped the configured root.')
+    target.unlink(missing_ok=True)
+
+
+@router.get('/admission')
+def model_admission(current_user: User = Depends(require_roles(UserRole.RESEARCHER, UserRole.PATIENT))):
+    # Global model metadata only. No patient data, raw image session or path is disclosed.
+    return {**inspect_hgst_admission(), 'inference_mode': resolve_inference_mode()}
+
+
 def _get_patient_for_researcher_or_self(
     db: Session,
     patient_id: int,
     current_user: User,
 ) -> Patient:
-    patient = db.get(Patient, patient_id)
-    if patient is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient not found.",
-        )
-
-    if current_user.role == UserRole.RESEARCHER:
-        if patient.assigned_researcher_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="The patient is not assigned to the current researcher.",
-            )
-    elif current_user.role == UserRole.PATIENT:
-        if patient.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Patients may access only their own data.",
-            )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The current role cannot access model inference.",
-        )
-
-    return patient
+    return require_patient_access(db,current_user,patient_id,"imaging")
 
 
 def _prediction_response(
@@ -75,6 +70,8 @@ def _prediction_response(
 ) -> TimeseriesPredictionResponse:
     return TimeseriesPredictionResponse(
         prediction_id=record.id,
+        storage_integrity=record_storage_info(record),
+        storage_context=record.storage_context,
         upload_id=record.upload_id,
         patient_id=patient_id,
         file_name=record.file_name,
@@ -88,6 +85,8 @@ def _prediction_response(
         model_version=record.model_version,
         summary_text=record.summary_text,
         is_demo=is_demo,
+        source_admission_status=('demonstration_only' if is_demo else
+            ((record.storage_context or {}).get('input') or {}).get('model_registration_status', 'not_recorded')),
         disclaimer=disclaimer,
         created_at=record.created_at,
     )
@@ -109,6 +108,7 @@ async def predict_fmri(
     """
 
     _get_patient_for_researcher_or_self(db, patient_id, current_user)
+    require_imaging_storage(db,patient_id)
     try:
         file_bytes = await read_upload_bytes_limited(
             timeseries_file,
@@ -119,6 +119,7 @@ async def predict_fmri(
             file_name=timeseries_file.filename or "",
             upload_root=Path(settings.UPLOAD_ROOT),
             max_bytes=settings.UPLOAD_MAX_BYTES,
+            authorization_check=lambda:recheck_request_authority(db),
         )
     except UploadTooLargeError as exc:
         raise HTTPException(
@@ -142,17 +143,25 @@ async def predict_fmri(
         stored_path=str(stored.stored_path),
     )
     db.add(upload)
-    db.commit()
-    db.refresh(upload)
+    try:
+        db.flush()
+    except Exception as exc:
+        db.rollback()
+        _discard_new_upload(stored)
+        raise HTTPException(503,'上传保存事务未完成。') from exc
 
     def mark_failed(note: str) -> None:
         upload.status = "failed"
         upload.note = note[:1000]
-        db.commit()
+        try:
+            save_storage_transaction(db,upload,current_user,action='model_upload_failed')
+        except Exception:
+            _discard_new_upload(stored)
+            raise
 
     try:
-        result = predict_with_mode(file_bytes, stored.original_name)
-    except (HGSTUnavailableError, HGSTBundleMissingError) as exc:
+        result = await run_in_threadpool(predict_with_mode, file_bytes, stored.original_name)
+    except (HGSTUnavailableError, HGSTBundleMissingError, HGSTModelNotAdmittedError) as exc:
         mark_failed(str(exc))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -174,6 +183,15 @@ async def predict_fmri(
     # source_type == 'mock' 的记录即演示（is_demo=true），DB 中保留该标识以便报告页展示免责；
     # 真实推理统一按既有口径存 fmri_hgst。
     is_demo = result.source_type == MOCK_SOURCE_TYPE
+    if not is_demo:
+        current=inspect_hgst_admission()
+        if (current.get('model_version_id')!=getattr(result,'model_registry_version_id',None)
+                or current.get('registry_revision')!=getattr(result,'model_registry_revision',None)
+                or current.get('status')!=getattr(result,'model_admission_status',None)
+                or current.get('artifact',{}).get('sha256')!=getattr(result,'model_artifact_sha256',None)
+                or not current.get('real_inference_allowed')):
+            mark_failed('实际注册模型指针已变化或准入失效。')
+            raise HTTPException(503,'实际模型版本或准入已变化，请重新发起分析。')
     db_source_type = MOCK_SOURCE_TYPE if is_demo else "fmri_hgst"
 
     prediction = ModelPrediction(
@@ -187,13 +205,26 @@ async def predict_fmri(
         roi_dim_used=result.roi_dim_used,
         timepoints=result.timepoints,
         model_name=result.model_name,
-        model_version=result.model_version,
+        model_version=(str(result.model_registry_version_id)+':'+current['model_version']
+            if not is_demo and result.model_registry_version_id is not None else result.model_version),
         summary_text=result.summary_text,
     )
     db.add(prediction)
     upload.status = "completed"
     upload.note = None
-    db.commit()
+    stamp_storage_context(db,prediction,current_user,input_context={
+        'kind':'uploaded_timeseries','upload_id':upload.id,'sha256':stored.file_hash,'size_bytes':stored.file_size,
+        'model_registration_status':'demonstration_only' if is_demo else ('legacy_accepted' if current['status']=='legacy_accepted' else 'active'),
+        'model_input_contract_status':'not_applicable' if is_demo else current['input_contract_status'],
+        'model_artifact_sha256':getattr(result,'model_artifact_sha256',None),
+        'model_version_id':getattr(result,'model_registry_version_id',None),'registry_revision':getattr(result,'model_registry_revision',None),
+        'model_input_contract_digest':getattr(result,'model_input_contract_digest',None),
+    })
+    try:
+        save_storage_transaction(db,prediction,current_user,action='model_prediction_saved')
+    except Exception:
+        _discard_new_upload(stored)
+        raise
     db.refresh(prediction)
 
     return _prediction_response(
@@ -214,6 +245,7 @@ def predict_mock(
     """Create a visibly labelled deterministic demonstration result."""
 
     _get_patient_for_researcher_or_self(db, patient_id, current_user)
+    require_imaging_storage(db,patient_id)
     safe_file_name = (Path(file_name).name or "demo_fmri.1D")[:255]
     seed = hashlib.sha256(f"{patient_id}:{safe_file_name}".encode()).hexdigest()
     probability = round(0.65 + (int(seed[:8], 16) % 100) / 1000, 3)
@@ -239,7 +271,8 @@ def predict_mock(
         ),
     )
     db.add(record)
-    db.commit()
+    stamp_storage_context(db,record,current_user,input_context={'kind':'deterministic_demo','sha256':seed,'raw_input_present':False})
+    save_storage_transaction(db,record,current_user,action='model_demonstration_saved')
     db.refresh(record)
 
     return _prediction_response(

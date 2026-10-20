@@ -10,6 +10,7 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <link rel="stylesheet" href="../doctor-web/css/account-profile.css?v=20261010c">
+    <link rel="stylesheet" href="../doctor-web/css/authorization-panel.css?v=20261014-w02">
 </head>
 <body class="bg-page">
     <nav class="navbar">
@@ -66,6 +67,12 @@
                     <p id="accountStatus" class="account-status" role="status" aria-live="polite"></p>
                 </div>
             </section>
+            <section data-authorization-panel data-authorization-role="patient" aria-label="身份与共享授权"></section>
+            <section class="todo-widget account-card" aria-label="具体研究授权与撤回">
+                <h3>具体研究授权与撤回</h3>
+                <p>按机构提供的具体项目核对研究用途、资料范围和当前同意；可撤回后续处理权限。当前仅运行合成研究。</p>
+                <a href="patient_research_consent.html" class="btn-outline">管理具体项目同意或撤回</a>
+            </section>
         </div>
     </main>
 
@@ -75,7 +82,11 @@
             <span>知行合“医” - 专注每刻 © 2026</span>
         </div>
     </footer>
-    <script src="js/api.js?v=20261010c"></script>
-    <script src="../doctor-web/js/account.js?v=20261010c"></script>
+    <script src="js/session-guard.js?v=20261013-w01"></script>
+    <script src="js/owned-cache.js?v=20261013-w01"></script>
+    <script src="../doctor-web/js/safe-rendering.js?v=20261013-w01"></script>
+    <script src="js/api.js?v=20261014-w02"></script>
+    <script src="../doctor-web/js/account.js?v=20261014-w02"></script>
+    <script src="../doctor-web/js/authorization-panel.js?v=20261014-w02"></script>
 </body>
 </html>

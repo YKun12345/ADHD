@@ -82,7 +82,7 @@ async function run() {
                 page.handleCellTap(tap({ index: cell.index, trial: page.data.currentTrial }))
               } else {
                 if (lastEvent) page.handleAnswer(lastEvent)
-                assert.equal(page._records.length, index - 2, '迟到点击不能回答下一题')
+                assert.equal(page._records.length, index, '两条实际warmup保留，迟到点击不能回答下一题')
                 h.advance(100)
                 const event = tap({ match: String(cell.index === positions[index - 2]), trial: page.data.currentTrial })
                 page.handleAnswer(event); page.handleAnswer(event)

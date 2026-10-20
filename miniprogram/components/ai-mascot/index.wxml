@@ -1,9 +1,12 @@
 <view
-  class="ai-mascot ai-mascot--{{state}}"
+  class="ai-mascot ai-mascot--{{state}} ai-mascot--react-{{reaction}} {{decorative ? '' : 'ai-mascot--interactive'}} {{motionActive ? '' : 'ai-mascot--paused'}}"
   aria-role="img"
   aria-label="{{decorative ? '' : label}}"
   aria-hidden="{{decorative}}"
+  bindtap="onInteract"
 >
+  <view class="ai-mascot__sprite-viewport" wx:if="{{!spriteFailed}}"><image class="ai-mascot__sprite-sheet" src="{{spriteSource}}" mode="scaleToFill" style="transform:translateX({{spriteFrame * -100 / 3}}%)" bindload="onSpriteLoad" binderror="onSpriteError" aria-hidden="{{true}}" /></view>
+  <view class="ai-mascot__fallback" wx:else>
   <view class="ai-mascot__ear ai-mascot__ear--left"></view>
   <view class="ai-mascot__ear ai-mascot__ear--right"></view>
   <view class="ai-mascot__face">
@@ -25,4 +28,5 @@
   </view>
   <view class="ai-mascot__arm ai-mascot__arm--left"></view>
   <view class="ai-mascot__arm ai-mascot__arm--right"></view>
+  </view>
 </view>
