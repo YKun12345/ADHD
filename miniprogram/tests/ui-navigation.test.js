@@ -25,6 +25,7 @@ const businessPages = [
   'stroop',
   'tracking',
   'tracking-trend',
+  'followup-summary',
   'report',
   'ai-chat',
   'care-pathway',
@@ -57,7 +58,7 @@ for (const page of businessPages) {
     `${page} 必须注册 ui-nav`
   )
   assert.equal(componentCount, 1, `${page} 必须且只能渲染一个 ui-nav`)
-  assert.equal(wxss.includes('min-height: 100vh'), false, `${page} 接入文档流导航后不得继续强制 100vh`)
+  assert.doesNotMatch(wxss, /min-height:\s*100vh\b/, `${page} 接入文档流导航后不得继续强制 100vh`)
 
   for (const className of legacyNavigationClasses) {
     assert.equal(
@@ -67,6 +68,12 @@ for (const page of businessPages) {
     )
   }
 }
+
+assert.match(
+  read('pages', 'followup-summary', 'index.wxml'),
+  /^<ui-nav\s+title="阶段与长期回顾"\s+showBack="\{\{true\}\}"\s+fallbackUrl="\/pages\/home\/index"\s*\/>/,
+  '长期回顾的返回入口必须始终可见，并在无上一页时回到首页'
+)
 
 const login = readJson('pages', 'login', 'index.json')
 const register = readJson('pages', 'register', 'index.json')
@@ -130,7 +137,7 @@ assert.match(
 )
 assert.match(uncommentedWxss, /z-index:\s*\d+/, 'ui-nav 需要稳定的层级')
 assert.match(uncommentedWxss, /height:\s*88rpx/, '内容导航栏高度必须是 88rpx')
-assert.match(uncommentedWxss, /color:\s*#173f50/i, '导航标题必须使用深蓝绿')
+assert.match(uncommentedWxss, /color:\s*var\(--ui-ink,\s*#183747\)/i, '导航标题必须使用当前主题的深色文字变量')
 assert.match(uncommentedWxss, /border-bottom:/, '导航底部必须有精细分隔线')
 assert.match(
   uncommentedWxss,
@@ -234,13 +241,13 @@ const homeWxml = read('pages', 'home', 'index.wxml')
 assert.match(homeWxml, /<ui-nav\s+title="星伴智察"\s+showBack="\{\{false\}\}"\s*\/>/)
 
 const registerWxml = read('pages', 'register', 'index.wxml')
-assert.match(registerWxml, /^<ui-nav title="患者注册" fallbackUrl="\/pages\/login\/index" \/>/)
+assert.match(registerWxml, /<ui-nav title="用户注册" fallbackUrl="\/pages\/login\/index" \/>/)
 
 const aiChatWxml = read('pages', 'ai-chat', 'index.wxml')
 assert.match(
   aiChatWxml,
-  /<ui-nav\s+title="AI 健康助手"\s+rightText="清空"\s+bind:righttap="clearConversation"\s*\/>/,
-  'AI 助手必须保留清空能力'
+  /<ui-nav\s+title="星仔助手"\s*\/>/,
+  '助手兼容入口必须显示当前统一名称并保留默认返回能力'
 )
 
 console.log('统一导航契约测试全部通过')

@@ -1,3 +1,4 @@
+<ui-nav title="阶段与长期回顾" showBack="{{true}}" fallbackUrl="/pages/home/index" />
 <ai-copilot page-key="followup-summary" patient-id="{{patientId}}" />
 <view class="page product-page product-form-page"><view class="card"><text class="title">实际随访与长期总结</text><text>按真实日期、原始评估及计划版本汇总。缺失和未知不按0计算。</text><button bindtap="reload" disabled="{{busy}}">{{busy ? '正在读取…' : '重新读取'}}</button><text wx:if="{{errorText}}">{{errorText}}</text></view>
 <block wx:if="{{summary}}"><view class="card"><text>截至 {{summary.asOfDate}}</text><text>{{summary.coverageText}}</text><text wx:if="{{summary.truncatedText}}">{{summary.truncatedText}}</text></view>
